@@ -17,7 +17,10 @@ import {
   getSuratMasukAction,
   saveSuratMasukAction,
   deleteSuratMasukAction,
+  getNextNomorSuratSuggestionAction,
 } from "@/lib/actions/admin-persuratan";
+import { ModernDatePicker } from "@/components/ui/modern-date-picker";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SuratMasuk {
   id: string;
@@ -40,6 +43,12 @@ export function SuratMasukManager() {
   const [filterDateSurat, setFilterDateSurat] = useState("");
   const [filterDateTerima, setFilterDateTerima] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Delete Confirmation State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -67,8 +76,13 @@ export function SuratMasukManager() {
 
   const fetchData = async () => {
     setLoading(true);
-    const data = await getSuratMasukAction();
-    setItems(data);
+    setFetchError(null);
+    const result = await getSuratMasukAction();
+    if (result.success) {
+      setItems(result.data || []);
+    } else {
+      setFetchError(result.error || "Gagal mengambil data dari Google Sheets.");
+    }
     setLoading(false);
   };
 
@@ -79,19 +93,50 @@ export function SuratMasukManager() {
         item.asal_surat.toLowerCase().includes(search.toLowerCase()) ||
         item.perihal.toLowerCase().includes(search.toLowerCase());
 
-      const matchesDateSurat = filterDateSurat
-        ? item.tanggal_surat === filterDateSurat
-        : true;
+      const matchesDateSurat = (() => {
+        if (!filterDateSurat) return true;
+        const itemDateStr = item.tanggal_surat?.trim();
+        if (!itemDateStr) return false;
+        if (itemDateStr === filterDateSurat.trim()) return true;
+        try {
+          const d1 = new Date(itemDateStr).getTime();
+          const d2 = new Date(filterDateSurat).getTime();
+          return !isNaN(d1) && !isNaN(d2) && d1 === d2;
+        } catch {
+          return false;
+        }
+      })();
 
-      const matchesDateTerima = filterDateTerima
-        ? item.tanggal_terima === filterDateTerima
-        : true;
+      const matchesDateTerima = (() => {
+        if (!filterDateTerima) return true;
+        const itemDateStr = item.tanggal_terima?.trim();
+        if (!itemDateStr) return false;
+        if (itemDateStr === filterDateTerima.trim()) return true;
+        try {
+          const d1 = new Date(itemDateStr).getTime();
+          const d2 = new Date(filterDateTerima).getTime();
+          return !isNaN(d1) && !isNaN(d2) && d1 === d2;
+        } catch {
+          return false;
+        }
+      })();
 
       return matchesSearch && matchesDateSurat && matchesDateTerima;
     });
   }, [items, search, filterDateSurat, filterDateTerima]);
 
-  const handleOpenForm = (item?: SuratMasuk) => {
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterDateSurat, filterDateTerima]);
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredItems, currentPage]);
+
+  const handleOpenForm = async (item?: SuratMasuk) => {
     if (item) {
       setFormData({
         nomor_surat: item.nomor_surat,
@@ -101,17 +146,25 @@ export function SuratMasukManager() {
         perihal: item.perihal,
       });
       setEditingId(item.id);
+      setShowForm(true);
     } else {
+      const today = new Date().toISOString().split("T")[0];
       setFormData({
         nomor_surat: "",
-        tanggal_surat: "",
-        tanggal_terima: "",
+        tanggal_surat: today,
+        tanggal_terima: today,
         asal_surat: "",
         perihal: "",
       });
       setEditingId(null);
+      setShowForm(true);
+
+      // Suggest next number
+      const suggestion = await getNextNomorSuratSuggestionAction("MASUK");
+      if (suggestion) {
+        setFormData((prev) => ({ ...prev, nomor_surat: suggestion }));
+      }
     }
-    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -124,11 +177,15 @@ export function SuratMasukManager() {
 
     setSubmitting(true);
     try {
-      await deleteSuratMasukAction(deletingId);
-      await fetchData();
-      setShowDeleteConfirm(false);
-      setDeletingId(null);
-      showToast("Data surat berhasil dihapus", "success");
+      const result = await deleteSuratMasukAction(deletingId);
+      if (result?.error) {
+        showToast(result.error, "error");
+      } else {
+        await fetchData();
+        setShowDeleteConfirm(false);
+        setDeletingId(null);
+        showToast("Data surat berhasil dihapus", "success");
+      }
     } catch (error) {
       showToast("Gagal menghapus data", "error");
     } finally {
@@ -149,13 +206,18 @@ export function SuratMasukManager() {
       const form = new FormData(e.currentTarget);
       if (editingId) form.append("id", editingId);
 
-      await saveSuratMasukAction(form);
-      await fetchData();
-      setShowForm(false);
-      showToast(
-        editingId ? "Data berhasil diperbarui" : "Data berhasil disimpan",
-        "success",
-      );
+      const result = await saveSuratMasukAction(form);
+
+      if (result?.error) {
+        showToast(result.error, "error");
+      } else {
+        await fetchData();
+        setShowForm(false);
+        showToast(
+          editingId ? "Data berhasil diperbarui" : "Data berhasil disimpan",
+          "success",
+        );
+      }
     } catch (error) {
       showToast("Gagal menyimpan data", "error");
     } finally {
@@ -211,44 +273,47 @@ export function SuratMasukManager() {
       </div>
 
       {/* Advanced Filter Panel */}
-      {showFilters && (
-        <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-200">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest ml-1">
-              Filter Tgl Surat
-            </label>
-            <input
-              type="date"
-              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-              value={filterDateSurat}
-              onChange={(e) => setFilterDateSurat(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest ml-1">
-              Filter Tgl Terima
-            </label>
-            <input
-              type="date"
-              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-              value={filterDateTerima}
-              onChange={(e) => setFilterDateTerima(e.target.value)}
-            />
-          </div>
-          <div className="flex items-end gap-2">
-            <button
-              onClick={() => {
-                setFilterDateSurat("");
-                setFilterDateTerima("");
-              }}
-              className="flex-1 px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-xl text-sm font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
-            >
-              <X className="h-3.5 w-3.5" />
-              Reset Filter
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+            animate={{ height: "auto", opacity: 1, marginBottom: 24 }}
+            exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="relative z-50 pointer-events-auto"
+            style={{ overflow: "visible" }}
+          >
+            <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl grid grid-cols-1 sm:grid-cols-3 gap-4 mb-1">
+              <div className="space-y-1.5">
+                <ModernDatePicker
+                  label="Filter Tgl Surat"
+                  value={filterDateSurat}
+                  onChange={(val) => setFilterDateSurat(val)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <ModernDatePicker
+                  label="Filter Tgl Terima"
+                  value={filterDateTerima}
+                  onChange={(val) => setFilterDateTerima(val)}
+                />
+              </div>
+              <div className="flex items-end gap-2">
+                <button
+                  onClick={() => {
+                    setFilterDateSurat("");
+                    setFilterDateTerima("");
+                  }}
+                  className="flex-1 px-4 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold hover:bg-rose-100 transition-all flex items-center justify-center gap-2 shadow-sm shadow-rose-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Reset Filter
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Table Section */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-[400px] relative">
@@ -282,15 +347,15 @@ export function SuratMasukManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredItems.length > 0 ? (
-                filteredItems.map((item, index) => (
+              {paginatedItems.length > 0 ? (
+                paginatedItems.map((item, index) => (
                   <tr
                     key={item.id}
                     className="hover:bg-slate-50/50 transition-colors group"
                   >
                     <td className="px-4 py-4 text-center">
                       <span className="text-xs font-bold text-slate-400">
-                        {index + 1}
+                        {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -352,12 +417,30 @@ export function SuratMasukManager() {
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
+                      <div
+                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${fetchError ? "bg-red-50 text-red-400" : "bg-slate-50 text-slate-300"}`}
+                      >
                         <FileText className="h-6 w-6" />
                       </div>
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                        Belum ada data surat
+                        {fetchError
+                          ? "Gagal memuat data surat"
+                          : "Belum ada data surat"}
                       </p>
+                      {fetchError && (
+                        <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
+                          {fetchError}. Silakan cek koneksi internet atau coba
+                          refresh halaman.
+                        </p>
+                      )}
+                      {fetchError && (
+                        <button
+                          onClick={fetchData}
+                          className="mt-4 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                        >
+                          Coba Lagi
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -365,6 +448,64 @@ export function SuratMasukManager() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {filteredItems.length > 0 && (
+          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+              Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
+              {Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}{" "}
+              dari {filteredItems.length} Surat
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all"
+              >
+                Sebelumnya
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Logic for showing pages around current page if many
+                  let pageNum = i + 1;
+                  if (totalPages > 5) {
+                    if (currentPage > 3) pageNum = currentPage - 2 + i;
+                    if (pageNum + (4 - i) > totalPages)
+                      pageNum = totalPages - 4 + i;
+                  }
+                  if (pageNum <= 0 || pageNum > totalPages) return null;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${
+                        currentPage === pageNum
+                          ? "bg-[#1f4bb7] text-white shadow-md shadow-blue-200"
+                          : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Form Modal */}
@@ -417,33 +558,25 @@ export function SuratMasukManager() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Tanggal Surat
-                </label>
-                <input
+                <ModernDatePicker
                   required
                   name="tanggal_surat"
-                  type="date"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  label="Tanggal Surat"
                   value={formData.tanggal_surat}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tanggal_surat: e.target.value })
+                  onChange={(val) =>
+                    setFormData({ ...formData, tanggal_surat: val })
                   }
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Tanggal Terima
-                </label>
-                <input
+                <ModernDatePicker
                   required
                   name="tanggal_terima"
-                  type="date"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  label="Tanggal Terima"
                   value={formData.tanggal_terima}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tanggal_terima: e.target.value })
+                  onChange={(val) =>
+                    setFormData({ ...formData, tanggal_terima: val })
                   }
                 />
               </div>

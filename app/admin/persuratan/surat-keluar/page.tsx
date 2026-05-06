@@ -14,6 +14,7 @@ export default function SuratKeluarPage() {
         title="Tata Naskah: Surat Keluar"
         description="Pencatatan dan pengelolaan arsip surat yang dikirim keluar."
         icon={Send}
+        externalLink="https://docs.google.com/spreadsheets/d/1C8OanScMPs45xNcWHfEldzOjVGLcKQiSL8TZdrxryg8/edit?gid=57740679#gid=57740679"
       />
       <SuratKeluarManager />
     </div>

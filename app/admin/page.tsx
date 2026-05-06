@@ -10,7 +10,11 @@ import {
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PageHeader } from "@/components/admin/page-header";
-import { isSuperAdmin } from "@/lib/constants";
+import {
+  isSuperAdmin,
+  ALL_ADMIN_MENUS,
+  DEFAULT_ADMIN_PERMISSIONS,
+} from "@/lib/constants";
 
 import { AdminAlertBanner } from "@/components/admin/dashboard/admin-alert-banner";
 import { AdminDashboardMetrics } from "@/components/admin/dashboard/admin-dashboard-metrics";
@@ -24,22 +28,9 @@ export default async function AdminHomePage() {
   // Fetch permissions for this user
   let allowedMenus: string[] = [];
   if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
-    allowedMenus = [
-      "ringkasan",
-      "pengajuan",
-      "layanan",
-      "item_layanan",
-      "form_layanan",
-      "persyaratan",
-      "pengguna",
-      "dokumen_hasil",
-    ];
+    allowedMenus = ALL_ADMIN_MENUS;
   } else {
-    allowedMenus = profile.permissions || [
-      "ringkasan",
-      "pengajuan",
-      "dokumen_hasil",
-    ];
+    allowedMenus = profile.permissions || DEFAULT_ADMIN_PERMISSIONS;
   }
 
   const [{ count: serviceCount }, { count: userCount }, { data: requests }] =

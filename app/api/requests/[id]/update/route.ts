@@ -62,7 +62,10 @@ export async function POST(
     // 2. Prepare user folder in Google Drive (for new uploads)
     const mainFolderId = await getOrCreateFolder("File Persyaratan");
     const userFolderName = `${profile.full_name || "User"} (${profile.email})`;
-    const userFolderId = await getOrCreateFolder(userFolderName, mainFolderId as string);
+    const userFolderId = await getOrCreateFolder(
+      userFolderName,
+      mainFolderId as string,
+    );
 
     // 3. Fetch all existing documents for this request at once
     // This avoids "uuid = bigint" errors by doing the matching in memory

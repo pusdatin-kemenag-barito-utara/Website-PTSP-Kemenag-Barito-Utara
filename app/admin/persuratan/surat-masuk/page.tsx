@@ -14,6 +14,7 @@ export default function SuratMasukPage() {
         title="Tata Naskah: Surat Masuk"
         description="Pencatatan dan pengelolaan arsip surat yang masuk ke sistem."
         icon={Inbox}
+        externalLink="https://docs.google.com/spreadsheets/d/1C8OanScMPs45xNcWHfEldzOjVGLcKQiSL8TZdrxryg8/edit?gid=0#gid=0"
       />
       <SuratMasukManager />
     </div>
