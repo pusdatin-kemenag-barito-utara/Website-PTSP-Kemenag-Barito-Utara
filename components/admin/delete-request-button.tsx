@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { deleteRequestAction } from "@/lib/actions/admin";
+import { deleteRequestAction } from "@/lib/actions/admin-requests";
 
 export function DeleteRequestButton({ requestId }: { requestId: string }) {
   const [isOpen, setIsOpen] = useState(false);

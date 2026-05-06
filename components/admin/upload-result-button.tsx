@@ -4,7 +4,7 @@ import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2, FileUp } from "lucide-react";
 import { toast } from "sonner";
-import { uploadResultDocumentAction } from "@/lib/actions/admin";
+import { uploadResultDocumentAction } from "@/lib/actions/admin-requests";
 
 export function UploadResultButton({
   requestId,

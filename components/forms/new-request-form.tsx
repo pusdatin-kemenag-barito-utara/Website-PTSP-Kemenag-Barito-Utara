@@ -3,13 +3,11 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { parseJsonArray } from "@/lib/utils";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { compressImageToUnder } from "@/lib/image-compression";
+import { RequestServiceSelection } from "./request-service-selection";
+import { RequestFormFields } from "./request-form-fields";
+import { RequestRequirementUpload } from "./request-requirement-upload";
 
 type Catalog = any[];
 
@@ -104,162 +102,37 @@ export function NewRequestForm({ catalog }: { catalog: Catalog }) {
       <input type="hidden" name="service_id" value={serviceId} />
       <input type="hidden" name="service_item_id" value={serviceItemId} />
 
-      <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#1f4bb7]">
-            Langkah 1
-          </p>
-          <h2 className="mt-1 text-base font-bold text-slate-900 sm:text-lg">
-            Pilih Layanan
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Tentukan unit layanan dan item layanan yang ingin diajukan.
-          </p>
-        </div>
+      <RequestServiceSelection
+        catalog={catalog}
+        serviceId={serviceId}
+        serviceItemId={serviceItemId}
+        onServiceChange={handleServiceChange}
+        onItemChange={setServiceItemId}
+      />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Pilih Layanan" required>
-            <Select
-              value={serviceId}
-              onChange={(e) => handleServiceChange(e.target.value)}
-            >
-              {catalog.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
+      <RequestFormFields fields={selectedItem?.service_form_fields ?? []} />
 
-          <Field label="Pilih Item Layanan" required>
-            <Select
-              name="service_item_select"
-              value={serviceItemId}
-              onChange={(e) => setServiceItemId(e.target.value)}
-            >
-              {(selectedService?.service_items ?? []).map((item: any) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-      </section>
+      <RequestRequirementUpload
+        requirements={selectedItem?.service_requirements ?? []}
+      />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#1f4bb7]">
-            Langkah 2
-          </p>
-          <h3 className="mt-1 text-base font-bold text-slate-900 sm:text-lg">
-            Isi Data Formulir
-          </h3>
-          <p className="mt-1 text-sm text-slate-600">
-            Lengkapi data sesuai kebutuhan item layanan yang dipilih.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {(selectedItem?.service_form_fields ?? [])
-            .sort((a: any, b: any) => a.sort_order - b.sort_order)
-            .map((field: any) => {
-              const common = {
-                name: `answer_${field.id}`,
-                required: field.is_required,
-                placeholder: field.placeholder || "",
-              };
-
-              return (
-                <div
-                  key={field.id}
-                  className={field.type === "textarea" ? "md:col-span-2" : ""}
-                >
-                  <Field label={field.label} required={field.is_required}>
-                    {field.type === "textarea" ? (
-                      <Textarea {...common} />
-                    ) : field.type === "select" ? (
-                      <Select {...common}>
-                        <option value="">Pilih salah satu</option>
-                        {parseJsonArray(field.options).map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </Select>
-                    ) : field.type === "date" ? (
-                      <Input type="date" {...common} />
-                    ) : field.type === "number" ? (
-                      <Input type="number" {...common} />
-                    ) : (
-                      <Input type="text" {...common} />
-                    )}
-                  </Field>
-                </div>
-              );
-            })}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <div className="mb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#1f4bb7]">
-            Langkah 3
-          </p>
-          <h3 className="mt-1 text-base font-bold text-slate-900 sm:text-lg">
-            Upload Dokumen Persyaratan
-          </h3>
-          <p className="mt-1 text-sm text-slate-600">
-            Unggah dokumen dengan format dan ukuran sesuai ketentuan.
-          </p>
-        </div>
-
-        {(selectedItem?.service_requirements ?? []).length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {(selectedItem?.service_requirements ?? []).map(
-              (requirement: any) => (
-                <div
-                  key={requirement.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4"
-                >
-                  <Field
-                    label={requirement.document_name}
-                    required={requirement.is_required}
-                    hint={`Format: ${requirement.allowed_extensions || "pdf,jpg,jpeg,png"} | Maks: ${requirement.max_file_size_mb} MB`}
-                  >
-                    <Input
-                      type="file"
-                      name={`requirement_${requirement.id}`}
-                      required={requirement.is_required}
-                      accept={(
-                        requirement.allowed_extensions || "pdf,jpg,jpeg,png"
-                      )
-                        .split(",")
-                        .map((ext: string) => `.${ext.trim()}`)
-                        .join(",")}
-                    />
-                  </Field>
-                </div>
-              ),
-            )}
-          </div>
-        ) : (
-          <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-            Item layanan ini tidak memiliki dokumen wajib.
+      <div className="flex flex-col gap-3 pt-4">
+        {error && (
+          <p className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-600">
+            {error}
           </p>
         )}
-      </section>
-
-      {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="sticky bottom-3 z-10 rounded-2xl border border-blue-200 bg-white/95 p-3 shadow-sm backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
-        <Button className="h-11 w-full sm:w-auto" disabled={loading}>
-          {loading ? "Menyimpan..." : "Kirim Pengajuan"}
+        <Button
+          type="submit"
+          className="h-14 w-full rounded-2xl bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] text-base font-bold shadow-xl shadow-blue-500/20 transition-all hover:shadow-blue-500/40 active:scale-[0.98]"
+          disabled={loading}
+        >
+          {loading ? "Sedang Mengirim..." : "Kirim Pengajuan Sekarang"}
         </Button>
+        <p className="text-center text-xs font-medium text-slate-400">
+          Dengan mengklik tombol di atas, Anda menyatakan bahwa data yang diisi
+          adalah benar dan valid.
+        </p>
       </div>
     </form>
   );

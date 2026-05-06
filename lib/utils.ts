@@ -20,8 +20,13 @@ export function slugify(value: string) {
     .replace(/-+/g, "-");
 }
 
-export function sanitizeFilename(value: string) {
-  return value.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+export function snakeCase(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w\_]+/g, "")
+    .replace(/\_\_+/g, "_");
 }
 
 export function parseJsonArray(value?: string | null): string[] {

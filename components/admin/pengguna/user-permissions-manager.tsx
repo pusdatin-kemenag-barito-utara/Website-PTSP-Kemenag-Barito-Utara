@@ -1,30 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useTransition, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, Loader2, ShieldAlert, KeyRound } from 'lucide-react';
-import { toast } from 'sonner';
-import { updateUserPermissionsAction } from '@/lib/actions/user-permissions';
+import { useState, useTransition, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Check, Loader2, ShieldAlert, KeyRound } from "lucide-react";
+import { toast } from "sonner";
+import { updateUserPermissionsAction } from "@/lib/actions/user-permissions";
+import { DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
 
 const MENUS = [
-  { id: 'ringkasan', label: 'Ringkasan' },
-  { id: 'pengajuan', label: 'Pengajuan' },
-  { id: 'layanan', label: 'Layanan' },
-  { id: 'item_layanan', label: 'Item Layanan' },
-  { id: 'form_layanan', label: 'Form Layanan' },
-  { id: 'persyaratan', label: 'Persyaratan' },
-  { id: 'pengguna', label: 'Pengguna' },
-  { id: 'dokumen_hasil', label: 'Dokumen Hasil' },
+  { id: "ringkasan", label: "Ringkasan" },
+  { id: "pengajuan", label: "Pengajuan" },
+  { id: "layanan", label: "Layanan" },
+  { id: "item_layanan", label: "Item Layanan" },
+  { id: "form_layanan", label: "Form Layanan" },
+  { id: "persyaratan", label: "Persyaratan" },
+  { id: "pengguna", label: "Pengguna" },
+  { id: "dokumen_hasil", label: "Dokumen Hasil" },
+  { id: "surat_masuk", label: "Surat Masuk" },
+  { id: "surat_keluar", label: "Surat Keluar" },
 ];
 
-export function UserPermissionsModal({ 
-  user, 
-  isOpen, 
-  onClose, 
-  onSave 
-}: { 
-  user: any; 
-  isOpen: boolean; 
+export function UserPermissionsModal({
+  user,
+  isOpen,
+  onClose,
+  onSave,
+}: {
+  user: any;
+  isOpen: boolean;
   onClose: () => void;
   onSave: (userId: string, perms: string[]) => void;
 }) {
@@ -34,16 +37,16 @@ export function UserPermissionsModal({
   // Load existing permissions
   useEffect(() => {
     if (isOpen && user) {
-      setPermissions(user.permissions || ['ringkasan', 'pengajuan', 'dokumen_hasil']);
+      setPermissions(user.permissions || DEFAULT_ADMIN_PERMISSIONS);
     }
   }, [isOpen, user]);
 
   if (!isOpen || !user) return null;
 
   const handleTogglePermission = (menuId: string) => {
-    setPermissions(prev => {
+    setPermissions((prev) => {
       if (prev.includes(menuId)) {
-        return prev.filter(id => id !== menuId);
+        return prev.filter((id) => id !== menuId);
       }
       return [...prev, menuId];
     });
@@ -52,12 +55,12 @@ export function UserPermissionsModal({
   const handleSave = () => {
     startTransition(async () => {
       const result = await updateUserPermissionsAction(user.id, permissions);
-      
+
       if (result.error) {
-        toast.error('Gagal menyimpan hak akses', { description: result.error });
+        toast.error("Gagal menyimpan hak akses", { description: result.error });
       } else {
-        toast.success('Hak Akses Diperbarui!', { 
-          description: `Hak akses untuk ${user.full_name || user.email} telah disimpan.`
+        toast.success("Hak Akses Diperbarui!", {
+          description: `Hak akses untuk ${user.full_name || user.email} telah disimpan.`,
         });
         onSave(user.id, permissions);
         onClose();
@@ -88,8 +91,12 @@ export function UserPermissionsModal({
                 <KeyRound className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">Hak Akses Petugas</h3>
-                <p className="text-xs text-slate-500 font-medium">{user.full_name || user.email}</p>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Hak Akses Petugas
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  {user.full_name || user.email}
+                </p>
               </div>
             </div>
             <button
@@ -104,31 +111,42 @@ export function UserPermissionsModal({
           <div className="p-6 overflow-y-auto custom-scrollbar">
             <div className="flex items-center gap-2 p-3 mb-6 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 text-sm">
               <ShieldAlert className="h-5 w-5 shrink-0 text-blue-600" />
-              <p>Pilih menu apa saja yang boleh diakses oleh <b>{user.full_name || user.email}</b> di panel admin.</p>
+              <p>
+                Pilih menu apa saja yang boleh diakses oleh{" "}
+                <b>{user.full_name || user.email}</b> di panel admin.
+              </p>
             </div>
 
             {/* Permissions Checkboxes */}
             <div className="space-y-3">
-              {MENUS.map(menu => {
+              {MENUS.map((menu) => {
                 const isChecked = permissions.includes(menu.id);
                 return (
-                  <label 
-                    key={menu.id} 
+                  <label
+                    key={menu.id}
                     className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                      isChecked ? 'border-[#1f4bb7] bg-blue-50/50 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-200'
+                      isChecked
+                        ? "border-[#1f4bb7] bg-blue-50/50 shadow-sm"
+                        : "border-slate-100 bg-white hover:border-slate-200"
                     }`}
                   >
-                    <span className={`text-sm font-bold ${isChecked ? 'text-[#1f4bb7]' : 'text-slate-700'}`}>
+                    <span
+                      className={`text-sm font-bold ${isChecked ? "text-[#1f4bb7]" : "text-slate-700"}`}
+                    >
                       Menu {menu.label}
                     </span>
-                    <div className={`flex h-5 w-5 items-center justify-center rounded transition-colors ${
-                      isChecked ? 'bg-[#1f4bb7] text-white' : 'bg-slate-100 border border-slate-200'
-                    }`}>
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded transition-colors ${
+                        isChecked
+                          ? "bg-[#1f4bb7] text-white"
+                          : "bg-slate-100 border border-slate-200"
+                      }`}
+                    >
                       {isChecked && <Check className="h-3.5 w-3.5" />}
                     </div>
-                    <input 
-                      type="checkbox" 
-                      className="hidden" 
+                    <input
+                      type="checkbox"
+                      className="hidden"
                       checked={isChecked}
                       onChange={() => handleTogglePermission(menu.id)}
                     />
@@ -152,7 +170,11 @@ export function UserPermissionsModal({
               disabled={isPending}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
             >
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
               Simpan Hak Akses
             </button>
           </div>
