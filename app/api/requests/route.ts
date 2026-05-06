@@ -140,7 +140,7 @@ export async function POST(request: Request) {
   const userFolderName = `${userProfile?.full_name || "Unknown User"} (${userProfile?.email || user.email})`;
   const userFolderId = await getOrCreateFolder(
     userFolderName,
-    mainRequirementsFolderId,
+    mainRequirementsFolderId as string,
   );
 
   for (const requirement of requirements ?? []) {
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
     const fileName = sanitizeFilename(file.name);
 
     // Upload to the specific user subfolder in Google Drive
-    const driveFile = await uploadToDrive(file, userFolderId);
+    const driveFile = await uploadToDrive(file, userFolderId as string);
     const storagePath = `gdrive:${driveFile.id}`;
 
     if (!driveFile.id) {

@@ -103,7 +103,7 @@ export async function POST(
   const userFolderName = `${userProfile?.full_name || "Unknown User"} (${userProfile?.email || user.email})`;
   const userFolderId = await getOrCreateFolder(
     userFolderName,
-    mainRequirementsFolderId,
+    mainRequirementsFolderId as string,
   );
 
   // 3. Check for existing document to delete from Google Drive if it was a revision
@@ -120,7 +120,7 @@ export async function POST(
   }
 
   // 4. Upload to the specific user subfolder in Google Drive
-  const driveFile = await uploadToDrive(file, userFolderId);
+  const driveFile = await uploadToDrive(file, userFolderId as string);
   const storagePath = `gdrive:${driveFile.id}`;
 
   if (!driveFile.id) {

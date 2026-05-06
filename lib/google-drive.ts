@@ -91,3 +91,12 @@ export async function getOrCreateFolder(
 
   return folder.data.id;
 }
+
+export function getDrivePreviewUrl(path: string) {
+  if (!path) return "";
+  if (path.startsWith("gdrive:")) {
+    const fileId = path.split(":")[1];
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+  return path;
+}
