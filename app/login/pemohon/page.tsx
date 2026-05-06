@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
 import { UserCircle2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+
+export const metadata: Metadata = {
+  title: "Masuk Pemohon",
+  description:
+    "Masuk ke portal layanan PTSP Kemenag Barito Utara untuk masyarakat umum.",
+};
 
 export default function LoginPemohonPage() {
   return (
