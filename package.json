@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev --turbopack",
@@ -48,7 +48,7 @@
     "@tailwindcss/postcss": "^4.1.13",
     "@types/estree": "^1.0.6",
     "@types/file-saver": "^2.0.7",
-    "@types/node": "^20.0.0",
+    "@types/node": "^24.0.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@types/react-google-recaptcha": "^2.1.9",
