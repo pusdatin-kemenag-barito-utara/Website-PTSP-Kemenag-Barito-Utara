@@ -1,19 +1,17 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/admin';
+import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 export async function getRolePermissions() {
-  const admin = createAdminClient();
-  const { data, error } = await admin.from('role_permissions').select('*');
-  
-  if (error) {
+  try {
+    const data = await prisma.role_permissions.findMany();
+    return data || [];
+  } catch (error: any) {
     console.error('Error fetching role permissions:', error.message);
     return [];
   }
-  
-  return data || [];
 }
 
 export async function updateRolePermissionsAction(role: string, permissions: string[]) {
@@ -23,17 +21,25 @@ export async function updateRolePermissionsAction(role: string, permissions: str
     return { error: 'Hanya Super Admin yang dapat mengubah hak akses.' };
   }
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from('role_permissions')
-    .upsert({ role, permissions, updated_at: new Date().toISOString() });
+  try {
+    await prisma.role_permissions.upsert({
+      where: { role },
+      update: { 
+        permissions, 
+        updated_at: new Date() 
+      },
+      create: { 
+        role, 
+        permissions, 
+        updated_at: new Date() 
+      },
+    });
 
-  if (error) {
+    revalidatePath('/admin');
+    revalidatePath('/admin/pengguna');
+    
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/admin');
-  revalidatePath('/admin/pengguna');
-  
-  return { success: true };
 }

@@ -6,9 +6,9 @@ import { parseJsonArray } from "@/lib/utils";
 
 export function RequestFormFields({ fields }: { fields: any[] }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
       <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#1f4bb7]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#059669]">
           Langkah 2
         </p>
         <h3 className="mt-1 text-base font-bold text-slate-900 sm:text-lg">

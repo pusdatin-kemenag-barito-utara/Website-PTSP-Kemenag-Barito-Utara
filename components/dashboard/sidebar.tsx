@@ -27,7 +27,7 @@ function NavLink({
       onClick={onClick}
       className={`group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
         isActive
-          ? "bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] text-white shadow-md shadow-blue-500/20"
+          ? "bg-gradient-to-r from-[#059669] to-[#047857] text-white shadow-md shadow-emerald-500/20"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
@@ -71,8 +71,8 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           className="flex w-full items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-4 py-3 hover:bg-slate-50 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#1f4bb7]/10">
-              <Shield className="h-3.5 w-3.5 text-[#1f4bb7]" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#059669]/10">
+              <Shield className="h-3.5 w-3.5 text-[#059669]" />
             </div>
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
               {isAdmin ? "Menu Admin" : "Menu Utama"}

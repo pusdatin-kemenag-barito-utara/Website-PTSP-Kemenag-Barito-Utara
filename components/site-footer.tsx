@@ -14,25 +14,24 @@ const footerNav = [
   { label: "Beranda", href: "/" },
   { label: "Jenis Layanan", href: "/layanan" },
   { label: "Lacak Permohonan", href: "/track" },
-  { label: "Ajukan Layanan", href: "/dashboard/pengajuan/baru" },
   { label: "Hubungi Kami", href: "/kontak" },
 ];
 
 const footerLayanan = [
-  { label: "Bimas Islam", href: "/layanan" },
-  { label: "Pendidikan Agama", href: "/layanan" },
-  { label: "Haji & Umrah", href: "/layanan" },
-  { label: "Legalisir Dokumen", href: "/layanan" },
+  { label: "Sub Bagian Tata Usaha", href: "/layanan?q=Tata%20Usaha" },
+  { label: "Pendidikan Islam", href: "/layanan?q=Pendidikan" },
+  { label: "Bimbingan Masyarakat", href: "/layanan?q=Bimbingan,%20Hindu" },
+  { label: "Zakat & Wakaf", href: "/layanan?q=Zakat" },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="relative bg-[#080f2e] text-white overflow-hidden border-t border-white/5">
+    <footer className="relative bg-[#022c22] text-white overflow-hidden border-t border-white/5">
       {/* Top accent line */}
-      <div className="h-1 w-full bg-gradient-to-r from-[#1f4bb7] via-[#0f8a54] to-[#f0c040]/70" />
+      <div className="h-1 w-full bg-gradient-to-r from-[#059669] via-[#0f8a54] to-[#f0c040]/70" />
 
       {/* Ambient glows */}
-      <div className="pointer-events-none absolute -left-40 top-0 h-96 w-96 rounded-full bg-[#1f4bb7]/5 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-40 top-0 h-96 w-96 rounded-full bg-[#059669]/5 blur-[120px]" />
       <div className="pointer-events-none absolute -right-40 bottom-0 h-80 w-80 rounded-full bg-[#0f8a54]/5 blur-[100px]" />
 
       <div className="relative z-10 mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24">
@@ -139,38 +138,37 @@ export function SiteFooter() {
               <div className="flex gap-3 text-[13px] text-white/50">
                 <MapPin className="h-4 w-4 shrink-0 text-[#0f8a54]" />
                 <p className="leading-snug">
-                  Jl. A. Yani No. 6, Muara Teweh, Barito Utara
+                  Jl. Ahmad Yani No.126 Muara Teweh 73811
                 </p>
               </div>
               <div className="flex gap-3 text-[13px] text-white/50">
-                <Phone className="h-4 w-4 shrink-0 text-[#f0c040]" />
-                <p>(0519) 21xxx</p>
+                <Phone className="h-4 w-4 shrink-0 text-emerald-400" />
+                <p>(0519) 21269</p>
               </div>
               <div className="flex gap-3 text-[13px] text-white/50">
-                <Mail className="h-4 w-4 shrink-0 text-blue-400" />
-                <p className="break-all">ptsp@kemenag.go.id</p>
+                <Mail className="h-4 w-4 shrink-0 text-emerald-400" />
+                <p className="break-all">ptspkemenagbaritoutara@gmail.com</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom bar — Simplified for mobile */}
-        <div className="border-t border-white/5 py-8 flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-[11px] text-white/30 text-center md:text-left">
-            © {new Date().getFullYear()} Kemenag Barito Utara.
-          </p>
-          <div className="flex items-center gap-5 text-[10px] text-white/20 uppercase tracking-widest font-bold">
-            <span className="hidden sm:flex items-center gap-1.5">
-              Built with{" "}
-              <Heart className="h-3 w-3 text-red-500/40 fill-red-500/40" />
+        {/* Bottom bar — Single line refined look */}
+        <div className="border-t border-white/5 py-8 flex flex-col items-center justify-center gap-2">
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-[11px] text-white/40 font-medium tracking-wide">
+            <span>
+              © {new Date().getFullYear()} Kantor Kementerian Agama Kabupaten
+              Barito Utara.
             </span>
+            <span className="hidden md:block h-3 w-[1px] bg-white/10" />
             <a
-              href="https://kemenag.go.id"
+              href="https://www.kemenag-baritoutara.com/"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 transition-colors hover:text-white"
+              className="flex items-center gap-1.5 transition-all hover:text-white"
             >
-              kemenag.go.id <ExternalLink className="h-2.5 w-2.5" />
+              www.kemenag-baritoutara.com{" "}
+              <ExternalLink className="h-2.5 w-2.5" />
             </a>
           </div>
         </div>

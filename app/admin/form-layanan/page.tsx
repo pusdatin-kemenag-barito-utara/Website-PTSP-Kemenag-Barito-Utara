@@ -1,20 +1,32 @@
 import { requireAdmin } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma, { serializeBigInt } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/page-header";
 import { FormInput } from "lucide-react";
 import { FormLayananClient } from "@/components/admin/form-layanan/form-layanan-client";
 
 export default async function AdminFormFieldsPage() {
   await requireAdmin();
-  const admin = createAdminClient();
-  const [{ data: items }, { data: fields }] = await Promise.all([
-    admin.from("service_items").select("id, name").order("name"),
-    admin
-      .from("service_form_fields")
-      .select("*, service_items(name)")
-      .order("service_item_id")
-      .order("sort_order"),
+
+  const [itemsData, fieldsData] = await Promise.all([
+    prisma.service_items.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.service_form_fields.findMany({
+      include: {
+        service_items: {
+          select: { name: true },
+        },
+      },
+      orderBy: [
+        { service_item_id: "asc" },
+        { sort_order: "asc" },
+      ],
+    }),
   ]);
+
+  const items = serializeBigInt(itemsData);
+  const fields = serializeBigInt(fieldsData);
 
   return (
     <div className="space-y-6">

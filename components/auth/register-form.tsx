@@ -139,7 +139,7 @@ export function RegisterForm() {
       ) : null}
 
       <Button
-        className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#1f4bb7]! hover:bg-[#1a3fa3]! hover:shadow-blue-500/25"
+        className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"
         disabled={loading}
       >
         {loading ? "Memproses..." : "Buat Akun"}

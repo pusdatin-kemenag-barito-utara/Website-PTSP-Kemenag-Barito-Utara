@@ -71,7 +71,7 @@ export function RequirementTable({
                         .map((ext: string) => (
                           <span
                             key={ext}
-                            className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100"
+                            className="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100"
                           >
                             {ext.trim()}
                           </span>
@@ -97,7 +97,7 @@ export function RequirementTable({
                       <button
                         onClick={() => onEdit(req)}
                         disabled={isPending}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-[#1f4bb7] transition-all"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-[#059669] transition-all"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>

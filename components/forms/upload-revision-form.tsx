@@ -32,8 +32,8 @@ export function UploadRevisionForm({
     
     await Promise.all(
       entries.map(async ([key, value]) => {
-        if (value instanceof File && value.size > 0 && value.type.startsWith("image/")) {
-          const compressedFile = await compressImageToUnder(value, 100);
+        if (value instanceof File && value.size > 800 * 1024 && value.type.startsWith("image/")) {
+          const compressedFile = await compressImageToUnder(value, 800);
           finalFormData.append(key, compressedFile);
         } else {
           finalFormData.append(key, value);

@@ -17,7 +17,7 @@ export function Button({ className, variant = 'default', size = 'md', ...props }
         size === 'lg' && 'px-6 py-3 text-base',
         // Variants
         variant === 'default' &&
-          'bg-[#1f4bb7] text-white shadow-sm shadow-blue-500/20 hover:bg-[#183f9a] hover:shadow-md hover:shadow-blue-500/25 focus-visible:ring-[#1f4bb7] active:scale-[0.98]',
+          'bg-[#059669] text-white shadow-sm shadow-emerald-500/20 hover:bg-[#047857] hover:shadow-md hover:shadow-emerald-500/25 focus-visible:ring-[#059669] active:scale-[0.98]',
         variant === 'secondary' &&
           'bg-slate-800 text-white shadow-sm hover:bg-slate-900 focus-visible:ring-slate-800 active:scale-[0.98]',
         variant === 'danger' &&

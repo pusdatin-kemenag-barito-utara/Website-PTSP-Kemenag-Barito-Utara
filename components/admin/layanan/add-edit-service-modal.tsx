@@ -3,6 +3,8 @@ import { X, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/ui/field";
+import { Select } from "@/components/ui/select";
+import { ADMIN_ROLES } from "@/lib/constants";
 
 export function AddEditServiceModal({
   isOpen,
@@ -77,22 +79,31 @@ export function AddEditServiceModal({
                     value={formData.slug}
                     onChange={(e) => onChangeFormData({ slug: e.target.value })}
                     required
-                    className="rounded-l-none font-mono text-sm text-[#1f4bb7]"
+                    className="rounded-l-none font-mono text-sm text-[#059669]"
                   />
                 </div>
               </Field>
 
-              <Field label="Deskripsi Singkat">
-                <Textarea
-                  name="description"
-                  value={formData.description}
+              <Field
+                label="Pemilik Layanan (Hak Akses)"
+                hint="Admin dengan role ini yang berhak mengelola item layanan ini. Kosongkan jika dikelola oleh Super Admin."
+              >
+                <Select
+                  name="role_owner"
+                  value={formData.role_owner || ""}
                   onChange={(e) =>
-                    onChangeFormData({ description: e.target.value })
+                    onChangeFormData({ role_owner: e.target.value })
                   }
-                  placeholder="Tulis deskripsi singkat tentang layanan ini..."
-                  className="min-h-[100px] resize-none"
-                />
+                >
+                  <option value="">-- Semua Bidang / Super Admin --</option>
+                  {ADMIN_ROLES.filter(r => r.startsWith("admin_") && r !== "admin_ptsp").map(role => (
+                    <option key={role} value={role}>
+                      {role.split('_').slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                    </option>
+                  ))}
+                </Select>
               </Field>
+
               <div className="pt-2">
                 <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/60 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
                   <div className="flex items-center justify-center">
@@ -128,7 +139,7 @@ export function AddEditServiceModal({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] hover:shadow-md hover:shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#059669] to-[#047857] hover:shadow-md hover:shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

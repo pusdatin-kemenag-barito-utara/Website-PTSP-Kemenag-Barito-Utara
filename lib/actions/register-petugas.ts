@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import prisma from '@/lib/prisma';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function registerPetugasAction(formData: FormData) {
@@ -8,7 +9,7 @@ export async function registerPetugasAction(formData: FormData) {
   const email = String(formData.get('email') || '').trim();
   const phone = String(formData.get('phone') || '').trim();
   const unit_kerja = String(formData.get('unit_kerja') || '').trim();
-  const role = String(formData.get('role') || 'admin_ptsp');
+  const role = String(formData.get('role') || 'admin_ptsp') as any;
   const password = String(formData.get('password') || '');
 
   if (!full_name || !email || !phone || !unit_kerja || !password) {
@@ -47,40 +48,44 @@ export async function registerPetugasAction(formData: FormData) {
 /**
  * Verifikasi akun petugas (hanya Super Admin)
  */
-export async function verifyPetugasAction(userId: string) {
-  const admin = createAdminClient();
+export async function verifyPetugasAction(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await prisma.profiles.update({
+      where: { id: userId },
+      data: { is_verified: true },
+    });
 
-  const { error } = await admin
-    .from('profiles')
-    .update({ is_verified: true })
-    .eq('id', userId);
-
-  if (error) {
-    return { error: error.message };
+    revalidatePath('/admin/pengguna');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
-
-  revalidatePath('/admin/pengguna');
-  return { success: true };
 }
 
 /**
  * Tolak akun petugas — hapus akun dari sistem
  */
-export async function rejectPetugasAction(userId: string) {
-  const admin = createAdminClient();
+export async function rejectPetugasAction(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = createAdminClient();
 
-  // Hapus profile dulu
-  await admin.from('profiles').delete().eq('id', userId);
+    // Hapus profile dulu (Prisma)
+    await prisma.profiles.delete({
+      where: { id: userId },
+    });
 
-  // Hapus dari auth
-  const { error } = await admin.auth.admin.deleteUser(userId);
+    // Hapus dari auth
+    const { error } = await admin.auth.admin.deleteUser(userId);
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath('/admin/pengguna');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
-
-  revalidatePath('/admin/pengguna');
-  return { success: true };
 }
 
 /**
@@ -140,23 +145,19 @@ export async function updatePetugasAction(data: {
     }
   }
 
-  // ── Step 3: Update profiles TERAKHIR (override apa yg trigger ubah) ──
+  // ── Step 3: Update profiles TERAKHIR ──
   const profileUpdate: Record<string, any> = {};
   if (data.email !== undefined) profileUpdate.email = data.email;
   if (data.phone !== undefined) profileUpdate.phone = data.phone;
   if (data.unit_kerja !== undefined) profileUpdate.unit_kerja = data.unit_kerja;
-  if (data.role !== undefined) profileUpdate.role = data.role;
+  if (data.role !== undefined) profileUpdate.role = data.role as any;
   if (data.newPassword) profileUpdate.plain_password = data.newPassword;
 
   if (Object.keys(profileUpdate).length > 0) {
-    const { error: profileError } = await admin
-      .from('profiles')
-      .update(profileUpdate)
-      .eq('id', data.userId);
-
-    if (profileError) {
-      return { error: profileError.message };
-    }
+    await prisma.profiles.update({
+      where: { id: data.userId },
+      data: profileUpdate,
+    });
   }
 
   revalidatePath('/admin/pengguna');

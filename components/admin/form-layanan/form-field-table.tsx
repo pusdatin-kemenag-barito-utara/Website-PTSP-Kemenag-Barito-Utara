@@ -71,7 +71,7 @@ export function FormFieldTable({
                     </span>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
                       {field.type}
                     </span>
                   </td>
@@ -91,7 +91,7 @@ export function FormFieldTable({
                       <button
                         onClick={() => onEdit(field)}
                         disabled={isPending}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-blue-50 hover:text-[#1f4bb7] transition-all"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-[#059669] transition-all"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>

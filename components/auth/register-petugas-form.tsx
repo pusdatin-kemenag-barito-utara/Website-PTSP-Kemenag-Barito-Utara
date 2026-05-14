@@ -22,9 +22,17 @@ const UNIT_KERJA_OPTIONS = [
 ];
 
 const PETUGAS_ROLES = [
-  { value: "kepala_kantor", label: "Kepala Kantor" },
+  { value: "admin_ptsp", label: "Admin PTSP (Umum)" },
+  { value: "admin_sub_bagian_tata_usaha", label: "Admin Sub Bagian Tata Usaha" },
+  { value: "admin_pendidikan_madrasah", label: "Admin Pendidikan Madrasah" },
+  { value: "admin_pendidikan_agama_islam", label: "Admin Pendidikan Agama Islam" },
+  { value: "admin_pendidikan_diniyah_pondok_pesantren", label: "Admin Pendidikan Diniyah & Pondok Pesantren" },
+  { value: "admin_bimbingan_masyarakat_islam", label: "Admin Bimbingan Masyarakat Islam" },
+  { value: "admin_bimbingan_masyarakat_kristen_katolik", label: "Admin Bimbingan Masyarakat Kristen & Katolik" },
+  { value: "admin_penyelenggara_zakat_wakaf", label: "Admin Penyelenggara Zakat & Wakaf" },
+  { value: "admin_penyelenggara_hindu", label: "Admin Penyelenggara Hindu" },
   { value: "kasubag_tu", label: "Kasubag TU" },
-  { value: "admin_ptsp", label: "Admin PTSP" },
+  { value: "kepala_kantor", label: "Kepala Kantor" },
 ];
 
 export function RegisterPetugasForm() {
@@ -77,7 +85,8 @@ export function RegisterPetugasForm() {
                 Pendaftaran Berhasil!
               </p>
               <p className="text-xs text-emerald-700">
-                Akun Anda menunggu verifikasi dari Super Admin sebelum dapat digunakan.
+                Akun Anda menunggu verifikasi dari Super Admin sebelum dapat
+                digunakan.
               </p>
             </div>
           </div>
@@ -98,7 +107,7 @@ export function RegisterPetugasForm() {
             type="email"
             name="email"
             required
-            placeholder="nama@instansi.go.id"
+            placeholder="nama@gmail.com"
             autoComplete="off"
           />
         </Field>

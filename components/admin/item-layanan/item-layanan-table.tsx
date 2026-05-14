@@ -77,7 +77,7 @@ export function ItemLayananTable({
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => onEdit(item)}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-white border border-slate-200/80 hover:bg-blue-50 hover:text-[#1f4bb7] hover:border-blue-200 transition-all duration-200 shadow-sm"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-white border border-slate-200/80 hover:bg-emerald-50 hover:text-[#059669] hover:border-emerald-200 transition-all duration-200 shadow-sm"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit

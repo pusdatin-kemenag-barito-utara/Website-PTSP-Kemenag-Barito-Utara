@@ -10,11 +10,21 @@ export const SUPER_ADMIN_EMAIL = "nazilahmuhammad1998@gmail.com";
  * Sesuai enum app_role di database Supabase.
  */
 export const ADMIN_ROLES = [
-  "admin_ptsp",
+  "super_admin",
   "kepala_kantor",
   "kasubag_tu",
-  "super_admin",
+  "admin_ptsp",
+  "admin_sub_bagian_tata_usaha",
+  "admin_pendidikan_madrasah",
+  "admin_pendidikan_agama_islam",
+  "admin_pendidikan_diniyah_pondok_pesantren",
+  "admin_bimbingan_masyarakat_islam",
+  "admin_bimbingan_masyarakat_kristen_katolik",
+  "admin_penyelenggara_zakat_wakaf",
+  "admin_penyelenggara_hindu",
 ] as const;
+
+export type AppRole = typeof ADMIN_ROLES[number];
 
 /**
  * Menu standar yang bisa diakses oleh petugas admin biasa.
@@ -34,13 +44,12 @@ export const ALL_ADMIN_MENUS = [
   "ringkasan",
   "pengajuan",
   "layanan",
-  "item_layanan",
-  "form_layanan",
-  "persyaratan",
   "pengguna",
   "dokumen_hasil",
   "surat_masuk",
   "surat_keluar",
+  "log_audit",
+  "pemeliharaan_storage",
 ];
 
 /**

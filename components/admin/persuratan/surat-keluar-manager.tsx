@@ -26,7 +26,7 @@ import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { motion, AnimatePresence } from "framer-motion";
 
 const UNIT_COLORS: Record<string, string> = {
-  Sekjend: "bg-blue-50 text-blue-600 border-blue-100",
+  Sekjend: "bg-emerald-50 text-emerald-600 border-emerald-100",
   "Bimas Islam": "bg-emerald-50 text-emerald-600 border-emerald-100",
   "Bimas Kristen": "bg-purple-50 text-purple-600 border-purple-100",
   "Pendidikan Madrasah": "bg-amber-50 text-amber-600 border-amber-100",
@@ -36,7 +36,7 @@ const UNIT_COLORS: Record<string, string> = {
 };
 
 const AGENDA_COLORS: Record<string, string> = {
-  "Surat Dinas": "bg-indigo-50 text-indigo-600 border-indigo-100",
+  "Surat Dinas": "bg-emerald-50 text-emerald-600 border-emerald-100",
   "Surat Keputusan": "bg-red-50 text-red-600 border-red-100",
   "Surat Tugas": "bg-violet-50 text-violet-600 border-violet-100",
   "Surat Undangan": "bg-cyan-50 text-cyan-600 border-cyan-100",
@@ -45,7 +45,7 @@ const AGENDA_COLORS: Record<string, string> = {
   "Surat Pernyataan": "bg-pink-50 text-pink-600 border-pink-100",
   "Surat Cuti": "bg-lime-50 text-lime-600 border-lime-100",
   "Berita Acara": "bg-zinc-50 text-zinc-600 border-zinc-100",
-  "Nota Dinas": "bg-blue-50 text-blue-600 border-blue-100",
+  "Nota Dinas": "bg-emerald-50 text-emerald-600 border-emerald-100",
 };
 
 interface SuratKeluar {
@@ -251,7 +251,7 @@ export function SuratKeluarManager() {
           <input
             type="text"
             placeholder="Cari nomor surat, tujuan, atau perihal..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -262,7 +262,7 @@ export function SuratKeluarManager() {
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm border ${
               showFilters || filterDate
-                ? "bg-indigo-50 border-indigo-200 text-indigo-600"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                 : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -276,12 +276,12 @@ export function SuratKeluarManager() {
             title="Refresh Data"
           >
             <Loader2
-              className={`h-4 w-4 ${loading ? "animate-spin text-indigo-600" : ""}`}
+              className={`h-4 w-4 ${loading ? "animate-spin text-emerald-600" : ""}`}
             />
           </button>
           <button
             onClick={() => handleOpenForm()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#1f4bb7] text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#059669] text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
           >
             <Plus className="h-4 w-4" />
             Buat Surat Baru
@@ -326,7 +326,7 @@ export function SuratKeluarManager() {
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-[400px] relative">
         {loading && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+            <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
           </div>
         )}
         <div className="overflow-x-auto">
@@ -368,7 +368,7 @@ export function SuratKeluarManager() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                          <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
                             <ArrowUpRight className="h-3.5 w-3.5" />
                           </div>
                           <span className="text-sm font-bold text-slate-900">
@@ -383,7 +383,7 @@ export function SuratKeluarManager() {
                     <td className="px-6 py-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 text-xs text-slate-600 font-bold bg-slate-100 w-fit px-3 py-1.5 rounded-lg border border-slate-200">
-                          <Calendar className="h-3.5 w-3.5 text-blue-500" />
+                          <Calendar className="h-3.5 w-3.5 text-emerald-500" />
                           <span>{item.tanggal_surat}</span>
                         </div>
                         <div
@@ -504,7 +504,7 @@ export function SuratKeluarManager() {
                       onClick={() => setCurrentPage(pageNum)}
                       className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${
                         currentPage === pageNum
-                          ? "bg-[#1f4bb7] text-white shadow-md shadow-blue-200"
+                          ? "bg-[#059669] text-white shadow-md shadow-emerald-200"
                           : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -568,7 +568,7 @@ export function SuratKeluarManager() {
                   required
                   name="nomor_surat"
                   type="text"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
                   placeholder="B-___/Kk.17.05/1/BA.01/__/2026"
                   value={formData.nomor_surat}
                   onChange={(e) =>
@@ -595,7 +595,7 @@ export function SuratKeluarManager() {
                 </label>
                 <select
                   name="agenda"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none appearance-none"
                   value={formData.agenda}
                   onChange={(e) =>
                     setFormData({ ...formData, agenda: e.target.value })
@@ -620,7 +620,7 @@ export function SuratKeluarManager() {
                 </label>
                 <select
                   name="unit_kerja"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none appearance-none"
                   value={formData.unit_kerja}
                   onChange={(e) =>
                     setFormData({ ...formData, unit_kerja: e.target.value })
@@ -644,7 +644,7 @@ export function SuratKeluarManager() {
                   required
                   name="tujuan_surat"
                   type="text"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
                   placeholder="Instansi atau perorangan penerima..."
                   value={formData.tujuan_surat}
                   onChange={(e) =>
@@ -661,7 +661,7 @@ export function SuratKeluarManager() {
                   required
                   name="perihal"
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-none"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none resize-none"
                   placeholder="Isi ringkas perihal surat..."
                   value={formData.perihal}
                   onChange={(e) =>
@@ -682,7 +682,7 @@ export function SuratKeluarManager() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-[2] px-6 py-3 bg-[#1f4bb7] text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-[2] px-6 py-3 bg-[#059669] text-white rounded-xl text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editingId ? "Simpan Perubahan" : "Simpan & Terbitkan"}

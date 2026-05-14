@@ -1,6 +1,6 @@
 import { cn, getStatusTone, REQUEST_STATUS_LABELS } from '@/lib/utils';
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
   const tone = getStatusTone(status);
 
   return (
@@ -10,8 +10,9 @@ export function StatusBadge({ status }: { status: string }) {
         tone === 'success' && 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60',
         tone === 'danger' && 'bg-red-50 text-red-700 ring-1 ring-red-200/60',
         tone === 'warning' && 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
-        tone === 'info' && 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/60',
-        tone === 'muted' && 'bg-slate-100 text-slate-600 ring-1 ring-slate-200/60'
+        tone === 'info' && 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60',
+        tone === 'muted' && 'bg-slate-100 text-slate-600 ring-1 ring-slate-200/60',
+        className
       )}
     >
       <span
@@ -20,7 +21,7 @@ export function StatusBadge({ status }: { status: string }) {
           tone === 'success' && 'bg-emerald-500',
           tone === 'danger' && 'bg-red-500',
           tone === 'warning' && 'bg-amber-500',
-          tone === 'info' && 'bg-blue-500',
+          tone === 'info' && 'bg-emerald-500',
           tone === 'muted' && 'bg-slate-400'
         )}
       />
@@ -46,7 +47,7 @@ export function Badge({
         variant === 'success' && 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60',
         variant === 'danger' && 'bg-red-50 text-red-700 ring-1 ring-red-200/60',
         variant === 'warning' && 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/60',
-        variant === 'info' && 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/60',
+        variant === 'info' && 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60',
         className
       )}
     >

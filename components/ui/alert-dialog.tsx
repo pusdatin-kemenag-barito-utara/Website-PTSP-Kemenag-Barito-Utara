@@ -31,13 +31,13 @@ export function AlertDialog({
   const variantStyles = {
     danger: "bg-red-600 hover:bg-red-700 shadow-red-500/20",
     warning: "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20",
-    info: "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20",
+    info: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20",
   };
 
   const iconStyles = {
     danger: "text-red-600 bg-red-50",
     warning: "text-amber-600 bg-amber-50",
-    info: "text-blue-600 bg-blue-50",
+    info: "text-emerald-600 bg-emerald-50",
   };
 
   return (

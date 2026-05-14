@@ -16,7 +16,7 @@ export default async function AddServicePage() {
     <div className="space-y-6">
       <Link
         href="/admin/layanan"
-        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#1f4bb7] transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[#059669] transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Kembali ke daftar layanan
@@ -53,7 +53,7 @@ export default async function AddServicePage() {
                 type="checkbox"
                 name="is_active"
                 defaultChecked
-                className="h-4 w-4 rounded border-slate-300 text-[#1f4bb7] focus:ring-[#1f4bb7]/20"
+                className="h-4 w-4 rounded border-slate-300 text-[#059669] focus:ring-[#059669]/20"
               />
               Aktifkan layanan
             </label>

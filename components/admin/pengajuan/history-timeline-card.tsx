@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { History, MessageSquare, Activity, User } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { ActivityLogActions } from "./activity-log-actions";
 
 export function HistoryTimelineCard({ request }: { request: any }) {
   const combined = [
@@ -30,7 +31,7 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                 <div
                   className={`absolute -left-[35px] flex h-6 w-6 items-center justify-center rounded-full border-4 border-white shadow-sm ${
                     item.type === "review"
-                      ? "bg-[#1f4bb7] text-white"
+                      ? "bg-[#059669] text-white"
                       : "bg-slate-200 text-slate-500"
                   }`}
                 >
@@ -41,9 +42,9 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                   )}
                 </div>
                 <div
-                  className={`rounded-2xl border p-4 shadow-sm ${
+                  className={`group rounded-2xl border p-4 shadow-sm ${
                     item.type === "review"
-                      ? "bg-blue-50/30 border-blue-100"
+                      ? "bg-emerald-50/30 border-emerald-100"
                       : "bg-white border-slate-100"
                   }`}
                 >
@@ -79,11 +80,11 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                       <p className="text-sm font-bold text-slate-800">
                         {item.action}
                       </p>
-                      {item.notes && (
-                        <p className="text-xs text-slate-500 mt-1 font-medium">
-                          {item.notes}
-                        </p>
-                      )}
+                      <ActivityLogActions 
+                        logId={item.id.toString()}
+                        requestId={item.request_id}
+                        initialNotes={item.notes}
+                      />
                     </>
                   )}
                 </div>

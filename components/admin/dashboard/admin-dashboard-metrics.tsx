@@ -16,7 +16,7 @@ export function AdminDashboardMetrics({
       {/* Metric 1 */}
       <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#1f4bb7]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-[#059669]">
             <Layers3 className="h-5 w-5" />
           </div>
           <p className="text-sm font-bold text-slate-500">Total Layanan</p>
@@ -32,7 +32,7 @@ export function AdminDashboardMetrics({
       {/* Metric 2 */}
       <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
             <Users className="h-5 w-5" />
           </div>
           <p className="text-sm font-bold text-slate-500">Pengguna</p>

@@ -105,7 +105,7 @@ export function EditUserModal({
             <Button
               type="submit"
               disabled={isPending}
-              className="flex-1 rounded-2xl h-12 font-bold bg-[#1f4bb7]"
+              className="flex-1 rounded-2xl h-12 font-bold bg-[#059669]"
             >
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -1,41 +1,114 @@
-import { createAdminClient } from '@/lib/supabase/admin';
+import prisma from "@/lib/prisma";
+
+/**
+ * Helper to convert BigInt values to numbers/strings for JSON serialization
+ */
+function serializeBigInt(obj: any): any {
+  return JSON.parse(
+    JSON.stringify(obj, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
+}
 
 export async function getPublicServices() {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from('services')
-    .select('*, service_items(*)')
-    .eq('is_active', true)
-    .order('name');
+  const data = await prisma.services.findMany({
+    where: { is_active: true },
+    include: {
+      service_items: {
+        // @ts-ignore
+        orderBy: [
+          // @ts-ignore
+          { sort_order: "asc" },
+          { name: "asc" }
+        ],
+        include: {
+          service_requirements: {
+            // @ts-ignore
+            orderBy: [
+              // @ts-ignore
+              { sort_order: "asc" },
+              { id: "asc" }
+            ],
+          },
+        },
+      },
+    },
+    // @ts-ignore
+    orderBy: [
+      // @ts-ignore
+      { sort_order: "asc" },
+      { name: "asc" }
+    ],
+  });
 
-  return data ?? [];
+  return serializeBigInt(data) ?? [];
 }
 
 export async function getServiceBySlug(slug: string) {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from('services')
-    .select('*, service_items(*, service_form_fields(*), service_requirements(*))')
-    .eq('slug', slug)
-    .maybeSingle();
+  const data = await prisma.services.findFirst({
+    where: { slug },
+    include: {
+      service_items: {
+        // @ts-ignore
+        orderBy: [
+          // @ts-ignore
+          { sort_order: "asc" },
+          { name: "asc" }
+        ],
+        include: {
+          service_form_fields: {
+            orderBy: { sort_order: "asc" },
+          },
+          service_requirements: {
+            // @ts-ignore
+            orderBy: [
+              // @ts-ignore
+              { sort_order: "asc" },
+              { id: "asc" }
+            ],
+          },
+        },
+      },
+    },
+  });
 
-  return data;
+  return serializeBigInt(data);
 }
 
 export async function getServiceCatalog() {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from('services')
-    .select(`
-      *,
-      service_items (
-        *,
-        service_form_fields (*),
-        service_requirements (*)
-      )
-    `)
-    .eq('is_active', true)
-    .order('name');
+  const data = await prisma.services.findMany({
+    where: { is_active: true },
+    include: {
+      service_items: {
+        // @ts-ignore
+        orderBy: [
+          // @ts-ignore
+          { sort_order: "asc" },
+          { name: "asc" }
+        ],
+        include: {
+          service_form_fields: {
+            orderBy: { sort_order: "asc" },
+          },
+          service_requirements: {
+            // @ts-ignore
+            orderBy: [
+              // @ts-ignore
+              { sort_order: "asc" },
+              { id: "asc" }
+            ],
+          },
+        },
+      },
+    },
+    // @ts-ignore
+    orderBy: [
+      // @ts-ignore
+      { sort_order: "asc" },
+      { name: "asc" }
+    ],
+  });
 
-  return data ?? [];
+  return serializeBigInt(data) ?? [];
 }

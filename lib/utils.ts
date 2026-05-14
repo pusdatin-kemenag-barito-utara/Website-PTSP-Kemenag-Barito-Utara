@@ -71,3 +71,26 @@ export function getStatusTone(status: string) {
 export function sanitizeFilename(name: string) {
   return name.replace(/[^a-z0-9.]/gi, "_").toLowerCase();
 }
+
+/**
+ * Mendapatkan URL publik untuk file berdasarkan prefix storage
+ */
+export function getFileUrl(path?: string | null) {
+  if (!path) return "";
+
+  // Cloudflare R2
+  if (path.startsWith("r2:")) {
+    const key = path.replace("r2:", "");
+    // Kita gunakan proxy internal agar bisa melakukan pre-signing atau jika bucket public bisa langsung domain
+    return `/api/files?path=${encodeURIComponent(path)}`;
+  }
+
+  // Google Drive
+  if (path.startsWith("gdrive:")) {
+    const fileId = path.split(":")[1];
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+
+  return path;
+}
+

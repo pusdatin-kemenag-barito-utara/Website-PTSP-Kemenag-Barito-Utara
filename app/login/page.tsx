@@ -3,7 +3,7 @@ import { ArrowRight, BadgeCheck, ShieldCheck, UserRound } from "lucide-react";
 
 export default function LoginSelectorPage() {
   return (
-    <div className="flex min-h-[calc(100vh-84px)] items-center justify-center p-6 sm:p-10 lg:p-12 relative overflow-hidden bg-gradient-to-br from-[#0a1e5e] via-[#0d2d8a] to-[#1a53c8]">
+    <div className="flex min-h-[calc(100vh-84px)] items-center justify-center p-6 sm:p-10 lg:p-12 relative overflow-hidden bg-gradient-to-br from-[#022c22] via-[#064e3b] to-[#047857]">
       {/* Background Effects */}
       <div
         className="absolute inset-0 opacity-[0.08]"
@@ -13,7 +13,7 @@ export default function LoginSelectorPage() {
           backgroundSize: "40px 40px",
         }}
       />
-      <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-[#1f4bb7]/40 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-[#059669]/40 blur-[120px]" />
       <div className="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-[#5eeaa5]/20 blur-[120px]" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-[120px]" />
 
@@ -28,7 +28,7 @@ export default function LoginSelectorPage() {
           <h1 className="text-4xl font-black text-white sm:text-5xl drop-shadow-sm">
             Pilih Jenis Login
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-blue-100/90 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-emerald-100/90 sm:text-lg">
             Silakan masuk sesuai dengan peran Anda untuk melanjutkan. Pastikan
             Anda memilih portal yang tepat.
           </p>
@@ -47,7 +47,7 @@ export default function LoginSelectorPage() {
                 <UserRound className="h-7 w-7" />
               </div>
               <h2 className="text-2xl font-black text-white">Login Pemohon</h2>
-              <p className="mt-3 text-sm leading-relaxed text-blue-50/80">
+              <p className="mt-3 text-sm leading-relaxed text-emerald-50/80">
                 Untuk masyarakat atau pemohon yang ingin membuat pengajuan
                 layanan, melacak status, dan mengunduh dokumen hasil.
               </p>
@@ -86,11 +86,11 @@ export default function LoginSelectorPage() {
             <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#f0c040]/20 blur-3xl transition-opacity group-hover:opacity-100 opacity-50" />
 
             <div className="relative z-10">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1f4bb7] to-[#2b67f0] text-white shadow-lg shadow-blue-900/30">
+              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#059669] to-[#10b981] text-white shadow-lg shadow-emerald-900/30">
                 <ShieldCheck className="h-7 w-7" />
               </div>
               <h2 className="text-2xl font-black text-white">Login Petugas</h2>
-              <p className="mt-3 text-sm leading-relaxed text-blue-50/80">
+              <p className="mt-3 text-sm leading-relaxed text-emerald-50/80">
                 Untuk petugas internal dalam mengelola katalog layanan,
                 memverifikasi berkas, dan memproses pengajuan masuk.
               </p>
@@ -123,7 +123,7 @@ export default function LoginSelectorPage() {
         </div>
 
         <div className="mt-10 mx-auto max-w-xl text-center rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-          <p className="text-sm font-medium text-blue-100">
+          <p className="text-sm font-medium text-emerald-100">
             Belum punya akun pemohon?{" "}
             <Link
               href="/register"

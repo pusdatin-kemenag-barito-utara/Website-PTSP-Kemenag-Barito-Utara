@@ -31,7 +31,7 @@ export function UserTablePagination({
             onClick={() => onPageChange(p)}
             className={`min-w-[28px] h-7 rounded-lg text-[11px] font-bold transition-all duration-200 ${
               p === page
-                ? "bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] text-white shadow-sm shadow-blue-500/20"
+                ? "bg-gradient-to-r from-[#059669] to-[#047857] text-white shadow-sm shadow-emerald-500/20"
                 : "text-slate-600 hover:bg-slate-200/60"
             }`}
           >

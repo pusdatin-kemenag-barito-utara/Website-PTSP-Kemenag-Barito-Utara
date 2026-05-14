@@ -57,7 +57,7 @@ export function AddEditFieldModal({
               <Field label="Item Layanan" required>
                 <Select
                   name="service_item_id"
-                  value={formData.service_item_id}
+                  value={formData.service_item_id || ""}
                   onChange={(e) =>
                     onChangeFormData({ service_item_id: e.target.value })
                   }
@@ -81,7 +81,7 @@ export function AddEditFieldModal({
                 >
                   <Input
                     name="label"
-                    value={formData.label}
+                    value={formData.label || ""}
                     onChange={onChangeLabel}
                     required
                     placeholder="Contoh: Nama Lengkap"
@@ -95,19 +95,19 @@ export function AddEditFieldModal({
                 >
                   <Input
                     name="name"
-                    value={formData.name}
+                    value={formData.name || ""}
                     onChange={(e) => onChangeFormData({ name: e.target.value })}
                     required
-                    className="font-mono text-sm text-[#1f4bb7] bg-slate-50"
+                    className="font-mono text-sm text-[#059669] bg-slate-50"
                   />
                 </Field>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Field label="Tipe Field" required>
                   <Select
                     name="type"
-                    value={formData.type}
+                    value={formData.type || "text"}
                     onChange={(e) => onChangeFormData({ type: e.target.value })}
                     required
                   >
@@ -118,20 +118,6 @@ export function AddEditFieldModal({
                     <option value="select">Dropdown (select)</option>
                   </Select>
                 </Field>
-
-                <Field label="Urutan Tampil (Sort Order)">
-                  <Input
-                    type="number"
-                    name="sort_order"
-                    value={formData.sort_order}
-                    onChange={(e) =>
-                      onChangeFormData({
-                        sort_order: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    required
-                  />
-                </Field>
               </div>
 
               <Field
@@ -140,7 +126,7 @@ export function AddEditFieldModal({
               >
                 <Input
                   name="placeholder"
-                  value={formData.placeholder}
+                  value={formData.placeholder || ""}
                   onChange={(e) =>
                     onChangeFormData({ placeholder: e.target.value })
                   }
@@ -160,7 +146,7 @@ export function AddEditFieldModal({
                   >
                     <Input
                       name="options"
-                      value={formData.options}
+                      value={formData.options || ""}
                       onChange={(e) =>
                         onChangeFormData({ options: e.target.value })
                       }
@@ -207,7 +193,7 @@ export function AddEditFieldModal({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] hover:shadow-md hover:shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#059669] to-[#047857] hover:shadow-md hover:shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

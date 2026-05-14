@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/admin';
+import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -11,18 +11,17 @@ export async function updateUserPermissionsAction(userId: string, permissions: s
     return { error: 'Hanya Super Admin yang dapat mengubah hak akses.' };
   }
 
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from('profiles')
-    .update({ permissions })
-    .eq('id', userId);
+  try {
+    await prisma.profiles.update({
+      where: { id: userId },
+      data: { permissions },
+    });
 
-  if (error) {
+    revalidatePath('/admin');
+    revalidatePath('/admin/pengguna');
+    
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath('/admin');
-  revalidatePath('/admin/pengguna');
-  
-  return { success: true };
 }

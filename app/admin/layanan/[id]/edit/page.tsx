@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { updateServiceAction } from "@/lib/actions/admin-master";
 import { requireAdmin } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -15,12 +15,10 @@ export default async function EditServicePage({
 }) {
   await requireAdmin();
   const { id } = await params;
-  const admin = createAdminClient();
-  const { data: service } = await admin
-    .from("services")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  
+  const service = await prisma.services.findUnique({
+    where: { id: BigInt(id) },
+  });
 
   if (!service) {
     notFound();
@@ -35,7 +33,7 @@ export default async function EditServicePage({
 
       <Card>
         <form action={updateServiceAction} className="space-y-4">
-          <input type="hidden" name="id" value={service.id} />
+          <input type="hidden" name="id" value={service.id.toString()} />
           <Field label="Nama Layanan" required>
             <Input name="name" defaultValue={service.name} required />
           </Field>
@@ -52,7 +50,7 @@ export default async function EditServicePage({
             <input
               type="checkbox"
               name="is_active"
-              defaultChecked={service.is_active}
+              defaultChecked={service.is_active || false}
             />
             Aktif
           </label>

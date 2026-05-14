@@ -43,7 +43,7 @@ export function UserTableHeader({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Cari..."
-            className="rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 w-48 transition-all focus:border-[#1f4bb7] focus:ring-2 focus:ring-[#1f4bb7]/10 outline-none"
+            className="rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 w-48 transition-all focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 outline-none"
           />
         </div>
       </div>

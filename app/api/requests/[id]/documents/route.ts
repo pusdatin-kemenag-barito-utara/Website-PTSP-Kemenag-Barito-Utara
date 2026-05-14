@@ -2,8 +2,10 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma from "@/lib/prisma";
 import { sanitizeFilename } from "@/lib/utils";
+import { getOrCreateFolder, uploadToDrive, deleteFromDrive } from "@/lib/google-drive";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 
 function isAllowedExtension(fileName: string, allowedExtensions: string) {
   const extension = fileName.split(".").pop()?.toLowerCase() || "";
@@ -19,6 +21,8 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
+  const requestId = id;
+  
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,13 +32,12 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const admin = createAdminClient();
-  const { data: serviceRequest } = await admin
-    .from("service_requests")
-    .select("*")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const serviceRequest = await prisma.service_requests.findUnique({
+    where: { 
+      id: requestId,
+      user_id: user.id,
+    },
+  });
 
   if (!serviceRequest) {
     return NextResponse.json(
@@ -44,7 +47,7 @@ export async function POST(
   }
 
   const formData = await request.formData();
-  const requirementId = Number(formData.get("requirement_id"));
+  const requirementId = BigInt(formData.get("requirement_id") as string);
   const file = formData.get("file") as File | null;
 
   if (!requirementId || !file || file.size === 0) {
@@ -54,11 +57,9 @@ export async function POST(
     );
   }
 
-  const { data: requirement } = await admin
-    .from("service_requirements")
-    .select("*")
-    .eq("id", requirementId)
-    .maybeSingle();
+  const requirement = await prisma.service_requirements.findUnique({
+    where: { id: requirementId },
+  });
 
   if (!requirement) {
     return NextResponse.json(
@@ -67,7 +68,7 @@ export async function POST(
     );
   }
 
-  if (file.size > (requirement.max_file_size_mb || 5) * 1024 * 1024) {
+  if (file.size > (Number(requirement.max_file_size_mb) || 5) * 1024 * 1024) {
     return NextResponse.json(
       { error: "Ukuran file melebihi batas." },
       { status: 400 },
@@ -89,16 +90,13 @@ export async function POST(
   const fileName = sanitizeFilename(file.name);
 
   // 1. Get or create the main "File Persyaratan" folder
-  const { getOrCreateFolder, uploadToDrive, deleteFromDrive } =
-    await import("@/lib/google-drive");
   const mainRequirementsFolderId = await getOrCreateFolder("File Persyaratan");
 
   // 2. Get user info to create a subfolder (Name - Email)
-  const { data: userProfile } = await admin
-    .from("profiles")
-    .select("full_name, email")
-    .eq("id", user.id)
-    .single();
+  const userProfile = await prisma.profiles.findUnique({
+    where: { id: user.id },
+    select: { full_name: true, email: true },
+  });
 
   const userFolderName = `${userProfile?.full_name || "Unknown User"} (${userProfile?.email || user.email})`;
   const userFolderId = await getOrCreateFolder(
@@ -106,56 +104,84 @@ export async function POST(
     mainRequirementsFolderId as string,
   );
 
-  // 3. Check for existing document to delete from Google Drive if it was a revision
-  const { data: existingDoc } = await admin
-    .from("service_request_documents")
-    .select("file_path")
-    .eq("request_id", id)
-    .eq("requirement_id", requirementId)
-    .maybeSingle();
+  // 3. Check for existing document to delete from Cloudflare R2 or Google Drive
+  const existingDoc = await prisma.service_request_documents.findUnique({
+    where: {
+      request_id_requirement_id: {
+        request_id: requestId,
+        requirement_id: requirementId,
+      },
+    },
+    select: { file_path: true },
+  });
 
-  if (existingDoc?.file_path?.startsWith("gdrive:")) {
-    const oldFileId = existingDoc.file_path.replace("gdrive:", "");
-    await deleteFromDrive(oldFileId);
+  if (existingDoc?.file_path) {
+    if (existingDoc.file_path.startsWith("r2:")) {
+      await deleteFromR2(existingDoc.file_path).catch(console.error);
+    } else if (existingDoc.file_path.startsWith("gdrive:")) {
+      const oldFileId = existingDoc.file_path.replace("gdrive:", "");
+      await deleteFromDrive(oldFileId).catch(console.error);
+    }
   }
 
-  // 4. Upload to the specific user subfolder in Google Drive
-  const driveFile = await uploadToDrive(file, userFolderId as string);
-  const storagePath = `gdrive:${driveFile.id}`;
+  // 4. Upload to Cloudflare R2 (Primary)
+  const r2Path = `requests/${requestId}/${requirementId}_${fileName}`;
+  const { path: storagePath } = await uploadToR2(file, r2Path);
 
-  if (!driveFile.id) {
+  // 5. Backup to Google Drive (Background)
+  uploadToDrive(file, userFolderId as string).catch(err => 
+    console.error("Backup to GDrive failed:", err)
+  );
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.service_request_documents.upsert({
+        where: {
+          request_id_requirement_id: {
+            request_id: requestId,
+            requirement_id: requirementId,
+          },
+        },
+        update: {
+          file_name: fileName,
+          file_path: storagePath,
+          file_type: file.type || "application/octet-stream",
+          file_size: BigInt(file.size),
+        },
+        create: {
+          request_id: requestId,
+          requirement_id: requirementId,
+          file_name: fileName,
+          file_path: storagePath,
+          file_type: file.type || "application/octet-stream",
+          file_size: BigInt(file.size),
+        },
+      });
+
+      await tx.service_requests.update({
+        where: { id: requestId },
+        data: {
+          status: "submitted",
+          revision_note: null,
+        },
+      });
+
+      await tx.activity_logs.create({
+        data: {
+          request_id: requestId,
+          actor_id: user.id,
+          action: "revision_uploaded",
+          notes: `Revisi dokumen ${requirement.document_name} diupload.`,
+        },
+      });
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Error updating documents:", error);
     return NextResponse.json(
-      { error: "Gagal mengunggah ke Google Drive." },
+      { error: error.message || "Gagal memperbarui dokumen." },
       { status: 500 },
     );
   }
-
-  await admin.from("service_request_documents").upsert(
-    {
-      request_id: id,
-      requirement_id: requirementId,
-      file_name: fileName,
-      file_path: storagePath,
-      file_type: file.type || "application/octet-stream",
-      file_size: file.size,
-    },
-    { onConflict: "request_id,requirement_id" },
-  );
-
-  await admin
-    .from("service_requests")
-    .update({
-      status: "submitted",
-      revision_note: null,
-    })
-    .eq("id", id);
-
-  await admin.from("activity_logs").insert({
-    request_id: id,
-    actor_id: user.id,
-    action: "revision_uploaded",
-    notes: `Revisi dokumen ${requirement.document_name} diupload.`,
-  });
-
-  return NextResponse.json({ success: true });
 }

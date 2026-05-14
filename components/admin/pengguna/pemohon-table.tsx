@@ -101,7 +101,7 @@ export function PemohonTable({
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Cari nama / no HP..."
-                className="rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 w-48 transition-all focus:border-[#1f4bb7] focus:ring-2 focus:ring-[#1f4bb7]/10 outline-none placeholder:text-slate-400"
+                className="rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 w-48 transition-all focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 outline-none placeholder:text-slate-400"
               />
             </div>
           )}
@@ -263,7 +263,7 @@ export function PemohonTable({
                 onClick={() => setPage(p)}
                 className={`min-w-[28px] h-7 rounded-lg text-[11px] font-bold transition-all duration-200 ${
                   p === page
-                    ? "bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] text-white shadow-sm shadow-blue-500/20"
+                    ? "bg-gradient-to-r from-[#059669] to-[#047857] text-white shadow-sm shadow-emerald-500/20"
                     : "text-slate-600 hover:bg-slate-200/60"
                 }`}
               >

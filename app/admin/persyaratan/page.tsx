@@ -1,20 +1,32 @@
 import { FileText } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import prisma, { serializeBigInt } from '@/lib/prisma';
 import { PageHeader } from '@/components/admin/page-header';
 import { PersyaratanClient } from '@/components/admin/persyaratan/persyaratan-client';
 
 export default async function AdminRequirementsPage() {
   await requireAdmin();
-  const admin = createAdminClient();
-  const [{ data: items }, { data: requirements }] = await Promise.all([
-    admin.from('service_items').select('id, name').order('name'),
-    admin
-      .from('service_requirements')
-      .select('*, service_items(name)')
-      .order('service_item_id')
-      .order('id')
+
+  const [itemsData, requirementsData] = await Promise.all([
+    prisma.service_items.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.service_requirements.findMany({
+      include: {
+        service_items: {
+          select: { name: true },
+        },
+      },
+      orderBy: [
+        { service_item_id: 'asc' },
+        { id: 'asc' },
+      ],
+    }),
   ]);
+
+  const items = serializeBigInt(itemsData);
+  const requirements = serializeBigInt(requirementsData);
 
   return (
     <div className="space-y-6">

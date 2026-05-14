@@ -29,7 +29,7 @@ export function UserStatCards({
           label: "Admin / Petugas",
           value: stats.admin,
           icon: UserCheck,
-          color: "bg-blue-100 text-blue-600",
+          color: "bg-emerald-100 text-emerald-600",
         },
         {
           label: "Pemohon",
@@ -55,7 +55,7 @@ export function UserStatCards({
               <card.icon className="h-5 w-5" />
             </div>
           </div>
-          <div className="absolute bottom-0 left-5 right-5 h-0.5 rounded-full bg-gradient-to-r from-[#1f4bb7] to-[#2d5bcf] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="absolute bottom-0 left-5 right-5 h-0.5 rounded-full bg-gradient-to-r from-[#059669] to-[#047857] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
       ))}
     </div>

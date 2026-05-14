@@ -87,7 +87,7 @@ export function UserTableContent({
                   <td className="px-5 py-4">
                     <button
                       onClick={() => onOpenPermissions?.(user)}
-                      className="text-[10px] font-bold uppercase tracking-wider text-[#1f4bb7] hover:underline"
+                      className="text-[10px] font-bold uppercase tracking-wider text-[#059669] hover:underline"
                     >
                       {user.permissions?.length || 0} Fitur
                     </button>
@@ -105,7 +105,7 @@ export function UserTableContent({
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => onEdit(user)}
-                      className="p-2 text-slate-400 hover:text-[#1f4bb7] hover:bg-blue-50 rounded-lg"
+                      className="p-2 text-slate-400 hover:text-[#059669] hover:bg-emerald-50 rounded-lg"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>

@@ -12,9 +12,9 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-5 md:space-y-7">
       <section className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8 shadow-sm border border-slate-200">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#1f4bb7] to-[#0f8a54]"></div>
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#059669] to-[#0f8a54]"></div>
         <div className="relative">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#1f4bb7]">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#059669]">
             👤 Pengaturan Akun
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -74,7 +74,7 @@ export default async function ProfilePage() {
           </div>
 
           <div className="pt-2">
-            <Button className="w-full sm:w-auto h-12 px-8 rounded-xl font-bold bg-[#1f4bb7] hover:bg-[#1a3fa3] text-white shadow-lg shadow-blue-500/25 transition-all">
+            <Button className="w-full sm:w-auto h-12 px-8 rounded-xl font-bold bg-[#059669] hover:bg-[#047857] text-white shadow-lg shadow-emerald-500/25 transition-all">
               Simpan Perubahan Profil
             </Button>
           </div>

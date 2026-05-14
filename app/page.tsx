@@ -1,73 +1,100 @@
+import { redirect } from "next/navigation";
 import { SiteHomeFaq } from "@/components/site-home-faq";
 import { HomeHero } from "@/components/home-hero";
 import { HomeQuickAccess } from "@/components/home-quick-access";
-import { HomeTrackSection } from "@/components/home-track-section";
+import { HomeServiceCatalogSection } from "@/components/home-service-catalog-section";
 import { HomeHowItWorks } from "@/components/home-how-it-works";
-import { Zap, BookOpenCheck } from "lucide-react";
+import { BookOpenCheck } from "lucide-react";
 
 export default async function HomePage() {
+  // Hanya redirect ke portal utama jika sedang di environment production
+  // Di localhost (development), halaman ini tetap bisa diakses dan diedit
+  if (process.env.NODE_ENV === "production") {
+    redirect("https://www.kemenag-baritoutara.com/");
+  }
+
   return (
     <div className="w-full overflow-x-hidden">
       <HomeHero />
       <HomeQuickAccess />
 
-      {/* Divider: Quick Access to Track */}
-      <div className="relative h-16 w-full overflow-hidden bg-[#f8fafc]">
+      {/* Modern Divider: Quick Access to Catalog */}
+      <div className="relative h-24 w-full bg-slate-50/50 overflow-hidden">
         <svg
-          viewBox="0 0 1440 64"
+          viewBox="0 0 1440 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="absolute bottom-0 w-full"
+          className="absolute bottom-0 w-full h-full"
           preserveAspectRatio="none"
         >
           <path
-            d="M0 32C240 64 480 0 720 32C960 64 1200 0 1440 32V64H0V32Z"
-            fill="white"
+            d="M0 50C240 100 480 0 720 50C960 100 1200 0 1440 50V100H0V50Z"
+            fill="#059669"
+            fillOpacity="0.05"
+          />
+          <path
+            d="M0 80C360 120 720 40 1080 80C1440 120 1440 80 1440 80V100H0V80Z"
+            fill="#064e3b"
           />
         </svg>
       </div>
 
-      <HomeTrackSection />
+      <HomeServiceCatalogSection />
 
-      {/* Divider: Track to How It Works */}
-      <div className="relative -mt-1 h-20 w-full overflow-hidden bg-white">
+      {/* Modern Divider: Track to How It Works */}
+      <div className="relative h-24 w-full bg-[#047857] overflow-hidden">
         <svg
-          viewBox="0 0 1440 80"
+          viewBox="0 0 1440 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full"
+          className="absolute top-0 w-full h-full"
           preserveAspectRatio="none"
         >
           <path
-            d="M0 0C360 80 720 0 1080 80C1440 160 1440 0 1440 0H0Z"
-            fill="#f8fafc"
-            className="opacity-50"
+            d="M0 0H1440V20C1080 60 720 -20 360 20C180 40 0 20 0 20V0Z"
+            fill="#047857"
           />
           <path
-            d="M0 0C360 40 720 0 1080 40C1440 80 1440 0 1440 0H0Z"
-            fill="#f1f5f9"
+            d="M0 0H1440V40C1080 80 720 0 360 40C180 60 0 40 0 40V0Z"
+            fill="white"
           />
         </svg>
       </div>
 
       <HomeHowItWorks />
 
+      {/* Modern Divider: How It Works to FAQ */}
+      <div className="relative h-24 w-full bg-white overflow-hidden">
+        <svg
+          viewBox="0 0 1440 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="absolute bottom-0 w-full h-full"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 100C360 60 720 100 1080 60C1440 20 1440 100 1440 100H0Z"
+            fill="#f8fafc"
+          />
+        </svg>
+      </div>
+
       {/* FAQ SECTION */}
-      <section className="bg-[#f8fafc] py-16 md:py-24">
+      <section className="bg-[#f8fafc] py-20 md:py-32">
         <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24">
-          <div className="mb-16 text-center">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#1f4bb7]/10 px-4 py-1.5">
-              <BookOpenCheck className="h-3.5 w-3.5 text-[#1f4bb7]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#1f4bb7]">
+          <div className="mb-20 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 border border-emerald-100">
+              <BookOpenCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
                 FAQ
               </span>
             </div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
-              Pertanyaan Umum
+            <h2 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+              Pertanyaan <span className="text-emerald-600">Umum</span>
             </h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm text-slate-500 md:text-base leading-relaxed">
-              Jawaban atas pertanyaan yang sering diajukan untuk memudahkan
-              proses layanan Anda.
+            <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-500 md:text-base leading-relaxed font-medium">
+              Temukan jawaban cepat atas kendala yang sering ditanyakan untuk memudahkan
+              proses administrasi layanan Anda.
             </p>
           </div>
           <div className="mx-auto max-w-4xl">

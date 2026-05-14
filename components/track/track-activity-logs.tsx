@@ -8,7 +8,7 @@ export function TrackActivityLogs({ logs }: { logs: any[] }) {
     <div className="rounded-[2rem] bg-white p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100">
       <h3 className="text-lg font-black text-slate-900 mb-4 flex items-center justify-between">
         <span className="flex items-center gap-2">
-          <History className="h-5 w-5 text-[#1f4bb7]" />
+          <History className="h-5 w-5 text-[#059669]" />
           Riwayat Aktivitas
         </span>
         <span className="text-xs font-medium text-slate-400">
@@ -24,7 +24,7 @@ export function TrackActivityLogs({ logs }: { logs: any[] }) {
           )
           .map((log: any) => (
             <div key={log.id} className="relative pl-6">
-              <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-2 border-white bg-[#1f4bb7] shadow-sm" />
+              <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-2 border-white bg-[#059669] shadow-sm" />
               <div>
                 <p className="text-sm font-bold text-slate-900">{log.action}</p>
                 <p className="mt-0.5 text-[11px] font-semibold text-slate-400">

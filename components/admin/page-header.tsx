@@ -15,10 +15,10 @@ export function PageHeader({
   externalLink?: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-gradient-to-r from-[#0f2563] to-[#1f4bb7] px-5 py-4 shadow-md shadow-blue-900/20 relative group">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-gradient-to-r from-[#064e3b] to-[#059669] px-5 py-4 shadow-md shadow-emerald-900/20 relative group">
       <div className="flex items-center gap-3.5">
         {Icon && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 border border-white/20 text-white shadow-md shadow-blue-500/20">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 border border-white/20 text-white shadow-md shadow-emerald-500/20">
             <Icon className="h-5 w-5" />
           </div>
         )}
@@ -27,7 +27,7 @@ export function PageHeader({
             {title}
           </h1>
           {description && (
-            <p className="mt-0.5 text-sm text-blue-100/80 leading-relaxed max-w-lg">
+            <p className="mt-0.5 text-sm text-emerald-100/80 leading-relaxed max-w-lg">
               {description}
             </p>
           )}
@@ -42,7 +42,7 @@ export function PageHeader({
             href={externalLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/70 hover:text-white transition-all shadow-lg hover:shadow-blue-500/20"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/70 hover:text-white transition-all shadow-lg hover:shadow-emerald-500/20"
             title="Buka File Spreadsheet"
           >
             <ExternalLink className="h-5 w-5" />

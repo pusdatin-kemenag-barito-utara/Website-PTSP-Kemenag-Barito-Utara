@@ -35,9 +35,8 @@ export function ConditionalShell({
       >
         {children}
         {isAuthPage && (
-          <footer className="pointer-events-none absolute bottom-6 left-0 z-20 w-full px-4 text-center text-[12px] font-medium text-white/80">
-            © {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab.
-            Barito Utara
+          <footer className="pointer-events-none absolute bottom-6 left-0 z-20 w-full px-4 text-center text-[10px] sm:text-[11px] font-medium text-white/40">
+            © {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab. Barito Utara
           </footer>
         )}
       </main>

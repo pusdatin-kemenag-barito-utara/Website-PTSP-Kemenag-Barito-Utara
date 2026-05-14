@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma from "@/lib/prisma";
 import { isSuperAdmin, isAdminRole } from "@/lib/constants";
 
 export async function getCurrentUser() {
@@ -16,12 +16,9 @@ export async function getCurrentProfile() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const data = await prisma.profiles.findUnique({
+    where: { id: user.id },
+  });
 
   return data;
 }
@@ -47,12 +44,10 @@ export async function requireRequestOwnership(
   requestId: string,
   userId: string,
 ) {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("service_requests")
-    .select("id, user_id")
-    .eq("id", requestId)
-    .maybeSingle();
+  const data = await prisma.service_requests.findUnique({
+    where: { id: requestId },
+    select: { user_id: true },
+  });
 
   return !!data && data.user_id === userId;
 }

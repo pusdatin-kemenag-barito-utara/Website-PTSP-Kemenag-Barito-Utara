@@ -1,16 +1,28 @@
 import { Layers } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/admin';
+import prisma, { serializeBigInt } from '@/lib/prisma';
 import { PageHeader } from '@/components/admin/page-header';
 import { ItemLayananClient } from '@/components/admin/item-layanan/item-layanan-client';
 
 export default async function AdminServiceItemsPage() {
   await requireAdmin();
-  const admin = createAdminClient();
-  const [{ data: services }, { data: items }] = await Promise.all([
-    admin.from('services').select('*').order('name'),
-    admin.from('service_items').select('*, services(name)').order('id')
+
+  const [servicesData, itemsData] = await Promise.all([
+    prisma.services.findMany({
+      orderBy: { name: 'asc' },
+    }),
+    prisma.service_items.findMany({
+      include: {
+        services: {
+          select: { name: true },
+        },
+      },
+      orderBy: { id: 'asc' },
+    }),
   ]);
+
+  const services = serializeBigInt(servicesData);
+  const items = serializeBigInt(itemsData);
 
   return (
     <div className="space-y-6">

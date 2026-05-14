@@ -26,52 +26,58 @@ export function SiteHomeFaq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2">
       {FAQ_ITEMS.map((item, index) => {
         const isOpen = openIndex === index;
 
         return (
           <div
             key={item.q}
-            className={`overflow-hidden rounded-2xl border transition-all duration-200 ${
+            className={`group overflow-hidden rounded-[1.5rem] border transition-all duration-500 ${
               isOpen
-                ? "border-[#1f4bb7]/30 bg-white shadow-[0_8px_24px_rgba(31,75,183,0.1)]"
-                : "border-slate-200 bg-white shadow-sm hover:border-[#1f4bb7]/20 hover:shadow-md"
+                ? "border-emerald-200 bg-white shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)] scale-[1.02] z-10"
+                : "border-slate-100 bg-white/50 hover:border-emerald-100 hover:bg-white hover:shadow-xl hover:shadow-emerald-500/5"
             }`}
           >
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+              className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
               onClick={() => setOpenIndex(isOpen ? null : index)}
               aria-expanded={isOpen}
             >
-              <span className="flex items-center gap-3">
+              <span className="flex items-center gap-4">
                 <span
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-200 ${
-                    isOpen ? "bg-[#1f4bb7] text-white" : "bg-slate-100 text-slate-500"
+                  className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-500 ${
+                    isOpen 
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 rotate-6" 
+                      : "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100"
                   }`}
                 >
-                  <HelpCircle className="h-4 w-4" />
+                  <HelpCircle className="h-5 w-5" />
                 </span>
-                <span className="text-sm font-semibold text-slate-800 sm:text-[15px]">
+                <span className={`text-[13px] sm:text-[15px] font-black transition-colors duration-300 ${isOpen ? "text-emerald-900" : "text-slate-700"}`}>
                   {item.q}
                 </span>
               </span>
-              <ChevronDown
-                className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${
-                  isOpen ? "rotate-180 text-[#1f4bb7]" : "text-slate-400"
-                }`}
-              />
+              <div className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-500 ${isOpen ? "bg-emerald-50 rotate-180" : "bg-slate-50"}`}>
+                <ChevronDown
+                  className={`h-4 w-4 transition-colors duration-300 ${
+                    isOpen ? "text-emerald-600" : "text-slate-400"
+                  }`}
+                />
+              </div>
             </button>
 
             <div
-              className={`grid transition-all duration-300 ease-out ${
+              className={`grid transition-all duration-500 ease-in-out ${
                 isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
               }`}
             >
               <div className="overflow-hidden">
-                <div className="border-t border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/30 px-5 py-4">
-                  <p className="text-sm leading-relaxed text-slate-600">{item.a}</p>
+                <div className="border-t border-slate-50 bg-gradient-to-br from-emerald-50/30 to-white px-6 py-5">
+                  <p className="text-[13px] sm:text-sm leading-relaxed text-slate-500 font-medium">
+                    {item.a}
+                  </p>
                 </div>
               </div>
             </div>

@@ -130,8 +130,8 @@ export function ModernDatePicker({
               !isCurrentMonth
                 ? "text-slate-200"
                 : isSelected
-                  ? "bg-[#1f4bb7] text-white shadow-lg shadow-blue-200 scale-110"
-                  : "text-slate-700 hover:bg-blue-50 hover:text-blue-600"
+                  ? "bg-[#059669] text-white shadow-lg shadow-emerald-200 scale-110"
+                  : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-600"
             }`}
           >
             {format(currentDay, "d")}
@@ -165,12 +165,12 @@ export function ModernDatePicker({
         onClick={() => setIsOpen(!isOpen)}
         className={`group flex items-center gap-3 w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm transition-all cursor-pointer ${
           isOpen
-            ? "border-blue-500 ring-2 ring-blue-500/10"
+            ? "border-emerald-500 ring-2 ring-emerald-500/10"
             : "border-slate-200 hover:border-slate-300"
         }`}
       >
         <CalendarIcon
-          className={`h-4 w-4 transition-colors ${isOpen ? "text-blue-500" : "text-slate-400 group-hover:text-slate-500"}`}
+          className={`h-4 w-4 transition-colors ${isOpen ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-500"}`}
         />
         <span
           className={`flex-1 font-semibold text-left ${value ? "text-slate-900" : "text-slate-400"}`}
@@ -210,7 +210,7 @@ export function ModernDatePicker({
                 <button
                   type="button"
                   onClick={() => handleDateClick(new Date())}
-                  className="px-3 py-1.5 text-[10px] font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                  className="px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
                 >
                   Hari Ini
                 </button>

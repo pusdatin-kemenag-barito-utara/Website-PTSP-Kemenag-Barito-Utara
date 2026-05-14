@@ -58,7 +58,7 @@ export function PetugasResetForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="email@kemenag.go.id"
-            className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500/10"
+            className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10"
           />
         </div>
         {error && (
@@ -69,7 +69,7 @@ export function PetugasResetForm() {
         <Button
           onClick={handleSendEmailLink}
           disabled={loading}
-          className="w-full h-14 rounded-2xl bg-[#1f4bb7] hover:bg-[#1a3fa3] font-bold text-base shadow-lg shadow-blue-500/20"
+          className="w-full h-14 rounded-2xl bg-[#059669] hover:bg-[#047857] font-bold text-base shadow-lg shadow-emerald-500/20"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
           Kirim Link Reset

@@ -1,7 +1,7 @@
 "use server";
 
+import prisma from "@/lib/prisma";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { revalidatePath } from "next/cache";
 
 export async function registerPemohonAction(formData: FormData) {
   const full_name = String(formData.get("full_name") || "").trim();
@@ -16,11 +16,10 @@ export async function registerPemohonAction(formData: FormData) {
   const admin = createAdminClient();
 
   // 1. Check if phone already exists in profiles
-  const { data: existingProfile } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("phone", phone)
-    .maybeSingle();
+  const existingProfile = await prisma.profiles.findFirst({
+    where: { phone },
+    select: { id: true },
+  });
 
   if (existingProfile) {
     throw new Error("Nomor WhatsApp sudah terdaftar.");
@@ -44,22 +43,33 @@ export async function registerPemohonAction(formData: FormData) {
       },
     });
 
-  if (authError) {
-    throw new Error(authError.message);
+  if (authError || !authUser.user) {
+    throw new Error(authError?.message || "Gagal membuat akun autentikasi.");
   }
 
   // 4. Create profile (sometimes the trigger might be slow or fail, we do it explicitly to be sure)
-  const { error: profileError } = await admin.from("profiles").upsert({
-    id: authUser.user.id,
-    full_name,
-    email: internalEmail,
-    phone,
-    address,
-    role: "user",
-    plain_password: password,
-  });
-
-  if (profileError) {
+  try {
+    await prisma.profiles.upsert({
+      where: { id: authUser.user.id },
+      update: {
+        full_name,
+        email: internalEmail,
+        phone,
+        address,
+        role: "user" as any,
+        plain_password: password,
+      },
+      create: {
+        id: authUser.user.id,
+        full_name,
+        email: internalEmail,
+        phone,
+        address,
+        role: "user" as any,
+        plain_password: password,
+      },
+    });
+  } catch (err) {
     // Cleanup if profile fails
     await admin.auth.admin.deleteUser(authUser.user.id);
     throw new Error("Gagal membuat profil pengguna.");

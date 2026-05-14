@@ -11,12 +11,13 @@ import {
   Home,
   LayoutGrid,
   Search,
-  FilePlus2,
-  Phone,
+  FilePlus,
+  PhoneCall,
   LayoutDashboard,
   LogIn,
   UserCircle2,
   Shield,
+  Activity,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { isAdminRole } from "@/lib/constants";
@@ -28,15 +29,10 @@ type HeaderProfile = {
 };
 
 const navItems = [
-  { href: "/", label: "Beranda", icon: Home },
-  { href: "/layanan", label: "Jenis Layanan", icon: LayoutGrid },
-  { href: "/track", label: "Lacak Layanan", icon: Search },
-  {
-    href: "/dashboard/pengajuan/baru",
-    label: "Ajukan Layanan",
-    icon: FilePlus2,
-  },
-  { href: "/kontak", label: "Kontak", icon: Phone },
+  { label: "Beranda", href: "/", icon: Home },
+  { label: "Jenis Layanan", href: "/layanan", icon: LayoutGrid },
+  { label: "Lacak Layanan", href: "/track", icon: Search },
+  { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 
 export function SiteHeaderClient({
@@ -78,28 +74,29 @@ export function SiteHeaderClient({
 
   // On home page: transparent header with white text at top, white header with dark text when scrolled.
   // On other pages: always blue gradient header with white text.
-  const isTransparent = isHome && !scrolled;
-  const needsDarkStyle = isHome && scrolled;
-
-  const headerClass = isHome
-    ? scrolled
-      ? "bg-white/95 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur-2xl border-b border-slate-100"
-      : "bg-transparent"
-    : "bg-gradient-to-r from-[#0d2d8a] to-[#1a3fa3] shadow-lg";
+  // Glassmorphism logic: stay transparent but with stronger/darker blur when scrolled
+  const isDarkBg = scrolled || !isHome;
+  const headerClass = isDarkBg
+    ? "w-full bg-emerald-950/95 backdrop-blur-2xl border-b border-white/10 shadow-2xl shadow-black/40"
+    : "w-full bg-transparent";
+ 
+  // Text should be dark only if on home page, NOT scrolled, and we want a light style (not applicable here as we want dark theme)
+  // But for safety, let's keep it white as we are using a dark green background.
+  const needsDarkStyle = false; 
 
   return (
-    <header
-      className={`fixed top-0 z-50 w-full transition-all duration-500 ${headerClass}`}
-    >
-      {/* Gradient top accent */}
-      <div
-        className={`h-1 w-full bg-gradient-to-r from-[#1f4bb7] via-[#0f8a54] to-[#f0c040] transition-opacity duration-300 ${
-          !isHome || scrolled ? "opacity-100" : "opacity-0"
-        }`}
-      />
+    <>
+      <header
+        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-700 ease-in-out ${headerClass}`}
+        style={{ backgroundColor: isDarkBg ? "#022c22" : "transparent" }}
+      >
+      {/* Scroll Progress Bar (visible when scrolled) */}
+      <div className={`absolute bottom-0 left-0 right-0 h-[2px] transition-opacity duration-500 ${scrolled ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="h-full bg-emerald-500/20 rounded-full" />
+      </div>
 
-      <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24">
-        <div className="flex h-[72px] items-center justify-between gap-4 md:h-[80px]">
+      <div className="mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20">
+        <div className="flex h-[72px] items-center justify-between gap-4 md:h-[84px]">
           {/* Logo (Left aligned) */}
           <div className="flex shrink-0 items-center justify-start">
             <Link
@@ -107,57 +104,44 @@ export function SiteHeaderClient({
               className="group flex items-center gap-2.5 transition-transform duration-300 hover:scale-105 active:scale-95"
             >
               <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm transition-colors duration-300 sm:h-12 sm:w-12 sm:rounded-2xl ${
-                  needsDarkStyle
-                    ? "bg-gradient-to-br from-[#1f4bb7]/10 to-[#1f4bb7]/5"
-                    : "bg-white/10 backdrop-blur-md border border-white/20"
-                }`}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-md transition-all duration-500 sm:h-14 sm:w-14 sm:rounded-[1.25rem] bg-white`}
               >
                 <Image
                   src="/kemenag.svg"
                   alt="Logo Kemenag"
-                  width={28}
-                  height={28}
-                  className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-md"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
                   style={{ width: "auto", height: "auto" }}
                   priority
                 />
               </div>
-              <div className="flex flex-col justify-center min-w-0 whitespace-nowrap">
-                {/* Mobile/Tablet text */}
+              <div className="flex flex-col justify-center min-w-0 whitespace-nowrap pl-1">
                 <span
-                  className={`text-[10px] sm:text-[12px] font-black tracking-tight leading-tight transition-colors duration-300 lg:hidden ${
-                    needsDarkStyle ? "text-[#1f4bb7]" : "text-white"
-                  }`}
+                  className="text-[10px] sm:text-[13px] font-black tracking-[0.05em] leading-tight transition-colors duration-500 lg:hidden text-white"
                 >
-                  PELAYANAN TERPADU SATU PINTU (PTSP)
+                  PELAYANAN TERPADU SATU PINTU
                 </span>
                 <span
-                  className={`text-[7.5px] sm:text-[9px] font-semibold tracking-wide leading-tight transition-colors duration-300 lg:hidden ${
-                    needsDarkStyle ? "text-slate-500" : "text-blue-200"
-                  }`}
+                  className="text-[7.5px] sm:text-[10px] font-bold tracking-wider leading-tight transition-colors duration-500 lg:hidden text-emerald-100/80"
                 >
                   KEMENTERIAN AGAMA KABUPATEN BARITO UTARA
                 </span>
                 {/* Desktop text */}
                 <span
-                  className={`hidden lg:block text-[12px] font-black tracking-wider leading-tight transition-colors duration-300 ${
-                    needsDarkStyle ? "text-[#1f4bb7]" : "text-white"
-                  }`}
+                  className="hidden lg:block text-[13px] font-black tracking-[0.05em] leading-tight transition-colors duration-500 text-white"
                 >
                   PELAYANAN TERPADU SATU PINTU (PTSP)
                 </span>
                 <span
-                  className={`hidden lg:block text-[9px] font-semibold tracking-wide leading-tight transition-colors duration-300 ${
-                    needsDarkStyle ? "text-slate-500" : "text-blue-200"
-                  }`}
+                  className="hidden lg:block text-[9px] font-bold tracking-[0.08em] leading-tight transition-colors duration-500 text-emerald-100/70"
                 >
                   KEMENTERIAN AGAMA KABUPATEN BARITO UTARA
                 </span>
               </div>
             </Link>
           </div>
-
+ 
           {/* Desktop Nav (Right aligned) */}
           <nav className="hidden items-center justify-end gap-1 lg:flex ml-auto">
             {navItems.map((item) => {
@@ -167,20 +151,27 @@ export function SiteHeaderClient({
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-bold transition-all duration-300 ${
-                    isActive
-                      ? needsDarkStyle
-                        ? "bg-[#1f4bb7]/10 text-[#1f4bb7]"
-                        : "bg-white/20 text-white shadow-inner"
-                      : needsDarkStyle
-                        ? "text-slate-600 hover:bg-slate-100 hover:text-[#1f4bb7]"
-                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                  className={`group relative flex items-center gap-2.5 rounded-2xl px-5 py-2.5 text-[14px] font-bold transition-all duration-500 ${
+                    isActive ? "!text-white" : "!text-white/70 hover:!text-white"
                   }`}
+                  style={{ color: isActive ? "white" : "rgba(255,255,255,0.7)" }}
                 >
+                  {/* Active/Hover Background Pill */}
+                  <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${
+                    isActive 
+                      ? "bg-white/10 opacity-100 shadow-inner"
+                      : "bg-transparent opacity-0 group-hover:opacity-100 group-hover:bg-white/5"
+                  }`} />
+                  
                   <Icon
-                    className={`h-4 w-4 transition-transform duration-300 ${isActive ? "scale-110" : "opacity-70 group-hover:scale-110 group-hover:opacity-100"}`}
+                    className={`relative z-10 h-4.5 w-4.5 transition-all duration-500 ${isActive ? "scale-110" : "opacity-60 group-hover:scale-110 group-hover:opacity-100"}`}
                   />
-                  {item.label}
+                  <span className="relative z-10" style={{ color: "inherit" }}>{item.label}</span>
+                  
+                  {/* Subtle active indicator dot */}
+                  {isActive && (
+                    <div className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-all duration-500 bg-white" />
+                  )}
                 </Link>
               );
             })}
@@ -190,36 +181,29 @@ export function SiteHeaderClient({
                 className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-bold transition-all duration-300 ${
                   pathname.startsWith("/dashboard") ||
                   pathname.startsWith("/admin")
-                    ? needsDarkStyle
-                      ? "bg-[#1f4bb7]/10 text-[#1f4bb7]"
-                      : "bg-white/20 text-white shadow-inner"
-                    : needsDarkStyle
-                      ? "text-slate-600 hover:bg-slate-100 hover:text-[#1f4bb7]"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                    ? "bg-white/20 !text-white shadow-inner"
+                    : "!text-white/80 hover:bg-white/10 hover:!text-white"
                 }`}
+                style={{ color: "white" }}
               >
                 <LayoutDashboard className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 opacity-70 group-hover:opacity-100" />
-                Dashboard
+                <span style={{ color: "inherit" }}>Dashboard</span>
               </Link>
             )}
           </nav>
-
+ 
           {/* Desktop CTA (Right aligned) */}
           <div className="hidden items-center justify-end lg:flex">
             {profile ? (
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md transition-colors duration-300 ${
-                    needsDarkStyle
-                      ? "bg-slate-100 border border-slate-200 text-slate-700"
-                      : "bg-white/10 border border-white/20 text-white"
-                  }`}
+                  className="flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md transition-colors duration-300 bg-white/10 border border-white/20 text-white"
                 >
                   {isAdmin ? (
-                    <Shield className="h-4 w-4 text-[#f0c040]" />
+                    <Shield className="h-4 w-4 text-emerald-400" />
                   ) : (
                     <UserCircle2
-                      className={`h-4 w-4 ${needsDarkStyle ? "text-[#1f4bb7]" : "text-blue-200"}`}
+                      className="h-4 w-4 text-emerald-200"
                     />
                   )}
                   <span className="text-sm font-bold">
@@ -232,23 +216,57 @@ export function SiteHeaderClient({
               <LoginDropdown
                 loginOpen={loginOpen}
                 setLoginOpen={setLoginOpen}
-                needsDarkStyle={needsDarkStyle}
+                needsDarkStyle={false}
               />
             )}
           </div>
+ 
+          {/* Mobile Hamburger Button */}
+          <div className="flex items-center justify-end lg:hidden relative z-[60]">
+            <button
+              type="button"
+              aria-label={mobileOpen ? "Tutup menu" : "Buka menu"}
+              onClick={() => setMobileOpen((prev) => !prev)}
+              className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border transition-all duration-500 active:scale-90 ${
+                mobileOpen
+                  ? "bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-600/20"
+                  : "border-white/20 bg-white/10 text-white hover:bg-white/20 shadow-inner"
+              }`}
+            >
+              <div className="relative flex h-5 w-5 flex-col items-center justify-center">
+                <span 
+                  className={`block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ${
+                    mobileOpen ? "absolute rotate-45 scale-x-110" : "mb-1.5"
+                  }`} 
+                />
+                <span 
+                  className={`block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ${
+                    mobileOpen ? "absolute opacity-0 -translate-x-2" : ""
+                  }`} 
+                />
+                <span 
+                  className={`block h-0.5 w-5 rounded-full bg-current transition-all duration-300 ${
+                    mobileOpen ? "absolute -rotate-45 scale-x-110" : "mt-1.5"
+                  }`} 
+                />
+              </div>
+            </button>
+          </div>
 
-          <MobileNav
-            mobileOpen={mobileOpen}
-            setMobileOpen={setMobileOpen}
-            needsDarkStyle={needsDarkStyle}
-            pathname={pathname}
-            navItems={navItems}
-            profile={profile}
-            dashboardHref={dashboardHref}
-            isAdmin={isAdmin}
-          />
         </div>
       </div>
+
     </header>
-  );
+    <MobileNav
+      mobileOpen={mobileOpen}
+      setMobileOpen={setMobileOpen}
+      needsDarkStyle={needsDarkStyle}
+      pathname={pathname}
+      navItems={navItems}
+      profile={profile}
+      dashboardHref={dashboardHref}
+      isAdmin={isAdmin}
+    />
+  </>
+);
 }

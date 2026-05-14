@@ -89,7 +89,7 @@ export function PenggunaClient({
         title="Daftar Admin & Petugas"
         subtitle="Kelola akun tim yang bertugas di portal PTSP."
         icon={UserCog}
-        iconColor="text-[#1f4bb7]"
+        iconColor="text-[#059669]"
         emptyText="Belum ada admin/petugas terdaftar."
         showRoleChange={viewerIsSuperAdmin}
         viewerIsSuperAdmin={viewerIsSuperAdmin}

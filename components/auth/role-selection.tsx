@@ -42,16 +42,16 @@ export function RoleSelection({ setRole }: { setRole: (role: Role) => void }) {
         {/* Option Petugas */}
         <button
           onClick={() => setRole("admin")}
-          className="group relative flex flex-col items-center p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-[#1f4bb7] hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 text-center"
+          className="group relative flex flex-col items-center p-6 bg-white rounded-3xl border-2 border-slate-100 hover:border-[#059669] hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 text-center"
         >
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-[#1f4bb7] group-hover:scale-110 group-hover:bg-[#1f4bb7] group-hover:text-white transition-all duration-300">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] group-hover:scale-110 group-hover:bg-[#059669] group-hover:text-white transition-all duration-300">
             <ShieldCheck className="h-8 w-8" />
           </div>
           <h3 className="font-black text-slate-800">Petugas</h3>
           <p className="mt-1 text-[11px] text-slate-400 uppercase font-bold tracking-wider">
             Internal Kemenag
           </p>
-          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#1f4bb7] opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#059669] opacity-0 group-hover:opacity-100 transition-opacity">
             Pilih <ChevronRight className="h-3 w-3" />
           </div>
         </button>

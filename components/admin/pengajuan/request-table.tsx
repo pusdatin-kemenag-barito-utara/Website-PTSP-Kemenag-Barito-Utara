@@ -56,10 +56,10 @@ export function AdminRequestTable({
             {requests.map((request: any) => (
               <tr
                 key={request.id}
-                className="group transition-colors duration-150 hover:bg-blue-50/30"
+                className="group transition-colors duration-150 hover:bg-emerald-50/30"
               >
                 <td className="px-5 py-3.5">
-                  <span className="font-mono text-xs font-semibold text-[#1f4bb7] bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">
+                  <span className="font-mono text-xs font-semibold text-[#059669] bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
                     {request.request_number}
                   </span>
                 </td>
@@ -94,7 +94,7 @@ export function AdminRequestTable({
                 <td className="px-5 py-3.5 text-right">
                   <Link
                     href={`/admin/pengajuan/${request.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#1f4bb7] bg-blue-50 border border-blue-100 transition-all duration-200 hover:bg-[#1f4bb7] hover:text-white hover:border-[#1f4bb7] hover:shadow-sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-[#059669] bg-emerald-50 border border-emerald-100 transition-all duration-200 hover:bg-[#059669] hover:text-white hover:border-[#059669] hover:shadow-sm"
                   >
                     <Eye className="h-3.5 w-3.5" />
                     Tinjau

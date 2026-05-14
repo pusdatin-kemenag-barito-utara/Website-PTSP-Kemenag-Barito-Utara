@@ -27,10 +27,10 @@ export function DashboardFaq() {
 
   return (
     <section className="ptsp-card overflow-hidden">
-      <div className="h-1 w-full bg-linear-to-r from-[#1f4bb7] via-[#2d7fff] to-[#00a2b8]" />
+      <div className="h-1 w-full bg-linear-to-r from-[#059669] via-[#34d399] to-[#10b981]" />
       <div className="p-4 sm:p-5">
         <div className="mb-4 flex items-center gap-2">
-          <HelpCircle className="h-5 w-5 text-[#1f4bb7]" />
+          <HelpCircle className="h-5 w-5 text-[#059669]" />
           <h2 className="text-xl font-bold text-slate-900">FAQ Singkat</h2>
         </div>
 
@@ -53,7 +53,7 @@ export function DashboardFaq() {
                     {item.q}
                   </span>
                   <ChevronDown
-                    className={`h-4 w-4 shrink-0 text-[#1f4bb7] transition-transform duration-300 ${
+                    className={`h-4 w-4 shrink-0 text-[#059669] transition-transform duration-300 ${
                       isOpen ? "rotate-180" : "rotate-0"
                     }`}
                   />

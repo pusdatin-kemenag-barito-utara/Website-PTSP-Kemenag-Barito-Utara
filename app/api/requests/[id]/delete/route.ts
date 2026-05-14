@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteFromDrive } from "@/lib/google-drive";
+import { deleteFromR2 } from "@/lib/r2";
 
 export async function DELETE(
   request: Request,
@@ -10,15 +12,16 @@ export async function DELETE(
   try {
     const profile = await requireAuth();
     const { id } = await params;
-    const admin = createAdminClient();
+    const requestId = id;
 
     // Verify ownership and status
-    const { data: reqData } = await admin
-      .from("service_requests")
-      .select("id, status")
-      .eq("id", id)
-      .eq("user_id", profile.id)
-      .single();
+    const reqData = await prisma.service_requests.findUnique({
+      where: { 
+        id: requestId,
+        user_id: profile.id,
+      },
+      select: { id: true, status: true },
+    });
 
     if (!reqData) {
       return NextResponse.json(
@@ -39,19 +42,22 @@ export async function DELETE(
     }
 
     // Get all document paths to delete from storage
-    const { data: docs } = await admin
-      .from("service_request_documents")
-      .select("id, file_path, file_name")
-      .eq("request_id", id);
+    const docs = await prisma.service_request_documents.findMany({
+      where: { request_id: requestId },
+      select: { id: true, file_path: true, file_name: true },
+    });
 
-    if (docs && docs.length > 0) {
+    if (docs.length > 0) {
       console.log(`Cleaning up ${docs.length} documents for request ${id}...`);
 
+      const admin = createAdminClient();
       const deletePromises = docs.map(async (doc) => {
         if (!doc.file_path) return;
 
         try {
-          if (doc.file_path.startsWith("gdrive:")) {
+          if (doc.file_path.startsWith("r2:")) {
+            await deleteFromR2(doc.file_path);
+          } else if (doc.file_path.startsWith("gdrive:")) {
             const driveFileId = doc.file_path.replace("gdrive:", "");
             await deleteFromDrive(driveFileId);
           } else {
@@ -60,9 +66,9 @@ export async function DELETE(
               .remove([doc.file_path]);
             if (storageError) throw storageError;
           }
-          console.log(`Deleted document: ${doc.file_name} (${doc.id})`);
+          console.log(`Deleted document file: ${doc.file_name} (${doc.id})`);
         } catch (error) {
-          console.error(`Failed to delete document ${doc.id}:`, error);
+          console.error(`Failed to delete storage file for doc ${doc.id}:`, error);
           // We continue to delete other files even if one fails
         }
       });
@@ -70,17 +76,11 @@ export async function DELETE(
       await Promise.all(deletePromises);
     }
 
-    // 4. Delete from DB
+    // 4. Delete from DB (Prisma will handle cascading if DB is set up)
     console.log(`Deleting request ${id} from database...`);
-    const { error: deleteError } = await admin
-      .from("service_requests")
-      .delete()
-      .eq("id", id);
-
-    if (deleteError) {
-      console.error("Database deletion error:", deleteError);
-      throw deleteError;
-    }
+    await prisma.service_requests.delete({
+      where: { id: requestId },
+    });
 
     console.log(`Request ${id} deleted successfully.`);
     return NextResponse.json({ success: true });

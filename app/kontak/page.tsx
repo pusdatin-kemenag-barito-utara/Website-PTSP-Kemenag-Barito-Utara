@@ -9,8 +9,8 @@ export default function ContactPage() {
       <ContactHeader />
 
       {/* Main Content */}
-      <section className="relative -mt-16 mb-24 px-6 sm:px-10 lg:px-12">
-        <div className="mx-auto w-full max-w-5xl space-y-8">
+      <section className="relative -mt-16 mb-24 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full space-y-8">
           <ContactInfoCards />
           <ContactChannels />
           <ContactFaq />

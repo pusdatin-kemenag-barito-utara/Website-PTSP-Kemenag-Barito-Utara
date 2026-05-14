@@ -132,7 +132,7 @@ export function AddEditRequirementModal({
                       return (
                         <label
                           key={ext}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-colors ${isChecked ? "bg-blue-50 border-blue-200 text-[#1f4bb7]" : "bg-slate-50 border-slate-200/60 text-slate-500 hover:bg-slate-100"}`}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-colors ${isChecked ? "bg-emerald-50 border-emerald-200 text-[#059669]" : "bg-slate-50 border-slate-200/60 text-slate-500 hover:bg-slate-100"}`}
                         >
                           <input
                             type="checkbox"
@@ -200,7 +200,7 @@ export function AddEditRequirementModal({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] hover:shadow-md hover:shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#059669] to-[#047857] hover:shadow-md hover:shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

@@ -44,7 +44,7 @@ export function ResultDocumentCard({
               href={generatedUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95 h-[38px]"
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 h-[38px]"
             >
               <Eye className="h-4 w-4" />
               Lihat File

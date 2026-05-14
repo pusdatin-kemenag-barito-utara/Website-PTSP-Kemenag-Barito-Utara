@@ -108,7 +108,7 @@ export function EditRequestForm({
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-          <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+          <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
             Data Formulir
           </h3>
@@ -145,7 +145,7 @@ export function EditRequestForm({
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="group relative rounded-xl border border-slate-200 bg-slate-50/30 p-3 transition-all hover:border-blue-200 hover:bg-blue-50/20"
+              className="group relative rounded-xl border border-slate-200 bg-slate-50/30 p-3 transition-all hover:border-emerald-200 hover:bg-emerald-50/20"
             >
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -170,10 +170,10 @@ export function EditRequestForm({
                         });
                       }
                     }}
-                    className="h-10 py-1.5 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-white hover:file:bg-blue-700 transition-all cursor-pointer border-slate-200"
+                    className="h-10 py-1.5 text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-600 file:px-3 file:py-1 file:text-[10px] file:font-bold file:text-white hover:file:bg-emerald-700 transition-all cursor-pointer border-slate-200"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <FileUp className="h-4 w-4 text-blue-500" />
+                    <FileUp className="h-4 w-4 text-emerald-500" />
                   </div>
                 </div>
                 <p className="text-[10px] text-slate-400 italic">
@@ -197,7 +197,7 @@ export function EditRequestForm({
         <Button
           type="submit"
           disabled={loading}
-          className="h-11 px-8 rounded-xl bg-[#1f4bb7] text-white shadow-lg shadow-blue-500/20 hover:bg-[#1a3fa3] hover:shadow-blue-500/40 transition-all gap-2"
+          className="h-11 px-8 rounded-xl bg-[#059669] text-white shadow-lg shadow-emerald-500/20 hover:bg-[#047857] hover:shadow-emerald-500/40 transition-all gap-2"
         >
           {loading ? (
             "Menyimpan..."

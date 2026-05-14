@@ -24,7 +24,7 @@ export function PasswordCell({
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="p-1 rounded-md text-slate-400 hover:text-[#1f4bb7] hover:bg-blue-50 transition-colors"
+        className="p-1 rounded-md text-slate-400 hover:text-[#059669] hover:bg-emerald-50 transition-colors"
         title={visible ? "Sembunyikan" : "Tampilkan"}
       >
         {visible ? (

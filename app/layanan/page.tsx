@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Building2, Layers3 } from "lucide-react";
+import { ArrowRight, BadgeCheck, Building2, Layers3, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { ServicesFilter } from "@/components/services/services-filter";
 import { getPublicServices } from "@/lib/queries";
@@ -11,73 +11,75 @@ export default async function ServicesPage() {
   );
 
   return (
-    <div className="w-full overflow-hidden">
-      {/* Immersive Header */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0d2d8a] via-[#1f4bb7] to-[#1a53c8] pt-12 pb-20 md:pt-16 md:pb-28">
+    <div className="w-full overflow-hidden bg-slate-50/30">
+      {/* Immersive Premium Header */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#064e3b] via-[#059669] to-[#047857] pt-24 pb-32 md:pt-32 md:pb-44 shadow-[0_20px_50px_-20px_rgba(4,120,87,0.4)]">
+        {/* Subtle Grid & Glow */}
         <div
-          className="absolute inset-0 opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.1]"
           style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,1) 1px, transparent 0)",
             backgroundSize: "40px 40px",
           }}
         />
-        <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-white/10 blur-[100px]" />
+        <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-white/10 blur-[120px] animate-pulse" />
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-[#5eeaa5]/20 blur-[100px]" />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 sm:px-10 lg:px-12">
-          <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm backdrop-blur-md">
-                <BadgeCheck className="h-4 w-4 text-[#5eeaa5]" />
-                Katalog Layanan PTSP
-              </span>
-              <h1 className="mt-5 text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl">
-                Jelajahi Layanan{" "}
-                <span className="bg-gradient-to-r from-[#5eeaa5] to-[#38d9a9] bg-clip-text text-transparent">
-                  Kementerian Agama
-                </span>
+        <div className="relative z-10 mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24">
+          <div className="grid gap-12 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="max-w-4xl space-y-8 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-lg backdrop-blur-md">
+                <Sparkles className="h-4 w-4 text-[#5eeaa5]" />
+                Katalog Layanan Digital
+              </div>
+              
+              <h1 className="text-4xl font-black leading-[1.1] text-white sm:text-6xl md:text-7xl tracking-tight">
+                Jelajahi Layanan <br className="hidden md:block" />
+                <span className="text-emerald-300">Pemerintah Agama</span>
               </h1>
-              <p className="mt-4 text-base leading-relaxed text-blue-100/90 sm:text-lg">
-                Pilih unit kerja, lihat item layanan, cek detail persyaratan,
-                lalu lanjutkan pengajuan secara online dari perangkat apa pun.
-                Cepat, transparan, dan dapat dilacak.
+              
+              <p className="max-w-2xl text-base leading-relaxed text-emerald-50/80 sm:text-xl font-medium mx-auto lg:mx-0">
+                Pilih unit kerja, cek detail persyaratan secara transparan, dan siapkan dokumen Anda sebelum mengajukan secara online.
               </p>
 
-              <div className="mt-8">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
                 <Link
                   href="/dashboard/pengajuan/baru"
-                  className="inline-flex items-center gap-2.5 rounded-2xl bg-white px-7 py-3.5 text-sm font-bold text-[#1f4bb7] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:bg-slate-50"
+                  className="inline-flex items-center gap-3 rounded-2xl bg-white px-8 py-4 text-[15px] font-black text-[#059669] shadow-2xl shadow-emerald-950/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-white/10 hover:bg-emerald-50 active:scale-95"
                 >
-                  <ArrowRight className="h-4 w-4" />
-                  Mulai Pengajuan Baru
+                  Mulai Pengajuan <ArrowRight className="h-4 w-4" />
                 </Link>
+                <div className="flex -space-x-3">
+                   {[1,2,3,4].map(i => (
+                     <div key={i} className="h-10 w-10 rounded-full border-2 border-[#059669] bg-emerald-100 flex items-center justify-center text-[10px] font-black text-[#059669]">
+                        {i}
+                     </div>
+                   ))}
+                   <div className="flex items-center justify-center h-10 px-4 rounded-full border-2 border-[#059669] bg-white text-[10px] font-black text-[#059669] translate-x-1">
+                      +30 Layanan
+                   </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 sm:flex-row lg:flex-col xl:flex-row">
-              <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-md shadow-xl lg:w-48">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
-                  <Building2 className="h-6 w-6" />
+            {/* Stats Cards */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:flex lg:flex-col xl:flex-row">
+              <div className="flex flex-col items-center lg:items-start gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl shadow-2xl min-w-[200px]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white shadow-inner">
+                  <Building2 className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200">
-                    Unit Layanan
-                  </p>
-                  <p className="text-3xl font-black text-white">
-                    {services.length}
-                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">Unit Kerja</p>
+                  <p className="text-4xl font-black text-white leading-none mt-1">{services.length}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-md shadow-xl lg:w-48">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-[#5eeaa5]">
-                  <Layers3 className="h-6 w-6" />
+              <div className="flex flex-col items-center lg:items-start gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl shadow-2xl min-w-[200px]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-emerald-300 shadow-inner">
+                  <Layers3 className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200">
-                    Total Item
-                  </p>
-                  <p className="text-3xl font-black text-white">{totalItems}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">Total Layanan</p>
+                  <p className="text-4xl font-black text-white leading-none mt-1">{totalItems}</p>
                 </div>
               </div>
             </div>
@@ -86,9 +88,9 @@ export default async function ServicesPage() {
       </section>
 
       {/* Main Content Area */}
-      <section className="relative -mt-10 mb-20 px-6 sm:px-10 lg:px-12">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="rounded-[2.5rem] bg-white p-6 sm:p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+      <section className="relative -mt-16 mb-32 px-6 sm:px-10 lg:px-20 xl:px-24">
+        <div className="mx-auto w-full">
+          <div className="rounded-[3rem] bg-white p-6 sm:p-10 md:p-12 shadow-[0_50px_100px_-20px_rgba(15,23,42,0.1)] border border-slate-100">
             <ServicesFilter services={services} />
           </div>
         </div>

@@ -1,6 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect, type FormEvent } from "react";
+import {
+  getEmailByPhoneAction,
+  verifyRecaptchaAction,
+} from "@/lib/actions/login-helper";
+import ReCAPTCHA from "react-google-recaptcha";
+import { useMemo, useState, useEffect, useRef, type FormEvent } from "react";
 import { Eye, EyeOff, ShieldCheck, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -10,8 +15,6 @@ import { Button } from "@/components/ui/button";
 import { isAdminRole } from "@/lib/constants";
 
 type LoginRoleMode = "pemohon" | "petugas";
-
-import { getEmailByPhoneAction } from "@/lib/actions/login-helper";
 
 function normalizeWhatsappNumber(raw: string) {
   const digits = raw.replace(/\D/g, "");
@@ -27,22 +30,12 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const [mounted, setMounted] = useState(false);
-  const [captchaA, setCaptchaA] = useState(1);
-  const [captchaB, setCaptchaB] = useState(1);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    setCaptchaA(Math.floor(Math.random() * 9) + 1);
-    setCaptchaB(Math.floor(Math.random() * 9) + 1);
   }, []);
-  const captchaQuestion = useMemo(
-    () => `${captchaA} + ${captchaB}`,
-    [captchaA, captchaB],
-  );
-  const regenerateCaptcha = () => {
-    setCaptchaA(Math.floor(Math.random() * 9) + 1);
-    setCaptchaB(Math.floor(Math.random() * 9) + 1);
-  };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,13 +79,21 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
     }
 
     if (mode === "petugas") {
-      const captchaAnswer = Number(formData.get("captcha_answer") || 0);
-      const expectedAnswer = captchaA + captchaB;
-
-      if (captchaAnswer !== expectedAnswer) {
+      if (!recaptchaToken) {
         setLoading(false);
-        setError("Jawaban captcha salah. Coba lagi.");
-        regenerateCaptcha();
+        setError("Silakan selesaikan reCAPTCHA untuk verifikasi keamanan.");
+        return;
+      }
+
+      const verifyResult = await verifyRecaptchaAction(recaptchaToken);
+      if (!verifyResult.success) {
+        setLoading(false);
+        setError(
+          verifyResult.error ||
+            "Verifikasi reCAPTCHA gagal. Silakan coba lagi.",
+        );
+        recaptchaRef.current?.reset();
+        setRecaptchaToken(null);
         return;
       }
     }
@@ -104,7 +105,13 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
 
     if (signInError) {
       setLoading(false);
-      setError(signInError.message);
+      if (signInError.message === "Invalid login credentials") {
+        setError(
+          "Email atau password salah. Pastikan akun Anda sudah terdaftar.",
+        );
+      } else {
+        setError(signInError.message);
+      }
       return;
     }
 
@@ -149,16 +156,12 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
       return;
     }
 
-    if (mode === "pemohon" && isAdmin) {
-      router.push("/admin");
-      router.refresh();
-      return;
-    }
-
     setLoading(false);
-    router.push(
-      mode === "petugas" ? "/admin" : isAdmin ? "/admin" : "/dashboard",
-    );
+    if (mode === "petugas") {
+      router.push("/admin");
+    } else {
+      router.push("/dashboard");
+    }
     router.refresh();
   };
 
@@ -174,7 +177,7 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
             type="email"
             name="email"
             required
-            placeholder="nama@instansi.go.id"
+            placeholder="nama@gmail.com"
           />
         </Field>
       )}
@@ -207,36 +210,32 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
 
       {mode === "petugas" ? (
         <Field
-          label="Keamanan (Captcha)"
+          label="Verifikasi Keamanan"
           required
-          hint="Isi hasil perhitungan di atas untuk verifikasi"
         >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-2 shadow-sm">
-              <div className="flex items-center gap-3 pl-1">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 shadow-sm">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <span className="text-[14px] font-bold text-slate-700 tracking-wide">
-                  Berapa hasil {mounted ? captchaQuestion : "..."} ?
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={regenerateCaptcha}
-                className="group flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
-                title="Ganti soal captcha"
-              >
-                <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-              </button>
+          <div className="relative group overflow-hidden rounded-[1.5rem] border border-slate-100 bg-slate-50/50 p-4 transition-all hover:border-emerald-200 hover:bg-emerald-50/30">
+            <div className="relative flex min-h-[78px] items-center justify-center">
+              {mounted ? (
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+                  onChange={(token) => {
+                    setRecaptchaToken(token);
+                  }}
+                  onExpired={() => setRecaptchaToken(null)}
+                  className="scale-[0.85] sm:scale-95 origin-center drop-shadow-sm"
+                />
+              ) : (
+                <div className="h-[78px] w-full animate-pulse rounded-xl bg-slate-100" />
+              )}
             </div>
-            <Input
-              name="captcha_answer"
-              type="number"
-              required
-              placeholder="Ketik angka jawaban di sini..."
-              className="font-bold text-slate-700 h-11"
-            />
+
+            {recaptchaToken && (
+              <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 animate-in fade-in zoom-in-95 duration-500">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Terverifikasi</span>
+              </div>
+            )}
           </div>
         </Field>
       ) : null}
@@ -248,7 +247,7 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
       ) : null}
 
       <Button
-        className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]! hover:shadow-emerald-500/25" : "bg-[#1f4bb7]! hover:bg-[#1a3fa3]! hover:shadow-blue-500/25"}`}
+        className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]! hover:shadow-emerald-500/25" : "bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"}`}
         disabled={loading}
       >
         {loading

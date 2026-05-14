@@ -16,13 +16,13 @@ export async function getDriveClient() {
   const auth = new google.auth.JWT({
     email: SERVICE_ACCOUNT_EMAIL,
     key: formattedKey,
-    scopes: ["https://www.googleapis.com/auth/drive.file"],
+    scopes: ["https://www.googleapis.com/auth/drive"],
   });
 
   return google.drive({ version: "v3", auth });
 }
 
-export async function uploadToDrive(file: File, folderId?: string) {
+export async function uploadToDrive(file: File, folderId?: string, customFileName?: string) {
   const drive = await getDriveClient();
   const parentFolderId = folderId || DEFAULT_FOLDER_ID;
 
@@ -35,7 +35,7 @@ export async function uploadToDrive(file: File, folderId?: string) {
 
   const response = await drive.files.create({
     requestBody: {
-      name: file.name,
+      name: customFileName || file.name,
       parents: parentFolderId ? [parentFolderId] : [],
     },
     media: {

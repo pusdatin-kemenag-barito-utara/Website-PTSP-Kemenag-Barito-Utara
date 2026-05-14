@@ -15,6 +15,8 @@ import {
   Mail,
   Inbox,
   Send,
+  History,
+  Database,
 } from "lucide-react";
 import { isSuperAdmin as checkSuperAdmin } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -47,46 +49,18 @@ const ADMIN_NAV: NavItem[] = [
     id: "pengajuan",
   },
   {
+    label: "Dokumen Hasil",
+    href: "/admin/dokumen-hasil",
+    icon: FileOutput,
+    group: "Utama",
+    id: "dokumen_hasil",
+  },
+  {
     label: "Layanan",
     href: "/admin/layanan",
     icon: FileText,
     group: "Master Data",
     id: "layanan",
-  },
-  {
-    label: "Item Layanan",
-    href: "/admin/item-layanan",
-    icon: Files,
-    group: "Master Data",
-    id: "item_layanan",
-  },
-  {
-    label: "Form Layanan",
-    href: "/admin/form-layanan",
-    icon: FormInput,
-    group: "Master Data",
-    id: "form_layanan",
-  },
-  {
-    label: "Persyaratan",
-    href: "/admin/persyaratan",
-    icon: ListChecks,
-    group: "Master Data",
-    id: "persyaratan",
-  },
-  {
-    label: "Pengguna",
-    href: "/admin/pengguna",
-    icon: Users,
-    group: "Sistem",
-    id: "pengguna",
-  },
-  {
-    label: "Dokumen Hasil",
-    href: "/admin/dokumen-hasil",
-    icon: FileOutput,
-    group: "Sistem",
-    id: "dokumen_hasil",
   },
   {
     label: "Surat Masuk",
@@ -101,6 +75,27 @@ const ADMIN_NAV: NavItem[] = [
     icon: Send,
     group: "Tata Naskah",
     id: "surat_keluar",
+  },
+  {
+    label: "Pengguna",
+    href: "/admin/pengguna",
+    icon: Users,
+    group: "Sistem",
+    id: "pengguna",
+  },
+  {
+    label: "Log Audit",
+    href: "/admin/log-audit",
+    icon: History,
+    group: "Sistem",
+    id: "log_audit",
+  },
+  {
+    label: "Pemeliharaan Storage",
+    href: "/admin/pemeliharaan-storage",
+    icon: Database,
+    group: "Sistem",
+    id: "pemeliharaan_storage",
   },
 ];
 

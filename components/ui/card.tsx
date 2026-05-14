@@ -25,7 +25,7 @@ export function Card({
         <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
           <div className="flex items-center gap-4">
             {Icon && (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-[#1f4bb7] border border-blue-100/50 shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-100/50 shadow-sm">
                 <Icon className="h-5 w-5" />
               </div>
             )}

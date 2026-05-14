@@ -1,82 +1,94 @@
-import { Search, CheckCircle2, Clock, FileCheck2 } from "lucide-react";
+import { Search, CheckCircle2, Clock, FileCheck2, ChevronRight } from "lucide-react";
 
 export function HomeTrackSection() {
   return (
-    <section className="py-14 md:py-20">
+    <section className="py-20 md:py-32 relative overflow-hidden">
       <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0d2d8a] via-[#1f4bb7] to-[#1a53c8] p-10 shadow-2xl shadow-blue-900/20 md:p-16 lg:p-20">
-          {/* Grid pattern */}
+        <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-[#064e3b] via-[#059669] to-[#047857] p-8 md:p-16 lg:p-24 shadow-[0_30px_100px_-20px_rgba(4,120,87,0.3)]">
+          {/* Subtle Grid Overlay */}
           <div
-            className="absolute inset-0 opacity-[0.08]"
+            className="absolute inset-0 opacity-[0.1]"
             style={{
               backgroundImage:
-                "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
+                "radial-gradient(circle at 2px 2px, rgba(255,255,255,1) 1px, transparent 0)",
+              backgroundSize: "32px 32px",
             }}
           />
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/8 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#0f8a54]/20 blur-3xl" />
+          
+          {/* Animated Glow Elements */}
+          <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-emerald-400/20 blur-[120px] animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-emerald-300/10 blur-[100px]" />
 
-          <div className="relative z-10 grid items-center gap-8 lg:grid-cols-[1fr_auto]">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5">
-                <Search className="h-3.5 w-3.5 text-white/70" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
-                  Lacak Status
+          <div className="relative z-10 grid items-center gap-16 lg:grid-cols-[1fr_auto]">
+            <div className="max-w-2xl">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-5 py-2 backdrop-blur-md">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span className="text-[10px] font-black text-white/90 uppercase tracking-[0.2em]">
+                  Lacak Permohonan
                 </span>
               </div>
-              <h2 className="text-2xl font-black text-white md:text-3xl">
-                Pantau Permohonan Anda
+              
+              <h2 className="text-4xl font-black text-white md:text-5xl lg:text-6xl tracking-tight leading-[1.1]">
+                Pantau <span className="text-emerald-300">Status</span> <br className="hidden md:block" /> Layanan Anda
               </h2>
-              <p className="mt-2 text-sm text-white/60 md:text-base max-w-lg">
-                Masukkan kode pelacakan untuk melihat status dan progres layanan
-                Anda secara real-time.
+              
+              <p className="mt-6 text-base text-emerald-50/70 md:text-lg font-medium leading-relaxed">
+                Masukkan nomor pendaftaran Anda untuk mendapatkan pembaruan status pemrosesan dokumen secara instan dan real-time.
               </p>
 
               <form
                 action="/track"
                 method="get"
-                className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center max-w-xl"
+                className="mt-10 group relative flex flex-col gap-4 sm:flex-row sm:items-center"
               >
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                    <Search className="h-5 w-5 text-white/50 group-focus-within:text-emerald-300 transition-colors duration-300" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-black text-emerald-300 select-none tracking-tight">
+                        PTSP-{new Date().getFullYear()}-
+                      </span>
+                      <div className="h-3 w-[1.5px] bg-white/20 rounded-full" />
+                    </div>
+                  </div>
                   <input
                     type="text"
                     name="q"
-                    placeholder="Contoh: PTSP-BRU-2025-000123"
-                    className="w-full rounded-2xl border border-white/20 bg-white/10 py-3.5 pl-11 pr-4 text-sm text-white placeholder-white/40 backdrop-blur-sm transition-all duration-200 focus:border-white/40 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/20"
+                    autoComplete="off"
+                    placeholder="000123"
+                    className="w-full rounded-[1.5rem] border border-white/10 bg-white/10 py-5 pl-[9.8rem] pr-6 text-base font-black text-white placeholder-white/20 backdrop-blur-xl transition-all duration-300 focus:border-emerald-300/50 focus:bg-white/15 focus:outline-none focus:ring-4 focus:ring-emerald-500/10"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-sm font-bold text-[#1f4bb7] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:flex-shrink-0"
+                  className="inline-flex items-center justify-center gap-3 rounded-[1.5rem] bg-white px-10 py-5 text-[15px] font-black text-[#064e3b] shadow-[0_15px_30px_-5px_rgba(255,255,255,0.2)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-5px_rgba(255,255,255,0.3)] hover:bg-emerald-50 active:scale-95 sm:flex-shrink-0"
                 >
-                  <Search className="h-4 w-4" />
-                  Lacak
+                  Cari Sekarang
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </form>
 
-              <div className="mt-4 flex flex-wrap gap-2.5">
+              <div className="mt-8 flex flex-wrap gap-4">
                 {[
                   {
                     icon: CheckCircle2,
-                    text: "Status Real-time",
-                    color: "text-[#5eeaa5]",
+                    text: "Sistem Terpusat",
+                    color: "bg-emerald-400/10 text-emerald-300",
                   },
                   {
                     icon: Clock,
-                    text: "Update Otomatis",
-                    color: "text-[#f0c040]",
+                    text: "Update 24/7",
+                    color: "bg-emerald-400/10 text-emerald-300",
                   },
                   {
                     icon: FileCheck2,
-                    text: "Unduh Hasil",
-                    color: "text-blue-300",
+                    text: "Output Digital",
+                    color: "bg-emerald-400/10 text-emerald-300",
                   },
                 ].map(({ icon: Icon, text, color }) => (
                   <span
                     key={text}
-                    className={`inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold ${color}`}
+                    className={`inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-[11px] font-black uppercase tracking-wider ${color} backdrop-blur-sm transition-all duration-300 hover:bg-white/5`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     {text}
@@ -85,31 +97,38 @@ export function HomeTrackSection() {
               </div>
             </div>
 
-            {/* Decorative visual */}
-            <div className="hidden xl:flex flex-col items-center gap-3">
+            {/* Premium Vertical Status Visual */}
+            <div className="hidden xl:flex flex-col gap-6 relative p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+              <div className="absolute left-[39px] top-12 bottom-12 w-0.5 bg-gradient-to-b from-emerald-400/40 via-emerald-400/20 to-transparent" />
+              
               {[
-                { step: "Menunggu Verifikasi", status: "done" },
-                { step: "Sedang Diproses", status: "active" },
-                { step: "Menunggu Tanda Tangan", status: "pending" },
-              ].map(({ step, status }, i) => (
+                { step: "Verifikasi Berkas", status: "done", time: "Selesai" },
+                { step: "Proses Validasi", status: "active", time: "Sedang Berjalan" },
+                { step: "Penerbitan SK", status: "pending", time: "Antrian" },
+              ].map(({ step, status, time }, i) => (
                 <div
                   key={step}
-                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 w-52"
+                  className="flex items-start gap-4 relative z-10 group"
                 >
                   <div
-                    className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${
+                    className={`mt-1 h-6 w-6 flex-shrink-0 rounded-full border-4 border-[#064e3b] shadow-lg transition-all duration-500 ${
                       status === "done"
-                        ? "bg-[#5eeaa5]"
+                        ? "bg-emerald-400 shadow-emerald-400/40"
                         : status === "active"
-                          ? "bg-[#f0c040] animate-pulse"
-                          : "bg-white/20"
+                          ? "bg-emerald-300 animate-pulse shadow-emerald-300/40"
+                          : "bg-white/20 border-white/10"
                     }`}
                   />
-                  <span
-                    className={`text-xs font-semibold ${status === "pending" ? "text-white/30" : "text-white/80"}`}
-                  >
-                    {step}
-                  </span>
+                  <div className="flex flex-col">
+                    <span
+                      className={`text-sm font-black transition-colors duration-300 ${status === "pending" ? "text-white/30" : "text-white"}`}
+                    >
+                      {step}
+                    </span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${status === "active" ? "text-emerald-200" : status === "done" ? "text-emerald-300" : "text-white/20"}`}>
+                      {time}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

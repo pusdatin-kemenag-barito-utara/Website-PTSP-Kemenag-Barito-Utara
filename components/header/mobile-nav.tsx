@@ -1,20 +1,20 @@
-import Link from "next/link";
-import { X, Menu, LayoutDashboard, UserCircle2, Shield } from "lucide-react";
-import { SignOutButton } from "@/components/auth/sign-out-button";
-import type { ElementType } from "react";
+"use client";
 
-interface NavItem {
-  href: string;
-  label: string;
-  icon: ElementType;
-}
+import Link from "next/link";
+import { 
+  X, 
+  UserCircle2, 
+  Shield, 
+  LayoutDashboard 
+} from "lucide-react";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
 interface MobileNavProps {
   mobileOpen: boolean;
-  setMobileOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
+  setMobileOpen: (open: boolean) => void;
   needsDarkStyle: boolean;
   pathname: string;
-  navItems: NavItem[];
+  navItems: any[];
   profile: any;
   dashboardHref: string;
   isAdmin: boolean;
@@ -31,45 +31,54 @@ export function MobileNav({
   isAdmin,
 }: MobileNavProps) {
   return (
-    <>
-      <div className="flex w-1/4 items-center justify-end lg:hidden">
-        <button
-          type="button"
-          aria-label={mobileOpen ? "Tutup menu" : "Buka menu"}
-          onClick={() => setMobileOpen((prev) => !prev)}
-          className={`inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all duration-200 active:scale-90 ${
-            needsDarkStyle
-              ? "border-slate-200 bg-white/80 text-slate-700 hover:bg-slate-100 shadow-sm"
-              : "border-white/20 bg-white/10 text-white hover:bg-white/20 shadow-inner"
-          }`}
-        >
-          {mobileOpen ? (
-            <X className="h-5 w-5" />
-          ) : (
-            <Menu className="h-5 w-5" />
-          )}
-        </button>
-      </div>
-
+    <div
+      className={`fixed inset-0 z-[9999] lg:hidden transition-all duration-700 ease-in-out ${
+        mobileOpen ? "visible" : "invisible pointer-events-none"
+      }`}
+    >
+      {/* Backdrop with extreme blur */}
       <div
-        className={`lg:hidden grid transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] absolute top-[72px] md:top-[80px] left-0 w-full px-6 sm:px-10 z-40 ${
-          mobileOpen
-            ? "grid-rows-[1fr] opacity-100"
-            : "grid-rows-[0fr] opacity-0 pointer-events-none"
+        className={`absolute inset-0 bg-[#022c22]/60 backdrop-blur-2xl transition-opacity duration-700 ${
+          mobileOpen ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      {/* Main Panel */}
+      <div
+        className={`absolute right-0 top-0 h-full w-[320px] max-w-[90%] bg-gradient-to-b from-[#022c22] to-[#047857] shadow-2xl transition-transform duration-700 cubic-bezier(0.34, 1.56, 0.64, 1) border-l border-white/10 ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="overflow-hidden">
-          <div
-            className={`mb-6 mt-2 transform transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              mobileOpen ? "translate-y-0" : "-translate-y-4"
-            } rounded-3xl border p-4 shadow-2xl backdrop-blur-xl ${
-              needsDarkStyle
-                ? "border-slate-200 bg-white/95 shadow-slate-900/10"
-                : "border-white/20 bg-white/10 shadow-black/20"
-            }`}
-          >
-            <nav className="flex flex-col gap-1">
-              {navItems.map((item) => {
+        {/* Decorative background elements */}
+        <div className="absolute -left-20 top-40 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
+        <div className="absolute -right-20 bottom-20 h-80 w-80 rounded-full bg-emerald-600/10 blur-[100px]" />
+
+        <div className="flex h-full flex-col">
+          {/* Header */}
+          <div className="px-6 pt-8 pb-6 border-b border-white/5 bg-white/5 backdrop-blur-md">
+             <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
+                       <UserCircle2 className="h-8 w-8" />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/80">Menu Utama</p>
+                       <h3 className="text-2xl font-extrabold text-white tracking-tight">Portal PTSP</h3>
+                    </div>
+                </div>
+                <button 
+                  onClick={() => setMobileOpen(false)}
+                  className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 text-white/40 active:scale-90 transition-transform border border-white/10"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+             </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar relative z-10">
+            <nav className="flex flex-col gap-2.5">
+              {navItems.map((item, idx) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -77,86 +86,93 @@ export function MobileNav({
                     key={item.label}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-bold transition-all duration-200 ${
+                    style={{ transitionDelay: `${idx * 40}ms` }}
+                    className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-bold transition-all duration-300 ${
+                      mobileOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+                    } ${
                       isActive
-                        ? needsDarkStyle
-                          ? "bg-[#1f4bb7]/10 text-[#1f4bb7]"
-                          : "bg-white/20 text-white shadow-inner"
-                        : needsDarkStyle
-                          ? "text-slate-600 hover:bg-slate-100 hover:text-[#1f4bb7]"
-                          : "text-white/80 hover:bg-white/10 hover:text-white"
+                        ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-500/30 border border-white/10"
+                        : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
                     }`}
                   >
-                    <Icon className="h-5 w-5 flex-shrink-0" />
-                    {item.label}
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${isActive ? "bg-white/20 text-white" : "bg-white/5 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white"}`}>
+                       <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? "stroke-[2.5px]" : ""}`} />
+                    </div>
+                    <span 
+                      className={`tracking-wide ${isActive ? "font-extrabold text-white" : "font-medium text-white/70"}`}
+                      style={{ color: isActive ? "#fff" : "rgba(255,255,255,0.7)" }}
+                    >
+                      {item.label}
+                    </span>
                   </Link>
                 );
               })}
+              
               {profile && (
                 <Link
                   href={dashboardHref}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-bold transition-all duration-200 ${
-                    needsDarkStyle
-                      ? "text-slate-600 hover:bg-slate-100 hover:text-[#1f4bb7]"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  }`}
+                  style={{ 
+                    transitionDelay: `${navItems.length * 40}ms`,
+                    color: "rgba(255,255,255,0.6)" 
+                  }}
+                  className={`group flex items-center gap-4 rounded-2xl px-5 py-4 text-[15px] font-medium tracking-wide transition-all duration-300 ${
+                    mobileOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+                  } text-white/60 hover:bg-white/5 hover:text-white`}
                 >
-                  <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white">
+                    <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
+                  </div>
                   Dashboard
                 </Link>
               )}
             </nav>
 
-            <div
-              className={`mt-4 border-t pt-4 ${
-                needsDarkStyle ? "border-slate-200" : "border-white/20"
-              }`}
-            >
-              {profile ? (
-                <div className="flex flex-col gap-3">
-                  <div
-                    className={`flex items-center gap-3 rounded-2xl px-5 py-3.5 ${
-                      needsDarkStyle
-                        ? "bg-slate-100 text-slate-700"
-                        : "bg-white/10 text-white shadow-inner"
-                    }`}
-                  >
-                    {isAdmin ? (
-                      <Shield className="h-5 w-5 text-[#f0c040]" />
-                    ) : (
-                      <UserCircle2 className="h-5 w-5 opacity-80" />
-                    )}
-                    <span className="text-sm font-bold">
-                      {isAdmin ? "Admin" : "Pemohon"}
-                    </span>
+            <div className={`mt-10 mb-6 transition-all duration-700 ${mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+              <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-emerald-900/80 to-[#022c22] p-6 shadow-2xl border border-white/5 backdrop-blur-md">
+                {/* Decoration for access area */}
+                <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-500/20 blur-2xl" />
+                
+                <p className="relative z-10 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400/80 mb-5">Pilih Mode Akses</p>
+                
+                {profile ? (
+                  <div className="relative z-10 flex flex-col gap-4">
+                    <div className="flex items-center gap-4 rounded-2xl bg-white/5 px-5 py-4 border border-white/10 backdrop-blur-sm">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                        {isAdmin ? <Shield className="h-6 w-6" /> : <UserCircle2 className="h-6 w-6" />}
+                      </div>
+                      <div>
+                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400/60">Akun Aktif</p>
+                         <p className="text-sm font-bold text-white tracking-tight">{isAdmin ? "Administrator" : "Pemohon Layanan"}</p>
+                      </div>
+                    </div>
+                    <SignOutButton />
                   </div>
-                  <SignOutButton />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href="/login/pemohon"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#1f4bb7] to-[#2b67f0] p-4 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:translate-y-0"
-                  >
-                    <UserCircle2 className="h-6 w-6" />
-                    Pemohon
-                  </Link>
-                  <Link
-                    href="/login/petugas"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#0f8a54] to-[#0d7a4b] p-4 text-sm font-bold text-white shadow-lg shadow-green-900/20 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:translate-y-0"
-                  >
-                    <Shield className="h-6 w-6" />
-                    Petugas
-                  </Link>
-                </div>
-              )}
+                ) : (
+                  <div className="relative z-10 grid grid-cols-2 gap-3">
+                    <Link
+                      href="/login/pemohon"
+                      onClick={() => setMobileOpen(false)}
+                      className="group flex flex-col items-center justify-center gap-3 rounded-[1.75rem] bg-white/5 p-5 transition-all duration-300 hover:bg-emerald-500 hover:shadow-xl border border-white/5"
+                    >
+                      <UserCircle2 className="h-8 w-8 text-emerald-400 group-hover:text-white transition-all duration-300 group-hover:scale-110" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/80">Pemohon</span>
+                    </Link>
+                    <Link
+                      href="/login/petugas"
+                      onClick={() => setMobileOpen(false)}
+                      className="group flex flex-col items-center justify-center gap-3 rounded-[1.75rem] bg-white/5 p-5 transition-all duration-300 hover:bg-emerald-600 hover:shadow-xl border border-white/5"
+                    >
+                      <Shield className="h-8 w-8 text-emerald-400/60 group-hover:text-white transition-all duration-300 group-hover:scale-110" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/80">Petugas</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

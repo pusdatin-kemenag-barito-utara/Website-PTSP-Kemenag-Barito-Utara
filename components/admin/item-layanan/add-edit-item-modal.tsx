@@ -99,20 +99,20 @@ export function AddEditItemModal({
                     value={formData.slug}
                     onChange={(e) => onChangeFormData({ slug: e.target.value })}
                     required
-                    className="rounded-l-none font-mono text-sm text-[#1f4bb7]"
+                    className="rounded-l-none font-mono text-sm text-[#059669]"
                   />
                 </div>
               </Field>
 
-              <Field label="Deskripsi Item">
-                <Textarea
-                  name="description"
-                  value={formData.description}
+              <Field label="Estimasi Waktu" hint="Contoh: 1-3 Hari Kerja">
+                <Input
+                  name="estimated_time"
+                  value={formData.estimated_time}
                   onChange={(e) =>
-                    onChangeFormData({ description: e.target.value })
+                    onChangeFormData({ estimated_time: e.target.value })
                   }
-                  placeholder="Tulis deskripsi singkat tentang item ini..."
-                  className="min-h-[100px] resize-none"
+                  placeholder="Masukkan estimasi waktu pengerjaan"
+                  className="font-medium"
                 />
               </Field>
               <div className="pt-2">
@@ -151,7 +151,7 @@ export function AddEditItemModal({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] hover:shadow-md hover:shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[#059669] to-[#047857] hover:shadow-md hover:shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

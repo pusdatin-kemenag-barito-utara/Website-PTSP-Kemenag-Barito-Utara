@@ -17,9 +17,9 @@ export function FormAnswersCard({ request }: { request: any }) {
           {(request.service_request_answers ?? []).map((answer: any) => (
             <div
               key={answer.id}
-              className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-[#1f4bb7]/30 hover:bg-blue-50/20 transition-colors group"
+              className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-[#059669]/30 hover:bg-emerald-50/20 transition-colors group"
             >
-              <div className="absolute top-0 left-0 w-1 h-full bg-[#1f4bb7]/20 rounded-l-2xl group-hover:bg-[#1f4bb7] transition-colors" />
+              <div className="absolute top-0 left-0 w-1 h-full bg-[#059669]/20 rounded-l-2xl group-hover:bg-[#059669] transition-colors" />
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">
                 {answer.field_name}
               </p>

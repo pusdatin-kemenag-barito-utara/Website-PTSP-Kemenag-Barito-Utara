@@ -22,7 +22,7 @@ export function AdminTopbar({
 
       {/* Brand mark — mobile only */}
       <div className="flex lg:hidden items-center gap-2 min-w-0">
-        <Shield className="h-4 w-4 text-[#1f4bb7] shrink-0" />
+        <Shield className="h-4 w-4 text-[#059669] shrink-0" />
         <p className="text-sm font-bold text-slate-800 truncate">
           Panel Admin PTSP
         </p>
@@ -30,8 +30,8 @@ export function AdminTopbar({
 
       {/* Desktop: subtle breadcrumb label */}
       <div className="hidden lg:flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#1f4bb7]/10">
-          <Shield className="h-3.5 w-3.5 text-[#1f4bb7]" />
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#059669]/10">
+          <Shield className="h-3.5 w-3.5 text-[#059669]" />
         </div>
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           PTSP Kemenag Barito Utara
@@ -48,7 +48,7 @@ export function AdminTopbar({
           Super Admin
         </span>
       ) : (
-        <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 border border-blue-200/80 px-3 py-1.5 text-[11px] font-bold text-[#1f4bb7]">
+        <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 text-[11px] font-bold text-[#059669]">
           <Shield className="h-3.5 w-3.5" />
           Administrator
         </span>

@@ -1,7 +1,12 @@
 import { requireAdmin } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma, { serializeBigInt } from "@/lib/prisma";
 import { DokumenHasilClient } from "@/components/admin/dokumen-hasil/dokumen-hasil-client";
 import { getDrivePreviewUrl } from "@/lib/google-drive";
+import { AdminPagination } from "@/components/admin/pengajuan/admin-pagination";
+import { ReportExportButton } from "@/components/admin/report-export-button";
+import { getR2SignedUrl } from "@/lib/r2";
+import { PageHeader } from "@/components/admin/page-header";
+import { FileOutput } from "lucide-react";
 
 async function getSignedUrl(path?: string | null) {
   if (!path) return null;
@@ -12,43 +17,89 @@ async function getSignedUrl(path?: string | null) {
     return getDrivePreviewUrl(fileId);
   }
 
-  const admin = createAdminClient();
-  const { data } = await admin.storage
-    .from("generated-documents")
-    .createSignedUrl(path, 3600);
-  return data?.signedUrl || null;
+  // Handle Cloudflare R2 links
+  if (path.startsWith("r2:") || path.startsWith("results/")) {
+    try {
+      return await getR2SignedUrl(path);
+    } catch (err) {
+      console.error("Gagal mendapatkan R2 Signed URL:", err);
+      return null;
+    }
+  }
+
+  return path;
 }
 
-export default async function AdminGeneratedDocumentsPage() {
+export default async function AdminGeneratedDocumentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; service_id?: string; page?: string }>;
+}) {
   await requireAdmin();
-  const admin = createAdminClient();
+  const { q = "", service_id = "", page = "1" } = await searchParams;
 
-  // Fetch requests along with profiles, services, and generated_documents
-  const { data: requests } = await admin
-    .from("service_requests")
-    .select(
-      `
-      id,
-      request_number,
-      status,
-      profiles!service_requests_user_id_fkey (full_name),
-      services (id, name),
-      generated_documents (*)
-    `,
-    )
-    .order("created_at", { ascending: false });
+  const currentPage = Math.max(1, parseInt(page));
+  const pageSize = 20;
+  const skip = (currentPage - 1) * pageSize;
+
+  const where: any = {
+    // Only show requests that have a generated document
+    generated_documents: { isNot: null }
+  };
+
+  if (service_id) {
+    where.service_id = BigInt(service_id);
+  }
+
+  if (q) {
+    where.OR = [
+      { request_number: { contains: q, mode: 'insensitive' } },
+      { profiles: { full_name: { contains: q, mode: 'insensitive' } } },
+    ];
+  }
+
+  // Fetch data and count in parallel
+  const [rawRequests, totalCount] = await Promise.all([
+    prisma.service_requests.findMany({
+      where,
+      select: {
+        id: true,
+        request_number: true,
+        status: true,
+        created_at: true,
+        profiles: {
+          select: { full_name: true },
+        },
+        services: {
+          select: { id: true, name: true },
+        },
+        service_items: {
+          select: { name: true },
+        },
+        generated_documents: true,
+      },
+      orderBy: { created_at: "desc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.service_requests.count({ where }),
+  ]);
 
   // Fetch list of services for the filter dropdown
-  const { data: services } = await admin
-    .from("services")
-    .select("id, name")
-    .order("name");
+  const rawServices = await prisma.services.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  const requests = serializeBigInt(rawRequests);
+  const services = serializeBigInt(rawServices);
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Generate signed URLs for existing documents
   const urlEntries = await Promise.all(
-    (requests ?? []).map(async (request: any) => ({
+    requests.map(async (request: any) => ({
       id: request.id,
-      url: await getSignedUrl(request.generated_documents?.[0]?.file_path),
+      url: await getSignedUrl(request.generated_documents?.file_path),
     })),
   );
 
@@ -58,21 +109,36 @@ export default async function AdminGeneratedDocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-[#0f2563] to-[#1f4bb7] px-5 py-6 shadow-md shadow-blue-900/20">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          Dokumen Hasil
-        </h1>
-        <p className="mt-2 text-sm sm:text-base text-blue-100/90 font-medium max-w-2xl">
-          Kelola dokumen PDF hasil layanan. Anda dapat mencari, membuat ulang,
-          dan mengunduh dokumen resmi yang telah diterbitkan untuk pemohon.
-        </p>
-      </div>
-
-      <DokumenHasilClient
-        requests={requests || []}
-        urlMap={urlMap}
-        services={services || []}
+      <PageHeader
+        title="Dokumen Hasil"
+        description="Kelola dokumen PDF hasil layanan. Anda dapat mencari, melihat, dan mengunduh dokumen resmi yang telah diterbitkan untuk pemohon."
+        icon={FileOutput}
+        actions={
+          <ReportExportButton 
+            type="documents"
+            where={where}
+            fileName="Laporan_Dokumen_Hasil_PTSP"
+          />
+        }
       />
+
+      <div className="space-y-4">
+        <DokumenHasilClient
+          requests={requests || []}
+          urlMap={urlMap}
+          services={services || []}
+          q={q}
+          service_id={service_id}
+        />
+        
+        {totalPages > 1 && (
+          <AdminPagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            totalCount={totalCount}
+          />
+        )}
+      </div>
     </div>
   );
 }

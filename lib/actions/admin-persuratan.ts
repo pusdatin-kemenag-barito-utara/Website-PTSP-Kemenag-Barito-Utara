@@ -133,7 +133,7 @@ export async function saveSuratMasukAction(formData: FormData) {
 
     // Check permissions if not super admin
     if (profile.role !== "super_admin") {
-      const permissions = profile.permissions || [];
+      const permissions = (profile.permissions as string[]) || [];
       if (!permissions.includes("surat_masuk")) {
         return {
           error: "Anda tidak memiliki hak akses untuk mengelola Surat Masuk.",
@@ -194,7 +194,7 @@ export async function deleteSuratMasukAction(id: string) {
     const profile = await requireAdmin();
     // Check permissions if not super admin
     if (profile.role !== "super_admin") {
-      const permissions = profile.permissions || [];
+      const permissions = (profile.permissions as string[]) || [];
       if (!permissions.includes("surat_masuk")) {
         return {
           error: "Anda tidak memiliki hak akses untuk menghapus Surat Masuk.",
@@ -251,7 +251,7 @@ export async function saveSuratKeluarAction(formData: FormData) {
 
     // Check permissions if not super admin
     if (profile.role !== "super_admin") {
-      const permissions = profile.permissions || [];
+      const permissions = (profile.permissions as string[]) || [];
       if (!permissions.includes("surat_keluar")) {
         return {
           error: "Anda tidak memiliki hak akses untuk mengelola Surat Keluar.",
@@ -319,7 +319,7 @@ export async function deleteSuratKeluarAction(id: string) {
     const profile = await requireAdmin();
     // Check permissions if not super admin
     if (profile.role !== "super_admin") {
-      const permissions = profile.permissions || [];
+      const permissions = (profile.permissions as string[]) || [];
       if (!permissions.includes("surat_keluar")) {
         return {
           error: "Anda tidak memiliki hak akses untuk menghapus Surat Keluar.",

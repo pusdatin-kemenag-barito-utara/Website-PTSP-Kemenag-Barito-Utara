@@ -2,13 +2,14 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma from "@/lib/prisma";
 import {
   uploadToDrive,
   deleteFromDrive,
   getOrCreateFolder,
 } from "@/lib/google-drive";
 import { sanitizeFilename } from "@/lib/utils";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(
   request: Request,
@@ -17,20 +18,20 @@ export async function POST(
   try {
     const profile = await requireAuth();
     const { id } = await params;
+    const requestId = id;
     const formData = await request.formData();
 
     const answersJson = formData.get("answers") as string;
     const updates = JSON.parse(answersJson);
 
-    const admin = createAdminClient();
-
     // Verify ownership and status
-    const { data: reqData } = await admin
-      .from("service_requests")
-      .select("id, status, user_id")
-      .eq("id", id)
-      .eq("user_id", profile.id)
-      .single();
+    const reqData = await prisma.service_requests.findUnique({
+      where: { 
+        id: requestId,
+        user_id: profile.id,
+      },
+      select: { id: true, status: true },
+    });
 
     if (!reqData) {
       return NextResponse.json(
@@ -50,16 +51,7 @@ export async function POST(
       );
     }
 
-    // 1. Update text answers
-    for (const update of updates) {
-      await admin
-        .from("service_request_answers")
-        .update({ field_value: update.field_value })
-        .eq("id", update.id)
-        .eq("request_id", id);
-    }
-
-    // 2. Prepare user folder in Google Drive (for new uploads)
+    // 1. Prepare user folder in Google Drive (for new uploads)
     const mainFolderId = await getOrCreateFolder("File Persyaratan");
     const userFolderName = `${profile.full_name || "User"} (${profile.email})`;
     const userFolderId = await getOrCreateFolder(
@@ -67,99 +59,97 @@ export async function POST(
       mainFolderId as string,
     );
 
-    // 3. Fetch all existing documents for this request at once
-    // This avoids "uuid = bigint" errors by doing the matching in memory
-    const { data: existingDocs, error: fetchError } = await admin
-      .from("service_request_documents")
-      .select("*")
-      .eq("request_id", id);
+    // 2. Fetch existing documents
+    const existingDocs = await prisma.service_request_documents.findMany({
+      where: { request_id: requestId },
+    });
 
-    if (fetchError) {
-      console.error("[update] Error fetching existing docs:", fetchError);
-    }
+    // 3. Process updates in a transaction
+    await prisma.$transaction(async (tx) => {
+      // 3a. Update text answers
+      for (const update of updates) {
+        await tx.service_request_answers.updateMany({
+          where: {
+            id: BigInt(update.id),
+            request_id: requestId,
+          },
+          data: {
+            field_value: update.field_value,
+          },
+        });
+      }
 
-    // 4. Update documents
-    const entries = Array.from(formData.entries());
-    const fileEntries = entries.filter(([key]) => key.startsWith("doc_"));
+      // 3b. Update documents
+      const entries = Array.from(formData.entries());
+      const fileEntries = entries.filter(([key]) => key.startsWith("doc_"));
 
-    for (const [key, value] of fileEntries) {
-      if (!(value instanceof File) || value.size === 0) continue;
+      for (const [key, value] of fileEntries) {
+        if (!(value instanceof File) || value.size === 0) continue;
 
-      const docId = key.replace("doc_", "");
-      console.log(`[update] Processing file for docId identifier: ${docId}`);
+        const docIdStr = key.replace("doc_", "");
+        const docId = BigInt(docIdStr);
 
-      // Find the document in memory
-      // We check for both ID match and Requirement ID match
-      const currentDoc = existingDocs?.find(
-        (doc) =>
-          String(doc.id) === docId || String(doc.requirement_id) === docId,
-      );
+        // Find matching document by ID or Requirement ID
+        const currentDoc = existingDocs.find(
+          (doc) => doc.id === docId || doc.requirement_id === docId
+        );
 
-      const newFileName = sanitizeFilename(value.name);
-      const oldFilePath = currentDoc?.file_path;
+        const newFileName = sanitizeFilename(value.name);
+        const oldFilePath = currentDoc?.file_path;
 
-      try {
-        // 4a. Upload NEW file
+        // Upload NEW file to Drive
         const newDriveFile = await uploadToDrive(value, userFolderId as string);
         const newStoragePath = `gdrive:${newDriveFile.id}`;
 
         if (currentDoc) {
-          // UPDATE existing record
-          const { error: dbError } = await admin
-            .from("service_request_documents")
-            .update({
+          // UPDATE record
+          await tx.service_request_documents.update({
+            where: { id: currentDoc.id },
+            data: {
               file_name: newFileName,
               file_path: newStoragePath,
-              file_size: value.size,
+              file_size: BigInt(value.size),
               file_type: value.type || "application/octet-stream",
-            })
-            .eq("id", currentDoc.id);
+            },
+          });
 
-          if (dbError) throw dbError;
-
-          // Delete old file from Drive
+          // Cleanup old file (async, outside transaction ideally, but we handle errors)
           if (oldFilePath) {
             try {
               if (oldFilePath.startsWith("gdrive:")) {
                 await deleteFromDrive(oldFilePath.replace("gdrive:", ""));
               } else {
-                await admin.storage
-                  .from("request-documents")
-                  .remove([oldFilePath]);
+                const admin = createAdminClient();
+                await admin.storage.from("request-documents").remove([oldFilePath]);
               }
             } catch (delErr) {
               console.warn(`[update] Could not delete old file:`, delErr);
             }
           }
         } else {
-          // INSERT new record (if not found in memory)
-          const numericDocId = parseInt(docId);
-          const { error: insError } = await admin
-            .from("service_request_documents")
-            .insert({
-              request_id: id,
-              requirement_id: isNaN(numericDocId) ? null : numericDocId,
+          // INSERT new record
+          await tx.service_request_documents.create({
+            data: {
+              request_id: requestId,
+              requirement_id: docId, // assuming docId is requirement_id here
               file_name: newFileName,
               file_path: newStoragePath,
-              file_size: value.size,
+              file_size: BigInt(value.size),
               file_type: value.type || "application/octet-stream",
-            });
-
-          if (insError) throw insError;
+            },
+          });
         }
-
-        console.log(`[update] Successfully handled document ${docId}`);
-      } catch (err) {
-        console.error(`[update] Failed to handle doc ${docId}:`, err);
       }
-    }
 
-    // 5. Activity log
-    await admin.from("activity_logs").insert({
-      request_id: id,
-      actor_id: profile.id,
-      action: "request_updated",
-      notes: "Pemohon memperbarui data dan dokumen pengajuan.",
+      // 3c. Activity log
+      await tx.activity_logs.create({
+        data: {
+          request_id: requestId,
+          actor_id: profile.id,
+          action: "request_updated",
+          notes: "Pemohon memperbarui data dan dokumen pengajuan.",
+        },
+      });
     });
 
     return NextResponse.json({ success: true });

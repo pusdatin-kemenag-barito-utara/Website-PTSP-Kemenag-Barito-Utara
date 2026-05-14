@@ -1,0 +1,104 @@
+"use server";
+
+import prisma from "@/lib/prisma";
+import { getCurrentProfile } from "@/lib/auth";
+
+export async function getPublicRequestStatus(query: string) {
+  if (!query) return { error: "Nomor permohonan tidak boleh kosong." };
+
+  const profile = await getCurrentProfile();
+  const currentYear = new Date().getFullYear();
+  let requestNumber = query.trim();
+
+  // Jika user hanya memasukkan angka belakang (misal: 000123)
+  if (/^\d+$/.test(requestNumber)) {
+    requestNumber = `PTSP-${currentYear}-${requestNumber}`;
+  } 
+  // Jika user memasukkan tahun dan angka saja (misal: 2026-000123)
+  else if (/^\d{4}-\d+$/.test(requestNumber)) {
+    requestNumber = `PTSP-${requestNumber}`;
+  }
+
+  try {
+    const request = await prisma.service_requests.findUnique({
+      where: { request_number: requestNumber },
+      include: {
+        profiles: {
+          select: { full_name: true }
+        },
+        services: {
+          select: { name: true }
+        },
+        service_items: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (!request) {
+      return { error: "Nomor permohonan tidak ditemukan. Pastikan nomor yang Anda masukkan benar." };
+    }
+
+    const isOwner = profile?.id === request.user_id;
+
+    // Map status to Indonesian labels
+    const statusMap: Record<string, { label: string; color: string; description: string }> = {
+      submitted: { 
+        label: "Diterima", 
+        color: "blue", 
+        description: "Berkas Anda telah kami terima dan menunggu antrian verifikasi." 
+      },
+      under_review: { 
+        label: "Sedang Diverifikasi", 
+        color: "amber", 
+        description: "Petugas sedang memeriksa kelengkapan dan keabsahan dokumen Anda." 
+      },
+      revision_required: { 
+        label: "Perlu Revisi", 
+        color: "rose", 
+        description: "Ada dokumen yang kurang atau tidak sesuai. Silakan login ke akun Anda untuk melihat detail revisi." 
+      },
+      approved: { 
+        label: "Disetujui", 
+        color: "emerald", 
+        description: "Permohonan Anda telah disetujui dan sedang dalam proses penyelesaian dokumen." 
+      },
+      completed: { 
+        label: "Selesai", 
+        color: "emerald", 
+        description: "Permohonan Anda telah selesai diproses. Anda bisa melihat/unduh dokumen hasil di dashboard." 
+      },
+      rejected: { 
+        label: "Ditolak", 
+        color: "slate", 
+        description: "Mohon maaf, permohonan Anda tidak dapat kami proses. Silakan login untuk melihat alasan penolakan." 
+      }
+    };
+
+    const statusInfo = statusMap[request.status] || { 
+      label: request.status.toUpperCase(), 
+      color: "slate", 
+      description: "Status permohonan sedang dalam pembaruan." 
+    };
+
+    return {
+      success: true,
+      data: {
+        id: request.id,
+        request_number: request.request_number,
+        service_name: request.services?.name || "-",
+        item_name: request.service_items?.name || "-",
+        applicant_name: request.profiles?.full_name || "-",
+        status: statusInfo.label,
+        status_color: statusInfo.color,
+        status_description: statusInfo.description,
+        created_at: request.created_at,
+        updated_at: request.updated_at,
+        is_owner: isOwner
+      }
+    };
+  } catch (error) {
+    console.error("Public tracking error:", error);
+    return { error: "Terjadi kesalahan sistem saat melacak data." };
+  }
+}

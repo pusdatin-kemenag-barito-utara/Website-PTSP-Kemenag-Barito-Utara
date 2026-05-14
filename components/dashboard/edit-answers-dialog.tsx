@@ -31,7 +31,7 @@ export function EditAnswersDialog({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 border-slate-200 text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all"
+          className="h-8 gap-1.5 border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all"
           disabled={disabled}
           onClick={() => setOpen(true)}
         >
@@ -42,7 +42,7 @@ export function EditAnswersDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Edit className="h-5 w-5 text-blue-600" />
+            <Edit className="h-5 w-5 text-emerald-600" />
             <span>Edit Data &amp; Dokumen Pengajuan</span>
           </DialogTitle>
           <p className="text-xs text-slate-500 mt-1">

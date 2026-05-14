@@ -26,7 +26,7 @@ export function TrackStatusCard({
             {result.request_number}
           </h2>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-flex">
-            <span className="text-[#1f4bb7]">{result.services?.name}</span>
+            <span className="text-[#059669]">{result.services?.name}</span>
             <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
             <span>{result.service_items?.name}</span>
           </div>
@@ -122,10 +122,10 @@ export function TrackStatusCard({
               href={generatedUrl}
               target="_blank"
               rel="noreferrer"
-              className="group flex items-center justify-between rounded-2xl border border-[#1f4bb7]/20 bg-[#1f4bb7]/5 p-5 transition-colors hover:bg-[#1f4bb7]/10"
+              className="group flex items-center justify-between rounded-2xl border border-[#059669]/20 bg-[#059669]/5 p-5 transition-colors hover:bg-[#059669]/10"
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1f4bb7] text-white shadow-md">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#059669] text-white shadow-md">
                   <Download className="h-6 w-6" />
                 </div>
                 <div>
@@ -137,7 +137,7 @@ export function TrackStatusCard({
                   </p>
                 </div>
               </div>
-              <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-white text-[#1f4bb7] shadow-sm transition-transform group-hover:scale-110 sm:flex">
+              <div className="hidden h-10 w-10 items-center justify-center rounded-full bg-white text-[#059669] shadow-sm transition-transform group-hover:scale-110 sm:flex">
                 <ArrowRight className="h-5 w-5" />
               </div>
             </a>

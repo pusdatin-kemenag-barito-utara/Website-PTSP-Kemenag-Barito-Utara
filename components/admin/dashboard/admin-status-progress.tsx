@@ -17,12 +17,12 @@ export function AdminStatusProgress({
     <div className="lg:col-span-2 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-[#1f4bb7]" />
+          <Activity className="h-4 w-4 text-[#059669]" />
           Status Progres Pengajuan
         </h2>
         <Link
           href="/admin/pengajuan"
-          className="text-xs font-bold text-[#1f4bb7] hover:text-[#143481] transition-colors"
+          className="text-xs font-bold text-[#059669] hover:text-emerald-700 transition-colors"
         >
           Lihat Rincian &rarr;
         </Link>
@@ -47,9 +47,9 @@ export function AdminStatusProgress({
               {
                 label: "Masuk / Menunggu",
                 value: stats.submitted,
-                color: "bg-blue-500",
-                text: "text-blue-700",
-                bg: "bg-blue-50",
+                color: "bg-emerald-500",
+                text: "text-emerald-700",
+                bg: "bg-emerald-50",
               },
               {
                 label: "Sedang Diproses",

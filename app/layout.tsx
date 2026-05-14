@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ConditionalShell } from "@/components/conditional-shell";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
+import { ChatWidget } from "@/components/features/chat/ChatWidget";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,7 +15,6 @@ const inter = Inter({
   display: "swap",
   variable: "--font-inter",
 });
-
 export const metadata: Metadata = {
   metadataBase: new URL("https://ptsp.kemenag-baritoutara.com"),
   title: {
@@ -113,7 +113,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   ];
 
   return (
-    <html lang="id" className={inter.variable}>
+    <html lang="id" className={`${inter.variable}`}>
       <head>
         <script
           type="application/ld+json"
@@ -127,6 +127,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Analytics />
           </ConditionalShell>
           <Toaster position="top-center" richColors />
+          <ChatWidget />
         </div>
       </body>
     </html>

@@ -18,14 +18,14 @@ function NavLink({
       onClick={onClick}
       className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-all duration-300 ${
         isActive
-          ? "bg-blue-50/80 text-[#1f4bb7] shadow-sm shadow-blue-100/50 border border-blue-100/50"
+          ? "bg-emerald-50/80 text-[#059669] shadow-sm shadow-emerald-100/50 border border-emerald-100/50"
           : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 border border-transparent"
       }`}
     >
       <span
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-300 ${
           isActive
-            ? "bg-white shadow-sm text-[#1f4bb7]"
+            ? "bg-white shadow-sm text-[#059669]"
             : "bg-transparent text-slate-400 group-hover:text-slate-600 group-hover:bg-white group-hover:shadow-sm"
         }`}
       >
@@ -33,7 +33,7 @@ function NavLink({
       </span>
       <span className="flex-1 leading-tight truncate">{item.label}</span>
       {isActive && (
-        <ChevronRight className="h-4 w-4 opacity-60 shrink-0 text-[#1f4bb7]" />
+        <ChevronRight className="h-4 w-4 opacity-60 shrink-0 text-[#059669]" />
       )}
     </Link>
   );
@@ -66,7 +66,7 @@ export function AdminSidebar({
     <div className="flex h-full flex-col">
       {/* Logo / Brand */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-100">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1f4bb7] to-[#143481] shadow-lg shadow-blue-900/20">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-lg shadow-emerald-900/20">
           <Shield className="h-5 w-5 text-white" />
         </div>
         <div className="min-w-0 flex-1">
@@ -119,7 +119,7 @@ export function AdminSidebar({
       <div className="border-t border-slate-100 bg-slate-50/50 p-4 space-y-3">
         {/* Profile card */}
         <div className="flex items-center gap-3 rounded-2xl bg-white border border-slate-200/60 px-3 py-3 shadow-sm">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-indigo-50 border border-blue-200/50 text-xs font-black text-[#1f4bb7]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 border border-emerald-200/50 text-xs font-black text-[#059669]">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
@@ -133,7 +133,7 @@ export function AdminSidebar({
                   Super Admin
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1f4bb7]">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#059669]">
                   <Shield className="h-3 w-3" />
                   Administrator
                 </span>

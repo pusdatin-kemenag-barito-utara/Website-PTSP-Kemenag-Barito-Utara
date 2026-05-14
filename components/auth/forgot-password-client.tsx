@@ -32,7 +32,7 @@ export function ForgotPasswordClient() {
             {/* Form Header */}
             <div
               className={`h-1.5 w-full ${
-                role === "user" ? "bg-emerald-500" : "bg-[#1f4bb7]"
+                role === "user" ? "bg-emerald-500" : "bg-[#059669]"
               }`}
             />
 

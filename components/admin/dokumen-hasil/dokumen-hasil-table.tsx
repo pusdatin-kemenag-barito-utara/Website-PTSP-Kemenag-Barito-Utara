@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  Download,
+  Eye,
 } from "lucide-react";
 
 export function DokumenHasilTable({
@@ -36,9 +36,9 @@ export function DokumenHasilTable({
     <div className="divide-y divide-slate-100">
       {paginatedRequests.map((request: any) => {
         const fileUrl = urlMap[request.id];
-        const isGenerated = !!request.generated_documents?.[0];
+        const isGenerated = !!request.generated_documents;
         const docDate = isGenerated
-          ? formatDate(request.generated_documents[0].generated_at)
+          ? formatDate(request.generated_documents.generated_at)
           : null;
 
         return (
@@ -68,16 +68,16 @@ export function DokumenHasilTable({
                   </span>
                   <span
                     className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                      request.status === "selesai"
+                      request.status === "completed"
                         ? "bg-emerald-100 text-emerald-700"
-                        : request.status === "diproses"
+                        : request.status === "under_review"
                           ? "bg-blue-100 text-blue-700"
-                          : request.status === "ditolak"
+                          : request.status === "rejected"
                             ? "bg-red-100 text-red-700"
                             : "bg-amber-100 text-amber-700"
                     }`}
                   >
-                    {request.status}
+                    {request.status.replace(/_/g, " ")}
                   </span>
                 </div>
                 <p className="text-sm font-medium text-slate-700 truncate">
@@ -97,7 +97,7 @@ export function DokumenHasilTable({
 
             {/* Actions */}
             <div className="flex items-center gap-3 shrink-0 ml-16 md:ml-0">
-              {request.generated_documents?.[0]?.file_path === "EXPIRED" ? (
+              {request.generated_documents?.file_path === "EXPIRED" ? (
                 <span className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-red-50 text-red-600 border border-red-200">
                   <AlertCircle className="h-4 w-4" />
                   Kadaluarsa
@@ -107,15 +107,15 @@ export function DokumenHasilTable({
                   href={fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-sm active:scale-95"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-sm active:scale-95"
                 >
-                  <Download className="h-4 w-4" />
-                  Unduh
+                  <Eye className="h-4 w-4" />
+                  Lihat File
                 </a>
               ) : (
                 <button
                   disabled
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed"
                 >
                   <AlertCircle className="h-4 w-4" />
                   Belum Ada

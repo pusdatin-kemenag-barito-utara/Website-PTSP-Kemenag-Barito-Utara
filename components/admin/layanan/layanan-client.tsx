@@ -15,7 +15,15 @@ import {
 
 import { slugify } from "@/lib/utils";
 
-export function LayananClient({ initialServices }: { initialServices: any[] }) {
+export function LayananClient({
+  initialServices,
+  currentUserRole = "",
+  isSuperAdmin = false,
+}: {
+  initialServices: any[];
+  currentUserRole?: string;
+  isSuperAdmin?: boolean;
+}) {
   const [services, setServices] = useState(initialServices);
   const [isPending, startTransition] = useTransition();
 
@@ -28,8 +36,8 @@ export function LayananClient({ initialServices }: { initialServices: any[] }) {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    description: "",
     is_active: true,
+    role_owner: "",
   });
 
   useEffect(() => {
@@ -50,8 +58,8 @@ export function LayananClient({ initialServices }: { initialServices: any[] }) {
     setFormData({
       name: service.name,
       slug: service.slug,
-      description: service.description || "",
       is_active: service.is_active,
+      role_owner: service.role_owner || "",
     });
   };
 
@@ -60,8 +68,8 @@ export function LayananClient({ initialServices }: { initialServices: any[] }) {
     const data = new FormData();
     data.append("name", formData.name);
     data.append("slug", formData.slug);
-    data.append("description", formData.description);
     if (formData.is_active) data.append("is_active", "on");
+    if (formData.role_owner) data.append("role_owner", formData.role_owner);
 
     startTransition(async () => {
       try {
@@ -79,7 +87,7 @@ export function LayananClient({ initialServices }: { initialServices: any[] }) {
         }
         setIsAddOpen(false);
         setEditingService(null);
-        setFormData({ name: "", slug: "", description: "", is_active: true });
+        setFormData({ name: "", slug: "", is_active: true, role_owner: "" });
       } catch (error) {
         toast.error("Gagal menyimpan data.");
       }
@@ -169,12 +177,13 @@ export function LayananClient({ initialServices }: { initialServices: any[] }) {
             setFormData({
               name: "",
               slug: "",
-              description: "",
               is_active: true,
+              // Jika bukan super admin, pre-fill role_owner dengan role bidang yang sedang login
+              role_owner: isSuperAdmin ? "" : currentUserRole,
             });
             setIsAddOpen(true);
           }}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#1f4bb7] to-[#2557c9] px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-blue-500/20 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#059669] to-[#047857] px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-500/20 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
         >
           <Plus className="h-4 w-4" />
           Tambah Layanan Baru
@@ -188,6 +197,8 @@ export function LayananClient({ initialServices }: { initialServices: any[] }) {
         onMoveDown={moveDown}
         onEdit={openEdit}
         onDelete={setDeletingService}
+        showBidangColumn={isSuperAdmin}
+        isSuperAdmin={isSuperAdmin}
       />
 
       {/* FLOATING MODAL: ADD / EDIT */}

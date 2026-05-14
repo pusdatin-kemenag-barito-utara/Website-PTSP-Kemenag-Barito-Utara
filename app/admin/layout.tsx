@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
   isSuperAdmin,
   ALL_ADMIN_MENUS,
@@ -21,7 +20,7 @@ export default async function AdminLayout({
     allowedMenus = ALL_ADMIN_MENUS;
   } else {
     // If permissions array is null/undefined in DB, use default
-    allowedMenus = profile.permissions || DEFAULT_ADMIN_PERMISSIONS;
+    allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
   }
 
   return (

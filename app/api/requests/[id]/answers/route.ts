@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import prisma from "@/lib/prisma";
 
 export async function PUT(
   request: Request,
@@ -16,15 +16,16 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const admin = createAdminClient();
+    const requestId = id;
 
     // Verify ownership and status
-    const { data: reqData } = await admin
-      .from("service_requests")
-      .select("id, status")
-      .eq("id", id)
-      .eq("user_id", profile.id)
-      .single();
+    const reqData = await prisma.service_requests.findUnique({
+      where: { 
+        id: requestId,
+        user_id: profile.id,
+      },
+      select: { id: true, status: true },
+    });
 
     if (!reqData) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -41,25 +42,32 @@ export async function PUT(
       );
     }
 
-    // Update each answer
-    // To do this reliably, we update them one by one or in a loop
-    for (const update of updates) {
-      await admin
-        .from("service_request_answers")
-        .update({ field_value: update.field_value })
-        .eq("id", update.id)
-        .eq("request_id", id);
-    }
+    // Update each answer and log activity in transaction
+    await prisma.$transaction(async (tx) => {
+      for (const update of updates) {
+        await tx.service_request_answers.updateMany({
+          where: {
+            id: BigInt(update.id),
+            request_id: requestId,
+          },
+          data: {
+            field_value: update.field_value,
+          },
+        });
+      }
 
-    // Add activity log
-    await admin.from("activity_logs").insert({
-      request_id: id,
-      user_id: profile.id,
-      action: "Pemohon memperbarui data formulir",
+      await tx.activity_logs.create({
+        data: {
+          request_id: requestId,
+          actor_id: profile.id,
+          action: "Pemohon memperbarui data formulir",
+        },
+      });
     });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    console.error("Error updating answers:", err);
     return NextResponse.json(
       { error: err.message || "Internal Error" },
       { status: 500 },
