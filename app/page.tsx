@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { SiteHomeFaq } from "@/components/site-home-faq";
 import { HomeHero } from "@/components/home-hero";
 import { HomeQuickAccess } from "@/components/home-quick-access";
@@ -7,12 +6,6 @@ import { HomeHowItWorks } from "@/components/home-how-it-works";
 import { BookOpenCheck } from "lucide-react";
 
 export default async function HomePage() {
-  // Hanya redirect ke portal utama jika sedang di environment production
-  // Di localhost (development), halaman ini tetap bisa diakses dan diedit
-  if (process.env.NODE_ENV === "production") {
-    redirect("https://www.kemenag-baritoutara.com/");
-  }
-
   return (
     <div className="w-full overflow-x-hidden">
       <HomeHero />
