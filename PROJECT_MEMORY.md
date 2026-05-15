@@ -26,6 +26,11 @@ Penyusunan kategori harus mengikuti struktur resmi Kantor Kemenag Barito Utara:
     - Komponen `TextHighlight` wajib digunakan untuk menandai kecocokan kata kunci.
 - **Sistem Pelacakan**: Desain transparan dengan *Timeline* modern untuk memantau status dokumen warga.
 
+## ⚙️ Optimasi & Standar Perbaikan (Zero Error Policy)
+1.  **Recharts Fix**: Wajib menggunakan `ResizeObserver` dan pengecekan `offsetWidth > 0` sebelum merender `ResponsiveContainer` guna menghindari error dimensi `-1` di konsol.
+2.  **CSP Compliance**: Dilarang memanggil aset media (suara/video) dari URL eksternal di dashboard admin. Simpan aset di `/public/sounds/` untuk menghindari pemblokiran *Content Security Policy*.
+3.  **Strict TypeScript**: Selalu gunakan tipe data eksplisit pada parameter callback (misal: `(c: string)`) untuk menjamin kelancaran proses `npm run build`.
+
 ## 🛠️ Tech Stack
 - **Framework**: Next.js (App Router)
 - **Database**: Prisma ORM (PostgreSQL)
@@ -40,4 +45,4 @@ Penyusunan kategori harus mengikuti struktur resmi Kantor Kemenag Barito Utara:
 4.  **SEO**: Pastikan setiap halaman memiliki metadata yang tepat untuk kemudahan pencarian di Google.
 
 ---
-*Terakhir Diperbarui: 15 Mei 2026*
+*Terakhir Diperbarui: 16 Mei 2026*
