@@ -48,24 +48,29 @@ function TextHighlight({ text, query }: { text: string; query: string }) {
     .toLowerCase()
     .split(/[,\s]+/)
     .filter(Boolean)
-    .sort((a, b) => b.length - a.length);
+    .sort((a: string, b: string) => b.length - a.length);
 
   if (keywords.length === 0) return <span>{text}</span>;
 
-  const pattern = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const pattern = keywords
+    .map((k: string) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
   const regex = new RegExp(`(${pattern})`, "gi");
   const parts = text.split(regex);
 
   return (
     <span>
-      {parts.map((part, i) =>
+      {parts.map((part: string, i: number) =>
         regex.test(part) ? (
-          <mark key={i} className="bg-emerald-100 text-emerald-900 px-0.5 rounded-sm font-bold">
+          <mark
+            key={i}
+            className="bg-emerald-100 text-emerald-900 px-0.5 rounded-sm font-bold"
+          >
             {part}
           </mark>
         ) : (
           part
-        )
+        ),
       )}
     </span>
   );
@@ -85,20 +90,23 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
     const keyword = normalize(query);
     if (!keyword) return services;
 
-    const orGroups = query.split(",").map(g => g.trim()).filter(Boolean);
+    const orGroups = query
+      .split(",")
+      .map((g: string) => g.trim())
+      .filter(Boolean);
 
-    return services.filter((service) => {
-      return orGroups.some(group => {
+    return services.filter((service: Service) => {
+      return orGroups.some((group: string) => {
         const andKeywords = group.toLowerCase().split(/\s+/).filter(Boolean);
-        
-        return andKeywords.every(word => {
+
+        return andKeywords.every((word: string) => {
           if (service.name.toLowerCase().includes(word)) return true;
           if (service.description?.toLowerCase().includes(word)) return true;
 
-          return (service.service_items ?? []).some(item => {
+          return (service.service_items ?? []).some((item: ServiceItem) => {
             if (item.name.toLowerCase().includes(word)) return true;
-            return (item.service_requirements ?? []).some(req => 
-              req.document_name.toLowerCase().includes(word)
+            return (item.service_requirements ?? []).some((req: Requirement) =>
+              req.document_name.toLowerCase().includes(word),
             );
           });
         });
@@ -149,7 +157,13 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
         <div className="mt-4 flex items-center justify-between px-2">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
             {query ? (
-              <span>Hasil: <span className="text-emerald-600">{filteredServices.length} Unit Kerja</span> Terdeteksi</span>
+              <span>
+                Hasil:{" "}
+                <span className="text-emerald-600">
+                  {filteredServices.length} Unit Kerja
+                </span>{" "}
+                Terdeteksi
+              </span>
             ) : (
               `Menampilkan ${services.length} Unit Kerja Utama`
             )}
@@ -163,14 +177,21 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
             <div className="mx-auto h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
               <Search className="h-8 w-8 text-slate-300" />
             </div>
-            <p className="text-slate-500 font-bold text-lg">Layanan tidak ditemukan</p>
-            <p className="text-slate-400 text-sm mt-1">Coba gunakan kata kunci yang lebih umum atau periksa ejaan Anda.</p>
-            <button onClick={() => setQuery("")} className="mt-6 inline-flex items-center gap-2 text-[#059669] text-sm font-black underline underline-offset-4 decoration-2 hover:text-emerald-700 transition-colors">
+            <p className="text-slate-500 font-bold text-lg">
+              Layanan tidak ditemukan
+            </p>
+            <p className="text-slate-400 text-sm mt-1">
+              Coba gunakan kata kunci yang lebih umum atau periksa ejaan Anda.
+            </p>
+            <button
+              onClick={() => setQuery("")}
+              className="mt-6 inline-flex items-center gap-2 text-[#059669] text-sm font-black underline underline-offset-4 decoration-2 hover:text-emerald-700 transition-colors"
+            >
               Reset Pencarian
             </button>
           </div>
         ) : (
-          filteredServices.map((service, idx) => {
+          filteredServices.map((service: Service, idx: number) => {
             const isOpen = openId === service.id;
             return (
               <div
@@ -208,14 +229,16 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                       </div>
                       <h3
                         className={`text-lg sm:text-2xl font-black transition-colors duration-300 leading-tight ${
-                          isOpen ? "text-[#059669]" : "text-slate-900 group-hover:text-[#059669]"
+                          isOpen
+                            ? "text-[#059669]"
+                            : "text-slate-900 group-hover:text-[#059669]"
                         }`}
                       >
                         <TextHighlight text={service.name} query={query} />
                       </h3>
                     </div>
                   </div>
-                  
+
                   <div
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all duration-500 ${
                       isOpen
@@ -233,54 +256,96 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+                      transition={{
+                        duration: 0.4,
+                        ease: [0.04, 0.62, 0.23, 0.98],
+                      }}
                     >
                       <div className="px-6 pb-8 sm:px-10 border-t border-slate-50 pt-8 bg-slate-50/30">
                         <div className="grid gap-8 lg:grid-cols-12">
                           <div className="lg:col-span-12 space-y-4">
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Pilih Layanan Spesifik:</h4>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">
+                              Pilih Layanan Spesifik:
+                            </h4>
                             <div className="grid gap-3 sm:grid-cols-2">
-                              {service.service_items && service.service_items.length > 0 ? (
-                                service.service_items.map((item, ridx) => {
-                                  const isMatching = query && (
-                                    item.name.toLowerCase().includes(query.toLowerCase()) ||
-                                    (item.service_requirements ?? []).some(r => r.document_name.toLowerCase().includes(query.toLowerCase()))
-                                  );
+                              {service.service_items &&
+                              service.service_items.length > 0 ? (
+                                service.service_items.map(
+                                  (item: ServiceItem, ridx: number) => {
+                                    const isMatching =
+                                      query &&
+                                      (item.name
+                                        .toLowerCase()
+                                        .includes(query.toLowerCase()) ||
+                                        (item.service_requirements ?? []).some(
+                                          (r: Requirement) =>
+                                            r.document_name
+                                              .toLowerCase()
+                                              .includes(query.toLowerCase()),
+                                        ));
 
-                                  return (
-                                    <Link
-                                      key={item.id}
-                                      href={`/layanan/${service.slug}`}
-                                      className={`flex items-center justify-between gap-3 p-5 rounded-2xl border transition-all group/item ${
-                                        isMatching 
-                                          ? "border-emerald-200 bg-emerald-50/50 ring-2 ring-emerald-500/10" 
-                                          : "border-white bg-white hover:border-emerald-200 hover:shadow-lg"
-                                      }`}
-                                    >
-                                      <div className="flex gap-3 items-start min-w-0">
-                                        <span className={`text-sm font-black shrink-0 mt-0.5 ${isMatching ? "text-emerald-600" : "text-slate-300"}`}>
-                                          {ridx + 1}.
-                                        </span>
-                                        <div className="min-w-0">
-                                          <span className="text-[15px] font-bold text-slate-700 leading-tight block">
-                                            <TextHighlight text={item.name} query={query} />
+                                    return (
+                                      <Link
+                                        key={item.id}
+                                        href={`/layanan/${service.slug}`}
+                                        className={`flex items-center justify-between gap-3 p-5 rounded-2xl border transition-all group/item ${
+                                          isMatching
+                                            ? "border-emerald-200 bg-emerald-50/50 ring-2 ring-emerald-500/10"
+                                            : "border-white bg-white hover:border-emerald-200 hover:shadow-lg"
+                                        }`}
+                                      >
+                                        <div className="flex gap-3 items-start min-w-0">
+                                          <span
+                                            className={`text-sm font-black shrink-0 mt-0.5 ${isMatching ? "text-emerald-600" : "text-slate-300"}`}
+                                          >
+                                            {ridx + 1}.
                                           </span>
-                                          {isMatching && (item.service_requirements ?? []).some(r => r.document_name.toLowerCase().includes(query.toLowerCase())) && (
-                                            <p className="mt-2 text-[10px] text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                              <ShieldCheck className="h-3 w-3" /> Syarat Terdeteksi: <span className="text-emerald-900/50">
-                                                {item.service_requirements?.find(r => r.document_name.toLowerCase().includes(query.toLowerCase()))?.document_name}
-                                              </span>
-                                            </p>
-                                          )}
+                                          <div className="min-w-0">
+                                            <span className="text-[15px] font-bold text-slate-700 leading-tight block">
+                                              <TextHighlight
+                                                text={item.name}
+                                                query={query}
+                                              />
+                                            </span>
+                                            {isMatching &&
+                                              (
+                                                item.service_requirements ?? []
+                                              ).some((r) =>
+                                                r.document_name
+                                                  .toLowerCase()
+                                                  .includes(
+                                                    query.toLowerCase(),
+                                                  ),
+                                              ) && (
+                                                <p className="mt-2 text-[10px] text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                                  <ShieldCheck className="h-3 w-3" />{" "}
+                                                  Syarat Terdeteksi:{" "}
+                                                  <span className="text-emerald-900/50">
+                                                    {
+                                                      item.service_requirements?.find(
+                                                        (r) =>
+                                                          r.document_name
+                                                            .toLowerCase()
+                                                            .includes(
+                                                              query.toLowerCase(),
+                                                            ),
+                                                      )?.document_name
+                                                    }
+                                                  </span>
+                                                </p>
+                                              )}
+                                          </div>
                                         </div>
-                                      </div>
-                                      <ArrowRight className="h-4 w-4 text-slate-300 group-hover/item:text-emerald-500 group-hover/item:translate-x-1 transition-all shrink-0" />
-                                    </Link>
-                                  );
-                                })
+                                        <ArrowRight className="h-4 w-4 text-slate-300 group-hover/item:text-emerald-500 group-hover/item:translate-x-1 transition-all shrink-0" />
+                                      </Link>
+                                    );
+                                  },
+                                )
                               ) : (
                                 <div className="col-span-2 py-8 text-center bg-white rounded-2xl border border-dashed border-slate-200">
-                                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada item layanan</p>
+                                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                    Belum ada item layanan
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -301,7 +366,13 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
 
 export function ServicesFilter({ services }: { services: Service[] }) {
   return (
-    <Suspense fallback={<div className="h-20 flex items-center justify-center"><div className="animate-spin h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full" /></div>}>
+    <Suspense
+      fallback={
+        <div className="h-20 flex items-center justify-center">
+          <div className="animate-spin h-6 w-6 border-2 border-emerald-600 border-t-transparent rounded-full" />
+        </div>
+      }
+    >
       <ServicesFilterContent services={services} />
     </Suspense>
   );

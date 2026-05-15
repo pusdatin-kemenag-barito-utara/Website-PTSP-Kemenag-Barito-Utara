@@ -65,7 +65,7 @@ export async function prependToSheet(sheetName: string, values: any[][]) {
     spreadsheetId: SPREADSHEET_ID,
   });
   const sheet = spreadsheet.data.sheets?.find(
-    (s) => s.properties?.title === sheetName,
+    (s: any) => s.properties?.title === sheetName,
   );
   if (!sheet) throw new Error(`Sheet ${sheetName} not found`);
   const sheetId = sheet.properties?.sheetId;
@@ -91,7 +91,7 @@ export async function prependToSheet(sheetName: string, values: any[][]) {
           updateCells: {
             rows: [
               {
-                values: values[0].map((val) => ({
+                values: values[0].map((val: any) => ({
                   userEnteredValue:
                     typeof val === "number"
                       ? { numberValue: val }
@@ -143,7 +143,7 @@ export async function deleteSheetRow(sheetName: string, rowIndex: number) {
   });
 
   const sheet = spreadsheet.data.sheets?.find(
-    (s) => s.properties?.title === sheetName,
+    (s: any) => s.properties?.title === sheetName,
   );
 
   if (!sheet) throw new Error(`Sheet ${sheetName} not found`);

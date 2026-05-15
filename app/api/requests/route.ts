@@ -13,7 +13,7 @@ function isAllowedExtension(fileName: string, allowedExtensions: string) {
   const extension = fileName.split(".").pop()?.toLowerCase() || "";
   const allowed = allowedExtensions
     .split(",")
-    .map((item) => item.trim().toLowerCase())
+    .map((item: string) => item.trim().toLowerCase())
     .filter(Boolean);
   return allowed.includes(extension);
 }
@@ -59,7 +59,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (file && file.size > (Number(requirement.max_file_size_mb) || 5) * 1024 * 1024) {
+    if (
+      file &&
+      file.size > (Number(requirement.max_file_size_mb) || 5) * 1024 * 1024
+    ) {
       return NextResponse.json(
         {
           error: `Ukuran file terlalu besar untuk ${requirement.document_name}`,
@@ -98,7 +101,7 @@ export async function POST(request: Request) {
       });
 
       // 2. Save form answers
-      const answersData = fields.map((field) => ({
+      const answersData = fields.map((field: any) => ({
         request_id: createdRequest.id,
         field_id: field.id,
         field_name: field.label,
@@ -126,83 +129,99 @@ export async function POST(request: Request) {
 
     // 4. Handle Google Drive uploads
     const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-    
+
     const userProfile = await prisma.profiles.findUnique({
       where: { id: user.id },
       select: { full_name: true, email: true },
     });
 
-    const safeUserName = sanitizeFilename(userProfile?.full_name || "User").replace(/\s+/g, "_");
-    
+    const safeUserName = sanitizeFilename(
+      userProfile?.full_name || "User",
+    ).replace(/\s+/g, "_");
+
     // Buat/Cari folder User di dalam folder Utama (PTSP_UPLOADS)
     const userFolderId = await getOrCreateFolder(
       `${safeUserName}_${user.id.substring(0, 8)}`,
-      rootFolderId as string
+      rootFolderId as string,
     );
 
     // Folder khusus untuk pengajuan ini
     const requestFolderId = await getOrCreateFolder(
       result.request_number,
-      userFolderId as string
+      userFolderId as string,
     );
 
-    const uploadPromises = (requirements ?? []).map(async (requirement) => {
-      const file = formData.get(`requirement_${requirement.id}`) as File | null;
-      if (!file || file.size === 0) return;
+    const uploadPromises = (requirements ?? []).map(
+      async (requirement: any) => {
+        const file = formData.get(
+          `requirement_${requirement.id}`,
+        ) as File | null;
+        if (!file || file.size === 0) return;
 
-      const originalFileName = sanitizeFilename(file.name);
-      const safeRequirementName = sanitizeFilename(requirement.document_name).replace(/\s+/g, "_");
-      
-      // Nama file yang rapi: [NAMA_SYARAT]_[NAMA_ASLI]
-      const finalFileName = `${safeRequirementName}_${originalFileName}`;
-      
-      // 1. Upload ke Cloudflare R2 (Struktur Rapi)
-      const r2Path = `requests/${safeUserName}_${user.id.substring(0, 5)}/${result.request_number}/${finalFileName}`;
-      const { path: storagePath } = await uploadToR2(file, r2Path);
+        const originalFileName = sanitizeFilename(file.name);
+        const safeRequirementName = sanitizeFilename(
+          requirement.document_name,
+        ).replace(/\s+/g, "_");
 
-      // 2. Backup ke Google Drive (Struktur Rapi)
-      // Wajib di-await agar tidak di-kill oleh Vercel/Next.js saat response selesai
-      await uploadToDrive(file, requestFolderId as string, finalFileName)
-        .catch(err => {
+        // Nama file yang rapi: [NAMA_SYARAT]_[NAMA_ASLI]
+        const finalFileName = `${safeRequirementName}_${originalFileName}`;
+
+        // 1. Upload ke Cloudflare R2 (Struktur Rapi)
+        const r2Path = `requests/${safeUserName}_${user.id.substring(0, 5)}/${result.request_number}/${finalFileName}`;
+        const { path: storagePath } = await uploadToR2(file, r2Path);
+
+        // 2. Backup ke Google Drive (Struktur Rapi)
+        // Wajib di-await agar tidak di-kill oleh Vercel/Next.js saat response selesai
+        await uploadToDrive(
+          file,
+          requestFolderId as string,
+          finalFileName,
+        ).catch((err) => {
           console.error(`Backup to GDrive failed for ${finalFileName}:`, err);
         });
 
-      await prisma.service_request_documents.upsert({
-        where: {
-          request_id_requirement_id: {
+        await prisma.service_request_documents.upsert({
+          where: {
+            request_id_requirement_id: {
+              request_id: result.id,
+              requirement_id: requirement.id,
+            },
+          },
+          update: {
+            file_name: finalFileName,
+            file_path: storagePath,
+            file_type: file.type || "application/octet-stream",
+            file_size: BigInt(file.size),
+          },
+          create: {
             request_id: result.id,
             requirement_id: requirement.id,
+            file_name: finalFileName,
+            file_path: storagePath,
+            file_type: file.type || "application/octet-stream",
+            file_size: BigInt(file.size),
           },
-        },
-        update: {
-          file_name: finalFileName,
-          file_path: storagePath,
-          file_type: file.type || "application/octet-stream",
-          file_size: BigInt(file.size),
-        },
-        create: {
-          request_id: result.id,
-          requirement_id: requirement.id,
-          file_name: finalFileName,
-          file_path: storagePath,
-          file_type: file.type || "application/octet-stream",
-          file_size: BigInt(file.size),
-        },
-      });
-    });
+        });
+      },
+    );
 
     await Promise.all(uploadPromises);
 
     return NextResponse.json({ id: result.id.toString() }, { status: 201 });
-
   } catch (error: any) {
     console.error("Error creating request:", error);
-    if (error.code === 'P2002') {
+    if (error.code === "P2002") {
       return NextResponse.json(
-        { error: "Terjadi gangguan sinkronisasi nomor pengajuan. Silakan coba klik Kirim kembali." },
-        { status: 409 }
+        {
+          error:
+            "Terjadi gangguan sinkronisasi nomor pengajuan. Silakan coba klik Kirim kembali.",
+        },
+        { status: 409 },
       );
     }
-    return NextResponse.json({ error: error.message || "Gagal membuat pengajuan." }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Gagal membuat pengajuan." },
+      { status: 500 },
+    );
   }
 }

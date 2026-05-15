@@ -49,7 +49,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
 
   return (
     <div className="space-y-4">
-      {items.map((item, idx) => {
+      {items.map((item: any, idx: number) => {
         const isOpen = openId === item.id;
         return (
           <div
@@ -117,10 +117,9 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
                 >
-                    <div className="border-t border-slate-50 p-4 pt-5 sm:p-8 sm:pt-6">
-                      {/* Grid Wrapper for Inline Expansion */}
+                  <div className="border-t border-slate-50 p-4 pt-5 sm:p-8 sm:pt-6">
+                    {/* Grid Wrapper for Inline Expansion */}
                     <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 sm:gap-4">
-                      
                       {/* Card 1: Estimasi */}
                       <div className="rounded-2xl border border-slate-100 bg-white p-3.5 sm:p-4 shadow-sm h-full">
                         <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 sm:h-10 sm:w-10 sm:rounded-xl">
@@ -135,11 +134,17 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                       </div>
 
                       {/* Card 2: Input Formulir */}
-                      <button 
-                        onClick={() => setActiveDetail(activeDetail === "form" ? null : "form")}
+                      <button
+                        onClick={() =>
+                          setActiveDetail(
+                            activeDetail === "form" ? null : "form",
+                          )
+                        }
                         className={`group text-left rounded-2xl border p-3.5 sm:p-4 transition-all ${activeDetail === "form" ? "border-emerald-200 bg-emerald-50/40 shadow-inner" : "border-slate-100 bg-white hover:border-emerald-100"}`}
                       >
-                        <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg transition-colors sm:h-10 sm:w-10 sm:rounded-xl ${activeDetail === "form" ? "bg-emerald-500 text-white" : "bg-emerald-50 text-emerald-600"}`}>
+                        <div
+                          className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg transition-colors sm:h-10 sm:w-10 sm:rounded-xl ${activeDetail === "form" ? "bg-emerald-500 text-white" : "bg-emerald-50 text-emerald-600"}`}
+                        >
                           <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="flex items-center justify-between gap-2">
@@ -148,10 +153,13 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                               Input Formulir
                             </p>
                             <p className="mt-0.5 text-xs font-black text-slate-800 sm:text-sm truncate">
-                              {item.service_form_fields?.length ?? 0} Kolom Isian
+                              {item.service_form_fields?.length ?? 0} Kolom
+                              Isian
                             </p>
                           </div>
-                          <ChevronDown className={`h-3.5 w-3.5 text-emerald-400 shrink-0 transition-transform duration-300 ${activeDetail === "form" ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 text-emerald-400 shrink-0 transition-transform duration-300 ${activeDetail === "form" ? "rotate-180" : ""}`}
+                          />
                         </div>
                       </button>
 
@@ -171,22 +179,44 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                   <ClipboardList className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight sm:text-sm">Rincian Formulir Isian</h4>
-                                  <p className="text-[10px] text-slate-500 font-medium sm:text-[11px]">Informasi yang harus diisi pada formulir online</p>
+                                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight sm:text-sm">
+                                    Rincian Formulir Isian
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 font-medium sm:text-[11px]">
+                                    Informasi yang harus diisi pada formulir
+                                    online
+                                  </p>
                                 </div>
                               </div>
                               <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                                 {item.service_form_fields?.length > 0 ? (
-                                  item.service_form_fields.sort((a,b) => a.sort_order - b.sort_order).map((field, fidx) => (
-                                    <div key={field.id} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-emerald-50/50 shadow-sm">
-                                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[9px] font-bold text-emerald-500 mt-0.5 sm:h-6 sm:w-6 sm:text-[10px]">
-                                        {fidx + 1}
-                                      </span>
-                                      <span className="text-[12px] font-bold text-slate-700 sm:text-[13px]">{field.label} {field.is_required && <span className="text-rose-500">*</span>}</span>
-                                    </div>
-                                  ))
+                                  item.service_form_fields
+                                    .sort(
+                                      (a: any, b: any) =>
+                                        a.sort_order - b.sort_order,
+                                    )
+                                    .map((field: any, fidx: number) => (
+                                      <div
+                                        key={field.id}
+                                        className="flex items-start gap-3 p-3 rounded-xl bg-white border border-emerald-50/50 shadow-sm"
+                                      >
+                                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[9px] font-bold text-emerald-500 mt-0.5 sm:h-6 sm:w-6 sm:text-[10px]">
+                                          {fidx + 1}
+                                        </span>
+                                        <span className="text-[12px] font-bold text-slate-700 sm:text-[13px]">
+                                          {field.label}{" "}
+                                          {field.is_required && (
+                                            <span className="text-rose-500">
+                                              *
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                    ))
                                 ) : (
-                                  <p className="text-xs text-slate-400 italic col-span-2">Tidak ada kolom isian khusus</p>
+                                  <p className="text-xs text-slate-400 italic col-span-2">
+                                    Tidak ada kolom isian khusus
+                                  </p>
                                 )}
                               </div>
                             </div>
@@ -195,11 +225,15 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                       </AnimatePresence>
 
                       {/* Card 3: Dokumen Syarat */}
-                      <button 
-                        onClick={() => setActiveDetail(activeDetail === "req" ? null : "req")}
+                      <button
+                        onClick={() =>
+                          setActiveDetail(activeDetail === "req" ? null : "req")
+                        }
                         className={`group text-left rounded-2xl border p-3.5 sm:p-4 transition-all ${activeDetail === "req" ? "border-emerald-200 bg-emerald-50/40 shadow-inner" : "border-slate-100 bg-white hover:border-emerald-100"}`}
                       >
-                        <div className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg transition-colors sm:h-10 sm:w-10 sm:rounded-xl ${activeDetail === "req" ? "bg-emerald-500 text-white" : "bg-emerald-50 text-emerald-600"}`}>
+                        <div
+                          className={`mb-2 flex h-8 w-8 items-center justify-center rounded-lg transition-colors sm:h-10 sm:w-10 sm:rounded-xl ${activeDetail === "req" ? "bg-emerald-500 text-white" : "bg-emerald-50 text-emerald-600"}`}
+                        >
                           <FolderCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         <div className="flex items-center justify-between gap-2">
@@ -208,10 +242,13 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                               Dokumen Syarat
                             </p>
                             <p className="mt-0.5 text-xs font-black text-slate-800 sm:text-sm truncate">
-                              {item.service_requirements?.length ?? 0} Berkas Digital
+                              {item.service_requirements?.length ?? 0} Berkas
+                              Digital
                             </p>
                           </div>
-                          <ChevronDown className={`h-3.5 w-3.5 text-emerald-400 shrink-0 transition-transform duration-300 ${activeDetail === "req" ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 text-emerald-400 shrink-0 transition-transform duration-300 ${activeDetail === "req" ? "rotate-180" : ""}`}
+                          />
                         </div>
                       </button>
 
@@ -231,32 +268,56 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                   <Files className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight sm:text-sm">Dokumen Persyaratan</h4>
-                                  <p className="text-[10px] text-slate-500 font-medium sm:text-[11px]">Berkas digital yang harus disiapkan</p>
+                                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight sm:text-sm">
+                                    Dokumen Persyaratan
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 font-medium sm:text-[11px]">
+                                    Berkas digital yang harus disiapkan
+                                  </p>
                                 </div>
                               </div>
                               <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                                 {item.service_requirements?.length > 0 ? (
-                                  item.service_requirements.sort((a,b) => a.sort_order - b.sort_order).map((req, ridx) => (
-                                    <div key={req.id} className="flex items-start gap-3 p-3.5 rounded-xl bg-white border border-emerald-50/50 shadow-sm sm:p-4">
-                                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[9px] font-bold text-emerald-500 mt-0.5 sm:h-6 sm:w-6 sm:text-[10px]">
-                                        {ridx + 1}
-                                      </span>
-                                      <div className="min-w-0">
-                                        <p className="text-[12px] font-black text-slate-700 sm:text-[13px] leading-tight">{req.document_name} {req.is_required && <span className="text-rose-500">*</span>}</p>
-                                        {req.description && <p className="text-[10px] text-slate-500 mt-1 leading-relaxed sm:text-[11px]">{req.description}</p>}
+                                  item.service_requirements
+                                    .sort(
+                                      (a: any, b: any) =>
+                                        a.sort_order - b.sort_order,
+                                    )
+                                    .map((req: any, ridx: number) => (
+                                      <div
+                                        key={req.id}
+                                        className="flex items-start gap-3 p-3.5 rounded-xl bg-white border border-emerald-50/50 shadow-sm sm:p-4"
+                                      >
+                                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[9px] font-bold text-emerald-500 mt-0.5 sm:h-6 sm:w-6 sm:text-[10px]">
+                                          {ridx + 1}
+                                        </span>
+                                        <div className="min-w-0">
+                                          <p className="text-[12px] font-black text-slate-700 sm:text-[13px] leading-tight">
+                                            {req.document_name}{" "}
+                                            {req.is_required && (
+                                              <span className="text-rose-500">
+                                                *
+                                              </span>
+                                            )}
+                                          </p>
+                                          {req.description && (
+                                            <p className="text-[10px] text-slate-500 mt-1 leading-relaxed sm:text-[11px]">
+                                              {req.description}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))
+                                    ))
                                 ) : (
-                                  <p className="text-xs text-slate-400 italic col-span-2">Tidak ada dokumen persyaratan</p>
+                                  <p className="text-xs text-slate-400 italic col-span-2">
+                                    Tidak ada dokumen persyaratan
+                                  </p>
                                 )}
                               </div>
                             </div>
                           </m.div>
                         )}
                       </AnimatePresence>
-
                     </div>
 
                     <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-5 sm:mt-8 sm:pt-6">

@@ -8,7 +8,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { getRequestsForExport, getDocumentsForExport } from "@/lib/actions/export";
+import {
+  getRequestsForExport,
+  getDocumentsForExport,
+} from "@/lib/actions/export";
 
 interface ReportExportButtonProps {
   type: "requests" | "documents";
@@ -45,8 +48,12 @@ export function ReportExportButton({
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Laporan");
 
-      const colWidths = Object.keys(data[0]).map((key) => ({
-        wch: Math.max(key.length, ...data.map((row: any) => (row[key] || "").toString().length)) + 2,
+      const colWidths = Object.keys(data[0]).map((key: string) => ({
+        wch:
+          Math.max(
+            key.length,
+            ...data.map((row: any) => (row[key] || "").toString().length),
+          ) + 2,
       }));
       ws["!cols"] = colWidths;
 
@@ -54,7 +61,7 @@ export function ReportExportButton({
       const dataBlob = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
       });
-      
+
       saveAs(dataBlob, `${fileName}_${new Date().getTime()}.xlsx`);
       toast.success(`Excel berhasil diunduh.`);
     } catch (error) {
@@ -75,15 +82,17 @@ export function ReportExportButton({
       }
 
       const doc = new jsPDF({ orientation: "landscape" });
-      
+
       // Header
       doc.setFontSize(14);
       doc.text("LAPORAN LAYANAN PTSP KEMENAG BARITO UTARA", 14, 15);
       doc.setFontSize(10);
       doc.text(`Dicetak pada: ${new Date().toLocaleString("id-ID")}`, 14, 22);
-      
+
       const columns = Object.keys(data[0]);
-      const rows = data.map((item: any) => columns.map((col) => item[col]));
+      const rows = data.map((item: any) =>
+        columns.map((col: string) => item[col]),
+      );
 
       autoTable(doc, {
         head: [columns],
@@ -112,7 +121,11 @@ export function ReportExportButton({
         size="sm"
         className="h-9 px-3 flex items-center gap-2 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-[#059669] hover:bg-[#047857] text-white border-none shadow-md transition-all active:scale-95"
       >
-        {loadingExcel ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+        {loadingExcel ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <FileDown className="h-3.5 w-3.5" />
+        )}
         {loadingExcel ? "..." : "Excel"}
       </Button>
 
@@ -122,7 +135,11 @@ export function ReportExportButton({
         size="sm"
         className="h-9 px-3 flex items-center gap-2 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-rose-600 hover:bg-rose-700 text-white border-none shadow-md transition-all active:scale-95"
       >
-        {loadingPdf ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+        {loadingPdf ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <FileText className="h-3.5 w-3.5" />
+        )}
         {loadingPdf ? "..." : "PDF"}
       </Button>
     </div>

@@ -30,14 +30,14 @@ export async function getRequestsForExport(where: any) {
   });
 
   // Format data for Excel
-  return rawRequests.map((r) => ({
+  return rawRequests.map((r: any) => ({
     "No. Permohonan": r.request_number,
-    "Tanggal": format(new Date(r.created_at), "dd MMMM yyyy", { locale: id }),
+    Tanggal: format(new Date(r.created_at), "dd MMMM yyyy", { locale: id }),
     "Nama Pemohon": r.profiles?.full_name || "-",
-    "Email": r.profiles?.email || "-",
-    "Layanan": r.services?.name || "-",
+    Email: r.profiles?.email || "-",
+    Layanan: r.services?.name || "-",
     "Sub Layanan": r.service_items?.name || "-",
-    "Status": r.status.toUpperCase(),
+    Status: r.status.toUpperCase(),
   }));
 }
 
@@ -51,7 +51,7 @@ export async function getDocumentsForExport(where: any) {
   const rawRequests = await prisma.service_requests.findMany({
     where: {
       ...where,
-      generated_documents: { isNot: null }
+      generated_documents: { isNot: null },
     },
     include: {
       profiles: {
@@ -63,17 +63,19 @@ export async function getDocumentsForExport(where: any) {
       service_items: {
         select: { name: true },
       },
-      generated_documents: true
+      generated_documents: true,
     },
     orderBy: { created_at: "desc" },
   });
 
-  return rawRequests.map((r) => ({
+  return rawRequests.map((r: any) => ({
     "No. Permohonan": r.request_number,
     "Nama Pemohon": r.profiles?.full_name || "-",
-    "Layanan": r.services?.name || "-",
+    Layanan: r.services?.name || "-",
     "Sub Layanan": r.service_items?.name || "-",
-    "Tanggal Selesai": r.completed_at ? format(new Date(r.completed_at), "dd MMMM yyyy", { locale: id }) : "-",
+    "Tanggal Selesai": r.completed_at
+      ? format(new Date(r.completed_at), "dd MMMM yyyy", { locale: id })
+      : "-",
     "Nama File": r.generated_documents?.file_name || "-",
   }));
 }

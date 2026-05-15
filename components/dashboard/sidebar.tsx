@@ -58,7 +58,7 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const navItems = isAdmin ? ADMIN_NAV : USER_NAV;
 
   const groups = isAdmin
-    ? Array.from(new Set(navItems.map((item) => item.group || "")))
+    ? Array.from(new Set(navItems.map((item: any) => item.group || "")))
     : [""];
 
   return (
@@ -94,10 +94,10 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           <div className="p-2">
             {isAdmin ? (
               <div className="space-y-1">
-                {groups.map((group, gi) => {
+                {groups.map((group: any, gi: number) => {
                   const GroupIcon = GROUP_ICONS[group];
                   const groupItems = navItems.filter(
-                    (item) => (item.group || "") === group,
+                    (item: any) => (item.group || "") === group,
                   );
                   return (
                     <div key={group} className={gi > 0 ? "pt-1" : ""}>
@@ -112,7 +112,7 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
                         </div>
                       )}
                       <div className="space-y-0.5">
-                        {groupItems.map((item) => {
+                        {groupItems.map((item: any) => {
                           const isActive =
                             item.href === "/admin"
                               ? pathname === item.href
@@ -136,7 +136,7 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
               </div>
             ) : (
               <div className="space-y-0.5">
-                {navItems.map((item) => {
+                {navItems.map((item: any) => {
                   const isActive =
                     item.href === "/dashboard"
                       ? pathname === item.href

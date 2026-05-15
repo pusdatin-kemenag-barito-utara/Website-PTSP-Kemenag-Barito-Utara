@@ -106,7 +106,7 @@ export async function getSuratMasukAction() {
     const data = await getSheetData(`${SHEETS.MASUK}!A2:F`);
     return {
       success: true,
-      data: data.map((row) => ({
+      data: data.map((row: any) => ({
         id: row[0],
         nomor_surat: row[1],
         tanggal_surat: row[2],
@@ -222,7 +222,7 @@ export async function getSuratKeluarAction() {
     const data = await getSheetData(`${SHEETS.KELUAR}!A2:G`);
     return {
       success: true,
-      data: data.map((row) => ({
+      data: data.map((row: any) => ({
         id: row[0],
         nomor_surat: row[1],
         tanggal_surat: row[2],

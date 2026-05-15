@@ -54,13 +54,15 @@ export async function createServiceAction(formData: FormData) {
     slug: slugify(String(formData.get("slug") || formData.get("name") || "")),
     description: formData.get("description") || "",
     is_active: formData.get("is_active") === "on",
-    role_owner: formData.get("role_owner") ? String(formData.get("role_owner")) : null,
+    role_owner: formData.get("role_owner")
+      ? String(formData.get("role_owner"))
+      : null,
   });
 
   await prisma.services.create({
     data: payload,
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -76,7 +78,7 @@ export async function updateServiceAction(formData: FormData) {
       where: { id },
       select: { role_owner: true },
     });
-    
+
     if (service?.role_owner !== profile.role) {
       throw new Error("Unauthorized");
     }
@@ -87,14 +89,16 @@ export async function updateServiceAction(formData: FormData) {
     slug: slugify(String(formData.get("slug") || formData.get("name") || "")),
     description: formData.get("description") || "",
     is_active: formData.get("is_active") === "on",
-    role_owner: formData.get("role_owner") ? String(formData.get("role_owner")) : null,
+    role_owner: formData.get("role_owner")
+      ? String(formData.get("role_owner"))
+      : null,
   });
 
   await prisma.services.update({
     where: { id },
     data: payload,
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -110,35 +114,35 @@ export async function deleteServiceAction(formData: FormData) {
       where: { id },
       select: { role_owner: true },
     });
-    
+
     if (service?.role_owner !== profile.role) {
       throw new Error("Unauthorized");
     }
   }
-  
+
   await prisma.services.delete({
     where: { id },
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
 
 export async function reorderServicesAction(ids: number[]) {
   const profile = await requireAdmin();
-  
+
   // Hanya Super Admin yang bisa mengubah urutan unit kerja
   if (!isSuperAdmin(profile.email)) {
     throw new Error("Hanya Super Admin yang dapat mengubah urutan layanan.");
   }
 
   await prisma.$transaction(
-    ids.map((id, index) =>
+    ids.map((id: number, index: number) =>
       prisma.services.update({
         where: { id: BigInt(id) },
         data: { sort_order: index },
-      })
-    )
+      }),
+    ),
   );
 
   revalidatePath("/admin/layanan");
@@ -166,7 +170,7 @@ export async function createServiceItemAction(formData: FormData) {
       estimated_time: payload.estimated_time,
     },
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -196,7 +200,7 @@ export async function updateServiceItemAction(formData: FormData) {
       is_active: payload.is_active,
     },
   });
-  
+
   revalidatePath("/admin/layanan/[id]", "page");
   await emitRefreshSignal();
 }
@@ -204,11 +208,11 @@ export async function updateServiceItemAction(formData: FormData) {
 export async function deleteServiceItemAction(formData: FormData) {
   await requireAdmin();
   const id = BigInt(formData.get("id") as string);
-  
+
   await prisma.service_items.delete({
     where: { id },
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -218,17 +222,19 @@ export async function reorderServiceItemsAction(ids: number[]) {
 
   // Hanya Super Admin yang bisa mengubah urutan item layanan
   if (!isSuperAdmin(profile.email)) {
-    throw new Error("Hanya Super Admin yang dapat mengubah urutan item layanan.");
+    throw new Error(
+      "Hanya Super Admin yang dapat mengubah urutan item layanan.",
+    );
   }
 
   await prisma.$transaction(
-    ids.map((id, index) =>
+    ids.map((id: number, index: number) =>
       prisma.service_items.update({
         where: { id: BigInt(id) },
         // @ts-ignore
         data: { sort_order: index },
-      })
-    )
+      }),
+    ),
   );
 
   revalidatePath("/admin/layanan");
@@ -263,7 +269,7 @@ export async function createFieldAction(formData: FormData) {
       sort_order: payload.sort_order ?? 0,
     },
   });
-  
+
   revalidatePath("/admin/layanan/[id]", "page");
   await emitRefreshSignal();
 }
@@ -296,7 +302,7 @@ export async function updateFieldAction(formData: FormData) {
       sort_order: payload.sort_order ?? 0,
     },
   });
-  
+
   revalidatePath("/admin/layanan/[id]", "page");
   await emitRefreshSignal();
 }
@@ -304,11 +310,11 @@ export async function updateFieldAction(formData: FormData) {
 export async function deleteFieldAction(formData: FormData) {
   await requireAdmin();
   const id = BigInt(formData.get("id") as string);
-  
+
   await prisma.service_form_fields.delete({
     where: { id },
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -318,12 +324,12 @@ export async function reorderFieldsAction(ids: string[]) {
     await requireAdmin();
 
     await prisma.$transaction(
-      ids.map((id, index) =>
+      ids.map((id: string, index: number) =>
         prisma.service_form_fields.update({
           where: { id: BigInt(id) },
           data: { sort_order: index },
-        })
-      )
+        }),
+      ),
     );
 
     revalidatePath("/admin/layanan/[id]", "page");
@@ -331,9 +337,9 @@ export async function reorderFieldsAction(ids: string[]) {
     return { success: true };
   } catch (error: any) {
     console.error("Error in reorderFieldsAction:", error);
-    return { 
-      success: false, 
-      error: error.message || "Gagal memperbarui urutan" 
+    return {
+      success: false,
+      error: error.message || "Gagal memperbarui urutan",
     };
   }
 }
@@ -347,7 +353,8 @@ export async function createRequirementAction(formData: FormData) {
     document_name: formData.get("document_name"),
     description: formData.get("description") || "",
     is_required: formData.get("is_required") === "on",
-    allowed_extensions: formData.get("allowed_extensions") || "pdf,jpg,jpeg,png",
+    allowed_extensions:
+      formData.get("allowed_extensions") || "pdf,jpg,jpeg,png",
     max_file_size_mb: formData.get("max_file_size_mb") || 5,
   });
 
@@ -357,7 +364,7 @@ export async function createRequirementAction(formData: FormData) {
       service_item_id: BigInt(payload.service_item_id),
     },
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -371,7 +378,8 @@ export async function updateRequirementAction(formData: FormData) {
     document_name: formData.get("document_name"),
     description: formData.get("description") || "",
     is_required: formData.get("is_required") === "on",
-    allowed_extensions: formData.get("allowed_extensions") || "pdf,jpg,jpeg,png",
+    allowed_extensions:
+      formData.get("allowed_extensions") || "pdf,jpg,jpeg,png",
     max_file_size_mb: formData.get("max_file_size_mb") || 5,
   });
 
@@ -386,7 +394,7 @@ export async function updateRequirementAction(formData: FormData) {
       max_file_size_mb: payload.max_file_size_mb,
     },
   });
-  
+
   revalidatePath("/admin/layanan/[id]", "page");
   await emitRefreshSignal();
 }
@@ -394,11 +402,11 @@ export async function updateRequirementAction(formData: FormData) {
 export async function deleteRequirementAction(formData: FormData) {
   await requireAdmin();
   const id = BigInt(formData.get("id") as string);
-  
+
   await prisma.service_requirements.delete({
     where: { id },
   });
-  
+
   revalidatePath("/admin/layanan");
   await emitRefreshSignal();
 }
@@ -408,13 +416,13 @@ export async function reorderRequirementsAction(ids: string[]) {
     await requireAdmin();
 
     await prisma.$transaction(
-      ids.map((id, index) =>
+      ids.map((id: string, index: number) =>
         prisma.service_requirements.update({
           where: { id: BigInt(id) },
           // @ts-ignore
           data: { sort_order: index },
-        })
-      )
+        }),
+      ),
     );
 
     revalidatePath("/admin/layanan/[id]", "page");
@@ -422,9 +430,9 @@ export async function reorderRequirementsAction(ids: string[]) {
     return { success: true };
   } catch (error: any) {
     console.error("Error in reorderRequirementsAction:", error);
-    return { 
-      success: false, 
-      error: error.message || "Gagal memperbarui urutan persyaratan" 
+    return {
+      success: false,
+      error: error.message || "Gagal memperbarui urutan persyaratan",
     };
   }
 }

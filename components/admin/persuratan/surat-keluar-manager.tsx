@@ -113,7 +113,7 @@ export function SuratKeluarManager() {
   };
 
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const matchesSearch =
         item.nomor_surat.toLowerCase().includes(search.toLowerCase()) ||
         item.tujuan_surat.toLowerCase().includes(search.toLowerCase()) ||
@@ -355,7 +355,7 @@ export function SuratKeluarManager() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paginatedItems.length > 0 ? (
-                paginatedItems.map((item, index) => (
+                paginatedItems.map((item: any, index: number) => (
                   <tr
                     key={item.id}
                     className="hover:bg-slate-50/50 transition-colors group"

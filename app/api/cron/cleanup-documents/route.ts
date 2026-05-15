@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const expiredRequestIds = expiredRequests.map((r) => r.id);
+    const expiredRequestIds = expiredRequests.map((r: { id: string }) => r.id);
     let deletedFilesCount = 0;
     const admin = createAdminClient();
 
@@ -52,7 +52,9 @@ export async function GET(request: Request) {
     });
 
     if (generatedDocs.length > 0) {
-      const pathsToDelete = generatedDocs.map((doc) => doc.file_path);
+      const pathsToDelete = generatedDocs.map(
+        (doc: { file_path: string }) => doc.file_path,
+      );
 
       // Delete physical files from Storage
       const { error: storageError } = await admin.storage
@@ -63,7 +65,7 @@ export async function GET(request: Request) {
         // Mark as expired in DB
         await prisma.generated_documents.updateMany({
           where: {
-            id: { in: generatedDocs.map((d) => d.id) },
+            id: { in: generatedDocs.map((d: any) => d.id) },
           },
           data: { file_path: "EXPIRED" },
         });
@@ -81,13 +83,15 @@ export async function GET(request: Request) {
     });
 
     // Handle R2 deletions
-    const r2Docs = reqDocs.filter(doc => doc.file_path.startsWith("r2:"));
+    const r2Docs = reqDocs.filter((doc: { file_path: string }) =>
+      doc.file_path.startsWith("r2:"),
+    );
     for (const doc of r2Docs) {
       try {
         await deleteFromR2(doc.file_path);
         await prisma.service_request_documents.update({
           where: { id: doc.id },
-          data: { file_path: "EXPIRED" }
+          data: { file_path: "EXPIRED" },
         });
         deletedFilesCount++;
       } catch (err) {
@@ -96,13 +100,14 @@ export async function GET(request: Request) {
     }
 
     // Filter out gdrive and r2 links before Supabase storage deletion
-    const supabaseDocs = reqDocs.filter(doc => 
-      !doc.file_path.startsWith("gdrive:") && 
-      !doc.file_path.startsWith("r2:")
+    const supabaseDocs = reqDocs.filter(
+      (doc: { file_path: string }) =>
+        !doc.file_path.startsWith("gdrive:") &&
+        !doc.file_path.startsWith("r2:"),
     );
 
     if (supabaseDocs.length > 0) {
-      const pathsToDelete = supabaseDocs.map((doc) => doc.file_path);
+      const pathsToDelete = supabaseDocs.map((doc: any) => doc.file_path);
 
       const { error: storageError } = await admin.storage
         .from("request-documents")
@@ -111,7 +116,7 @@ export async function GET(request: Request) {
       if (!storageError) {
         await prisma.service_request_documents.updateMany({
           where: {
-            id: { in: supabaseDocs.map((d) => d.id) },
+            id: { in: supabaseDocs.map((d: any) => d.id) },
           },
           data: { file_path: "EXPIRED" },
         });

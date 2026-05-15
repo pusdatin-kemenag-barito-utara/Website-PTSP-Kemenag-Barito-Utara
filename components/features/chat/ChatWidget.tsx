@@ -64,7 +64,7 @@ interface Message {
 
 const TypingDots = () => (
   <div className="typing-dots-container">
-    {[0, 1, 2].map((i) => (
+    {[0, 1, 2].map((i: number) => (
       <span key={i} className="typing-dot" style={{ animationDelay: `${i * 0.2}s` }} />
     ))}
   </div>
@@ -114,7 +114,7 @@ export const ChatWidget = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
+          messages: [...messages, userMsg].map((m: any) => ({
             role: m.role,
             content: m.content,
           })),
@@ -262,7 +262,7 @@ export const ChatWidget = () => {
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-          {messages.map((msg, i) => (
+          {messages.map((msg: any, i: number) => (
             <div key={i} style={{ 
               display: "flex", 
               flexDirection: "column", 
@@ -288,7 +288,7 @@ export const ChatWidget = () => {
             <div style={{ marginTop: 8 }}>
               <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Pertanyaan Populer:</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {QUICK_ACTIONS.map((qa) => (
+                {QUICK_ACTIONS.map((qa: string) => (
                   <button key={qa} onClick={() => sendMessage(qa)} style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 20, padding: "6px 12px", color: "#6ee7b7", fontSize: 11, cursor: "pointer", transition: "all 0.2s" }} className="hover:bg-emerald-500/20">{qa}</button>
                 ))}
               </div>

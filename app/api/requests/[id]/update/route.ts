@@ -26,7 +26,7 @@ export async function POST(
 
     // Verify ownership and status
     const reqData = await prisma.service_requests.findUnique({
-      where: { 
+      where: {
         id: requestId,
         user_id: profile.id,
       },
@@ -67,7 +67,7 @@ export async function POST(
     // 3. Process updates in a transaction
     await prisma.$transaction(async (tx) => {
       // 3a. Update text answers
-      for (const update of updates) {
+      for (const update of updates as any[]) {
         await tx.service_request_answers.updateMany({
           where: {
             id: BigInt(update.id),
@@ -81,7 +81,9 @@ export async function POST(
 
       // 3b. Update documents
       const entries = Array.from(formData.entries());
-      const fileEntries = entries.filter(([key]) => key.startsWith("doc_"));
+      const fileEntries = entries.filter(([key]: any) =>
+        key.startsWith("doc_"),
+      );
 
       for (const [key, value] of fileEntries) {
         if (!(value instanceof File) || value.size === 0) continue;
@@ -91,7 +93,7 @@ export async function POST(
 
         // Find matching document by ID or Requirement ID
         const currentDoc = existingDocs.find(
-          (doc) => doc.id === docId || doc.requirement_id === docId
+          (doc: any) => doc.id === docId || doc.requirement_id === docId,
         );
 
         const newFileName = sanitizeFilename(value.name);
@@ -120,7 +122,9 @@ export async function POST(
                 await deleteFromDrive(oldFilePath.replace("gdrive:", ""));
               } else {
                 const admin = createAdminClient();
-                await admin.storage.from("request-documents").remove([oldFilePath]);
+                await admin.storage
+                  .from("request-documents")
+                  .remove([oldFilePath]);
               }
             } catch (delErr) {
               console.warn(`[update] Could not delete old file:`, delErr);

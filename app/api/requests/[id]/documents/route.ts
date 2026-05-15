@@ -4,14 +4,18 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { sanitizeFilename } from "@/lib/utils";
-import { getOrCreateFolder, uploadToDrive, deleteFromDrive } from "@/lib/google-drive";
+import {
+  getOrCreateFolder,
+  uploadToDrive,
+  deleteFromDrive,
+} from "@/lib/google-drive";
 import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 
 function isAllowedExtension(fileName: string, allowedExtensions: string) {
   const extension = fileName.split(".").pop()?.toLowerCase() || "";
   const allowed = allowedExtensions
     .split(",")
-    .map((item) => item.trim().toLowerCase())
+    .map((item: string) => item.trim().toLowerCase())
     .filter(Boolean);
   return allowed.includes(extension);
 }
@@ -22,7 +26,7 @@ export async function POST(
 ) {
   const { id } = await context.params;
   const requestId = id;
-  
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,7 +37,7 @@ export async function POST(
   }
 
   const serviceRequest = await prisma.service_requests.findUnique({
-    where: { 
+    where: {
       id: requestId,
       user_id: user.id,
     },
@@ -129,8 +133,8 @@ export async function POST(
   const { path: storagePath } = await uploadToR2(file, r2Path);
 
   // 5. Backup to Google Drive (Background)
-  uploadToDrive(file, userFolderId as string).catch(err => 
-    console.error("Backup to GDrive failed:", err)
+  uploadToDrive(file, userFolderId as string).catch((err) =>
+    console.error("Backup to GDrive failed:", err),
   );
 
   try {

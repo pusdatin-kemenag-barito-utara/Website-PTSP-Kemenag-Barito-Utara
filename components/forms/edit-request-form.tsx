@@ -45,19 +45,19 @@ export function EditRequestForm({
     const finalFormData = new FormData();
 
     // Add answers
-    const updates = answers.map((answer) => ({
+    const updates = answers.map((answer: any) => ({
       id: answer.id,
       field_value: rawFormData.get(`answer_${answer.id}`) as string,
     }));
     finalFormData.append("answers", JSON.stringify(updates));
 
     // Add files
-    const fileEntries = Array.from(rawFormData.entries()).filter(([key]) =>
+    const fileEntries = Array.from(rawFormData.entries()).filter(([key]: any) =>
       key.startsWith("doc_"),
     );
 
     await Promise.all(
-      fileEntries.map(async ([key, value]) => {
+      fileEntries.map(async ([key, value]: any) => {
         if (value instanceof File && value.size > 0) {
           if (value.type.startsWith("image/")) {
             const compressed = await compressImageToUnder(value, 150);
@@ -114,7 +114,7 @@ export function EditRequestForm({
           </h3>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          {answers.map((answer) => (
+          {answers.map((answer: any) => (
             <div key={answer.id} className="space-y-1.5">
               <label
                 htmlFor={`answer_${answer.id}`}
@@ -142,7 +142,7 @@ export function EditRequestForm({
           </h3>
         </div>
         <div className="grid gap-3">
-          {documents.map((doc) => (
+          {documents.map((doc: any) => (
             <div
               key={doc.id}
               className="group relative rounded-xl border border-slate-200 bg-slate-50/30 p-3 transition-all hover:border-emerald-200 hover:bg-emerald-50/20"

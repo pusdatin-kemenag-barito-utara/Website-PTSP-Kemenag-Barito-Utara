@@ -44,7 +44,7 @@ export default async function AdminGeneratedDocumentsPage({
 
   const where: any = {
     // Only show requests that have a generated document
-    generated_documents: { isNot: null }
+    generated_documents: { isNot: null },
   };
 
   if (service_id) {
@@ -53,8 +53,8 @@ export default async function AdminGeneratedDocumentsPage({
 
   if (q) {
     where.OR = [
-      { request_number: { contains: q, mode: 'insensitive' } },
-      { profiles: { full_name: { contains: q, mode: 'insensitive' } } },
+      { request_number: { contains: q, mode: "insensitive" } },
+      { profiles: { full_name: { contains: q, mode: "insensitive" } } },
     ];
   }
 
@@ -104,7 +104,7 @@ export default async function AdminGeneratedDocumentsPage({
   );
 
   const urlMap = Object.fromEntries(
-    urlEntries.map((item) => [item.id, item.url]),
+    urlEntries.map((item: any) => [item.id, item.url]),
   );
 
   return (
@@ -114,7 +114,7 @@ export default async function AdminGeneratedDocumentsPage({
         description="Kelola dokumen PDF hasil layanan. Anda dapat mencari, melihat, dan mengunduh dokumen resmi yang telah diterbitkan untuk pemohon."
         icon={FileOutput}
         actions={
-          <ReportExportButton 
+          <ReportExportButton
             type="documents"
             where={where}
             fileName="Laporan_Dokumen_Hasil_PTSP"
@@ -130,11 +130,11 @@ export default async function AdminGeneratedDocumentsPage({
           q={q}
           service_id={service_id}
         />
-        
+
         {totalPages > 1 && (
-          <AdminPagination 
-            currentPage={currentPage} 
-            totalPages={totalPages} 
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
             totalCount={totalCount}
           />
         )}

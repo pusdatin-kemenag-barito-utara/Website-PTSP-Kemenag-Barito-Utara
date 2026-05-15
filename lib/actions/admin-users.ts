@@ -9,12 +9,12 @@ export async function updateUserRoleAction(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id"));
   const role = String(formData.get("role")) as any;
-  
+
   await prisma.profiles.update({
     where: { id },
     data: { role },
   });
-  
+
   revalidatePath("/admin/pengguna");
 }
 
@@ -44,7 +44,7 @@ export async function deleteUserPermanentlyAction(userId: string) {
     select: { id: true },
   });
 
-  const requestIds = requests.map((r) => r.id);
+  const requestIds = requests.map((r: any) => r.id);
 
   if (requestIds.length > 0) {
     // 2. Cari SEMUA file Google Drive terkait pengajuan user ini
@@ -62,8 +62,8 @@ export async function deleteUserPermanentlyAction(userId: string) {
     // 3. Hapus file-file tersebut dari Google Drive
     const { deleteFromDrive } = await import("@/lib/google-drive");
     const combinedPaths = [
-      ...reqDocs.map((d) => d.file_path),
-      ...genDocs.map((d) => d.file_path),
+      ...reqDocs.map((d: any) => d.file_path),
+      ...genDocs.map((d: any) => d.file_path),
     ];
 
     for (const path of combinedPaths) {
@@ -85,7 +85,7 @@ export async function deleteUserPermanentlyAction(userId: string) {
     throw new Error(`Gagal menghapus akun auth: ${authError.message}`);
   }
 
-  // 5. Hapus data di tabel profiles (Prisma akan menangani cascade jika dikonfigurasi di DB, 
+  // 5. Hapus data di tabel profiles (Prisma akan menangani cascade jika dikonfigurasi di DB,
   // tapi kita lakukan eksplisit untuk keamanan)
   await prisma.profiles.delete({
     where: { id: userId },

@@ -2,7 +2,22 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Loader2, ShieldAlert, KeyRound, LayoutDashboard, FolderKanban, FileOutput, FileText, Inbox, Send, Users, History, Database } from "lucide-react";
+import {
+  X,
+  Check,
+  Loader2,
+  ShieldAlert,
+  KeyRound,
+  LayoutDashboard,
+  FolderKanban,
+  FileOutput,
+  FileText,
+  Inbox,
+  Send,
+  Users,
+  History,
+  Database,
+} from "lucide-react";
 import { toast } from "sonner";
 import { updateUserPermissionsAction } from "@/lib/actions/user-permissions";
 import { DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
@@ -14,29 +29,31 @@ const MENU_GROUPS = [
       { id: "ringkasan", label: "Ringkasan", icon: LayoutDashboard },
       { id: "pengajuan", label: "Pengajuan", icon: FolderKanban },
       { id: "dokumen_hasil", label: "Dokumen Hasil", icon: FileOutput },
-    ]
+    ],
   },
   {
     name: "Master Data",
-    menus: [
-      { id: "layanan", label: "Manajemen Layanan", icon: FileText },
-    ]
+    menus: [{ id: "layanan", label: "Manajemen Layanan", icon: FileText }],
   },
   {
     name: "Tata Naskah",
     menus: [
       { id: "surat_masuk", label: "Surat Masuk", icon: Inbox },
       { id: "surat_keluar", label: "Surat Keluar", icon: Send },
-    ]
+    ],
   },
   {
     name: "Sistem",
     menus: [
       { id: "pengguna", label: "Manajemen Pengguna", icon: Users },
       { id: "log_audit", label: "Log Audit Aktivitas", icon: History },
-      { id: "pemeliharaan_storage", label: "Pemeliharaan Storage", icon: Database },
-    ]
-  }
+      {
+        id: "pemeliharaan_storage",
+        label: "Pemeliharaan Storage",
+        icon: Database,
+      },
+    ],
+  },
 ];
 
 export function UserPermissionsModal({
@@ -132,22 +149,26 @@ export function UserPermissionsModal({
               <div>
                 <p className="font-bold mb-1">Pemberian Akses Petugas</p>
                 <p className="text-xs text-emerald-700/80 leading-relaxed">
-                  Pilih menu yang dapat diakses oleh petugas ini. Admin dengan izin terbatas hanya akan melihat menu yang dicentang pada sidebar mereka.
+                  Pilih menu yang dapat diakses oleh petugas ini. Admin dengan
+                  izin terbatas hanya akan melihat menu yang dicentang pada
+                  sidebar mereka.
                 </p>
               </div>
             </div>
 
             {/* Menu Sections */}
             <div className="space-y-8">
-              {MENU_GROUPS.map((group) => (
+              {MENU_GROUPS.map((group: any) => (
                 <div key={group.name} className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{group.name}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {group.name}
+                    </span>
                     <div className="h-px flex-1 bg-slate-100" />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {group.menus.map((menu) => {
+                    {group.menus.map((menu: any) => {
                       const isChecked = permissions.includes(menu.id);
                       const Icon = menu.icon;
                       return (
@@ -161,19 +182,29 @@ export function UserPermissionsModal({
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl transition-colors ${isChecked ? 'bg-emerald-100 text-[#059669]' : 'bg-white text-slate-400'}`}>
-                               <Icon className="h-4 w-4" />
+                            <div
+                              className={`p-2 rounded-xl transition-colors ${isChecked ? "bg-emerald-100 text-[#059669]" : "bg-white text-slate-400"}`}
+                            >
+                              <Icon className="h-4 w-4" />
                             </div>
-                            <span className={`text-xs font-bold ${isChecked ? "text-[#059669]" : "text-slate-600"}`}>
+                            <span
+                              className={`text-xs font-bold ${isChecked ? "text-[#059669]" : "text-slate-600"}`}
+                            >
                               {menu.label}
                             </span>
                           </div>
-                          
+
                           {/* Toggle Switch */}
-                          <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${isChecked ? 'bg-[#059669]' : 'bg-slate-200'}`}>
-                            <motion.div 
+                          <div
+                            className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${isChecked ? "bg-[#059669]" : "bg-slate-200"}`}
+                          >
+                            <motion.div
                               animate={{ x: isChecked ? 20 : 2 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 30,
+                              }}
                               className="absolute top-1 left-0 w-3 h-3 bg-white rounded-full shadow-sm"
                             />
                           </div>
@@ -213,4 +244,3 @@ export function UserPermissionsModal({
     </AnimatePresence>
   );
 }
-

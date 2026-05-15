@@ -37,7 +37,7 @@ export function parseJsonArray(value?: string | null): string[] {
   } catch {
     return value
       .split(",")
-      .map((item) => item.trim())
+      .map((item: string) => item.trim())
       .filter(Boolean);
   }
 }
@@ -93,4 +93,3 @@ export function getFileUrl(path?: string | null) {
 
   return path;
 }
-

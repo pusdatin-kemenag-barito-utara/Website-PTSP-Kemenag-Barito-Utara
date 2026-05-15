@@ -34,7 +34,7 @@ export function ItemLayananTable({
           </thead>
           <tbody className="divide-y divide-slate-100">
             <AnimatePresence>
-              {filteredItems.map((item) => (
+              {filteredItems.map((item: any) => (
                 <motion.tr
                   layout
                   initial={{ opacity: 0, y: 10 }}

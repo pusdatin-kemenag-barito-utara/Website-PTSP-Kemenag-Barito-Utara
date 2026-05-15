@@ -15,12 +15,12 @@ export function RequestServiceSelection({
   onServiceChange: (value: string) => void;
   onItemChange: (value: string) => void;
 }) {
-  const selectedService = catalog.find((s) => String(s.id) === serviceId);
+  const selectedService = catalog.find((s: any) => String(s.id) === serviceId);
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
       <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#059669] to-[#0f8a54]" />
-      
+
       <div className="mb-6 flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] ring-1 ring-emerald-100/50">
           <Layers className="h-6 w-6" />
@@ -48,7 +48,7 @@ export function RequestServiceSelection({
             <option value="" disabled>
               -- Pilih Layanan --
             </option>
-            {catalog.map((service) => (
+            {catalog.map((service: any) => (
               <option key={service.id} value={service.id}>
                 {service.name}
               </option>
@@ -62,7 +62,7 @@ export function RequestServiceSelection({
             value={serviceItemId}
             onChange={(e) => onItemChange(e.target.value)}
             disabled={!serviceId}
-            className={`h-12 transition-colors ${!serviceId ? 'bg-slate-100 opacity-60 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white'}`}
+            className={`h-12 transition-colors ${!serviceId ? "bg-slate-100 opacity-60 cursor-not-allowed" : "bg-slate-50 border-slate-200 focus:bg-white"}`}
           >
             <option value="" disabled>
               -- Pilih Item Layanan --

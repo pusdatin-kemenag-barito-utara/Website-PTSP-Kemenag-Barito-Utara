@@ -50,7 +50,7 @@ export function ItemLayananClient({
     selectedServiceFilter === "all"
       ? items
       : items.filter(
-          (item) => item.service_id.toString() === selectedServiceFilter,
+          (item: any) => item.service_id.toString() === selectedServiceFilter,
         );
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,7 +134,7 @@ export function ItemLayananClient({
   };
 
   const total = initialItems.length;
-  const active = initialItems.filter((s) => s.is_active).length;
+  const active = initialItems.filter((s: any) => s.is_active).length;
   const inactive = total - active;
 
   return (

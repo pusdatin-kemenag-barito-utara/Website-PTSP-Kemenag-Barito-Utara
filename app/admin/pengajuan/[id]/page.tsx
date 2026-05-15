@@ -95,16 +95,19 @@ export default async function AdminRequestDetailPage({
     : rawGeneratedDocs
       ? [rawGeneratedDocs]
       : [];
-      
+
   // Get the most recent generated document
-  const generatedDoc = allGeneratedDocs.length > 0 ? allGeneratedDocs[allGeneratedDocs.length - 1] : null;
+  const generatedDoc =
+    allGeneratedDocs.length > 0
+      ? allGeneratedDocs[allGeneratedDocs.length - 1]
+      : null;
 
   // Build the preview URL using the unified getSignedUrl function
-  const generatedUrl = generatedDoc?.file_path 
-    ? await getSignedUrl("generated-documents", generatedDoc.file_path) 
+  const generatedUrl = generatedDoc?.file_path
+    ? await getSignedUrl("generated-documents", generatedDoc.file_path)
     : null;
-    
-  const signedUrlMap = new Map(docUrls.map((item) => [item.id, item.url]));
+
+  const signedUrlMap = new Map(docUrls.map((item: any) => [item.id, item.url]));
 
   return (
     <div className="space-y-6 pb-12">

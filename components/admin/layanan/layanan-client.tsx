@@ -128,7 +128,7 @@ export function LayananClient({
   };
 
   const saveOrder = (orderedServices: any[]) => {
-    const ids = orderedServices.map((s) => s.id);
+    const ids = orderedServices.map((s: any) => s.id);
     startTransition(async () => {
       try {
         await reorderServicesAction(ids);
@@ -142,7 +142,7 @@ export function LayananClient({
   };
 
   const total = initialServices.length;
-  const active = initialServices.filter((s) => s.is_active).length;
+  const active = initialServices.filter((s: any) => s.is_active).length;
   const inactive = total - active;
 
   return (

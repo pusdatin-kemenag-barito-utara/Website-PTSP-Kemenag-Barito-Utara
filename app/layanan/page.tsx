@@ -1,4 +1,10 @@
-import { ArrowRight, BadgeCheck, Building2, Layers3, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  Layers3,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { ServicesFilter } from "@/components/services/services-filter";
 import { getPublicServices } from "@/lib/queries";
@@ -18,7 +24,8 @@ export default async function ServicesPage() {
         <div
           className="absolute inset-0 opacity-[0.1]"
           style={{
-            backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,1) 1px, transparent 0)",
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, rgba(255,255,255,1) 1px, transparent 0)",
             backgroundSize: "40px 40px",
           }}
         />
@@ -32,14 +39,15 @@ export default async function ServicesPage() {
                 <Sparkles className="h-4 w-4 text-[#5eeaa5]" />
                 Katalog Layanan Digital
               </div>
-              
+
               <h1 className="text-4xl font-black leading-[1.1] text-white sm:text-6xl md:text-7xl tracking-tight">
                 Jelajahi Layanan <br className="hidden md:block" />
                 <span className="text-emerald-300">Pemerintah Agama</span>
               </h1>
-              
+
               <p className="max-w-2xl text-base leading-relaxed text-emerald-50/80 sm:text-xl font-medium mx-auto lg:mx-0">
-                Pilih unit kerja, cek detail persyaratan secara transparan, dan siapkan dokumen Anda sebelum mengajukan secara online.
+                Pilih unit kerja, cek detail persyaratan secara transparan, dan
+                siapkan dokumen Anda sebelum mengajukan secara online.
               </p>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
@@ -50,14 +58,17 @@ export default async function ServicesPage() {
                   Mulai Pengajuan <ArrowRight className="h-4 w-4" />
                 </Link>
                 <div className="flex -space-x-3">
-                   {[1,2,3,4].map(i => (
-                     <div key={i} className="h-10 w-10 rounded-full border-2 border-[#059669] bg-emerald-100 flex items-center justify-center text-[10px] font-black text-[#059669]">
-                        {i}
-                     </div>
-                   ))}
-                   <div className="flex items-center justify-center h-10 px-4 rounded-full border-2 border-[#059669] bg-white text-[10px] font-black text-[#059669] translate-x-1">
-                      +30 Layanan
-                   </div>
+                  {[1, 2, 3, 4].map((i: number) => (
+                    <div
+                      key={i}
+                      className="h-10 w-10 rounded-full border-2 border-[#059669] bg-emerald-100 flex items-center justify-center text-[10px] font-black text-[#059669]"
+                    >
+                      {i}
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-center h-10 px-4 rounded-full border-2 border-[#059669] bg-white text-[10px] font-black text-[#059669] translate-x-1">
+                    +30 Layanan
+                  </div>
                 </div>
               </div>
             </div>
@@ -69,8 +80,12 @@ export default async function ServicesPage() {
                   <Building2 className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">Unit Kerja</p>
-                  <p className="text-4xl font-black text-white leading-none mt-1">{services.length}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">
+                    Unit Kerja
+                  </p>
+                  <p className="text-4xl font-black text-white leading-none mt-1">
+                    {services.length}
+                  </p>
                 </div>
               </div>
               <div className="flex flex-col items-center lg:items-start gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl shadow-2xl min-w-[200px]">
@@ -78,8 +93,12 @@ export default async function ServicesPage() {
                   <Layers3 className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">Total Layanan</p>
-                  <p className="text-4xl font-black text-white leading-none mt-1">{totalItems}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">
+                    Total Layanan
+                  </p>
+                  <p className="text-4xl font-black text-white leading-none mt-1">
+                    {totalItems}
+                  </p>
                 </div>
               </div>
             </div>

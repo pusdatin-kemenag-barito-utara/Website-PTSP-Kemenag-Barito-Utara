@@ -101,7 +101,13 @@ export async function uploadResultDocumentAction(formData: FormData) {
 
   const request = await prisma.service_requests.findUnique({
     where: { id: requestId },
-    select: { id: true, user_id: true, request_number: true, status: true, completed_at: true },
+    select: {
+      id: true,
+      user_id: true,
+      request_number: true,
+      status: true,
+      completed_at: true,
+    },
   });
 
   if (!request) {
@@ -166,14 +172,17 @@ export async function uploadResultDocumentAction(formData: FormData) {
       },
     }),
     // Update request status if needed
-    ...(request.status !== nextStatus 
-      ? [prisma.service_requests.update({
-          where: { id: request.id },
-          data: {
-            status: nextStatus as any,
-            completed_at: nextStatus === "completed" ? new Date() : request.completed_at,
-          }
-        })]
+    ...(request.status !== nextStatus
+      ? [
+          prisma.service_requests.update({
+            where: { id: request.id },
+            data: {
+              status: nextStatus as any,
+              completed_at:
+                nextStatus === "completed" ? new Date() : request.completed_at,
+            },
+          }),
+        ]
       : []),
     // Add activity log
     prisma.activity_logs.create({
@@ -182,8 +191,8 @@ export async function uploadResultDocumentAction(formData: FormData) {
         action: "manual_document_uploaded",
         notes: "Dokumen hasil diunggah secara manual oleh admin.",
         actor_id: adminProfile.id,
-      }
-    })
+      },
+    }),
   ]);
 
   // Log to System Audit
@@ -230,13 +239,13 @@ export async function deleteRequestAction(formData: FormData) {
   const { deleteFromR2 } = await import("@/lib/r2");
 
   const allFilePaths = [
-    ...reqDocs.map((d) => d.file_path),
+    ...reqDocs.map((d: any) => d.file_path),
     ...(genDocs ? [genDocs.file_path] : []),
   ];
 
   for (const path of allFilePaths) {
     if (!path) continue;
-    
+
     if (path.startsWith("gdrive:")) {
       const fileId = path.replace("gdrive:", "");
       try {
