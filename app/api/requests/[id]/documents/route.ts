@@ -138,7 +138,7 @@ export async function POST(
   );
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.service_request_documents.upsert({
         where: {
           request_id_requirement_id: {

@@ -65,7 +65,7 @@ export async function POST(
     });
 
     // 3. Process updates in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 3a. Update text answers
       for (const update of updates as any[]) {
         await tx.service_request_answers.updateMany({

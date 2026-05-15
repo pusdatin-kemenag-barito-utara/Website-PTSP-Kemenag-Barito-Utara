@@ -43,7 +43,7 @@ export async function PUT(
     }
 
     // Update each answer and log activity in transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const update of updates) {
         await tx.service_request_answers.updateMany({
           where: {
