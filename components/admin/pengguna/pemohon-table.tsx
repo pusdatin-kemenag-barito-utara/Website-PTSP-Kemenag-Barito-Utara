@@ -34,7 +34,7 @@ export function PemohonTable({
 
   const filteredUsers = searchQuery
     ? users.filter(
-        (u) =>
+        (u: any) =>
           (u.full_name || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||

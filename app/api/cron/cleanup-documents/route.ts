@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const expiredRequestIds = expiredRequests.map((r: { id: string }) => r.id);
+    const expiredRequestIds = expiredRequests.map((r: any) => r.id);
     let deletedFilesCount = 0;
     const admin = createAdminClient();
 
@@ -52,9 +52,7 @@ export async function GET(request: Request) {
     });
 
     if (generatedDocs.length > 0) {
-      const pathsToDelete = generatedDocs.map(
-        (doc: { file_path: string }) => doc.file_path,
-      );
+      const pathsToDelete = generatedDocs.map((doc: any) => doc.file_path);
 
       // Delete physical files from Storage
       const { error: storageError } = await admin.storage
@@ -83,7 +81,7 @@ export async function GET(request: Request) {
     });
 
     // Handle R2 deletions
-    const r2Docs = reqDocs.filter((doc: { file_path: string }) =>
+    const r2Docs = reqDocs.filter((doc: any) =>
       doc.file_path.startsWith("r2:"),
     );
     for (const doc of r2Docs) {
@@ -101,7 +99,7 @@ export async function GET(request: Request) {
 
     // Filter out gdrive and r2 links before Supabase storage deletion
     const supabaseDocs = reqDocs.filter(
-      (doc: { file_path: string }) =>
+      (doc: any) =>
         !doc.file_path.startsWith("gdrive:") &&
         !doc.file_path.startsWith("r2:"),
     );

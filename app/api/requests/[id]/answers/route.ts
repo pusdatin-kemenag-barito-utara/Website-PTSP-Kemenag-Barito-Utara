@@ -20,7 +20,7 @@ export async function PUT(
 
     // Verify ownership and status
     const reqData = await prisma.service_requests.findUnique({
-      where: { 
+      where: {
         id: requestId,
         user_id: profile.id,
       },

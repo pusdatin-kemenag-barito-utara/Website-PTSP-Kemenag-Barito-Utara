@@ -23,7 +23,7 @@ async function checkDuplicateNomorSurat(
   excludeId?: string,
 ) {
   const data = await getSheetData(`${sheetName}!A:B`); // ID and Nomor Surat
-  return data.some((row) => row[1] === nomor && row[0] !== excludeId);
+  return data.some((row: any) => row[1] === nomor && row[0] !== excludeId);
 }
 
 async function generateNextId(sheetName: string, prefix: string) {
@@ -32,7 +32,7 @@ async function generateNextId(sheetName: string, prefix: string) {
   const pattern = new RegExp(`^${prefix}-${year}-(\\d+)$`);
 
   let maxNum = 0;
-  data.forEach((row) => {
+  data.forEach((row: any) => {
     const match = String(row[0]).match(pattern);
     if (match) {
       const num = parseInt(match[1]);
@@ -155,7 +155,7 @@ export async function saveSuratMasukAction(formData: FormData) {
 
     if (id) {
       const allData = await getSheetData(`${SHEETS.MASUK}!A:A`);
-      const rowIndex = allData.findIndex((row) => row[0] === id);
+      const rowIndex = allData.findIndex((row: any) => row[0] === id);
       if (rowIndex === -1) return { error: "Data surat tidak ditemukan." };
 
       await updateSheetRow(
@@ -203,7 +203,7 @@ export async function deleteSuratMasukAction(id: string) {
     }
 
     const allData = await getSheetData(`${SHEETS.MASUK}!A:A`);
-    const rowIndex = allData.findIndex((row) => row[0] === id);
+    const rowIndex = allData.findIndex((row: any) => row[0] === id);
     if (rowIndex === -1) return { error: "Data surat tidak ditemukan." };
 
     await deleteSheetRow(SHEETS.MASUK, rowIndex);
@@ -273,7 +273,7 @@ export async function saveSuratKeluarAction(formData: FormData) {
 
     if (id) {
       const allData = await getSheetData(`${SHEETS.KELUAR}!A:A`);
-      const rowIndex = allData.findIndex((row) => row[0] === id);
+      const rowIndex = allData.findIndex((row: any) => row[0] === id);
       if (rowIndex === -1) return { error: "Data surat tidak ditemukan." };
 
       await updateSheetRow(
@@ -328,7 +328,7 @@ export async function deleteSuratKeluarAction(id: string) {
     }
 
     const allData = await getSheetData(`${SHEETS.KELUAR}!A:A`);
-    const rowIndex = allData.findIndex((row) => row[0] === id);
+    const rowIndex = allData.findIndex((row: any) => row[0] === id);
     if (rowIndex === -1) return { error: "Data surat tidak ditemukan." };
 
     await deleteSheetRow(SHEETS.KELUAR, rowIndex);

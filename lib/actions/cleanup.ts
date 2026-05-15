@@ -15,7 +15,7 @@ import { createAuditLog } from "@/lib/audit";
  */
 export async function cleanupOldStorageAction() {
   const adminProfile = await requireAdmin();
-  
+
   // Batas waktu: 3 bulan yang lalu
   const threeMonthsAgo = subMonths(new Date(), 3);
 
@@ -41,7 +41,11 @@ export async function cleanupOldStorageAction() {
   });
 
   if (oldRequests.length === 0) {
-    return { success: true, count: 0, message: "Tidak ada file lama yang perlu dibersihkan." };
+    return {
+      success: true,
+      count: 0,
+      message: "Tidak ada file lama yang perlu dibersihkan.",
+    };
   }
 
   let deletedCount = 0;
@@ -54,12 +58,16 @@ export async function cleanupOldStorageAction() {
         // 1. Hapus dari Google Drive jika ada
         if (doc.file_path.startsWith("gdrive:")) {
           const fileId = doc.file_path.replace("gdrive:", "");
-          await deleteFromDrive(fileId).catch(e => console.error("Gagal hapus Drive:", e));
+          await deleteFromDrive(fileId).catch((e: any) =>
+            console.error("Gagal hapus Drive:", e),
+          );
         }
-        
+
         // 2. Hapus dari R2 jika ada
         if (doc.file_path.startsWith("r2:")) {
-          await deleteFromR2(doc.file_path).catch(e => console.error("Gagal hapus R2:", e));
+          await deleteFromR2(doc.file_path).catch((e: any) =>
+            console.error("Gagal hapus R2:", e),
+          );
         }
 
         // 3. Update status di database agar tidak diproses lagi
@@ -86,11 +94,11 @@ export async function cleanupOldStorageAction() {
   });
 
   revalidatePath("/admin");
-  return { 
-    success: true, 
-    count: deletedCount, 
+  return {
+    success: true,
+    count: deletedCount,
     affectedRequests: oldRequests.length,
-    message: `Pembersihan selesai. ${deletedCount} file dari ${oldRequests.length} pengajuan telah dihapus.` 
+    message: `Pembersihan selesai. ${deletedCount} file dari ${oldRequests.length} pengajuan telah dihapus.`,
   };
 }
 

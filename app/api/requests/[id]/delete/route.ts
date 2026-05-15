@@ -16,7 +16,7 @@ export async function DELETE(
 
     // Verify ownership and status
     const reqData = await prisma.service_requests.findUnique({
-      where: { 
+      where: {
         id: requestId,
         user_id: profile.id,
       },
@@ -51,7 +51,7 @@ export async function DELETE(
       console.log(`Cleaning up ${docs.length} documents for request ${id}...`);
 
       const admin = createAdminClient();
-      const deletePromises = docs.map(async (doc) => {
+      const deletePromises = docs.map(async (doc: any) => {
         if (!doc.file_path) return;
 
         try {
@@ -68,7 +68,10 @@ export async function DELETE(
           }
           console.log(`Deleted document file: ${doc.file_name} (${doc.id})`);
         } catch (error) {
-          console.error(`Failed to delete storage file for doc ${doc.id}:`, error);
+          console.error(
+            `Failed to delete storage file for doc ${doc.id}:`,
+            error,
+          );
           // We continue to delete other files even if one fails
         }
       });
