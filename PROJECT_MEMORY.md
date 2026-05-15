@@ -34,7 +34,12 @@ Penyusunan kategori harus mengikuti struktur resmi Kantor Kemenag Barito Utara:
 
 1.  **Recharts Fix**: Wajib menggunakan `ResizeObserver` dan pengecekan `offsetWidth > 0` sebelum merender `ResponsiveContainer` guna menghindari error dimensi `-1` di konsol.
 2.  **CSP Compliance**: Dilarang memanggil aset media (suara/video) dari URL eksternal di dashboard admin. Simpan aset di `/public/sounds/` untuk menghindari pemblokiran _Content Security Policy_.
-3.  **Strict TypeScript**: Selalu gunakan tipe data eksplisit pada parameter callback (misal: `(c: string)`) untuk menjamin kelancaran proses `npm run build`.
+3.  **TypeScript Production Stabilization**:
+    *   **Implicit Any**: Selalu beri anotasi tipe eksplisit (misal: `: any`) pada parameter callback array (`map`, `filter`) di rute API dan komponen admin untuk mencegah kegagalan `npm run build` di Vercel.
+    *   **Prisma Transaction**: Gunakan `(tx: any)` pada blok `prisma.$transaction` untuk menghindari konflik tipe antara client standar dan interactive transaction.
+    *   **BigInt Serialization**: Gunakan utilitas `serializeBigInt` atau `.toString()` pada data BigInt sebelum dikirim sebagai JSON atau digunakan sebagai filter Prisma.
+    *   **Vercel Build**: Skrip build di `package.json` wajib menyertakan `prisma generate` (contoh: `prisma generate && next build`).
+    *   **Turbopack Build**: Untuk Next.js 16+, pastikan properti `turbopack: {}` (dengan `@ts-ignore`) ada di `next.config.ts` untuk menghindari error resolusi modul eksternal saat menggunakan plugin PWA.
 
 ## 🛠️ Tech Stack
 
