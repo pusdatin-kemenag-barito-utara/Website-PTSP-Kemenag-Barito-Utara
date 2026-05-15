@@ -28,7 +28,7 @@ export default async function AdminServicesPage() {
   const bidangLabel = profile.role
     ?.replace("admin_", "")
     .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+    .replace(/\b\w/g, (c: string) => c.toUpperCase());
 
   return (
     <div className="space-y-6">
