@@ -10,7 +10,7 @@ export function AdminQuickLinks({ quickMenus }: { quickMenus: any[] }) {
 
       <div className="rounded-2xl border border-slate-200/60 bg-white shadow-sm overflow-hidden p-2">
         <div className="flex flex-col gap-1">
-          {quickMenus.map((menu) => (
+          {quickMenus.map((menu: any) => (
             <Link
               key={menu.href}
               href={menu.href}

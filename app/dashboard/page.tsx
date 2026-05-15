@@ -23,12 +23,12 @@ export default async function DashboardHomePage() {
 
   const stats = {
     total: requests.length,
-    pending: requests.filter((item) =>
+    pending: requests.filter((item: any) =>
       ["submitted", "under_review"].includes(item.status),
     ).length,
-    revision: requests.filter((item) => item.status === "revision_required")
+    revision: requests.filter((item: any) => item.status === "revision_required")
       .length,
-    finished: requests.filter((item) =>
+    finished: requests.filter((item: any) =>
       ["approved", "completed"].includes(item.status),
     ).length,
   };

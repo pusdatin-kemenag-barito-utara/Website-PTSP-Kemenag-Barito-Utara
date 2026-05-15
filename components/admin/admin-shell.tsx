@@ -115,10 +115,10 @@ export function AdminShell({
   const isSuperAdmin = checkSuperAdmin(profile?.email);
   const authorizedNav = isSuperAdmin
     ? ADMIN_NAV
-    : ADMIN_NAV.filter((item) => allowedMenus.includes(item.id));
+    : ADMIN_NAV.filter((item: NavItem) => allowedMenus.includes(item.id));
 
   const groups = Array.from(
-    new Set(authorizedNav.map((item) => item.group || "")),
+    new Set(authorizedNav.map((item: NavItem) => item.group || "")),
   );
 
   const initials = (profile?.full_name || profile?.email || "A")

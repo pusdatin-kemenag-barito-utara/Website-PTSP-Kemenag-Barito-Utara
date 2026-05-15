@@ -81,9 +81,9 @@ export function AdminSidebar({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-        {groups.map((group) => {
+        {groups.map((group: string) => {
           const groupItems = authorizedNav.filter(
-            (item) => (item.group || "") === group,
+            (item: any) => (item.group || "") === group,
           );
           return (
             <div key={group}>
@@ -95,7 +95,7 @@ export function AdminSidebar({
                 </div>
               )}
               <div className="space-y-1">
-                {groupItems.map((item) => {
+                {groupItems.map((item: any) => {
                   const isActive =
                     item.href === "/admin"
                       ? pathname === item.href

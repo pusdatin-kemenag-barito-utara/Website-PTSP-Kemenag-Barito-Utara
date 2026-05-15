@@ -72,7 +72,7 @@ export function AdminStatusProgress({
                 text: "text-emerald-700",
                 bg: "bg-emerald-50",
               },
-            ].map((s) => (
+            ].map((s: any) => (
               <div key={s.label}>
                 <div className="flex items-end justify-between mb-2">
                   <div className="flex items-center gap-2">
