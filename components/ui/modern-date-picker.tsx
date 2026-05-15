@@ -21,7 +21,7 @@ import {
   Calendar as CalendarIcon,
   X,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface ModernDatePickerProps {
   value: string; // YYYY-MM-DD
@@ -194,7 +194,7 @@ export function ModernDatePicker({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 5, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -223,7 +223,7 @@ export function ModernDatePicker({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

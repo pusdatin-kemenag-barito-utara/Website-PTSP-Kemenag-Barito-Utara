@@ -11,8 +11,8 @@ export function DashboardRealtimeSync() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Initialize audio
-    audioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+    // Initialize audio from local public folder to satisfy CSP
+    audioRef.current = new Audio("/sounds/notification.mp3");
     
     // Subscribe to new service requests
     const channel = supabase

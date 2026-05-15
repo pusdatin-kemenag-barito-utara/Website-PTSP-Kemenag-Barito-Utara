@@ -12,7 +12,7 @@ import {
   Info,
 } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface ServiceItem {
   id: string;
@@ -111,7 +111,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
             {/* Content with Animation */}
             <AnimatePresence initial={false}>
               {isOpen && (
-                <motion.div
+                <m.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
@@ -158,7 +158,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                       {/* Detail 1: Inline Form Details (Only visible when form active) */}
                       <AnimatePresence mode="wait">
                         {activeDetail === "form" && (
-                          <motion.div
+                          <m.div
                             key="form-detail-inline"
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
@@ -190,7 +190,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                 )}
                               </div>
                             </div>
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
 
@@ -218,7 +218,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                       {/* Detail 2: Inline Requirement Details */}
                       <AnimatePresence mode="wait">
                         {activeDetail === "req" && (
-                          <motion.div
+                          <m.div
                             key="req-detail-inline"
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
@@ -253,7 +253,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                 )}
                               </div>
                             </div>
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
 
@@ -272,7 +272,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                       </Link>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>

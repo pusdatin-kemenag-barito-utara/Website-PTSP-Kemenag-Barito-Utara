@@ -12,7 +12,7 @@ import {
   ChevronDown,
   LayoutGrid,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 type Requirement = {
   id: string;
@@ -229,7 +229,7 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
 
                 <AnimatePresence>
                   {isOpen && (
-                    <motion.div
+                    <m.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -287,7 +287,7 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>

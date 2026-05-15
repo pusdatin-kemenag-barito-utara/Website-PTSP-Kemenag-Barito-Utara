@@ -11,71 +11,94 @@ export function AdminDashboardMetrics({
   needAction: number;
   totalRequests: number;
 }) {
+  const metrics = [
+    {
+      title: "Total Layanan",
+      value: serviceCount ?? 0,
+      sub: "Layanan aktif di sistem",
+      icon: Layers3,
+      color: "from-emerald-500 to-teal-600",
+      bg: "bg-emerald-50/50",
+      text: "text-emerald-700",
+      border: "border-emerald-100",
+    },
+    {
+      title: "Pengguna",
+      value: userCount ?? 0,
+      sub: "Total akun terdaftar",
+      icon: Users,
+      color: "from-blue-500 to-indigo-600",
+      bg: "bg-blue-50/50",
+      text: "text-blue-700",
+      border: "border-blue-100",
+    },
+    {
+      title: "Perlu Diproses",
+      value: needAction,
+      sub: "Menunggu tindakan admin",
+      icon: FileClock,
+      color: "from-amber-500 to-orange-600",
+      bg: "bg-amber-50/50",
+      text: "text-amber-700",
+      border: "border-amber-100",
+      urgent: true,
+    },
+    {
+      title: "Total Pengajuan",
+      value: totalRequests,
+      sub: "Seluruh siklus pengajuan",
+      icon: TrendingUp,
+      color: "from-slate-600 to-slate-800",
+      bg: "bg-slate-50/50",
+      text: "text-slate-700",
+      border: "border-slate-100",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      {/* Metric 1 */}
-      <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-[#059669]">
-            <Layers3 className="h-5 w-5" />
+      {metrics.map((item, idx) => (
+        <div
+          key={idx}
+          className={`group relative overflow-hidden rounded-3xl border ${item.border} bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/5`}
+        >
+          {/* Background Decorative Gradient */}
+          <div className={`absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${item.color} opacity-[0.03] transition-transform duration-500 group-hover:scale-150`} />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.bg} ${item.text} transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:${item.color} group-hover:text-white`}>
+                <item.icon className="h-6 w-6" />
+              </div>
+              {item.urgent && needAction > 0 && (
+                <span className="flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500/80">
+                {item.title}
+              </p>
+              <div className="flex items-baseline gap-1">
+                <h4 className="text-3xl font-black tracking-tight text-slate-800 tabular-nums">
+                  {item.value}
+                </h4>
+              </div>
+              <p className="text-[11px] font-medium text-slate-400">
+                {item.sub}
+              </p>
+            </div>
           </div>
-          <p className="text-sm font-bold text-slate-500">Total Layanan</p>
-        </div>
-        <p className="text-3xl font-black text-slate-800 tabular-nums">
-          {serviceCount ?? 0}
-        </p>
-        <p className="text-xs font-medium text-slate-400 mt-2">
-          Layanan aktif di sistem
-        </p>
-      </div>
 
-      {/* Metric 2 */}
-      <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-            <Users className="h-5 w-5" />
+          {/* Bottom Progress Line */}
+          <div className="absolute bottom-0 left-0 h-1 w-full bg-slate-50">
+            <div className={`h-full w-0 bg-gradient-to-r ${item.color} transition-all duration-700 ease-out group-hover:w-full`} />
           </div>
-          <p className="text-sm font-bold text-slate-500">Pengguna</p>
         </div>
-        <p className="text-3xl font-black text-slate-800 tabular-nums">
-          {userCount ?? 0}
-        </p>
-        <p className="text-xs font-medium text-slate-400 mt-2">
-          Total akun terdaftar
-        </p>
-      </div>
-
-      {/* Metric 3 */}
-      <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md ring-1 ring-amber-100/50">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-            <FileClock className="h-5 w-5" />
-          </div>
-          <p className="text-sm font-bold text-amber-700">Perlu Diproses</p>
-        </div>
-        <p className="text-3xl font-black text-amber-600 tabular-nums">
-          {needAction}
-        </p>
-        <p className="text-xs font-medium text-amber-500 mt-2">
-          Menunggu tindakan admin
-        </p>
-      </div>
-
-      {/* Metric 4 */}
-      <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-            <TrendingUp className="h-5 w-5" />
-          </div>
-          <p className="text-sm font-bold text-slate-500">Total Pengajuan</p>
-        </div>
-        <p className="text-3xl font-black text-slate-800 tabular-nums">
-          {totalRequests}
-        </p>
-        <p className="text-xs font-medium text-slate-400 mt-2">
-          Seluruh siklus pengajuan
-        </p>
-      </div>
+      ))}
     </div>
   );
 }

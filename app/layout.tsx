@@ -8,6 +8,7 @@ import { ConditionalShell } from "@/components/conditional-shell";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { ChatWidget } from "@/components/features/chat/ChatWidget";
+import { FramerWrapper } from "@/components/framer-wrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -121,14 +122,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="text-slate-900 antialiased">
-        <div className="flex min-h-dvh flex-col">
-          <ConditionalShell header={<SiteHeader />} footer={<SiteFooter />}>
-            {children}
-            <Analytics />
-          </ConditionalShell>
-          <Toaster position="top-center" richColors />
-          <ChatWidget />
-        </div>
+        <FramerWrapper>
+          <div className="flex min-h-dvh flex-col">
+            <ConditionalShell header={<SiteHeader />} footer={<SiteFooter />}>
+              {children}
+              <Analytics />
+            </ConditionalShell>
+            <Toaster position="top-center" richColors />
+            <ChatWidget />
+          </div>
+        </FramerWrapper>
       </body>
     </html>
   );

@@ -5,8 +5,8 @@ import { updateSession } from "@/lib/supabase/middleware";
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 
 const LIMITS = {
-  LOGIN: { window: 60 * 1000, max: 5 }, // 5 requests per 1 minute
-  REQUESTS: { window: 60 * 1000, max: 3 }, // 3 submissions per 1 minute
+  LOGIN: { window: 60 * 1000, max: 50 }, // Increased to 50 for smoother dev
+  REQUESTS: { window: 60 * 1000, max: 20 }, // Increased to 20
 };
 
 export async function proxy(request: NextRequest) {

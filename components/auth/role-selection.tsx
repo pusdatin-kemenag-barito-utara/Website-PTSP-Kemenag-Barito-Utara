@@ -1,11 +1,11 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { UserCircle2, ShieldCheck, ChevronRight } from "lucide-react";
 
 type Role = "user" | "admin" | null;
 
 export function RoleSelection({ setRole }: { setRole: (role: Role) => void }) {
   return (
-    <motion.div
+    <m.div
       key="role-selection"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -56,6 +56,6 @@ export function RoleSelection({ setRole }: { setRole: (role: Role) => void }) {
           </div>
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
