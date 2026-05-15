@@ -49,10 +49,10 @@ export default async function AdminHomePage() {
   ]);
 
   const stats = {
-    submitted: requests.filter((item) => item.status === "submitted").length,
-    underReview: requests.filter((item) => item.status === "under_review").length,
-    revision: requests.filter((item) => item.status === "revision_required").length,
-    finished: requests.filter((item) =>
+    submitted: requests.filter((item: { status: string }) => item.status === "submitted").length,
+    underReview: requests.filter((item: { status: string }) => item.status === "under_review").length,
+    revision: requests.filter((item: { status: string }) => item.status === "revision_required").length,
+    finished: requests.filter((item: { status: string }) =>
       ["approved", "completed"].includes(item.status),
     ).length,
   };
@@ -109,7 +109,7 @@ export default async function AdminHomePage() {
       color: "text-rose-600",
       bg: "bg-rose-50",
     },
-  ].filter((menu) => allowedMenus.includes(menu.id));
+  ].filter((menu: { id: string }) => allowedMenus.includes(menu.id));
 
   // --- Analytics Data Processing ---
   
@@ -121,14 +121,14 @@ export default async function AdminHomePage() {
     take: 5
   });
 
-  const serviceIds = topServicesRaw.map(s => s.service_id).filter(id => id !== null) as bigint[];
+  const serviceIds = topServicesRaw.map((s: { service_id: bigint | null }) => s.service_id).filter((id: bigint | null) => id !== null) as bigint[];
   const servicesInfo = await prisma.services.findMany({
     where: { id: { in: serviceIds } },
     select: { id: true, name: true }
   });
 
-  const serviceAnalytics = topServicesRaw.map(s => {
-    const info = servicesInfo.find(si => si.id === s.service_id);
+  const serviceAnalytics = topServicesRaw.map((s: any) => {
+    const info = servicesInfo.find((si: { id: bigint, name: string }) => si.id === s.service_id);
     return {
       name: info?.name || 'Lainnya',
       count: s._count.id
@@ -146,7 +146,7 @@ export default async function AdminHomePage() {
   });
 
   const trendDataMap = new Map();
-  last7DaysRequests.forEach(r => {
+  last7DaysRequests.forEach((r: { created_at: Date }) => {
     const date = r.created_at.toISOString().split('T')[0];
     trendDataMap.set(date, (trendDataMap.get(date) || 0) + 1);
   });
