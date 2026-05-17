@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,14 +30,14 @@ export function AddEditItemModal({
     <AnimatePresence>
       {(isOpen || editingItem) && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -58,10 +58,10 @@ export function AddEditItemModal({
             <form onSubmit={onSubmit} className="p-6 space-y-5">
               <Field label="Induk Layanan" required>
                 <Select
-                  name="service_id"
-                  value={formData.service_id}
+                  name="serviceId"
+                  value={formData.serviceId}
                   onChange={(e) =>
-                    onChangeFormData({ service_id: e.target.value })
+                    onChangeFormData({ serviceId: e.target.value })
                   }
                   required
                   className="font-medium"
@@ -106,10 +106,10 @@ export function AddEditItemModal({
 
               <Field label="Estimasi Waktu" hint="Contoh: 1-3 Hari Kerja">
                 <Input
-                  name="estimated_time"
-                  value={formData.estimated_time}
+                  name="estimatedTime"
+                  value={formData.estimatedTime}
                   onChange={(e) =>
-                    onChangeFormData({ estimated_time: e.target.value })
+                    onChangeFormData({ estimatedTime: e.target.value })
                   }
                   placeholder="Masukkan estimasi waktu pengerjaan"
                   className="font-medium"
@@ -120,9 +120,9 @@ export function AddEditItemModal({
                   <div className="flex items-center justify-center">
                     <input
                       type="checkbox"
-                      checked={formData.is_active}
+                      checked={formData.isActive}
                       onChange={(e) =>
-                        onChangeFormData({ is_active: e.target.checked })
+                        onChangeFormData({ isActive: e.target.checked })
                       }
                       className="peer sr-only"
                     />
@@ -162,7 +162,7 @@ export function AddEditItemModal({
                 </button>
               </div>
             </form>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileDown, FileText, Loader2 } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   getRequestsForExport,
   getDocumentsForExport,
-} from "@/lib/actions/export";
+} from "@/lib/actions/system/export";
 
 interface ReportExportButtonProps {
   type: "requests" | "documents";
@@ -44,22 +44,54 @@ export function ReportExportButton({
         return;
       }
 
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Laporan");
 
-      const colWidths = Object.keys(data[0]).map((key: string) => ({
-        wch:
-          Math.max(
-            key.length,
-            ...data.map((row: any) => (row[key] || "").toString().length),
-          ) + 2,
-      }));
-      ws["!cols"] = colWidths;
+      // Add Headers & Style
+      const headers = Object.keys(data[0]);
+      worksheet.columns = headers.map((header) => {
+        // Find max content length for this column
+        const maxLength = Math.max(
+          header.length,
+          ...data.map((row: any) => (row[header] || "").toString().length),
+        );
 
-      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const dataBlob = new Blob([excelBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+        return {
+          header: header.toUpperCase().replace(/_/g, " "),
+          key: header,
+          width: Math.min(Math.max(maxLength + 4, 12), 50), // Clamp between 12 and 50
+        };
+      });
+
+      // Style the header row
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF059669" }, // Emerald Green
+      };
+      headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
+      // Add Data Rows
+      worksheet.addRows(data);
+
+      // Add border to all cells
+      worksheet.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+          cell.alignment = { vertical: "middle", wrapText: true };
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const dataBlob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
       saveAs(dataBlob, `${fileName}_${new Date().getTime()}.xlsx`);

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Trash2, Edit2, X, Check } from "lucide-react";
 import { toast } from "sonner";
-import { updateActivityLogAction, deleteActivityLogAction } from "@/lib/actions/admin-requests";
+import { updateActivityLogAction, deleteActivityLogAction } from "@/lib/actions/admin/admin-requests";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
 export function ActivityLogActions({
@@ -24,15 +24,19 @@ export function ActivityLogActions({
     startTransition(async () => {
       try {
         const formData = new FormData();
-        formData.append("log_id", logId);
-        formData.append("request_id", requestId);
+        formData.append("logId", logId);
+        formData.append("requestId", requestId);
         formData.append("notes", notes);
         
-        await updateActivityLogAction(formData);
-        toast.success("Catatan aktivitas diperbarui");
-        setIsEditing(false);
+        const result = await updateActivityLogAction(formData);
+        if (result.success) {
+          toast.success(result.message || "Catatan aktivitas diperbarui");
+          setIsEditing(false);
+        } else {
+          toast.error(result.error || "Gagal memperbarui catatan");
+        }
       } catch (error: any) {
-        toast.error("Gagal memperbarui: " + error.message);
+        toast.error("Terjadi kesalahan sistem: " + error.message);
       }
     });
   };
@@ -41,14 +45,18 @@ export function ActivityLogActions({
     startTransition(async () => {
       try {
         const formData = new FormData();
-        formData.append("log_id", logId);
-        formData.append("request_id", requestId);
+        formData.append("logId", logId);
+        formData.append("requestId", requestId);
         
-        await deleteActivityLogAction(formData);
-        toast.success("Aktivitas dihapus");
-        setShowDeleteAlert(false);
+        const result = await deleteActivityLogAction(formData);
+        if (result.success) {
+          toast.success(result.message || "Aktivitas dihapus");
+          setShowDeleteAlert(false);
+        } else {
+          toast.error(result.error || "Gagal menghapus aktivitas");
+        }
       } catch (error: any) {
-        toast.error("Gagal menghapus: " + error.message);
+        toast.error("Terjadi kesalahan sistem: " + error.message);
       }
     });
   };

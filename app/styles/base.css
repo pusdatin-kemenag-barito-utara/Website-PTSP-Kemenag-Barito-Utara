@@ -1,0 +1,54 @@
+html,
+body {
+  min-height: 100%;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  font-family: var(--font-family);
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.3) transparent;
+  font-size: var(--fluid-p);
+  line-height: 1.6;
+}
+
+/* Fluid Typography for Headings */
+h1 { font-size: var(--fluid-h1); line-height: 1.1; font-weight: 800; }
+h2 { font-size: var(--fluid-h2); line-height: 1.2; font-weight: 700; }
+
+/* Custom Scrollbar */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 9999px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input,
+textarea,
+select {
+  outline: none;
+}
+
+/* Responsive Image Handling */
+img, video {
+  max-width: 100%;
+  height: auto;
+}

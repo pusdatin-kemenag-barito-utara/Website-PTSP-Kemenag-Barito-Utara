@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronDown,
   FileText,
@@ -18,19 +18,40 @@ interface ServiceItem {
   id: string;
   name: string;
   description: string | null;
-  // @ts-ignore
-  estimated_time?: string | null;
-  service_requirements: any[];
-  service_form_fields: any[];
+  estimatedTime?: string | null;
+  serviceRequirements: any[];
+  serviceFormFields: any[];
 }
 
-export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
-  const [openId, setOpenId] = useState<string | null>(items[0]?.id || null);
+export function ServiceItemsAccordion({
+  items,
+  initialOpenId,
+}: {
+  items: ServiceItem[];
+  initialOpenId?: string;
+}) {
+  const [openId, setOpenId] = useState<string | null>(
+    initialOpenId ? String(initialOpenId) : items[0] ? String(items[0].id) : null,
+  );
   const [activeDetail, setActiveDetail] = useState<"form" | "req" | null>(null);
 
-  const toggleItem = (id: string) => {
-    if (openId !== id) {
-      setOpenId(id);
+  // Auto-scroll to the item if it was opened via initialOpenId
+  useEffect(() => {
+    if (initialOpenId) {
+      const element = document.getElementById(`item-${initialOpenId}`);
+      if (element) {
+        // Wait a bit for layout to settle
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      }
+    }
+  }, [initialOpenId]);
+
+  const toggleItem = (id: any) => {
+    const stringId = String(id);
+    if (openId !== stringId) {
+      setOpenId(stringId);
       setActiveDetail(null);
     } else {
       setOpenId(null);
@@ -50,10 +71,11 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
   return (
     <div className="space-y-4">
       {items.map((item: any, idx: number) => {
-        const isOpen = openId === item.id;
+        const isOpen = openId === String(item.id);
         return (
           <div
             key={item.id}
+            id={`item-${item.id}`}
             className={`overflow-hidden rounded-[2rem] border transition-all duration-500 ${
               isOpen
                 ? "border-emerald-200 bg-white shadow-[0_20px_50px_rgba(5,150,105,0.1)]"
@@ -87,12 +109,12 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     <span className="flex items-center gap-1 whitespace-nowrap">
                       <FolderCheck className="h-2.5 w-2.5" />
-                      {item.service_requirements?.length ?? 0} Dokumen
+                      {item.serviceRequirements?.length ?? 0} Dokumen
                     </span>
                     <span className="hidden h-1 w-1 rounded-full bg-slate-200 sm:block" />
                     <span className="flex items-center gap-1 whitespace-nowrap">
                       <FileText className="h-2.5 w-2.5" />
-                      {item.service_form_fields?.length ?? 0} Formulir
+                      {item.serviceFormFields?.length ?? 0} Formulir
                     </span>
                   </div>
                 </div>
@@ -129,7 +151,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                           Estimasi Waktu
                         </p>
                         <p className="mt-0.5 text-xs font-black text-slate-800 sm:text-sm">
-                          {item.estimated_time || "1-3 Hari Kerja"}
+                          {item.estimatedTime || "1-3 Hari Kerja"}
                         </p>
                       </div>
 
@@ -153,7 +175,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                               Input Formulir
                             </p>
                             <p className="mt-0.5 text-xs font-black text-slate-800 sm:text-sm truncate">
-                              {item.service_form_fields?.length ?? 0} Kolom
+                              {item.serviceFormFields?.length ?? 0} Kolom
                               Isian
                             </p>
                           </div>
@@ -189,11 +211,11 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                 </div>
                               </div>
                               <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
-                                {item.service_form_fields?.length > 0 ? (
-                                  item.service_form_fields
+                                {item.serviceFormFields?.length > 0 ? (
+                                  item.serviceFormFields
                                     .sort(
                                       (a: any, b: any) =>
-                                        a.sort_order - b.sort_order,
+                                        a.sortOrder - b.sortOrder,
                                     )
                                     .map((field: any, fidx: number) => (
                                       <div
@@ -205,7 +227,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                         </span>
                                         <span className="text-[12px] font-bold text-slate-700 sm:text-[13px]">
                                           {field.label}{" "}
-                                          {field.is_required && (
+                                          {field.isRequired && (
                                             <span className="text-rose-500">
                                               *
                                             </span>
@@ -242,7 +264,7 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                               Dokumen Syarat
                             </p>
                             <p className="mt-0.5 text-xs font-black text-slate-800 sm:text-sm truncate">
-                              {item.service_requirements?.length ?? 0} Berkas
+                              {item.serviceRequirements?.length ?? 0} Berkas
                               Digital
                             </p>
                           </div>
@@ -277,11 +299,11 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                 </div>
                               </div>
                               <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                                {item.service_requirements?.length > 0 ? (
-                                  item.service_requirements
+                                {item.serviceRequirements?.length > 0 ? (
+                                  item.serviceRequirements
                                     .sort(
                                       (a: any, b: any) =>
-                                        a.sort_order - b.sort_order,
+                                        a.sortOrder - b.sortOrder,
                                     )
                                     .map((req: any, ridx: number) => (
                                       <div
@@ -293,8 +315,8 @@ export function ServiceItemsAccordion({ items }: { items: ServiceItem[] }) {
                                         </span>
                                         <div className="min-w-0">
                                           <p className="text-[12px] font-black text-slate-700 sm:text-[13px] leading-tight">
-                                            {req.document_name}{" "}
-                                            {req.is_required && (
+                                            {req.documentName}{" "}
+                                            {req.isRequired && (
                                               <span className="text-rose-500">
                                                 *
                                               </span>

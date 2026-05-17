@@ -3,16 +3,19 @@
 import {
   getEmailByPhoneAction,
   verifyRecaptchaAction,
-} from "@/lib/actions/login-helper";
+} from "@/lib/actions/auth/login-helper";
+import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
 import ReCAPTCHA from "react-google-recaptcha";
-import { useMemo, useState, useEffect, useRef, type FormEvent } from "react";
-import { Eye, EyeOff, ShieldCheck, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { isAdminRole } from "@/lib/constants";
+
+// Local Components
+import { LoginRecaptcha } from "./_components/login-recaptcha";
 
 type LoginRoleMode = "pemohon" | "petugas";
 
@@ -23,12 +26,16 @@ function normalizeWhatsappNumber(raw: string) {
   return digits;
 }
 
-export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
-  const router = useRouter();
+export function LoginFormByRole({
+  mode,
+  callbackUrl,
+}: {
+  mode: LoginRoleMode;
+  callbackUrl?: string;
+}) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   const [mounted, setMounted] = useState(false);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -45,7 +52,6 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
     const formData = new FormData(event.currentTarget);
     const password = String(formData.get("password") || "");
     const supabase = createClient();
-
     let email = String(formData.get("email") || "");
 
     if (mode === "pemohon") {
@@ -58,23 +64,18 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
         return;
       }
 
-      // Use the server-side helper to get email (bypasses RLS)
       const result = await getEmailByPhoneAction(normalizedPhone);
-
       if (result.error || !result.email) {
         setLoading(false);
         setError(result.error || "Nomor WhatsApp tidak ditemukan.");
         return;
       }
-
       email = result.email;
     }
 
     if (!email) {
       setLoading(false);
-      setError(
-        "Akun ini belum memiliki email yang valid. Silakan hubungi admin.",
-      );
+      setError("Akun ini belum memiliki email yang valid. Silakan hubungi admin.");
       return;
     }
 
@@ -88,81 +89,63 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
       const verifyResult = await verifyRecaptchaAction(recaptchaToken);
       if (!verifyResult.success) {
         setLoading(false);
-        setError(
-          verifyResult.error ||
-            "Verifikasi reCAPTCHA gagal. Silakan coba lagi.",
-        );
+        setError(verifyResult.error || "Verifikasi reCAPTCHA gagal. Silakan coba lagi.");
         recaptchaRef.current?.reset();
         setRecaptchaToken(null);
         return;
       }
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (signInError) {
-      setLoading(false);
-      if (signInError.message === "Invalid login credentials") {
-        setError(
-          "Email atau password salah. Pastikan akun Anda sudah terdaftar.",
-        );
-      } else {
-        setError(signInError.message);
+      if (signInError) {
+        setLoading(false);
+        setError(signInError.message === "Invalid login credentials" 
+          ? "Email atau password salah. Pastikan akun Anda sudah terdaftar." 
+          : signInError.message);
+        return;
       }
-      return;
-    }
 
-    const { data: userRes, error: userError } = await supabase.auth.getUser();
+      const { data: userRes, error: userError } = await supabase.auth.getUser();
+      if (userError || !userRes.user) {
+        setLoading(false);
+        setError(userError?.message || "Gagal memuat data pengguna.");
+        return;
+      }
 
-    if (userError || !userRes.user) {
+      const { data: profile, error: profileError } = await getProfileAfterLoginAction(userRes.user.id);
+      if (profileError || !profile) {
+        setLoading(false);
+        setError(profileError || "Gagal memuat profil.");
+        return;
+      }
+
+      const role = String(profile.role || "user");
+      const isPetugasRole = isAdminRole(role);
+
+      if (mode === "petugas" && isPetugasRole && profile.isVerified === false) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        setError("Akun Anda sedang menunggu verifikasi dari Super Admin.");
+        return;
+      }
+
+      if (mode === "petugas" && !isPetugasRole) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        setError("Akun ini bukan akun petugas/admin.");
+        return;
+      }
+
+      window.location.href = callbackUrl || (mode === "petugas" ? "/admin" : "/dashboard");
+    } catch (err: any) {
       setLoading(false);
-      setError(userError?.message || "Gagal memuat data pengguna.");
-      return;
+      setError(err.message || "Terjadi kesalahan saat login.");
     }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, is_verified")
-      .eq("id", userRes.user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      setLoading(false);
-      setError(profileError.message);
-      return;
-    }
-
-    const role = String(profile?.role || "user");
-    const isAdmin = isAdminRole(role);
-    const isPetugasRole = isAdminRole(role);
-
-    // Cek verifikasi: petugas yang belum diverifikasi Super Admin tidak bisa login
-    if (mode === "petugas" && isPetugasRole && profile?.is_verified === false) {
-      await supabase.auth.signOut();
-      setLoading(false);
-      setError(
-        "Akun Anda sedang menunggu verifikasi dari Super Admin. Silakan hubungi admin untuk aktivasi.",
-      );
-      return;
-    }
-
-    if (mode === "petugas" && !isPetugasRole) {
-      await supabase.auth.signOut();
-      setLoading(false);
-      setError("Akun ini bukan akun petugas/admin.");
-      return;
-    }
-
-    setLoading(false);
-    if (mode === "petugas") {
-      router.push("/admin");
-    } else {
-      router.push("/dashboard");
-    }
-    router.refresh();
   };
 
   return (
@@ -173,12 +156,7 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
         </Field>
       ) : (
         <Field label="Email" required>
-          <Input
-            type="email"
-            name="email"
-            required
-            placeholder="nama@gmail.com"
-          />
+          <Input type="email" name="email" required placeholder="nama@gmail.com" />
         </Field>
       )}
 
@@ -193,68 +171,30 @@ export function LoginFormByRole({ mode }: { mode: LoginRoleMode }) {
           />
           <button
             type="button"
-            aria-label={
-              showPassword ? "Sembunyikan password" : "Tampilkan password"
-            }
             onClick={() => setShowPassword((prev) => !prev)}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
           >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </Field>
 
-      {mode === "petugas" ? (
-        <Field
-          label="Verifikasi Keamanan"
-          required
-        >
-          <div className="relative group overflow-hidden rounded-[1.5rem] border border-slate-100 bg-slate-50/50 p-4 transition-all hover:border-emerald-200 hover:bg-emerald-50/30">
-            <div className="relative flex min-h-[78px] items-center justify-center">
-              {mounted ? (
-                <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
-                  onChange={(token) => {
-                    setRecaptchaToken(token);
-                  }}
-                  onExpired={() => setRecaptchaToken(null)}
-                  className="scale-[0.85] sm:scale-95 origin-center drop-shadow-sm"
-                />
-              ) : (
-                <div className="h-[78px] w-full animate-pulse rounded-xl bg-slate-100" />
-              )}
-            </div>
+      {mode === "petugas" && (
+        <LoginRecaptcha
+          mounted={mounted}
+          recaptchaRef={recaptchaRef}
+          recaptchaToken={recaptchaToken}
+          onTokenChange={setRecaptchaToken}
+        />
+      )}
 
-            {recaptchaToken && (
-              <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 animate-in fade-in zoom-in-95 duration-500">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Terverifikasi</span>
-              </div>
-            )}
-          </div>
-        </Field>
-      ) : null}
-
-      {error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      ) : null}
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <Button
-        className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]! hover:shadow-emerald-500/25" : "bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"}`}
-        disabled={loading}
+        className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]!" : "bg-[#059669]! hover:bg-[#047857]!"}`}
+        disabled={loading || (mode === "petugas" && !recaptchaToken)}
       >
-        {loading
-          ? "Memproses..."
-          : mode === "petugas"
-            ? "Masuk Sebagai Petugas"
-            : "Masuk Sebagai Pemohon"}
+        {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : "Masuk Sebagai Pemohon"}
       </Button>
     </form>
   );

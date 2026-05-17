@@ -5,13 +5,17 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteServiceModal } from "./delete-service-modal";
 import { AddEditServiceModal } from "./add-edit-service-modal";
-import { LayananTable } from "./layanan-table";
+import dynamic from "next/dynamic";
 import {
   createServiceAction,
   updateServiceAction,
   deleteServiceAction,
   reorderServicesAction,
-} from "@/lib/actions/admin-master";
+} from "@/lib/actions/admin/admin-master";
+
+const LayananTable = dynamic(() => import("./layanan-table").then((mod) => mod.LayananTable), {
+  ssr: false,
+});
 
 import { slugify } from "@/lib/utils";
 
@@ -36,8 +40,8 @@ export function LayananClient({
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    is_active: true,
-    role_owner: "",
+    isActive: true,
+    roleOwner: "",
   });
 
   useEffect(() => {
@@ -58,8 +62,8 @@ export function LayananClient({
     setFormData({
       name: service.name,
       slug: service.slug,
-      is_active: service.is_active,
-      role_owner: service.role_owner || "",
+      isActive: service.isActive,
+      roleOwner: service.roleOwner || "",
     });
   };
 
@@ -68,28 +72,27 @@ export function LayananClient({
     const data = new FormData();
     data.append("name", formData.name);
     data.append("slug", formData.slug);
-    if (formData.is_active) data.append("is_active", "on");
-    if (formData.role_owner) data.append("role_owner", formData.role_owner);
+    if (formData.isActive) data.append("isActive", "on");
+    if (formData.roleOwner) data.append("roleOwner", formData.roleOwner);
 
     startTransition(async () => {
-      try {
-        if (editingService) {
-          data.append("id", editingService.id.toString());
-          await updateServiceAction(data);
-          toast.success("Berhasil Memperbarui", {
-            description: "Layanan telah diperbarui.",
-          });
-        } else {
-          await createServiceAction(data);
-          toast.success("Berhasil Menambahkan", {
-            description: "Layanan baru telah ditambahkan.",
-          });
-        }
+      let result;
+      if (editingService) {
+        data.append("id", editingService.id.toString());
+        result = await updateServiceAction(data);
+      } else {
+        result = await createServiceAction(data);
+      }
+
+      if (result.success) {
+        toast.success(editingService ? "Berhasil Memperbarui" : "Berhasil Menambahkan", {
+          description: result.message || (editingService ? "Layanan telah diperbarui." : "Layanan baru telah ditambahkan."),
+        });
         setIsAddOpen(false);
         setEditingService(null);
-        setFormData({ name: "", slug: "", is_active: true, role_owner: "" });
-      } catch (error) {
-        toast.error("Gagal menyimpan data.");
+        setFormData({ name: "", slug: "", isActive: true, roleOwner: "" });
+      } else {
+        toast.error(result.error || "Gagal menyimpan data.");
       }
     });
   };
@@ -99,50 +102,39 @@ export function LayananClient({
     const data = new FormData();
     data.append("id", deletingService.id.toString());
     startTransition(async () => {
-      try {
-        await deleteServiceAction(data);
+      const result = await deleteServiceAction(data);
+      if (result.success) {
         toast.success("Layanan Dihapus", {
-          description: "Layanan berhasil dihapus secara permanen.",
+          description: result.message || "Layanan berhasil dihapus secara permanen.",
         });
         setDeletingService(null);
-      } catch (error) {
-        toast.error("Gagal menghapus layanan.");
+      } else {
+        toast.error(result.error || "Gagal menghapus layanan.");
       }
     });
   };
 
-  const moveUp = (index: number) => {
-    if (index === 0) return;
-    const newArr = [...services];
-    [newArr[index - 1], newArr[index]] = [newArr[index], newArr[index - 1]];
-    setServices(newArr);
-    saveOrder(newArr);
-  };
-
-  const moveDown = (index: number) => {
-    if (index === services.length - 1) return;
-    const newArr = [...services];
-    [newArr[index + 1], newArr[index]] = [newArr[index], newArr[index + 1]];
-    setServices(newArr);
-    saveOrder(newArr);
+  const handleReorder = (newOrder: any[]) => {
+    setServices(newOrder);
+    saveOrder(newOrder);
   };
 
   const saveOrder = (orderedServices: any[]) => {
     const ids = orderedServices.map((s: any) => s.id);
     startTransition(async () => {
-      try {
-        await reorderServicesAction(ids);
+      const result = await reorderServicesAction(ids);
+      if (result.success) {
         toast.success("Urutan Tersimpan", {
-          description: "Urutan layanan telah disesuaikan.",
+          description: result.message || "Urutan layanan telah disesuaikan.",
         });
-      } catch (error) {
-        toast.error("Gagal menyimpan urutan.");
+      } else {
+        toast.error(result.error || "Gagal menyimpan urutan.");
       }
     });
   };
 
   const total = initialServices.length;
-  const active = initialServices.filter((s: any) => s.is_active).length;
+  const active = initialServices.filter((s: any) => s.isActive).length;
   const inactive = total - active;
 
   return (
@@ -177,9 +169,9 @@ export function LayananClient({
             setFormData({
               name: "",
               slug: "",
-              is_active: true,
-              // Jika bukan super admin, pre-fill role_owner dengan role bidang yang sedang login
-              role_owner: isSuperAdmin ? "" : currentUserRole,
+              isActive: true,
+              // Jika bukan super admin, pre-fill roleOwner dengan role bidang yang sedang login
+              roleOwner: isSuperAdmin ? "" : currentUserRole,
             });
             setIsAddOpen(true);
           }}
@@ -193,8 +185,7 @@ export function LayananClient({
       <LayananTable
         services={services}
         isPending={isPending}
-        onMoveUp={moveUp}
-        onMoveDown={moveDown}
+        onReorder={handleReorder}
         onEdit={openEdit}
         onDelete={setDeletingService}
         showBidangColumn={isSuperAdmin}

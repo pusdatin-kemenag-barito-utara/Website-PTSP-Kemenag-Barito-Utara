@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { updatePlainPasswordAction } from "@/lib/actions/auth/auth";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,10 +32,7 @@ export function ResetPasswordForm() {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        await supabase
-          .from("profiles")
-          .update({ plain_password: password })
-          .eq("id", user.id);
+        await updatePlainPasswordAction(user.id, password);
       }
     }
 

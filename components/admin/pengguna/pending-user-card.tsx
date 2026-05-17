@@ -10,12 +10,12 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   verifyPetugasAction,
   rejectPetugasAction,
-} from "@/lib/actions/register-petugas";
+} from "@/lib/actions/auth/register-petugas";
 import { formatDate } from "@/lib/utils";
 import { RoleBadge } from "./role-badge";
 
@@ -41,7 +41,7 @@ export function PendingUserCard({
           toast.error("Gagal memverifikasi", { description: result.error });
         } else {
           toast.success("Petugas Diverifikasi!", {
-            description: `${user.full_name || user.email} berhasil diaktifkan sebagai petugas.`,
+            description: `${user.fullName || user.email} berhasil diaktifkan sebagai petugas.`,
             icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
           });
           onVerify(user.id);
@@ -52,7 +52,7 @@ export function PendingUserCard({
           toast.error("Gagal menolak", { description: result.error });
         } else {
           toast.success("Pendaftaran Ditolak", {
-            description: `Akun ${user.full_name || user.email} telah dihapus dari sistem.`,
+            description: `Akun ${user.fullName || user.email} telah dihapus dari sistem.`,
             icon: <XCircle className="h-5 w-5 text-red-500" />,
           });
           onReject(user.id);
@@ -68,11 +68,11 @@ export function PendingUserCard({
         {/* User Info */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-amber-500 text-white font-black text-sm shadow-sm">
-            {(user.full_name || user.email || "?").charAt(0).toUpperCase()}
+            {(user.fullName || user.email || "?").charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-bold text-slate-900 truncate">
-              {user.full_name || "Tanpa Nama"}
+              {user.fullName || "Tanpa Nama"}
             </p>
             <p className="text-xs text-slate-500 truncate">{user.email}</p>
           </div>
@@ -85,15 +85,14 @@ export function PendingUserCard({
               <Phone className="h-3 w-3 text-orange-400" /> {user.phone}
             </span>
           )}
-          {user.unit_kerja && (
+          {user.unitKerja && (
             <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 bg-white border border-orange-200 text-slate-600">
-              <Building2 className="h-3 w-3 text-orange-400" />{" "}
-              {user.unit_kerja}
+              <Building2 className="h-3 w-3 text-orange-400" /> {user.unitKerja}
             </span>
           )}
           <RoleBadge role={user.role} />
           <span className="inline-flex items-center gap-1 rounded-lg px-2 py-1 bg-orange-100 text-orange-700 font-semibold">
-            <Clock className="h-3 w-3" /> {formatDate(user.created_at)}
+            <Clock className="h-3 w-3" /> {formatDate(user.createdAt)}
           </span>
         </div>
 
@@ -101,7 +100,7 @@ export function PendingUserCard({
         <div className="flex items-center gap-2 shrink-0">
           <AnimatePresence mode="wait">
             {confirmAction === null ? (
-              <motion.div
+              <m.div
                 key="buttons"
                 className="flex gap-2"
                 initial={{ opacity: 0 }}
@@ -126,9 +125,9 @@ export function PendingUserCard({
                   <XCircle className="h-3.5 w-3.5" />
                   Tolak
                 </button>
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div
+              <m.div
                 key="confirm"
                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 shadow-sm"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -167,7 +166,7 @@ export function PendingUserCard({
                 >
                   Batal
                 </button>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

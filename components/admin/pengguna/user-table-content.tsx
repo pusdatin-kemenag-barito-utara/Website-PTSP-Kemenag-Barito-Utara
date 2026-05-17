@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Pencil, Trash2 } from "lucide-react";
 import { isSuperAdmin } from "@/lib/constants";
 import { RoleBadge } from "./role-badge";
@@ -15,6 +15,8 @@ export function UserTableContent({
   onEdit,
   onDelete,
   onOpenPermissions,
+  visibleUserId,
+  onTogglePassword,
 }: {
   paginatedUsers: any[];
   page: number;
@@ -24,6 +26,8 @@ export function UserTableContent({
   onEdit: (user: any) => void;
   onDelete: (user: any) => void;
   onOpenPermissions?: (user: any) => void;
+  visibleUserId: string | null;
+  onTogglePassword: (userId: string) => void;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -57,7 +61,7 @@ export function UserTableContent({
         <tbody className="divide-y divide-slate-100">
           <AnimatePresence>
             {paginatedUsers.map((user, idx) => (
-              <motion.tr
+              <m.tr
                 layout
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -70,11 +74,11 @@ export function UserTableContent({
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-xs">
-                      {(user.full_name || "U").charAt(0).toUpperCase()}
+                      {(user.fullName || "U").charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">
-                        {user.full_name || "-"}
+                        {user.fullName || "-"}
                       </p>
                       <p className="text-[11px] text-slate-500">{user.email}</p>
                     </div>
@@ -96,8 +100,10 @@ export function UserTableContent({
                 {viewerIsSuperAdmin && (
                   <td className="px-5 py-4">
                     <PasswordCell
-                      password={user.plain_password}
+                      password={user.plainPassword}
                       canView={viewerIsSuperAdmin}
+                      isVisible={visibleUserId === user.id}
+                      onToggle={() => onTogglePassword(user.id)}
                     />
                   </td>
                 )}
@@ -119,7 +125,7 @@ export function UserTableContent({
                     )}
                   </div>
                 </td>
-              </motion.tr>
+              </m.tr>
             ))}
           </AnimatePresence>
           {!paginatedUsers.length && (

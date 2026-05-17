@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, Shield, Crown, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { SystemHealthBadge } from "./system-health-badge";
 
 function NavLink({
   item,
@@ -115,6 +116,8 @@ export function AdminSidebar({
         })}
       </nav>
 
+      <SystemHealthBadge />
+
       {/* User info + Logout */}
       <div className="border-t border-slate-100 bg-slate-50/50 p-4 space-y-3">
         {/* Profile card */}
@@ -124,7 +127,7 @@ export function AdminSidebar({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-slate-800 truncate">
-              {profile?.full_name || profile?.email || "Admin"}
+              {profile?.fullName || profile?.email || "Admin"}
             </p>
             <div className="flex items-center gap-1 mt-0.5">
               {isSuperAdmin ? (

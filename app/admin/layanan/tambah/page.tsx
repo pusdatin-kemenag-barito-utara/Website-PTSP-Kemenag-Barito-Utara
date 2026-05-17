@@ -1,13 +1,9 @@
 import Link from "next/link";
-import { createServiceAction } from "@/lib/actions/admin-master";
 import { requireAdmin } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/admin/page-header";
 import { ArrowLeft, PlusCircle } from "lucide-react";
+import { AddServiceForm } from "@/components/admin/layanan/add-service-form";
 
 export default async function AddServicePage() {
   await requireAdmin();
@@ -28,38 +24,8 @@ export default async function AddServicePage() {
         icon={PlusCircle}
       />
 
-      <Card>
-        <form action={createServiceAction} className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Nama Layanan" required>
-              <Input name="name" required placeholder="Masukkan nama layanan" />
-            </Field>
-            <Field
-              label="Slug"
-              hint="Boleh dikosongkan. Sistem akan membuat slug dari nama."
-            >
-              <Input name="slug" placeholder="contoh: layanan-nikah" />
-            </Field>
-          </div>
-          <Field label="Deskripsi">
-            <Textarea
-              name="description"
-              placeholder="Deskripsi singkat tentang layanan ini..."
-            />
-          </Field>
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-            <label className="flex items-center gap-2.5 text-sm font-medium text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                name="is_active"
-                defaultChecked
-                className="h-4 w-4 rounded border-slate-300 text-[#059669] focus:ring-[#059669]/20"
-              />
-              Aktifkan layanan
-            </label>
-            <Button>Simpan Layanan</Button>
-          </div>
-        </form>
+      <Card className="overflow-hidden border-slate-200/60 shadow-sm">
+        <AddServiceForm />
       </Card>
     </div>
   );

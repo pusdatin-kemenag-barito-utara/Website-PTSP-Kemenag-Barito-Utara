@@ -1,4 +1,6 @@
 import { Menu, X, Shield, Crown } from "lucide-react";
+import { CommandPalette } from "./command-palette";
+import { NotificationHistory } from "./notification-history";
 
 export function AdminTopbar({
   mobileOpen,
@@ -40,6 +42,12 @@ export function AdminTopbar({
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Tools */}
+      <div className="flex items-center gap-2 mr-2 border-r border-slate-100 pr-4">
+        <CommandPalette />
+        <NotificationHistory />
+      </div>
 
       {/* Role badge */}
       {isSuperAdmin ? (

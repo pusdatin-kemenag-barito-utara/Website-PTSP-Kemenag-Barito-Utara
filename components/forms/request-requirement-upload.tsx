@@ -29,11 +29,11 @@ export function RequestRequirementUpload({
     if (!file) return;
 
     const reqId = String(requirement.id);
-    const docName = requirement.document_name;
+    const docName = requirement.documentName;
     const originalSize = file.size;
     
     // Validasi Ekstensi
-    const allowedExtensions = (requirement.allowed_extensions || "pdf,jpg,jpeg,png")
+    const allowedExtensions = (requirement.allowedExtensions || "pdf,jpg,jpeg,png")
       .split(",")
       .map((ext: string) => ext.trim().toLowerCase());
     const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
@@ -62,7 +62,7 @@ export function RequestRequirementUpload({
       }
 
       // 2. Validasi Ukuran Akhir (terutama untuk PDF)
-      const maxSizeMb = requirement.max_file_size_mb || 5;
+      const maxSizeMb = requirement.maxFileSizeMb || 5;
       const maxSizeBytes = maxSizeMb * 1024 * 1024;
       if (fileToUpload.size > maxSizeBytes) {
         toast.error(`File Terlalu Besar!`, {
@@ -144,7 +144,7 @@ export function RequestRequirementUpload({
 
   return (
     <>
-      <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+      <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5">
         <div className="mb-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#059669]">
             Langkah 3
@@ -163,7 +163,7 @@ export function RequestRequirementUpload({
               const reqId = String(requirement.id);
               const uploaded = uploadedFiles[reqId];
               const isProcessing = processingFiles[reqId];
-              const extensions = (requirement.allowed_extensions || "pdf,jpg,jpeg,png");
+              const extensions = (requirement.allowedExtensions || "pdf,jpg,jpeg,png");
 
               return (
                 <div
@@ -175,8 +175,8 @@ export function RequestRequirementUpload({
                   }`}
                 >
                   <label className="mb-2 block text-sm font-semibold text-slate-800">
-                    {requirement.document_name}
-                    {requirement.is_required && <span className="ml-1 text-rose-500">*</span>}
+                    {requirement.documentName}
+                    {requirement.isRequired && <span className="ml-1 text-rose-500">*</span>}
                   </label>
 
                   {/* Input File - Selalu ada di DOM agar FormData menemukannya */}
@@ -184,7 +184,7 @@ export function RequestRequirementUpload({
                     <input
                       type="file"
                       name={`requirement_${requirement.id}`}
-                      required={requirement.is_required && !uploaded}
+                      required={requirement.isRequired && !uploaded}
                       accept={extensions.split(",").map((ext: string) => `.${ext.trim()}`).join(",")}
                       onChange={(e) => handleFileChange(requirement, e)}
                       className="w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#059669] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
@@ -199,7 +199,7 @@ export function RequestRequirementUpload({
 
                   {/* Tampilan File Terpilih */}
                   {uploaded && (
-                    <div className="flex items-center gap-3 rounded-lg bg-white border border-emerald-200 px-3 py-2">
+                    <div className="flex items-center gap-2 sm:gap-3 rounded-lg bg-white border border-emerald-200 p-2 sm:px-3 sm:py-2">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
                         {uploaded.file.type.startsWith("image/") ? (
                           <ImageIcon className="h-4 w-4 text-emerald-600" />
@@ -215,7 +215,7 @@ export function RequestRequirementUpload({
                         {uploaded.previewUrl && (
                           <button
                             type="button"
-                            onClick={() => setPreviewModal({ url: uploaded.previewUrl!, name: requirement.document_name, type: uploaded.file.type })}
+                            onClick={() => setPreviewModal({ url: uploaded.previewUrl!, name: requirement.documentName, type: uploaded.file.type })}
                             className="p-1.5 text-slate-400 hover:text-[#059669]"
                           >
                             <Eye className="h-4 w-4" />
@@ -232,9 +232,9 @@ export function RequestRequirementUpload({
                     </div>
                   )}
 
-                  <div className="mt-1.5 flex items-center justify-between text-[10px] sm:text-xs text-slate-400">
-                    <span>Format: {extensions}</span>
-                    <span className="font-medium text-slate-500">Maks: {requirement.max_file_size_mb || 5} MB</span>
+                  <div className="mt-2 flex items-center justify-between text-[10px] sm:text-xs text-slate-400">
+                    <span className="truncate mr-2">Format: {extensions}</span>
+                    <span className="shrink-0 font-medium text-slate-500 bg-slate-200/50 px-1.5 py-0.5 rounded">Maks: {requirement.maxFileSizeMb || 5} MB</span>
                   </div>
                 </div>
               );
@@ -257,9 +257,33 @@ export function RequestRequirementUpload({
             </div>
             <div className="flex-1 overflow-auto p-2">
               {previewModal.type.startsWith("image/") ? (
-                <img src={previewModal.url} alt={previewModal.name} className="w-full h-auto object-contain" />
+                <div className="flex items-center justify-center min-h-[300px]">
+                  <img src={previewModal.url} alt={previewModal.name} className="w-full h-auto object-contain" />
+                </div>
               ) : (
-                <iframe src={previewModal.url} className="w-full h-[75vh] border-0" />
+                <>
+                  {/* Tampilan Desktop: Tetap pakai iframe */}
+                  <iframe src={previewModal.url} className="hidden md:block w-full h-[75vh] border-0" />
+                  
+                  {/* Tampilan Mobile/Tablet: Pakai tombol Buka di Tab Baru */}
+                  <div className="md:hidden flex flex-col items-center justify-center text-center p-8 min-h-[300px]">
+                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 mx-auto">
+                      <FileText className="h-10 w-10" />
+                    </div>
+                    <h5 className="text-lg font-bold text-slate-900 mb-2">Preview PDF</h5>
+                    <p className="text-sm text-slate-500 mb-6 max-w-xs mx-auto">
+                      PDF dibuka di tab baru untuk kenyamanan tampilan di perangkat seluler.
+                    </p>
+                    <a 
+                      href={previewModal.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex h-12 items-center justify-center px-8 rounded-xl bg-[#059669] text-white font-bold shadow-lg shadow-emerald-500/20 hover:bg-[#047857] transition-all active:scale-95"
+                    >
+                      Buka di Tab Baru
+                    </a>
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -3,7 +3,13 @@ import { RegisterForm } from "@/components/auth/register-form";
 import { UserPlus2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { callbackUrl } = await searchParams;
+
   return (
     <div className="relative flex h-[calc(100dvh-72px)] md:h-[calc(100dvh-84px)] items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
@@ -51,14 +57,17 @@ export default function RegisterPage() {
 
           {/* Form area */}
           <div className="px-8 py-4">
-            <RegisterForm />
+            <RegisterForm callbackUrl={callbackUrl as string} />
           </div>
           
           {/* Footer links */}
           <div className="bg-slate-50 px-8 py-3 text-center text-sm border-t border-slate-100">
             <p className="text-slate-500 font-medium">
               Sudah memiliki akun?{" "}
-              <Link href="/login/pemohon" className="text-[#059669] hover:underline font-bold transition-colors">
+              <Link
+                href={`/login/pemohon${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
+                className="text-[#059669] hover:underline font-bold transition-colors"
+              >
                 Masuk di sini
               </Link>
             </p>

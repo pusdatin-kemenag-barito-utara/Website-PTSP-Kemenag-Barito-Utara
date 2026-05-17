@@ -16,13 +16,13 @@ import { m, AnimatePresence } from "framer-motion";
 
 type Requirement = {
   id: string;
-  document_name: string;
+  documentName: string;
 };
 
 type ServiceItem = {
   id: number;
   name: string;
-  service_requirements?: Requirement[];
+  serviceRequirements?: Requirement[];
 };
 
 type Service = {
@@ -30,7 +30,7 @@ type Service = {
   name: string;
   slug: string;
   description?: string | null;
-  service_items?: ServiceItem[];
+  serviceItems?: ServiceItem[];
 };
 
 function normalize(text: string) {
@@ -103,10 +103,10 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
           if (service.name.toLowerCase().includes(word)) return true;
           if (service.description?.toLowerCase().includes(word)) return true;
 
-          return (service.service_items ?? []).some((item: ServiceItem) => {
+          return (service.serviceItems ?? []).some((item: ServiceItem) => {
             if (item.name.toLowerCase().includes(word)) return true;
-            return (item.service_requirements ?? []).some((req: Requirement) =>
-              req.document_name.toLowerCase().includes(word),
+            return (item.serviceRequirements ?? []).some((req: Requirement) =>
+              req.documentName.toLowerCase().includes(word),
             );
           });
         });
@@ -126,8 +126,8 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
 
   return (
     <div className="space-y-8">
-      <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
-        <div className="grid gap-4 sm:grid-cols-[1fr,170px]">
+      <section className="bg-white rounded-3xl sm:rounded-[2rem] p-4 sm:p-6 shadow-sm border border-slate-100">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-[1fr,170px]">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#059669] transition-colors" />
             <input
@@ -137,18 +137,18 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                 setQuery(e.target.value);
                 setOpenId(null);
               }}
-              placeholder="Cari unit, jenis layanan, atau syarat (misal: KTP, Ijazah)..."
-              className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-12 pr-4 text-sm font-medium text-slate-700 transition-all focus:bg-white focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/10 outline-none"
+              placeholder="Cari unit atau layanan..."
+              className="h-12 sm:h-14 w-full rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/50 pl-11 pr-4 text-[13px] sm:text-sm font-medium text-slate-700 transition-all focus:bg-white focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/10 outline-none"
             />
           </div>
-
+ 
           <button
             type="button"
             onClick={() => {
               setQuery("");
               setOpenId(null);
             }}
-            className="h-14 rounded-2xl bg-[#059669] px-6 text-sm font-bold text-white shadow-lg shadow-emerald-900/10 transition-all hover:bg-[#047857] hover:shadow-emerald-900/20 active:scale-95"
+            className="h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#059669] px-6 text-sm font-bold text-white shadow-lg shadow-emerald-900/10 transition-all hover:bg-[#047857] hover:shadow-emerald-900/20 active:scale-95"
           >
             Bersihkan
           </button>
@@ -196,7 +196,7 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
             return (
               <div
                 key={service.id}
-                className={`group overflow-hidden rounded-[2.5rem] border transition-all duration-500 ${
+                className={`group overflow-hidden rounded-3xl sm:rounded-[2.5rem] border transition-all duration-500 ${
                   isOpen
                     ? "border-emerald-200 bg-white shadow-[0_30px_60px_rgba(5,150,105,0.1)]"
                     : "border-slate-100 bg-white hover:border-emerald-100 hover:shadow-xl"
@@ -204,9 +204,9 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
               >
                 <button
                   onClick={() => toggleItem(service.id)}
-                  className="flex w-full items-center justify-between gap-4 p-6 sm:p-8 text-left"
+                  className="flex w-full items-center justify-between gap-3 sm:gap-4 p-4 sm:p-8 text-left"
                 >
-                  <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                  <div className="flex items-center gap-3 sm:gap-6 min-w-0">
                     <span
                       className={`hidden sm:flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xs font-black transition-all duration-500 ${
                         isOpen
@@ -217,18 +217,18 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                       {String(idx + 1).padStart(2, "0")}
                     </span>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5 sm:mb-1">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-600">
-                          <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          Unit Kerja
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-600">
+                          <Building2 className="h-2 w-2 sm:h-3 sm:w-3" />
+                          Unit
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">
-                          <Layers3 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          {service.service_items?.length ?? 0} Item
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-0.5 text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">
+                          <Layers3 className="h-2 w-2 sm:h-3 sm:w-3" />
+                          {service.serviceItems?.length ?? 0} Item
                         </span>
                       </div>
                       <h3
-                        className={`text-lg sm:text-2xl font-black transition-colors duration-300 leading-tight ${
+                        className={`text-base sm:text-2xl font-black transition-colors duration-300 leading-tight ${
                           isOpen
                             ? "text-[#059669]"
                             : "text-slate-900 group-hover:text-[#059669]"
@@ -268,18 +268,18 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                               Pilih Layanan Spesifik:
                             </h4>
                             <div className="grid gap-3 sm:grid-cols-2">
-                              {service.service_items &&
-                              service.service_items.length > 0 ? (
-                                service.service_items.map(
+                              {service.serviceItems &&
+                              service.serviceItems.length > 0 ? (
+                                service.serviceItems.map(
                                   (item: ServiceItem, ridx: number) => {
                                     const isMatching =
                                       query &&
                                       (item.name
                                         .toLowerCase()
                                         .includes(query.toLowerCase()) ||
-                                        (item.service_requirements ?? []).some(
+                                        (item.serviceRequirements ?? []).some(
                                           (r: Requirement) =>
-                                            r.document_name
+                                            r.documentName
                                               .toLowerCase()
                                               .includes(query.toLowerCase()),
                                         ));
@@ -287,21 +287,21 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                                     return (
                                       <Link
                                         key={item.id}
-                                        href={`/layanan/${service.slug}`}
-                                        className={`flex items-center justify-between gap-3 p-5 rounded-2xl border transition-all group/item ${
+                                        href={`/layanan/${service.slug}?item=${item.id}`}
+                                        className={`flex items-center justify-between gap-3 p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border transition-all group/item ${
                                           isMatching
                                             ? "border-emerald-200 bg-emerald-50/50 ring-2 ring-emerald-500/10"
                                             : "border-white bg-white hover:border-emerald-200 hover:shadow-lg"
                                         }`}
                                       >
-                                        <div className="flex gap-3 items-start min-w-0">
+                                        <div className="flex gap-2 sm:gap-3 items-start min-w-0">
                                           <span
-                                            className={`text-sm font-black shrink-0 mt-0.5 ${isMatching ? "text-emerald-600" : "text-slate-300"}`}
+                                            className={`text-[13px] sm:text-sm font-black shrink-0 mt-0.5 ${isMatching ? "text-emerald-600" : "text-slate-300"}`}
                                           >
                                             {ridx + 1}.
                                           </span>
                                           <div className="min-w-0">
-                                            <span className="text-[15px] font-bold text-slate-700 leading-tight block">
+                                            <span className="text-[13px] sm:text-[15px] font-bold text-slate-700 leading-tight block">
                                               <TextHighlight
                                                 text={item.name}
                                                 query={query}
@@ -309,9 +309,9 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                                             </span>
                                             {isMatching &&
                                               (
-                                                item.service_requirements ?? []
+                                                item.serviceRequirements ?? []
                                               ).some((r) =>
-                                                r.document_name
+                                                r.documentName
                                                   .toLowerCase()
                                                   .includes(
                                                     query.toLowerCase(),
@@ -322,14 +322,14 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                                                   Syarat Terdeteksi:{" "}
                                                   <span className="text-emerald-900/50">
                                                     {
-                                                      item.service_requirements?.find(
+                                                      item.serviceRequirements?.find(
                                                         (r) =>
-                                                          r.document_name
+                                                          r.documentName
                                                             .toLowerCase()
                                                             .includes(
                                                               query.toLowerCase(),
                                                             ),
-                                                      )?.document_name
+                                                      )?.documentName
                                                     }
                                                   </span>
                                                 </p>

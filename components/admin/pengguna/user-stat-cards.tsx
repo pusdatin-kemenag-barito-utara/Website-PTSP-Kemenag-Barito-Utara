@@ -5,7 +5,7 @@ export function UserStatCards({
 }: {
   stats: {
     total: number;
-    super_admin: number;
+    superAdmin: number;
     admin: number;
     user: number;
   };
@@ -21,7 +21,7 @@ export function UserStatCards({
         },
         {
           label: "Super Admin",
-          value: stats.super_admin,
+          value: stats.superAdmin,
           icon: Crown,
           color: "bg-amber-100 text-amber-600",
         },

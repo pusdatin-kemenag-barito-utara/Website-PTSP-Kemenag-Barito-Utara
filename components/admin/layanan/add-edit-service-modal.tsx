@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,14 +29,14 @@ export function AddEditServiceModal({
     <AnimatePresence>
       {(isOpen || editingService) && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -89,16 +89,22 @@ export function AddEditServiceModal({
                 hint="Admin dengan role ini yang berhak mengelola item layanan ini. Kosongkan jika dikelola oleh Super Admin."
               >
                 <Select
-                  name="role_owner"
-                  value={formData.role_owner || ""}
+                  name="roleOwner"
+                  value={formData.roleOwner || ""}
                   onChange={(e) =>
-                    onChangeFormData({ role_owner: e.target.value })
+                    onChangeFormData({ roleOwner: e.target.value })
                   }
                 >
                   <option value="">-- Semua Bidang / Super Admin --</option>
-                  {ADMIN_ROLES.filter(r => r.startsWith("admin_") && r !== "admin_ptsp").map(role => (
+                  {ADMIN_ROLES.filter(
+                    (r) => r.startsWith("admin_") && r !== "admin_ptsp",
+                  ).map((role) => (
                     <option key={role} value={role}>
-                      {role.split('_').slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      {role
+                        .split("_")
+                        .slice(1)
+                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                        .join(" ")}
                     </option>
                   ))}
                 </Select>
@@ -109,9 +115,9 @@ export function AddEditServiceModal({
                   <div className="flex items-center justify-center">
                     <input
                       type="checkbox"
-                      checked={formData.is_active}
+                      checked={formData.isActive}
                       onChange={(e) =>
-                        onChangeFormData({ is_active: e.target.checked })
+                        onChangeFormData({ isActive: e.target.checked })
                       }
                       className="peer sr-only"
                     />
@@ -150,7 +156,7 @@ export function AddEditServiceModal({
                 </button>
               </div>
             </form>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

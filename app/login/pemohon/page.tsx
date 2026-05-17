@@ -10,7 +10,13 @@ export const metadata: Metadata = {
     "Masuk ke portal layanan PTSP Kemenag Barito Utara untuk masyarakat umum.",
 };
 
-export default function LoginPemohonPage() {
+export default async function LoginPemohonPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { callbackUrl } = await searchParams;
+
   return (
     <div className="relative flex h-[calc(100dvh-72px)] md:h-[calc(100dvh-84px)] items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
@@ -58,7 +64,10 @@ export default function LoginPemohonPage() {
 
           {/* Form area */}
           <div className="px-8 py-4">
-            <LoginFormByRole mode="pemohon" />
+            <LoginFormByRole
+              mode="pemohon"
+              callbackUrl={callbackUrl as string}
+            />
             
             <div className="mt-8 flex flex-col gap-3">
               <div className="relative">
@@ -85,7 +94,10 @@ export default function LoginPemohonPage() {
               <Link href="/forgot-password" className="hover:text-[#059669] hover:underline transition-colors">
                 Lupa password?
               </Link>
-              <Link href="/login/petugas" className="flex items-center gap-1.5 hover:text-[#0f8a54] transition-colors">
+              <Link
+                href={`/login/petugas${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
+                className="flex items-center gap-1.5 hover:text-[#0f8a54] transition-colors"
+              >
                 Masuk sebagai Petugas <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
               </Link>
             </div>

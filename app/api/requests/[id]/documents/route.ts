@@ -2,13 +2,16 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import prisma from "@/lib/prisma";
-import { sanitizeFilename } from "@/lib/utils";
+import { db } from "@/lib/db";
 import {
-  getOrCreateFolder,
-  uploadToDrive,
-  deleteFromDrive,
-} from "@/lib/google-drive";
+  serviceRequests as serviceRequestsTable,
+  serviceRequirements as serviceRequirementsTable,
+  serviceRequestDocuments as serviceRequestDocumentsTable,
+  profiles as profilesTable,
+  activityLogs as activityLogsTable,
+} from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
+import { sanitizeFilename } from "@/lib/utils";
 import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 
 function isAllowedExtension(fileName: string, allowedExtensions: string) {
@@ -36,11 +39,11 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const serviceRequest = await prisma.service_requests.findUnique({
-    where: {
-      id: requestId,
-      user_id: user.id,
-    },
+  const serviceRequest = await db.query.serviceRequests.findFirst({
+    where: and(
+      eq(serviceRequestsTable.id, requestId),
+      eq(serviceRequestsTable.userId, user.id),
+    ),
   });
 
   if (!serviceRequest) {
@@ -51,18 +54,20 @@ export async function POST(
   }
 
   const formData = await request.formData();
-  const requirementId = BigInt(formData.get("requirement_id") as string);
+  const requirementIdInput = formData.get("requirementId") as string;
   const file = formData.get("file") as File | null;
 
-  if (!requirementId || !file || file.size === 0) {
+  if (!requirementIdInput || !file || file.size === 0) {
     return NextResponse.json(
       { error: "Dokumen revisi tidak valid." },
       { status: 400 },
     );
   }
 
-  const requirement = await prisma.service_requirements.findUnique({
-    where: { id: requirementId },
+  const requirementId = BigInt(requirementIdInput);
+
+  const requirement = await db.query.serviceRequirements.findFirst({
+    where: eq(serviceRequirementsTable.id, requirementId),
   });
 
   if (!requirement) {
@@ -72,7 +77,7 @@ export async function POST(
     );
   }
 
-  if (file.size > (Number(requirement.max_file_size_mb) || 5) * 1024 * 1024) {
+  if (file.size > (Number(requirement.maxFileSizeMb) || 5) * 1024 * 1024) {
     return NextResponse.json(
       { error: "Ukuran file melebihi batas." },
       { status: 400 },
@@ -82,7 +87,7 @@ export async function POST(
   if (
     !isAllowedExtension(
       file.name,
-      requirement.allowed_extensions || "pdf,jpg,jpeg,png",
+      requirement.allowedExtensions || "pdf,jpg,jpeg,png",
     )
   ) {
     return NextResponse.json(
@@ -93,90 +98,63 @@ export async function POST(
 
   const fileName = sanitizeFilename(file.name);
 
-  // 1. Get or create the main "File Persyaratan" folder
-  const mainRequirementsFolderId = await getOrCreateFolder("File Persyaratan");
-
-  // 2. Get user info to create a subfolder (Name - Email)
-  const userProfile = await prisma.profiles.findUnique({
-    where: { id: user.id },
-    select: { full_name: true, email: true },
+  // 1. Check for existing document to delete from Cloudflare R2
+  const existingDoc = await db.query.serviceRequestDocuments.findFirst({
+    where: and(
+      eq(serviceRequestDocumentsTable.requestId, requestId),
+      eq(serviceRequestDocumentsTable.requirementId, requirementId),
+    ),
+    columns: { filePath: true },
   });
 
-  const userFolderName = `${userProfile?.full_name || "Unknown User"} (${userProfile?.email || user.email})`;
-  const userFolderId = await getOrCreateFolder(
-    userFolderName,
-    mainRequirementsFolderId as string,
-  );
-
-  // 3. Check for existing document to delete from Cloudflare R2 or Google Drive
-  const existingDoc = await prisma.service_request_documents.findUnique({
-    where: {
-      request_id_requirement_id: {
-        request_id: requestId,
-        requirement_id: requirementId,
-      },
-    },
-    select: { file_path: true },
-  });
-
-  if (existingDoc?.file_path) {
-    if (existingDoc.file_path.startsWith("r2:")) {
-      await deleteFromR2(existingDoc.file_path).catch(console.error);
-    } else if (existingDoc.file_path.startsWith("gdrive:")) {
-      const oldFileId = existingDoc.file_path.replace("gdrive:", "");
-      await deleteFromDrive(oldFileId).catch(console.error);
+  if (existingDoc?.filePath) {
+    if (existingDoc.filePath.startsWith("r2:")) {
+      await deleteFromR2(existingDoc.filePath).catch(console.error);
     }
   }
 
-  // 4. Upload to Cloudflare R2 (Primary)
+  // 2. Upload to Cloudflare R2
   const r2Path = `requests/${requestId}/${requirementId}_${fileName}`;
   const { path: storagePath } = await uploadToR2(file, r2Path);
 
-  // 5. Backup to Google Drive (Background)
-  uploadToDrive(file, userFolderId as string).catch((err) =>
-    console.error("Backup to GDrive failed:", err),
-  );
-
   try {
-    await prisma.$transaction(async (tx: any) => {
-      await tx.service_request_documents.upsert({
-        where: {
-          request_id_requirement_id: {
-            request_id: requestId,
-            requirement_id: requirementId,
+    await db.transaction(async (tx) => {
+      await tx
+        .insert(serviceRequestDocumentsTable)
+        .values({
+          requestId: requestId,
+          requirementId: requirementId,
+          fileName: fileName,
+          filePath: storagePath || "",
+          fileType: file.type || "application/octet-stream",
+          fileSize: BigInt(file.size),
+        })
+        .onConflictDoUpdate({
+          target: [
+            serviceRequestDocumentsTable.requestId,
+            serviceRequestDocumentsTable.requirementId,
+          ],
+          set: {
+            fileName: fileName,
+            filePath: storagePath || "",
+            fileType: file.type || "application/octet-stream",
+            fileSize: BigInt(file.size),
           },
-        },
-        update: {
-          file_name: fileName,
-          file_path: storagePath,
-          file_type: file.type || "application/octet-stream",
-          file_size: BigInt(file.size),
-        },
-        create: {
-          request_id: requestId,
-          requirement_id: requirementId,
-          file_name: fileName,
-          file_path: storagePath,
-          file_type: file.type || "application/octet-stream",
-          file_size: BigInt(file.size),
-        },
-      });
+        });
 
-      await tx.service_requests.update({
-        where: { id: requestId },
-        data: {
+      await tx
+        .update(serviceRequestsTable)
+        .set({
           status: "submitted",
-          revision_note: null,
-        },
-      });
+          revisionNote: null,
+        })
+        .where(eq(serviceRequestsTable.id, requestId));
 
-      await tx.activity_logs.create({
-        data: {
-          request_id: requestId,
-          actor_id: user.id,
-          action: "revision_uploaded",
-          notes: `Revisi dokumen ${requirement.document_name} diupload.`,
-        },
+      await tx.insert(activityLogsTable).values({
+        requestId: requestId,
+        actorId: user.id,
+        action: "revision_uploaded",
+        notes: `Revisi dokumen ${requirement.documentName} diupload.`,
       });
     });
 

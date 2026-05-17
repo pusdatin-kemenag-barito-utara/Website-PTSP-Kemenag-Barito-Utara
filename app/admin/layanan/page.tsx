@@ -1,31 +1,39 @@
 import { FileText } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
-import prisma, { serializeBigInt } from "@/lib/prisma";
+import { db, serializeBigInt } from "@/lib/db";
+import { services as servicesTable } from "@/lib/db/schema";
+import { eq, asc } from "drizzle-orm";
 import { PageHeader } from "@/components/admin/page-header";
+import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { LayananClient } from "@/components/admin/layanan/layanan-client";
-import { isSuperAdmin } from "@/lib/constants";
 
 export default async function AdminServicesPage() {
   const profile = await requireAdmin();
 
   const isSuper = isSuperAdmin(profile.email);
-  // admin_ptsp bisa juga lihat semua layanan
-  const isGeneralAdmin = profile.role === "admin_ptsp";
+  
+  // Dapatkan role spesifik bidang berdasarkan email
+  const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+  
+  // Jika role spesifik tetap admin_ptsp, berarti admin umum (atau jika super_admin)
+  const isGeneralAdmin = specificRole === "admin_ptsp";
 
   let services: any[] = [];
 
-  const where = (isSuper || isGeneralAdmin) 
-    ? {} 
-    : { role_owner: profile.role };
+  const whereClause =
+    isSuper || isGeneralAdmin
+      ? undefined
+      : eq(servicesTable.roleOwner, specificRole as any);
 
-  const data = await prisma.services.findMany({
-    where,
-    orderBy: { sort_order: "asc" },
+
+  const data = await db.query.services.findMany({
+    where: whereClause,
+    orderBy: [asc(servicesTable.sortOrder)],
   });
-  
+
   services = serializeBigInt(data) ?? [];
 
-  const bidangLabel = profile.role
+  const bidangLabel = specificRole
     ?.replace("admin_", "")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c: string) => c.toUpperCase());
@@ -43,7 +51,7 @@ export default async function AdminServicesPage() {
       />
       <LayananClient
         initialServices={services}
-        currentUserRole={profile.role ?? ""}
+        currentUserRole={specificRole ?? ""}
         isSuperAdmin={isSuper}
       />
     </div>

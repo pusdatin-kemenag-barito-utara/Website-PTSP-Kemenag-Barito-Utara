@@ -1,13 +1,7 @@
 "use client";
 
 import { formatDate } from "@/lib/utils";
-import {
-  FileDigit,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Eye,
-} from "lucide-react";
+import { FileDigit, CheckCircle2, Clock, AlertCircle, Eye } from "lucide-react";
 
 export function DokumenHasilTable({
   paginatedRequests,
@@ -81,7 +75,7 @@ export function DokumenHasilTable({
                   </span>
                 </div>
                 <p className="text-sm font-medium text-slate-700 truncate">
-                  {request.profiles?.full_name || "Tanpa Nama"}
+                  {request.profiles?.fullName || "Tanpa Nama"}
                 </p>
                 <p className="text-xs text-slate-500 truncate max-w-md">
                   {request.services?.name || "Layanan tidak diketahui"}

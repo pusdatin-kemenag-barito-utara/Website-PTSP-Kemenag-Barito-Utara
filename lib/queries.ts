@@ -1,71 +1,48 @@
-import prisma from "@/lib/prisma";
-
-/**
- * Helper to convert BigInt values to numbers/strings for JSON serialization
- */
-function serializeBigInt(obj: any): any {
-  return JSON.parse(
-    JSON.stringify(obj, (key, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    )
-  );
-}
+import { db, serializeBigInt } from "@/lib/db";
+import {
+  services,
+  serviceItems,
+  serviceRequirements,
+  serviceFormFields,
+} from "@/lib/db/schema";
+import { eq, asc } from "drizzle-orm";
 
 export async function getPublicServices() {
-  const data = await prisma.services.findMany({
-    where: { is_active: true },
-    include: {
-      service_items: {
-        // @ts-ignore
-        orderBy: [
-          // @ts-ignore
-          { sort_order: "asc" },
-          { name: "asc" }
-        ],
-        include: {
-          service_requirements: {
-            // @ts-ignore
+  const data = await db.query.services.findMany({
+    where: eq(services.isActive, true),
+    with: {
+      serviceItems: {
+        orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
+        with: {
+          serviceRequirements: {
             orderBy: [
-              // @ts-ignore
-              { sort_order: "asc" },
-              { id: "asc" }
+              asc(serviceRequirements.sortOrder),
+              asc(serviceRequirements.id),
             ],
           },
         },
       },
     },
-    // @ts-ignore
-    orderBy: [
-      // @ts-ignore
-      { sort_order: "asc" },
-      { name: "asc" }
-    ],
+    orderBy: [asc(services.sortOrder), asc(services.name)],
   });
 
   return serializeBigInt(data) ?? [];
 }
 
 export async function getServiceBySlug(slug: string) {
-  const data = await prisma.services.findFirst({
-    where: { slug },
-    include: {
-      service_items: {
-        // @ts-ignore
-        orderBy: [
-          // @ts-ignore
-          { sort_order: "asc" },
-          { name: "asc" }
-        ],
-        include: {
-          service_form_fields: {
-            orderBy: { sort_order: "asc" },
+  const data = await db.query.services.findFirst({
+    where: eq(services.slug, slug),
+    with: {
+      serviceItems: {
+        orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
+        with: {
+          serviceFormFields: {
+            orderBy: [asc(serviceFormFields.sortOrder)],
           },
-          service_requirements: {
-            // @ts-ignore
+          serviceRequirements: {
             orderBy: [
-              // @ts-ignore
-              { sort_order: "asc" },
-              { id: "asc" }
+              asc(serviceRequirements.sortOrder),
+              asc(serviceRequirements.id),
             ],
           },
         },
@@ -77,37 +54,25 @@ export async function getServiceBySlug(slug: string) {
 }
 
 export async function getServiceCatalog() {
-  const data = await prisma.services.findMany({
-    where: { is_active: true },
-    include: {
-      service_items: {
-        // @ts-ignore
-        orderBy: [
-          // @ts-ignore
-          { sort_order: "asc" },
-          { name: "asc" }
-        ],
-        include: {
-          service_form_fields: {
-            orderBy: { sort_order: "asc" },
+  const data = await db.query.services.findMany({
+    where: eq(services.isActive, true),
+    with: {
+      serviceItems: {
+        orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
+        with: {
+          serviceFormFields: {
+            orderBy: [asc(serviceFormFields.sortOrder)],
           },
-          service_requirements: {
-            // @ts-ignore
+          serviceRequirements: {
             orderBy: [
-              // @ts-ignore
-              { sort_order: "asc" },
-              { id: "asc" }
+              asc(serviceRequirements.sortOrder),
+              asc(serviceRequirements.id),
             ],
           },
         },
       },
     },
-    // @ts-ignore
-    orderBy: [
-      // @ts-ignore
-      { sort_order: "asc" },
-      { name: "asc" }
-    ],
+    orderBy: [asc(services.sortOrder), asc(services.name)],
   });
 
   return serializeBigInt(data) ?? [];

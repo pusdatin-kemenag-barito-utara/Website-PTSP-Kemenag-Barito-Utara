@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { registerPetugasAction } from "@/lib/actions/register-petugas";
+import { registerPetugasAction } from "@/lib/actions/auth/register-petugas";
 
 const UNIT_KERJA_OPTIONS = [
   "Kepala Kantor",

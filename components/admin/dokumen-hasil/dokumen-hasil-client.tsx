@@ -8,27 +8,24 @@ export function DokumenHasilClient({
   urlMap,
   services,
   q,
-  service_id,
+  serviceId,
 }: {
   requests: any[];
   urlMap: Record<string, string | null>;
   services: { id: string; name: string }[];
   q: string;
-  service_id: string;
+  serviceId: string;
 }) {
   return (
     <div className="space-y-6">
       <DokumenHasilFilter
         searchQuery={q}
-        serviceFilter={service_id}
+        serviceFilter={serviceId}
         services={services}
       />
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <DokumenHasilTable
-          paginatedRequests={requests}
-          urlMap={urlMap}
-        />
+        <DokumenHasilTable paginatedRequests={requests} urlMap={urlMap} />
       </div>
     </div>
   );

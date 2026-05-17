@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { deleteUserPermanentlyAction } from "@/lib/actions/admin-users";
-import { updatePetugasAction } from "@/lib/actions/register-petugas";
+import { deleteUserPermanentlyAction } from "@/lib/actions/admin/admin-users";
+import { updatePetugasAction } from "@/lib/actions/auth/register-petugas";
 import { EditUserModal } from "./edit-user-modal";
 import { DeleteUserModal } from "./delete-user-modal";
 import { UserTablePagination } from "./user-table-pagination";
@@ -21,6 +21,8 @@ export function UserTable({
   onUserUpdated,
   onOpenPermissions,
   onUserDeleted,
+  visibleUserId,
+  onTogglePassword,
   perPage = 10,
 }: {
   users: any[];
@@ -34,6 +36,8 @@ export function UserTable({
   onUserUpdated?: (userId: string, data: Record<string, any>) => void;
   onOpenPermissions?: (user: any) => void;
   onUserDeleted?: (userId: string) => void;
+  visibleUserId: string | null;
+  onTogglePassword: (userId: string) => void;
   perPage?: number;
 }) {
   const [page, setPage] = useState(1);
@@ -43,7 +47,7 @@ export function UserTable({
   const [editForm, setEditForm] = useState({
     email: "",
     phone: "",
-    unit_kerja: "",
+    unitKerja: "",
     role: "",
     newPassword: "",
   });
@@ -53,7 +57,7 @@ export function UserTable({
   const filteredUsers = searchQuery
     ? users.filter(
         (u) =>
-          (u.full_name || "")
+          (u.fullName || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
           (u.email || "").toLowerCase().includes(searchQuery.toLowerCase()),
@@ -76,7 +80,7 @@ export function UserTable({
     setEditForm({
       email: user.email || "",
       phone: user.phone || "",
-      unit_kerja: user.unit_kerja || "",
+      unitKerja: user.unitKerja || "",
       role: user.role || "",
       newPassword: "",
     });
@@ -93,21 +97,21 @@ export function UserTable({
           userId: editingUser.id,
           email: editingUser.email,
           phone: editForm.phone,
-          unit_kerja: editForm.unit_kerja,
+          unitKerja: editForm.unitKerja,
           role: editForm.role,
           newPassword: editForm.newPassword || undefined,
         });
 
         if (result.success) {
           toast.success("Profil Diperbarui", {
-            description: `Data ${editingUser.full_name || editingUser.email} telah berhasil diperbarui.`,
+            description: `Data ${editingUser.fullName || editingUser.email} telah berhasil diperbarui.`,
           });
           onUserUpdated?.(editingUser.id, {
             phone: editForm.phone,
-            unit_kerja: editForm.unit_kerja,
+            unitKerja: editForm.unitKerja,
             role: editForm.role,
             ...(editForm.newPassword
-              ? { plain_password: editForm.newPassword }
+              ? { plainPassword: editForm.newPassword }
               : {}),
           });
           setEditingUser(null);
@@ -124,16 +128,21 @@ export function UserTable({
     if (!deletingUser) return;
     startTransition(async () => {
       try {
-        const result = await deleteUserPermanentlyAction(deletingUser.id);
+        const formData = new FormData();
+        formData.append("userId", deletingUser.id);
+        
+        const result = await deleteUserPermanentlyAction(formData);
         if (result.success) {
           toast.success("Akun Berhasil Dihapus", {
-            description: `Data ${deletingUser.full_name || deletingUser.email} telah dibersihkan.`,
+            description: result.message || `Data ${deletingUser.fullName || deletingUser.email} telah dibersihkan.`,
           });
           onUserDeleted?.(deletingUser.id);
           setDeletingUser(null);
+        } else {
+          toast.error("Gagal menghapus", { description: result.error });
         }
       } catch (err: any) {
-        toast.error("Gagal menghapus", { description: err.message });
+        toast.error("Terjadi kesalahan sistem", { description: err.message });
       }
     });
   };
@@ -159,6 +168,8 @@ export function UserTable({
         onEdit={openEditModal}
         onDelete={setDeletingUser}
         onOpenPermissions={onOpenPermissions}
+        visibleUserId={visibleUserId}
+        onTogglePassword={onTogglePassword}
       />
 
       <UserTablePagination

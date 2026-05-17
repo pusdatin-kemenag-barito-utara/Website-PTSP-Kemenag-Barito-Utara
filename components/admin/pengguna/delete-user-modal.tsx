@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,7 +21,7 @@ export function DeleteUserModal({
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl border border-slate-100"
@@ -37,7 +37,7 @@ export function DeleteUserModal({
           <p className="mb-8 text-sm font-medium leading-relaxed text-slate-500">
             Apakah Anda yakin ingin menghapus akun{" "}
             <span className="font-bold text-slate-900">
-              {deletingUser.full_name || deletingUser.email}
+              {deletingUser.fullName || deletingUser.email}
             </span>
             ? Tindakan ini permanen dan tidak dapat dibatalkan.
           </p>
@@ -64,7 +64,7 @@ export function DeleteUserModal({
             </Button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

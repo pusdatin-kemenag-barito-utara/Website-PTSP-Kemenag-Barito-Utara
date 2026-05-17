@@ -1,28 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronRight,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { getServiceBySlug } from "@/lib/queries";
 import { ServiceItemsAccordion } from "@/components/services/service-items-accordion";
+import { RealtimeSync } from "@/components/ui/realtime-sync";
 
 export default async function ServiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { slug } = await params;
+  const { item: initialItemId } = await searchParams;
   const service = await getServiceBySlug(slug);
 
   if (!service) {
     notFound();
   }
 
+  // Robustly handle both camelCase and snake_case from Drizzle/DB
+  const items = service.serviceItems || (service as any).service_items || [];
+
   return (
     <div className="w-full overflow-hidden">
+      <RealtimeSync />
       {/* Immersive Header */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#064e3b] via-[#059669] to-[#047857] pt-12 pb-20 md:pt-16 md:pb-28">
         <div
@@ -70,9 +74,11 @@ export default async function ServiceDetailPage({
       {/* Main Content Area */}
       <section className="relative -mt-10 mb-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto w-full">
-          {/* Daftar Item Layanan — Accordion */}
           <div className="space-y-5">
-            <ServiceItemsAccordion items={service.service_items ?? []} />
+            <ServiceItemsAccordion
+              items={items}
+              initialOpenId={initialItemId as string}
+            />
           </div>
         </div>
       </section>

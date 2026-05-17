@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Select } from "@/components/ui/select";
 import {
   createServiceItemAction,
   updateServiceItemAction,
   deleteServiceItemAction,
-} from "@/lib/actions/admin-master";
+  reorderServiceItemsAction,
+} from "@/lib/actions/admin/admin-items";
 import { DeleteItemModal } from "./delete-item-modal";
 import { AddEditItemModal } from "./add-edit-item-modal";
 import { ItemLayananTable } from "./item-layanan-table";
@@ -18,11 +20,16 @@ import { slugify } from "@/lib/utils";
 export function ItemLayananClient({
   initialItems,
   services,
+  isSuperAdmin = false,
 }: {
   initialItems: any[];
   services: any[];
+  isSuperAdmin?: boolean;
 }) {
-  const [items, setItems] = useState(initialItems);
+  const router = useRouter();
+  const [items, setItems] = useState(
+    [...initialItems].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+  );
   const [isPending, startTransition] = useTransition();
 
   // Modal states
@@ -30,13 +37,16 @@ export function ItemLayananClient({
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [deletingItem, setDeletingItem] = useState<any | null>(null);
 
+  // Debounce ref
+  const reorderTimeout = useRef<NodeJS.Timeout | null>(null);
+
   // Form states
   const [formData, setFormData] = useState({
-    service_id: "",
+    serviceId: "",
     name: "",
     slug: "",
     description: "",
-    is_active: true,
+    isActive: true,
   });
 
   // Filter state
@@ -50,7 +60,7 @@ export function ItemLayananClient({
     selectedServiceFilter === "all"
       ? items
       : items.filter(
-          (item: any) => item.service_id.toString() === selectedServiceFilter,
+          (item: any) => item.serviceId.toString() === selectedServiceFilter,
         );
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,27 +75,27 @@ export function ItemLayananClient({
   const openEdit = (item: any) => {
     setEditingItem(item);
     setFormData({
-      service_id: item.service_id.toString(),
+      serviceId: item.serviceId.toString(),
       name: item.name,
       slug: item.slug,
       description: item.description || "",
-      is_active: item.is_active,
+      isActive: item.isActive,
     });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.service_id) {
+    if (!formData.serviceId) {
       toast.error("Pilih Induk Layanan terlebih dahulu.");
       return;
     }
 
     const data = new FormData();
-    data.append("service_id", formData.service_id);
+    data.append("serviceId", formData.serviceId);
     data.append("name", formData.name);
     data.append("slug", formData.slug);
     data.append("description", formData.description);
-    if (formData.is_active) data.append("is_active", "on");
+    if (formData.isActive) data.append("isActive", "on");
 
     startTransition(async () => {
       try {
@@ -104,11 +114,11 @@ export function ItemLayananClient({
         setIsAddOpen(false);
         setEditingItem(null);
         setFormData({
-          service_id: "",
+          serviceId: "",
           name: "",
           slug: "",
           description: "",
-          is_active: true,
+          isActive: true,
         });
       } catch (error) {
         toast.error("Gagal menyimpan data.");
@@ -133,8 +143,41 @@ export function ItemLayananClient({
     });
   };
 
+  const handleReorder = (newItems: any[]) => {
+    // Optimistic UI update
+    setItems((prev) => {
+      // We need to merge the new items (which might be a filtered subset) back into the full list
+      const newFullList = [...prev];
+      newItems.forEach((newItem, index) => {
+        const fullIndex = newFullList.findIndex((p) => p.id === newItem.id);
+        if (fullIndex !== -1) {
+          newFullList[fullIndex] = { ...newItem, sortOrder: index };
+        }
+      });
+      return newFullList;
+    });
+
+    const ids = newItems.map((item) => item.id);
+    
+    // Debounce server action
+    if (reorderTimeout.current) clearTimeout(reorderTimeout.current);
+    reorderTimeout.current = setTimeout(() => {
+      startTransition(async () => {
+        try {
+          await reorderServiceItemsAction(ids);
+          toast.success("Urutan Tersimpan", {
+            description: "Urutan item layanan telah diperbarui.",
+          });
+          router.refresh();
+        } catch (error) {
+          toast.error("Gagal menyimpan urutan.");
+        }
+      });
+    }, 500);
+  };
+
   const total = initialItems.length;
-  const active = initialItems.filter((s: any) => s.is_active).length;
+  const active = initialItems.filter((s: any) => s.isActive).length;
   const inactive = total - active;
 
   return (
@@ -181,12 +224,12 @@ export function ItemLayananClient({
           <button
             onClick={() => {
               setFormData({
-                service_id:
+                serviceId:
                   selectedServiceFilter !== "all" ? selectedServiceFilter : "",
                 name: "",
                 slug: "",
                 description: "",
-                is_active: true,
+                isActive: true,
               });
               setIsAddOpen(true);
             }}
@@ -202,6 +245,8 @@ export function ItemLayananClient({
         filteredItems={filteredItems}
         onEdit={openEdit}
         onDelete={setDeletingItem}
+        onReorder={handleReorder}
+        isSuperAdmin={isSuperAdmin}
       />
 
       {/* FLOATING MODAL: ADD / EDIT */}
@@ -231,3 +276,4 @@ export function ItemLayananClient({
     </div>
   );
 }
+

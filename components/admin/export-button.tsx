@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -34,21 +34,32 @@ export function ExportButton({
 
     setLoading(true);
     try {
-      // Create worksheet
-      const ws = XLSX.utils.json_to_sheet(data);
-      
-      // Create workbook
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      // Create workbook and worksheet
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(sheetName);
+
+      // Add data
+      if (data.length > 0) {
+        // Add headers
+        const headers = Object.keys(data[0]);
+        worksheet.columns = headers.map((header) => ({
+          header: header.toUpperCase(),
+          key: header,
+          width: Math.max(header.length, 15),
+        }));
+
+        // Add rows
+        worksheet.addRows(data);
+      }
 
       // Generate buffer
-      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      
+      const buffer = await workbook.xlsx.writeBuffer();
+
       // Create blob and save
-      const dataBlob = new Blob([excelBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      const dataBlob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
+
       saveAs(dataBlob, `${fileName}_${new Date().getTime()}.xlsx`);
       toast.success(`Data berhasil di-export ke ${fileName}.xlsx`);
     } catch (error) {

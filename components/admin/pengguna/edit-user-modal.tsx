@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -32,7 +32,7 @@ export function EditUserModal({
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl border border-slate-100"
@@ -40,7 +40,7 @@ export function EditUserModal({
         <div className="mb-6">
           <h3 className="text-xl font-black text-slate-900">Edit Profil</h3>
           <p className="text-sm text-slate-500 mt-1">
-            Perbarui informasi akun {editingUser.full_name || editingUser.email}
+            Perbarui informasi akun {editingUser.fullName || editingUser.email}
           </p>
         </div>
 
@@ -62,9 +62,9 @@ export function EditUserModal({
 
           <Field label="Unit Kerja / Jabatan">
             <Input
-              value={editForm.unit_kerja}
+              value={editForm.unitKerja}
               onChange={(e) =>
-                onFormChange({ ...editForm, unit_kerja: e.target.value })
+                onFormChange({ ...editForm, unitKerja: e.target.value })
               }
               placeholder="Contoh: Seksi Pendidikan Madrasah"
             />
@@ -115,7 +115,7 @@ export function EditUserModal({
             </Button>
           </div>
         </form>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

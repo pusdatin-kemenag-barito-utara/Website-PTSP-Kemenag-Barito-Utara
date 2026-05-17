@@ -3,7 +3,13 @@ import { LoginFormByRole } from "@/components/auth/login-form-by-role";
 import { ShieldCheck, ArrowLeft, RefreshCw } from "lucide-react";
 import Image from "next/image";
 
-export default function LoginPetugasPage() {
+export default async function LoginPetugasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { callbackUrl } = await searchParams;
+
   return (
     <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-80px)] items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
@@ -52,7 +58,10 @@ export default function LoginPetugasPage() {
 
           {/* Form area */}
           <div className="px-8 pb-10">
-            <LoginFormByRole mode="petugas" />
+            <LoginFormByRole
+              mode="petugas"
+              callbackUrl={callbackUrl as string}
+            />
 
             <div className="mt-10 flex flex-col gap-4">
               <div className="relative">
@@ -86,7 +95,7 @@ export default function LoginPetugasPage() {
                 Lupa Password?
               </Link>
               <Link
-                href="/login/pemohon"
+                href={`/login/pemohon${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
                 className="flex items-center gap-2 hover:text-[#059669] transition-all hover:-translate-x-1"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Masuk Pemohon

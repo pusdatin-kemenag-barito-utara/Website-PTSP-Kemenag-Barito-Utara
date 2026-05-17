@@ -1,6 +1,15 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import {
+  serviceRequests as serviceRequestsTable,
+  serviceRequestAnswers as serviceRequestAnswersTable,
+  activityLogs as activityLogsTable,
+} from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function PUT(
   request: Request,
@@ -19,12 +28,12 @@ export async function PUT(
     const requestId = id;
 
     // Verify ownership and status
-    const reqData = await prisma.service_requests.findUnique({
-      where: {
-        id: requestId,
-        user_id: profile.id,
-      },
-      select: { id: true, status: true },
+    const reqData = await db.query.serviceRequests.findFirst({
+      where: and(
+        eq(serviceRequestsTable.id, requestId),
+        eq(serviceRequestsTable.userId, profile.id),
+      ),
+      columns: { id: true, status: true },
     });
 
     if (!reqData) {
@@ -43,25 +52,23 @@ export async function PUT(
     }
 
     // Update each answer and log activity in transaction
-    await prisma.$transaction(async (tx: any) => {
+    await db.transaction(async (tx) => {
       for (const update of updates) {
-        await tx.service_request_answers.updateMany({
-          where: {
-            id: BigInt(update.id),
-            request_id: requestId,
-          },
-          data: {
-            field_value: update.field_value,
-          },
-        });
+        await tx
+          .update(serviceRequestAnswersTable)
+          .set({ fieldValue: update.field_value })
+          .where(
+            and(
+              eq(serviceRequestAnswersTable.id, BigInt(update.id)),
+              eq(serviceRequestAnswersTable.requestId, requestId),
+            ),
+          );
       }
 
-      await tx.activity_logs.create({
-        data: {
-          request_id: requestId,
-          actor_id: profile.id,
-          action: "Pemohon memperbarui data formulir",
-        },
+      await tx.insert(activityLogsTable).values({
+        requestId: requestId,
+        actorId: profile.id,
+        action: "Pemohon memperbarui data formulir",
       });
     });
 

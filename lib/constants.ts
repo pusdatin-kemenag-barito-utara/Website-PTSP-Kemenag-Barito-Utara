@@ -65,3 +65,20 @@ export function isSuperAdmin(email?: string | null): boolean {
 export function isAdminRole(role?: string | null): boolean {
   return ADMIN_ROLES.includes(role as any);
 }
+
+/**
+ * Dapatkan role spesifik bidang berdasarkan email untuk admin_ptsp.
+ */
+export function getAdminSpecificRole(email: string | null | undefined, baseRole: string): string {
+  if (!email) return baseRole;
+  const emailLower = email.toLowerCase();
+  if (emailLower === "admin.penmad@kemenagbarut.go.id") return "admin_pendidikan_madrasah";
+  if (emailLower === "admin.pais@kemenagbarut.go.id") return "admin_pendidikan_agama_islam";
+  if (emailLower === "admin.pdpontren@kemenagbarut.go.id") return "admin_pendidikan_diniyah_pondok_pesantren";
+  if (emailLower === "admin.bimasislam@kemenagbarut.go.id") return "admin_bimbingan_masyarakat_islam";
+  if (emailLower === "admin.kristen@kemenagbarut.go.id") return "admin_bimbingan_masyarakat_kristen_katolik";
+  if (emailLower === "admin.zawa@kemenagbarut.go.id") return "admin_penyelenggara_zakat_wakaf";
+  if (emailLower === "admin.hindu@kemenagbarut.go.id") return "admin_penyelenggara_hindu";
+  return baseRole;
+}
+

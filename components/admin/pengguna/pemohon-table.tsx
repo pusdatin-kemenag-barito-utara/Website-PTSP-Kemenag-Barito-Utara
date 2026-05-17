@@ -9,9 +9,9 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { deleteUserPermanentlyAction } from "@/lib/actions/admin-users";
+import { deleteUserPermanentlyAction } from "@/lib/actions/admin/admin-users";
 import { formatDate } from "@/lib/utils";
 import { RoleBadge } from "./role-badge";
 import { PasswordCell } from "./password-cell";
@@ -21,10 +21,14 @@ export function PemohonTable({
   users,
   viewerIsSuperAdmin,
   onUserDeleted,
+  visibleUserId,
+  onTogglePassword,
 }: {
   users: any[];
   viewerIsSuperAdmin: boolean;
   onUserDeleted: (id: string) => void;
+  visibleUserId: string | null;
+  onTogglePassword: (userId: string) => void;
 }) {
   const PER_PAGE = 10;
   const [page, setPage] = useState(1);
@@ -35,7 +39,7 @@ export function PemohonTable({
   const filteredUsers = searchQuery
     ? users.filter(
         (u: any) =>
-          (u.full_name || "")
+          (u.fullName || "")
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
           (u.phone || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,16 +62,21 @@ export function PemohonTable({
     if (!deletingUser) return;
     startTransition(async () => {
       try {
-        const result = await deleteUserPermanentlyAction(deletingUser.id);
+        const formData = new FormData();
+        formData.append("userId", deletingUser.id);
+        
+        const result = await deleteUserPermanentlyAction(formData);
         if (result.success) {
           toast.success("Akun Berhasil Dihapus", {
-            description: `Seluruh data ${deletingUser.full_name || deletingUser.phone} dan file terkait telah dibersihkan.`,
+            description: result.message || `Seluruh data ${deletingUser.fullName || deletingUser.phone} dan file terkait telah dibersihkan.`,
           });
           onUserDeleted(deletingUser.id);
           setDeletingUser(null);
+        } else {
+          toast.error("Gagal menghapus", { description: result.error });
         }
       } catch (err: any) {
-        toast.error("Gagal menghapus pengguna", { description: err.message });
+        toast.error("Terjadi kesalahan sistem", { description: err.message });
       }
     });
   };
@@ -144,7 +153,7 @@ export function PemohonTable({
           <tbody className="divide-y divide-slate-100">
             <AnimatePresence>
               {paginatedUsers.map((user, idx) => (
-                <motion.tr
+                <m.tr
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -158,10 +167,10 @@ export function PemohonTable({
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 font-bold text-xs select-none">
-                        {(user.full_name || "P").charAt(0).toUpperCase()}
+                        {(user.fullName || "P").charAt(0).toUpperCase()}
                       </div>
                       <span className="font-bold text-slate-900 truncate">
-                        {user.full_name || (
+                        {user.fullName || (
                           <span className="italic text-slate-400">
                             Tanpa nama
                           </span>
@@ -192,13 +201,15 @@ export function PemohonTable({
                   {viewerIsSuperAdmin && (
                     <td className="px-5 py-3.5">
                       <PasswordCell
-                        password={user.plain_password}
+                        password={user.plainPassword}
                         canView={viewerIsSuperAdmin}
+                        isVisible={visibleUserId === user.id}
+                        onToggle={() => onTogglePassword(user.id)}
                       />
                     </td>
                   )}
                   <td className="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">
-                    {formatDate(user.created_at)}
+                    {formatDate(user.createdAt)}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex justify-end">
@@ -211,7 +222,7 @@ export function PemohonTable({
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </m.tr>
               ))}
             </AnimatePresence>
             {!paginatedUsers.length && (

@@ -67,17 +67,17 @@ export function UploadRevisionForm({
       className="space-y-3 rounded-xl border border-slate-200 p-4"
       onSubmit={onSubmit}
     >
-      <input type="hidden" name="requirement_id" value={requirement.id} />
+      <input type="hidden" name="requirementId" value={requirement.id} />
       <Field
-        label={requirement.document_name}
-        required={requirement.is_required}
-        hint={`Format: ${requirement.allowed_extensions || "pdf,jpg,jpeg,png"} | Maks: ${requirement.max_file_size_mb} MB`}
+        label={requirement.documentName}
+        required={requirement.isRequired}
+        hint={`Format: ${requirement.allowedExtensions || "pdf,jpg,jpeg,png"} | Maks: ${requirement.maxFileSizeMb} MB`}
       >
         <Input
           type="file"
           name="file"
           required
-          accept={(requirement.allowed_extensions || "pdf,jpg,jpeg,png")
+          accept={(requirement.allowedExtensions || "pdf,jpg,jpeg,png")
             .split(",")
             .map((ext: string) => `.${ext.trim()}`)
             .join(",")}

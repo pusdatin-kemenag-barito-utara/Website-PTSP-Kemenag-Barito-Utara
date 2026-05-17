@@ -3,12 +3,12 @@ import { Search, Filter } from "lucide-react";
 export function AdminRequestFilter({
   q,
   status,
-  service_id,
+  serviceId,
   services,
 }: {
   q: string;
   status: string;
-  service_id: string;
+  serviceId: string;
   services: any[] | null;
 }) {
   return (
@@ -37,8 +37,8 @@ export function AdminRequestFilter({
               Layanan
             </label>
             <select
-              name="service_id"
-              defaultValue={service_id}
+              name="serviceId"
+              defaultValue={serviceId}
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-all hover:border-slate-400 focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_10px_center] bg-no-repeat pr-9 outline-none truncate"
             >
               <option value="">Semua Layanan</option>
@@ -65,6 +65,7 @@ export function AdminRequestFilter({
               <option value="rejected">Ditolak</option>
               <option value="approved">Disetujui</option>
               <option value="completed">Selesai</option>
+              <option value="spam">Spam / Palsu</option>
             </select>
           </div>
           <button

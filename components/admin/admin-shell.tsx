@@ -121,7 +121,7 @@ export function AdminShell({
     new Set(authorizedNav.map((item: NavItem) => item.group || "")),
   );
 
-  const initials = (profile?.full_name || profile?.email || "A")
+  const initials = (profile?.fullName || profile?.email || "A")
     .split(" ")
     .map((w: any[]) => w[0])
     .slice(0, 2)

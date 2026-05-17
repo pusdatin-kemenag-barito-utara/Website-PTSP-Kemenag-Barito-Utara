@@ -1,0 +1,42 @@
+/* Layout Containers */
+.ptsp-shell {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80rem; /* max-w-7xl */
+  padding: 1rem; /* Default Mobile */
+}
+
+@media (min-width: 768px) {
+  .ptsp-shell {
+    padding: 1.5rem; /* Tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  .ptsp-shell {
+    padding: 2rem; /* Desktop */
+  }
+}
+
+/* Gradients & Backgrounds */
+.ptsp-hero-gradient {
+  background: linear-gradient(120deg, rgba(6, 78, 59, 0.96) 0%, rgba(4, 120, 87, 0.95) 55%, rgba(16, 185, 129, 0.9) 100%), #059669;
+}
+
+.ptsp-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+/* Helpers */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.ptsp-table-row-hover:hover {
+  background: linear-gradient(to right, rgba(236, 253, 245, 0.5), rgba(209, 250, 229, 0.5));
+  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid rgba(16, 185, 129, 0.3);
+}

@@ -1,0 +1,54 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireAuth } from "@/lib/auth";
+import { z } from "zod";
+import { UserService } from "@/lib/services/user-service";
+
+export type ActionResult = {
+  success: boolean;
+  message?: string;
+  error?: string;
+};
+
+const UpdateProfileSchema = z.object({
+  fullName: z.string().min(3, "Nama minimal 3 karakter"),
+  phone: z.string().min(10, "Nomor WhatsApp tidak valid"),
+  address: z.string().min(5, "Alamat minimal 5 karakter"),
+  password: z.string().min(6, "Password minimal 6 karakter").optional().or(z.literal("")),
+});
+
+export async function updateProfileAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const profile = await requireAuth();
+
+    const validated = UpdateProfileSchema.safeParse({
+      fullName: formData.get("full_name"),
+      phone: formData.get("phone"),
+      address: formData.get("address"),
+      password: formData.get("password"),
+    });
+
+    if (!validated.success) {
+      return { success: false, error: validated.error.issues[0].message };
+    }
+
+    const { fullName, phone, address, password } = validated.data;
+
+    await UserService.updateProfile(profile.id, {
+      fullName,
+      phone,
+      address,
+      password: password || undefined,
+    });
+
+    revalidatePath("/dashboard/profil");
+    revalidatePath("/dashboard");
+    revalidatePath("/admin/pengguna");
+
+    return { success: true, message: "Profil berhasil diperbarui" };
+  } catch (error: any) {
+    console.error("Error updating profile:", error);
+    return { success: false, error: error.message || "Gagal memperbarui profil" };
+  }
+}

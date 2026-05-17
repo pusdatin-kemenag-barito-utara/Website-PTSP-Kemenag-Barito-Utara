@@ -6,7 +6,7 @@ import { parseJsonArray } from "@/lib/utils";
 
 export function RequestFormFields({ fields }: { fields: any[] }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5">
       <div className="mb-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#059669]">
           Langkah 2
@@ -21,11 +21,11 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         {fields
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
           .map((field: any) => {
             const common = {
               name: `answer_${field.id}`,
-              required: field.is_required,
+              required: field.isRequired,
               placeholder: field.placeholder || "",
             };
 
@@ -34,7 +34,7 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
                 key={field.id}
                 className={field.type === "textarea" ? "md:col-span-2" : ""}
               >
-                <Field label={field.label} required={field.is_required}>
+                <Field label={field.label} required={field.isRequired}>
                   {field.type === "textarea" ? (
                     <Textarea {...common} />
                   ) : field.type === "select" ? (

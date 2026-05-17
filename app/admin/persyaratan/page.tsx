@@ -1,26 +1,47 @@
-import { FileText } from 'lucide-react';
-import { requireAdmin } from '@/lib/auth';
-import prisma, { serializeBigInt } from '@/lib/prisma';
-import { PageHeader } from '@/components/admin/page-header';
-import { PersyaratanClient } from '@/components/admin/persyaratan/persyaratan-client';
+import { FileText } from "lucide-react";
+import { requireAdmin } from "@/lib/auth";
+import { db, serializeBigInt } from "@/lib/db";
+import {
+  serviceItems as serviceItemsTable,
+  serviceRequirements as serviceRequirementsTable,
+} from "@/lib/db/schema";
+import { asc, sql } from "drizzle-orm";
+import { PageHeader } from "@/components/admin/page-header";
+import { PersyaratanClient } from "@/components/admin/persyaratan/persyaratan-client";
+import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 
 export default async function AdminRequirementsPage() {
-  await requireAdmin();
+  const profile = await requireAdmin();
+  const isSuper = isSuperAdmin(profile.email);
+  const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+  const isGeneralAdmin = specificRole === "admin_ptsp";
+
+  const roleOwnerFilter = isSuper || isGeneralAdmin ? undefined : specificRole;
+
+  let itemsWhere = undefined;
+  let requirementsWhere = undefined;
+
+  if (roleOwnerFilter) {
+    itemsWhere = sql`EXISTS (SELECT 1 FROM services WHERE services.id = ${serviceItemsTable.serviceId} AND services.role_owner = ${roleOwnerFilter})`;
+    requirementsWhere = sql`EXISTS (SELECT 1 FROM service_items JOIN services ON service_items.service_id = services.id WHERE service_items.id = ${serviceRequirementsTable.serviceItemId} AND services.role_owner = ${roleOwnerFilter})`;
+  }
 
   const [itemsData, requirementsData] = await Promise.all([
-    prisma.service_items.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: 'asc' },
+    db.query.serviceItems.findMany({
+      where: itemsWhere,
+      columns: { id: true, name: true },
+      orderBy: [asc(serviceItemsTable.name)],
     }),
-    prisma.service_requirements.findMany({
-      include: {
-        service_items: {
-          select: { name: true },
+    db.query.serviceRequirements.findMany({
+      where: requirementsWhere,
+      with: {
+        serviceItem: {
+          columns: { name: true },
         },
       },
       orderBy: [
-        { service_item_id: 'asc' },
-        { id: 'asc' },
+        asc(serviceRequirementsTable.serviceItemId),
+        asc(serviceRequirementsTable.id),
       ],
     }),
   ]);
@@ -35,7 +56,10 @@ export default async function AdminRequirementsPage() {
         description="Atur dokumen persyaratan yang harus diunggah untuk tiap item layanan."
         icon={FileText}
       />
-      <PersyaratanClient initialRequirements={requirements ?? []} items={items ?? []} />
+      <PersyaratanClient
+        initialRequirements={requirements ?? []}
+        items={items ?? []}
+      />
     </div>
   );
 }

@@ -50,6 +50,7 @@ export const REQUEST_STATUS_LABELS: Record<string, string> = {
   rejected: "Ditolak",
   approved: "Disetujui",
   completed: "Selesai",
+  spam: "Spam / Palsu",
 };
 
 export function getStatusTone(status: string) {
@@ -63,6 +64,8 @@ export function getStatusTone(status: string) {
       return "warning";
     case "under_review":
       return "info";
+    case "spam":
+      return "muted";
     default:
       return "muted";
   }
@@ -83,12 +86,6 @@ export function getFileUrl(path?: string | null) {
     const key = path.replace("r2:", "");
     // Kita gunakan proxy internal agar bisa melakukan pre-signing atau jika bucket public bisa langsung domain
     return `/api/files?path=${encodeURIComponent(path)}`;
-  }
-
-  // Google Drive
-  if (path.startsWith("gdrive:")) {
-    const fileId = path.split(":")[1];
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
   }
 
   return path;

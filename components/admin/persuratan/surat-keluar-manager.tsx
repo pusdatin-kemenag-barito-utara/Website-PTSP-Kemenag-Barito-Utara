@@ -21,9 +21,10 @@ import {
   saveSuratKeluarAction,
   deleteSuratKeluarAction,
   getNextNomorSuratSuggestionAction,
-} from "@/lib/actions/admin-persuratan";
+} from "@/lib/actions/admin/admin-persuratan";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 const UNIT_COLORS: Record<string, string> = {
   Sekjend: "bg-emerald-50 text-emerald-600 border-emerald-100",
@@ -78,13 +79,6 @@ export function SuratKeluarManager() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-
-  // Toast Notification State
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ show: false, message: "", type: "success" });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -195,24 +189,19 @@ export function SuratKeluarManager() {
     setSubmitting(true);
     try {
       const result = await deleteSuratKeluarAction(deletingId);
-      if (result?.error) {
-        showToast(result.error, "error");
-      } else {
+      if (result.success) {
+        toast.success(result.message || "Data surat keluar berhasil dihapus");
         await fetchData();
         setShowDeleteConfirm(false);
         setDeletingId(null);
-        showToast("Data surat keluar berhasil dihapus", "success");
+      } else {
+        toast.error(result.error || "Gagal menghapus data");
       }
     } catch (error) {
-      showToast("Gagal menghapus data", "error");
+      toast.error("Gagal menghapus data");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -225,18 +214,15 @@ export function SuratKeluarManager() {
 
       const result = await saveSuratKeluarAction(form);
 
-      if (result?.error) {
-        showToast(result.error, "error");
-      } else {
+      if (result.success) {
+        toast.success(result.message || "Data berhasil disimpan");
         await fetchData();
         setShowForm(false);
-        showToast(
-          editingId ? "Data berhasil diperbarui" : "Data berhasil disimpan",
-          "success",
-        );
+      } else {
+        toast.error(result.error || "Gagal menyimpan data");
       }
     } catch (error) {
-      showToast("Gagal menyimpan data", "error");
+      toast.error("Gagal menyimpan data");
     } finally {
       setSubmitting(false);
     }
@@ -292,7 +278,7 @@ export function SuratKeluarManager() {
       {/* Advanced Filter Panel */}
       <AnimatePresence>
         {showFilters && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0, marginBottom: 0 }}
             animate={{ height: "auto", opacity: 1, marginBottom: 24 }}
             exit={{ height: 0, opacity: 0, marginBottom: 0 }}
@@ -318,7 +304,7 @@ export function SuratKeluarManager() {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -340,7 +326,10 @@ export function SuratKeluarManager() {
                   Info Surat
                 </th>
                 <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                  Tanggal & Agenda
+                  Tanggal
+                </th>
+                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                  Agenda
                 </th>
                 <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Unit Kerja
@@ -381,19 +370,19 @@ export function SuratKeluarManager() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs text-slate-600 font-bold bg-slate-100 w-fit px-3 py-1.5 rounded-lg border border-slate-200">
-                          <Calendar className="h-3.5 w-3.5 text-emerald-500" />
-                          <span>{item.tanggal_surat}</span>
-                        </div>
-                        <div
-                          className={`flex items-center gap-2 text-[10px] font-extrabold w-fit px-2.5 py-1 rounded-md border uppercase tracking-tight ${
-                            AGENDA_COLORS[item.agenda] ||
-                            "bg-slate-50 text-slate-600 border-slate-100"
-                          }`}
-                        >
-                          {item.agenda}
-                        </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-600 font-bold bg-slate-100 w-fit px-3 py-1.5 rounded-lg border border-slate-200">
+                        <Calendar className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>{item.tanggal_surat}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div
+                        className={`flex items-center gap-2 text-[10px] font-extrabold w-fit px-2.5 py-1 rounded-md border uppercase tracking-tight ${
+                          AGENDA_COLORS[item.agenda] ||
+                          "bg-slate-50 text-slate-600 border-slate-100"
+                        }`}
+                      >
+                        {item.agenda}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -436,7 +425,7 @@ export function SuratKeluarManager() {
                 ))
               ) : !loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div
                         className={`h-12 w-12 rounded-2xl flex items-center justify-center ${fetchError ? "bg-red-50 text-red-400" : "bg-slate-50 text-slate-300"}`}
@@ -738,31 +727,6 @@ export function SuratKeluarManager() {
         </div>
       )}
 
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-8 fade-in duration-300">
-          <div
-            className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${
-              toast.type === "success"
-                ? "bg-emerald-600 border-emerald-500 text-white"
-                : "bg-red-600 border-red-500 text-white"
-            }`}
-          >
-            {toast.type === "success" ? (
-              <div className="p-1 bg-white/20 rounded-full">
-                <ArrowUpRight className="h-4 w-4" />
-              </div>
-            ) : (
-              <div className="p-1 bg-white/20 rounded-full">
-                <X className="h-4 w-4" />
-              </div>
-            )}
-            <span className="text-sm font-extrabold tracking-wide uppercase">
-              {toast.message}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

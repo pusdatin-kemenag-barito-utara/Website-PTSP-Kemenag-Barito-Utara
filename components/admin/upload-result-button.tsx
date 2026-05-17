@@ -4,7 +4,7 @@ import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Loader2, FileUp } from "lucide-react";
 import { toast } from "sonner";
-import { uploadResultDocumentAction } from "@/lib/actions/admin-requests";
+import { uploadResultDocumentAction } from "@/lib/actions/admin/admin-requests";
 
 export function UploadResultButton({
   requestId,
@@ -32,23 +32,30 @@ export function UploadResultButton({
 
     // Process upload
     const formData = new FormData();
-    formData.append("request_id", requestId);
+    formData.append("requestId", requestId);
     formData.append("file", file);
 
     const toastId = toast.loading("Mengunggah dokumen hasil...");
 
     startTransition(async () => {
       try {
-        await uploadResultDocumentAction(formData);
-        toast.success("Dokumen Berhasil Diunggah!", {
-          id: toastId,
-          description: "Dokumen hasil layanan telah diperbarui.",
-        });
-        router.refresh();
+        const result = await uploadResultDocumentAction(formData);
+        if (result.success) {
+          toast.success("Dokumen Berhasil Diunggah!", {
+            id: toastId,
+            description: result.message || "Dokumen hasil layanan telah diperbarui.",
+          });
+          router.refresh();
+        } else {
+          toast.error("Gagal mengunggah", {
+            id: toastId,
+            description: result.error || "Terjadi kesalahan",
+          });
+        }
       } catch (error: any) {
-        toast.error("Gagal mengunggah", {
+        toast.error("Terjadi kesalahan sistem", {
           id: toastId,
-          description: error.message || "Terjadi kesalahan",
+          description: error.message,
         });
       } finally {
         if (fileInputRef.current) fileInputRef.current.value = "";

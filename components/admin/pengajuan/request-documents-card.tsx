@@ -13,7 +13,7 @@ export function RequestDocumentsCard({
   return (
     <Card title="Dokumen Persyaratan" icon={FileCheck}>
       <div className="space-y-3">
-        {(request.service_request_documents ?? []).length === 0 && (
+        {(request.serviceRequestDocuments ?? []).length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
             <FileCheck className="h-8 w-8 text-slate-300 mb-2" />
             <p className="text-sm text-slate-500 font-semibold">
@@ -21,9 +21,9 @@ export function RequestDocumentsCard({
             </p>
           </div>
         )}
-        {(request.service_request_documents ?? []).map((doc: any) => {
+        {(request.serviceRequestDocuments ?? []).map((doc: any) => {
           const url = signedUrlMap.get(doc.id);
-          const title = doc.service_requirements?.document_name || doc.file_name;
+          const title = doc.serviceRequirements?.documentName || doc.fileName;
 
           return (
             <div
@@ -39,11 +39,11 @@ export function RequestDocumentsCard({
                     {title}
                   </p>
                   <p className="text-xs font-medium text-slate-400 mt-0.5 truncate">
-                    {doc.file_name}
+                    {doc.fileName}
                   </p>
                 </div>
               </div>
-              {doc.file_path === "EXPIRED" ? (
+              {doc.filePath === "EXPIRED" ? (
                 <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200">
                   <AlertCircle className="h-3 w-3" />
                   Kadaluarsa

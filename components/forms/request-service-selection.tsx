@@ -18,7 +18,7 @@ export function RequestServiceSelection({
   const selectedService = catalog.find((s: any) => String(s.id) === serviceId);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
+    <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
       <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#059669] to-[#0f8a54]" />
 
       <div className="mb-6 flex items-start gap-4">
@@ -67,7 +67,7 @@ export function RequestServiceSelection({
             <option value="" disabled>
               -- Pilih Item Layanan --
             </option>
-            {(selectedService?.service_items ?? []).map((item: any) => (
+            {(selectedService?.serviceItems ?? []).map((item: any) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>

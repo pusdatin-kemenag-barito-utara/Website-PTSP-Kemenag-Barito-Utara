@@ -12,7 +12,7 @@ import { getPublicServices } from "@/lib/queries";
 export default async function ServicesPage() {
   const services = await getPublicServices();
   const totalItems = services.reduce(
-    (acc: number, service: any) => acc + (service.service_items?.length ?? 0),
+    (acc: number, service: any) => acc + (service.serviceItems?.length ?? 0),
     0,
   );
 
@@ -42,12 +42,14 @@ export default async function ServicesPage() {
 
               <h1 className="text-4xl font-black leading-[1.1] text-white sm:text-6xl md:text-7xl tracking-tight">
                 Jelajahi Layanan <br className="hidden md:block" />
-                <span className="text-emerald-300">Pemerintah Agama</span>
+                <span className="text-emerald-300">
+                  Kementerian Agama Kabupaten Barito Utara
+                </span>
               </h1>
 
               <p className="max-w-2xl text-base leading-relaxed text-emerald-50/80 sm:text-xl font-medium mx-auto lg:mx-0">
-                Pilih unit kerja, cek detail persyaratan secara transparan, dan
-                siapkan dokumen Anda sebelum mengajukan secara online.
+                Pilih Unit Kerja, Cek Detail Persyaratan secara Transparan, dan
+                Siapkan Dokumen Anda Sebelum Mengajukan secara Online.
               </p>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
@@ -74,29 +76,29 @@ export default async function ServicesPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:flex lg:flex-col xl:flex-row">
-              <div className="flex flex-col items-center lg:items-start gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl shadow-2xl min-w-[200px]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white shadow-inner">
-                  <Building2 className="h-7 w-7" />
+            <div className="flex flex-row lg:flex-col xl:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+              <div className="flex flex-1 flex-row lg:flex-col items-center lg:items-start gap-3 sm:gap-4 rounded-2xl sm:rounded-[2rem] border border-white/15 bg-white/10 p-3 sm:p-5 md:p-8 backdrop-blur-xl shadow-2xl">
+                <div className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-white/10 text-white shadow-inner">
+                  <Building2 className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">
+                  <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-200/60 leading-none">
                     Unit Kerja
                   </p>
-                  <p className="text-4xl font-black text-white leading-none mt-1">
+                  <p className="text-2xl sm:text-4xl font-black text-white leading-none mt-1">
                     {services.length}
                   </p>
                 </div>
               </div>
-              <div className="flex flex-col items-center lg:items-start gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl shadow-2xl min-w-[200px]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-emerald-300 shadow-inner">
-                  <Layers3 className="h-7 w-7" />
+              <div className="flex flex-1 flex-row lg:flex-col items-center lg:items-start gap-3 sm:gap-4 rounded-2xl sm:rounded-[2rem] border border-white/15 bg-white/10 p-3 sm:p-5 md:p-8 backdrop-blur-xl shadow-2xl">
+                <div className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-white/10 text-emerald-300 shadow-inner">
+                  <Layers3 className="h-5 w-5 sm:h-7 sm:w-7" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200/60">
+                  <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-200/60 leading-none">
                     Total Layanan
                   </p>
-                  <p className="text-4xl font-black text-white leading-none mt-1">
+                  <p className="text-2xl sm:text-4xl font-black text-white leading-none mt-1">
                     {totalItems}
                   </p>
                 </div>

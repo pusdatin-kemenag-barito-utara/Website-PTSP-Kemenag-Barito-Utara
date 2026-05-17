@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Select } from "@/components/ui/select";
@@ -8,7 +6,8 @@ import {
   createRequirementAction,
   updateRequirementAction,
   deleteRequirementAction,
-} from "@/lib/actions/admin-master";
+  reorderRequirementsAction,
+} from "@/lib/actions/admin/admin-requirements";
 import { DeleteRequirementModal } from "./delete-requirement-modal";
 import { AddEditRequirementModal } from "./add-edit-requirement-modal";
 import { RequirementTable } from "./requirement-table";
@@ -20,7 +19,9 @@ export function PersyaratanClient({
   initialRequirements: any[];
   items: any[];
 }) {
-  const [requirements, setRequirements] = useState(initialRequirements);
+  const [requirements, setRequirements] = useState(
+    [...initialRequirements].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  );
   const [isPending, startTransition] = useTransition();
 
   // Modal states
@@ -32,14 +33,17 @@ export function PersyaratanClient({
     null,
   );
 
+  // Debounce ref
+  const reorderTimeout = useRef<NodeJS.Timeout | null>(null);
+
   // Form states
   const [formData, setFormData] = useState({
-    service_item_id: "",
-    document_name: "",
+    serviceItemId: "",
+    documentName: "",
     description: "",
-    allowed_extensions: "pdf,jpg,jpeg,png",
-    max_file_size_mb: 5,
-    is_required: true,
+    allowedExtensions: "pdf,jpg,jpeg,png",
+    maxFileSizeMb: 5,
+    isRequired: true,
   });
 
   // Filter state
@@ -53,35 +57,35 @@ export function PersyaratanClient({
     selectedItemFilter === "all"
       ? requirements
       : requirements.filter(
-          (req) => req.service_item_id.toString() === selectedItemFilter,
+          (req) => req.serviceItemId.toString() === selectedItemFilter,
         );
 
   const openEdit = (requirement: any) => {
     setEditingRequirement(requirement);
     setFormData({
-      service_item_id: requirement.service_item_id.toString(),
-      document_name: requirement.document_name,
+      serviceItemId: requirement.serviceItemId.toString(),
+      documentName: requirement.documentName,
       description: requirement.description || "",
-      allowed_extensions: requirement.allowed_extensions || "pdf,jpg,jpeg,png",
-      max_file_size_mb: requirement.max_file_size_mb || 5,
-      is_required: requirement.is_required,
+      allowedExtensions: requirement.allowedExtensions || "pdf,jpg,jpeg,png",
+      maxFileSizeMb: requirement.maxFileSizeMb || 5,
+      isRequired: requirement.isRequired,
     });
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.service_item_id) {
+    if (!formData.serviceItemId) {
       toast.error("Pilih Item Layanan terlebih dahulu.");
       return;
     }
 
     const data = new FormData();
-    data.append("service_item_id", formData.service_item_id);
-    data.append("document_name", formData.document_name);
+    data.append("serviceItemId", formData.serviceItemId);
+    data.append("documentName", formData.documentName);
     data.append("description", formData.description);
-    data.append("allowed_extensions", formData.allowed_extensions);
-    data.append("max_file_size_mb", formData.max_file_size_mb.toString());
-    if (formData.is_required) data.append("is_required", "on");
+    data.append("allowedExtensions", formData.allowedExtensions);
+    data.append("maxFileSizeMb", formData.maxFileSizeMb.toString());
+    if (formData.isRequired) data.append("isRequired", "on");
 
     startTransition(async () => {
       try {
@@ -100,12 +104,12 @@ export function PersyaratanClient({
         setIsAddOpen(false);
         setEditingRequirement(null);
         setFormData({
-          service_item_id: "",
-          document_name: "",
+          serviceItemId: "",
+          documentName: "",
           description: "",
-          allowed_extensions: "pdf,jpg,jpeg,png",
-          max_file_size_mb: 5,
-          is_required: true,
+          allowedExtensions: "pdf,jpg,jpeg,png",
+          maxFileSizeMb: 5,
+          isRequired: true,
         });
       } catch (error) {
         toast.error("Gagal menyimpan data.");
@@ -132,8 +136,8 @@ export function PersyaratanClient({
 
   const handleExtensionChange = (ext: string, checked: boolean) => {
     setFormData((prev) => {
-      const exts = prev.allowed_extensions
-        ? prev.allowed_extensions.split(",").map((e) => e.trim())
+      const exts = prev.allowedExtensions
+        ? prev.allowedExtensions.split(",").map((e) => e.trim())
         : [];
       if (checked) {
         if (!exts.includes(ext)) exts.push(ext);
@@ -141,8 +145,39 @@ export function PersyaratanClient({
         const index = exts.indexOf(ext);
         if (index > -1) exts.splice(index, 1);
       }
-      return { ...prev, allowed_extensions: exts.join(",") };
+      return { ...prev, allowedExtensions: exts.join(",") };
     });
+  };
+
+  const handleReorder = (newReqs: any[]) => {
+    // Optimistic UI update
+    setRequirements((prev) => {
+      const newFullList = [...prev];
+      newReqs.forEach((newReq, index) => {
+        const fullIndex = newFullList.findIndex((r) => r.id === newReq.id);
+        if (fullIndex !== -1) {
+          newFullList[fullIndex] = { ...newReq, sortOrder: index + 1 };
+        }
+      });
+      return newFullList;
+    });
+
+    const ids = newReqs.map((r) => r.id.toString());
+
+    // Debounce server action
+    if (reorderTimeout.current) clearTimeout(reorderTimeout.current);
+    reorderTimeout.current = setTimeout(() => {
+      startTransition(async () => {
+        try {
+          await reorderRequirementsAction(ids);
+          toast.success("Urutan Tersimpan", {
+            description: "Urutan persyaratan telah diperbarui.",
+          });
+        } catch (error) {
+          toast.error("Gagal menyimpan urutan.");
+        }
+      });
+    }, 500);
   };
 
   return (
@@ -174,13 +209,13 @@ export function PersyaratanClient({
           <button
             onClick={() => {
               setFormData({
-                service_item_id:
+                serviceItemId:
                   selectedItemFilter !== "all" ? selectedItemFilter : "",
-                document_name: "",
+                documentName: "",
                 description: "",
-                allowed_extensions: "pdf,jpg,jpeg,png",
-                max_file_size_mb: 5,
-                is_required: true,
+                allowedExtensions: "pdf,jpg,jpeg,png",
+                maxFileSizeMb: 5,
+                isRequired: true,
               });
               setIsAddOpen(true);
             }}
@@ -197,6 +232,8 @@ export function PersyaratanClient({
         items={items}
         onEdit={openEdit}
         onDelete={setDeletingRequirement}
+        onReorder={handleReorder}
+        isReorderable={selectedItemFilter !== "all"}
         isPending={isPending}
       />
 
@@ -224,3 +261,5 @@ export function PersyaratanClient({
     </div>
   );
 }
+
+

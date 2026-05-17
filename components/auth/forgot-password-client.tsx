@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { RoleSelection } from "@/components/auth/role-selection";
 import { PemohonResetForm } from "@/components/auth/pemohon-reset-form";
@@ -22,7 +22,7 @@ export function ForgotPasswordClient() {
         {!role ? (
           <RoleSelection setRole={setRole} />
         ) : (
-          <motion.div
+          <m.div
             key="form-flow"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -46,7 +46,7 @@ export function ForgotPasswordClient() {
 
               {role === "user" ? <PemohonResetForm /> : <PetugasResetForm />}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

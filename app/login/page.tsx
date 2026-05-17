@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, ShieldCheck, UserRound } from "lucide-react";
 
-export default function LoginSelectorPage() {
+export default async function LoginSelectorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { callbackUrl } = await searchParams;
+  const cbQuery = callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : "";
+
   return (
     <div className="flex min-h-[calc(100vh-84px)] items-center justify-center p-6 sm:p-10 lg:p-12 relative overflow-hidden bg-gradient-to-br from-[#022c22] via-[#064e3b] to-[#047857]">
       {/* Background Effects */}
@@ -37,7 +44,7 @@ export default function LoginSelectorPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:gap-8">
           {/* Card Pemohon */}
           <Link
-            href="/login/pemohon"
+            href={`/login/pemohon${cbQuery}`}
             className="group relative overflow-hidden rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/20 hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:border-white/30"
           >
             <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#5eeaa5]/20 blur-3xl transition-opacity group-hover:opacity-100 opacity-50" />
@@ -80,7 +87,7 @@ export default function LoginSelectorPage() {
 
           {/* Card Petugas */}
           <Link
-            href="/login/petugas"
+            href={`/login/petugas${cbQuery}`}
             className="group relative overflow-hidden rounded-[2rem] border border-white/15 bg-white/10 p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/20 hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:border-white/30"
           >
             <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#f0c040]/20 blur-3xl transition-opacity group-hover:opacity-100 opacity-50" />
@@ -126,7 +133,7 @@ export default function LoginSelectorPage() {
           <p className="text-sm font-medium text-emerald-100">
             Belum punya akun pemohon?{" "}
             <Link
-              href="/register"
+              href={`/register${cbQuery}`}
               className="font-bold text-white underline decoration-white/30 underline-offset-4 transition-colors hover:text-[#5eeaa5] hover:decoration-[#5eeaa5]"
             >
               Daftar Sekarang

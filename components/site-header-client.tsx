@@ -119,10 +119,10 @@ export function SiteHeaderClient({
                   />
                 </div>
                 <div className="flex flex-col justify-center min-w-0 whitespace-nowrap pl-1">
-                  <span className="text-[10px] sm:text-[13px] font-black tracking-[0.05em] leading-tight transition-colors duration-500 lg:hidden text-white">
+                  <span className="text-[11px] sm:text-[13px] font-black tracking-[0.05em] leading-tight transition-colors duration-500 lg:hidden text-white">
                     PELAYANAN TERPADU SATU PINTU
                   </span>
-                  <span className="text-[7.5px] sm:text-[10px] font-bold tracking-wider leading-tight transition-colors duration-500 lg:hidden text-emerald-100/80">
+                  <span className="text-[8.5px] sm:text-[10px] font-bold tracking-wider leading-tight transition-colors duration-500 lg:hidden text-emerald-100/80">
                     KEMENTERIAN AGAMA KABUPATEN BARITO UTARA
                   </span>
                   {/* Desktop text */}

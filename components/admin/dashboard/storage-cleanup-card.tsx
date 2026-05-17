@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Trash2, ShieldAlert, CheckCircle2, Loader2, Database } from "lucide-react";
-import { cleanupOldStorageAction, getCleanupStats } from "@/lib/actions/cleanup";
+import { cleanupOldStorageAction, getCleanupStats } from "@/lib/actions/system/cleanup";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -87,7 +87,7 @@ export function StorageCleanupCard() {
               <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
                 Terdapat <span className="font-bold text-slate-900">{stats.eligibleRequests} berkas permohonan</span> yang sudah selesai lebih dari 3 bulan. 
-                Menghapus file lama akan mengosongkan ruang di Cloudflare R2 & Google Drive Anda.
+                Menghapus file lama akan mengosongkan ruang di Cloudflare R2 Anda.
               </p>
             </div>
 

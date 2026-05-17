@@ -23,12 +23,12 @@ export function TrackStatusCard({
             Nomor Pengajuan
           </p>
           <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">
-            {result.request_number}
+            {result.requestNumber}
           </h2>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 inline-flex">
             <span className="text-[#059669]">{result.services?.name}</span>
             <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-            <span>{result.service_items?.name}</span>
+            <span>{result.serviceItems?.name}</span>
           </div>
         </div>
         <div className="shrink-0 scale-110 origin-left sm:origin-right">
@@ -42,7 +42,7 @@ export function TrackStatusCard({
             Tanggal Pengajuan
           </p>
           <p className="mt-1 text-sm font-bold text-slate-900">
-            {formatDate(result.created_at)}
+            {formatDate(result.createdAt)}
           </p>
         </div>
         <div>
@@ -50,7 +50,7 @@ export function TrackStatusCard({
             Diterima Sistem
           </p>
           <p className="mt-1 text-sm font-bold text-slate-900">
-            {result.submitted_at ? formatDate(result.submitted_at) : "-"}
+            {result.submittedAt ? formatDate(result.submittedAt) : "-"}
           </p>
         </div>
         <div>
@@ -58,7 +58,7 @@ export function TrackStatusCard({
             Disetujui
           </p>
           <p className="mt-1 text-sm font-bold text-slate-900">
-            {result.approved_at ? formatDate(result.approved_at) : "-"}
+            {result.approvedAt ? formatDate(result.approvedAt) : "-"}
           </p>
         </div>
         <div>
@@ -66,12 +66,12 @@ export function TrackStatusCard({
             Selesai
           </p>
           <p className="mt-1 text-sm font-bold text-slate-900">
-            {result.completed_at ? formatDate(result.completed_at) : "-"}
+            {result.completedAt ? formatDate(result.completedAt) : "-"}
           </p>
         </div>
       </div>
 
-      {result.revision_note && (
+      {result.revisionNote && (
         <div className="mt-5 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
           <div className="mt-0.5 shrink-0">
             <AlertCircle className="h-5 w-5 text-amber-600" />
@@ -80,19 +80,19 @@ export function TrackStatusCard({
             <p className="font-bold text-amber-800">
               Catatan Revisi dari Petugas
             </p>
-            <p className="mt-1 text-sm">{result.revision_note}</p>
+            <p className="mt-1 text-sm">{result.revisionNote}</p>
           </div>
         </div>
       )}
 
-      {result.rejection_reason && (
+      {result.rejectionReason && (
         <div className="mt-5 flex gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900">
           <div className="mt-0.5 shrink-0">
             <AlertCircle className="h-5 w-5 text-rose-600" />
           </div>
           <div>
             <p className="font-bold text-rose-800">Alasan Penolakan</p>
-            <p className="mt-1 text-sm">{result.rejection_reason}</p>
+            <p className="mt-1 text-sm">{result.rejectionReason}</p>
           </div>
         </div>
       )}

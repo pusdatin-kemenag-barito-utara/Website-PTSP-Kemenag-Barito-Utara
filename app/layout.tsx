@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { ConditionalShell } from "@/components/conditional-shell";
+import { SiteHeader } from "@/components/layout/header";
+import { SiteFooter } from "@/components/layout/footer";
+import { ConditionalShell } from "@/components/layout/conditional-shell";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { ChatWidget } from "@/components/features/chat/ChatWidget";
-import { FramerWrapper } from "@/components/framer-wrapper";
+import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -128,7 +128,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               {children}
               <Analytics />
             </ConditionalShell>
-            <Toaster position="top-center" richColors />
+            <Toaster 
+              position="top-center" 
+              richColors
+              toastOptions={{
+                style: {
+                  borderRadius: '14px',
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid rgba(226, 232, 240, 0.8)',
+                  padding: '16px',
+                  fontWeight: '500'
+                },
+                className: "text-[14px]"
+              }}
+            />
             <ChatWidget />
           </div>
         </FramerWrapper>

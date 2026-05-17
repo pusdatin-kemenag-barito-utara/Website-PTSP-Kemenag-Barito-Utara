@@ -1,11 +1,18 @@
 import { requireAdmin } from "@/lib/auth";
-import prisma, { serializeBigInt } from "@/lib/prisma";
+import { db, serializeBigInt } from "@/lib/db";
+import {
+  services as servicesTable,
+  serviceItems as serviceItemsTable,
+  serviceFormFields as serviceFormFieldsTable,
+  serviceRequirements as serviceRequirementsTable,
+} from "@/lib/db/schema";
+import { eq, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { ServiceWizardClient } from "@/components/admin/layanan/service-wizard-client";
 import { PageHeader } from "@/components/admin/page-header";
 import { FolderOpen, ArrowLeft } from "lucide-react";
-import { isSuperAdmin } from "@/lib/constants";
+import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import Link from "next/link";
+import { ServiceWizardClient } from "@/components/admin/layanan/service-wizard-client";
 
 export default async function ServiceWizardPage({
   params,
@@ -19,21 +26,19 @@ export default async function ServiceWizardPage({
   const { id } = await params;
 
   // Fetch complete service data including items, forms, and requirements
-  const serviceData = await prisma.services.findUnique({
-    where: { id: BigInt(id) },
-    include: {
-      service_items: {
-        // @ts-ignore
-        orderBy: { sort_order: "asc" },
-        include: {
-          service_form_fields: {
-            orderBy: { sort_order: "asc" },
+  const serviceData = await db.query.services.findFirst({
+    where: eq(servicesTable.id, BigInt(id)),
+    with: {
+      serviceItems: {
+        orderBy: [asc(serviceItemsTable.sortOrder)],
+        with: {
+          serviceFormFields: {
+            orderBy: [asc(serviceFormFieldsTable.sortOrder)],
           },
-          service_requirements: {
+          serviceRequirements: {
             orderBy: [
-              // @ts-ignore
-              { sort_order: "asc" },
-              { id: "asc" }
+              asc(serviceRequirementsTable.sortOrder),
+              asc(serviceRequirementsTable.id),
             ],
           },
         },
@@ -42,6 +47,14 @@ export default async function ServiceWizardPage({
   });
 
   if (!serviceData) {
+    notFound();
+  }
+
+  // Cek otorisasi kepemilikan layanan
+  const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+  const isGeneralAdmin = specificRole === "admin_ptsp";
+
+  if (!isSuper && !isGeneralAdmin && serviceData.roleOwner !== specificRole) {
     notFound();
   }
 
@@ -64,10 +77,7 @@ export default async function ServiceWizardPage({
         />
       </div>
 
-      <ServiceWizardClient 
-        initialService={service} 
-        isSuperAdmin={isSuper}
-      />
+      <ServiceWizardClient initialService={service} isSuperAdmin={isSuper} />
     </div>
   );
 }

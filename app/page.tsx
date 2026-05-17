@@ -1,8 +1,8 @@
-import { SiteHomeFaq } from "@/components/site-home-faq";
-import { HomeHero } from "@/components/home-hero";
-import { HomeQuickAccess } from "@/components/home-quick-access";
-import { HomeServiceCatalogSection } from "@/components/home-service-catalog-section";
-import { HomeHowItWorks } from "@/components/home-how-it-works";
+import { SiteHomeFaq } from "@/components/home/faq";
+import { HomeHero } from "@/components/home/hero";
+import { HomeQuickAccess } from "@/components/home/quick-access";
+import { HomeServiceCatalogSection } from "@/components/home/service-catalog";
+import { HomeHowItWorks } from "@/components/home/how-it-works";
 import { BookOpenCheck } from "lucide-react";
 
 export default async function HomePage() {

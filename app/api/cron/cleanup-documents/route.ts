@@ -2,7 +2,13 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
+import {
+  serviceRequests as serviceRequestsTable,
+  generatedDocuments as generatedDocumentsTable,
+  serviceRequestDocuments as serviceRequestDocumentsTable,
+} from "@/lib/db/schema";
+import { eq, and, lt, not, inArray, isNotNull } from "drizzle-orm";
 import { deleteFromR2 } from "@/lib/r2";
 
 export async function GET(request: Request) {
@@ -23,14 +29,12 @@ export async function GET(request: Request) {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    const expiredRequests = await prisma.service_requests.findMany({
-      where: {
-        status: "completed",
-        completed_at: {
-          lt: threeDaysAgo,
-        },
-      },
-      select: { id: true },
+    const expiredRequests = await db.query.serviceRequests.findMany({
+      where: and(
+        eq(serviceRequestsTable.status, "completed"),
+        lt(serviceRequestsTable.completedAt, threeDaysAgo),
+      ),
+      columns: { id: true },
     });
 
     if (!expiredRequests.length) {
@@ -39,20 +43,20 @@ export async function GET(request: Request) {
       });
     }
 
-    const expiredRequestIds = expiredRequests.map((r: any) => r.id);
+    const expiredRequestIds = expiredRequests.map((r) => r.id);
     let deletedFilesCount = 0;
     const admin = createAdminClient();
 
     // 2. Clean up "Dokumen Hasil" (generated_documents)
-    const generatedDocs = await prisma.generated_documents.findMany({
-      where: {
-        request_id: { in: expiredRequestIds },
-        file_path: { not: "EXPIRED" },
-      },
+    const generatedDocs = await db.query.generatedDocuments.findMany({
+      where: and(
+        inArray(generatedDocumentsTable.requestId, expiredRequestIds),
+        not(eq(generatedDocumentsTable.filePath, "EXPIRED")),
+      ),
     });
 
     if (generatedDocs.length > 0) {
-      const pathsToDelete = generatedDocs.map((doc: any) => doc.file_path);
+      const pathsToDelete = generatedDocs.map((doc) => doc.filePath);
 
       // Delete physical files from Storage
       const { error: storageError } = await admin.storage
@@ -61,63 +65,66 @@ export async function GET(request: Request) {
 
       if (!storageError) {
         // Mark as expired in DB
-        await prisma.generated_documents.updateMany({
-          where: {
-            id: { in: generatedDocs.map((d: any) => d.id) },
-          },
-          data: { file_path: "EXPIRED" },
-        });
+        await db
+          .update(generatedDocumentsTable)
+          .set({ filePath: "EXPIRED" })
+          .where(
+            inArray(
+              generatedDocumentsTable.id,
+              generatedDocs.map((d) => d.id),
+            ),
+          );
 
         deletedFilesCount += pathsToDelete.length;
       }
     }
 
     // 3. Clean up "Dokumen Persyaratan" (service_request_documents)
-    const reqDocs = await prisma.service_request_documents.findMany({
-      where: {
-        request_id: { in: expiredRequestIds },
-        file_path: { not: "EXPIRED" },
-      },
+    const reqDocs = await db.query.serviceRequestDocuments.findMany({
+      where: and(
+        inArray(serviceRequestDocumentsTable.requestId, expiredRequestIds),
+        not(eq(serviceRequestDocumentsTable.filePath, "EXPIRED")),
+      ),
     });
 
     // Handle R2 deletions
-    const r2Docs = reqDocs.filter((doc: any) =>
-      doc.file_path.startsWith("r2:"),
-    );
+    const r2Docs = reqDocs.filter((doc) => doc.filePath.startsWith("r2:"));
     for (const doc of r2Docs) {
       try {
-        await deleteFromR2(doc.file_path);
-        await prisma.service_request_documents.update({
-          where: { id: doc.id },
-          data: { file_path: "EXPIRED" },
-        });
+        await deleteFromR2(doc.filePath);
+        await db
+          .update(serviceRequestDocumentsTable)
+          .set({ filePath: "EXPIRED" })
+          .where(eq(serviceRequestDocumentsTable.id, doc.id));
         deletedFilesCount++;
       } catch (err) {
         console.error(`Failed to delete R2 doc ${doc.id}:`, err);
       }
     }
 
-    // Filter out gdrive and r2 links before Supabase storage deletion
+    // Filter out r2 links before Supabase storage deletion
     const supabaseDocs = reqDocs.filter(
-      (doc: any) =>
-        !doc.file_path.startsWith("gdrive:") &&
-        !doc.file_path.startsWith("r2:"),
+      (doc) =>
+        !doc.filePath.startsWith("r2:"),
     );
 
     if (supabaseDocs.length > 0) {
-      const pathsToDelete = supabaseDocs.map((doc: any) => doc.file_path);
+      const pathsToDelete = supabaseDocs.map((doc) => doc.filePath);
 
       const { error: storageError } = await admin.storage
         .from("request-documents")
         .remove(pathsToDelete);
 
       if (!storageError) {
-        await prisma.service_request_documents.updateMany({
-          where: {
-            id: { in: supabaseDocs.map((d: any) => d.id) },
-          },
-          data: { file_path: "EXPIRED" },
-        });
+        await db
+          .update(serviceRequestDocumentsTable)
+          .set({ filePath: "EXPIRED" })
+          .where(
+            inArray(
+              serviceRequestDocumentsTable.id,
+              supabaseDocs.map((d) => d.id),
+            ),
+          );
 
         deletedFilesCount += pathsToDelete.length;
       }

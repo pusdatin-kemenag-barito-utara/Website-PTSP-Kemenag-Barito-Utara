@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { deleteRequestAction } from "@/lib/actions/admin-requests";
+import { deleteRequestAction } from "@/lib/actions/admin/admin-requests";
 import { toast } from "sonner";
 
 export function DeleteRequestButton({ requestId }: { requestId: string }) {
@@ -11,17 +11,20 @@ export function DeleteRequestButton({ requestId }: { requestId: string }) {
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = async () => {
-    const toastId = toast.loading("Sedang membersihkan file R2 & Google Drive...");
+    const toastId = toast.loading("Sedang membersihkan file Cloudflare R2...");
     
     startTransition(async () => {
       try {
         const formData = new FormData();
-        formData.append("request_id", requestId);
+        formData.append("requestId", requestId);
         
-        await deleteRequestAction(formData);
+        const result = await deleteRequestAction(formData);
         
-        // Jika berhasil (jarang sampai sini karena biasanya langsung redirect)
-        toast.success("Pengajuan berhasil dihapus!", { id: toastId });
+        if (result?.success) {
+          toast.success("Pengajuan berhasil dihapus!", { id: toastId });
+        } else {
+          toast.error(`Gagal menghapus: ${result?.error || "Terjadi kesalahan"}`, { id: toastId });
+        }
       } catch (error: any) {
         // Abaikan error NEXT_REDIRECT karena itu artinya redirect berhasil
         if (error.message === "NEXT_REDIRECT" || error.digest?.includes("NEXT_REDIRECT")) {
@@ -30,7 +33,7 @@ export function DeleteRequestButton({ requestId }: { requestId: string }) {
         }
         
         console.error("Delete error:", error);
-        toast.error(`Gagal menghapus: ${error.message || "Terjadi kesalahan"}`, { id: toastId });
+        toast.error(`Terjadi kesalahan sistem: ${error.message}`, { id: toastId });
       }
     });
   };
@@ -77,7 +80,7 @@ export function DeleteRequestButton({ requestId }: { requestId: string }) {
               <p className="mb-8 text-sm font-medium leading-relaxed text-slate-500">
                 Apakah Anda yakin ingin menghapus pengajuan ini?
                 <span className="block mt-2 font-bold text-red-600">
-                  Seluruh data dan berkas di Cloudflare R2 & Google Drive akan ikut terhapus
+                  Seluruh data dan berkas di Cloudflare R2 akan ikut terhapus
                   permanen dan tidak bisa dikembalikan.
                 </span>
               </p>

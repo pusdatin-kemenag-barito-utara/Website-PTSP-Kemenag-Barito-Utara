@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { isSuperAdmin } from "@/lib/constants";
 import { redirect } from "next/navigation";
 import { StorageCleanupCard } from "@/components/admin/dashboard/storage-cleanup-card";
+import { StorageQuotaGrid } from "@/components/admin/dashboard/storage-quota-grid";
 import { Card } from "@/components/ui/card";
 
 export default async function AdminStorageMaintenancePage() {
@@ -18,12 +19,13 @@ export default async function AdminStorageMaintenancePage() {
     <div className="space-y-6">
       <PageHeader
         title="Pemeliharaan Storage"
-        description="Optimasi ruang penyimpanan Cloudflare R2 dan Google Drive dengan membersihkan berkas lama."
+        description="Optimasi ruang penyimpanan Cloudflare R2 dengan membersihkan berkas lama."
         icon={Database}
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
+          <StorageQuotaGrid />
           <StorageCleanupCard />
         </div>
 
@@ -62,7 +64,7 @@ export default async function AdminStorageMaintenancePage() {
             </h3>
             <ul className="list-disc list-inside space-y-2 text-[11px] text-slate-500 font-medium leading-relaxed">
               <li>Pembersihan dilakukan secara permanen dan tidak dapat dibatalkan (Undo).</li>
-              <li>Sistem akan menghapus file baik di Cloudflare R2 maupun backup di Google Drive.</li>
+              <li>Sistem akan menghapus file dari Cloudflare R2.</li>
               <li>Aksi pembersihan dicatat di Sistem Audit Log untuk transparansi.</li>
               <li>Gunakan fitur ini secara berkala (misal: sebulan sekali) untuk menjaga performa sistem.</li>
             </ul>

@@ -57,41 +57,31 @@ export function DocumentPreviewModal({
         </div>
 
         {/* Content Area */}
-        <div className="p-8 sm:p-12 flex flex-col items-center justify-center bg-slate-50/30">
+        <div className="bg-slate-50/30 flex-1 overflow-hidden flex flex-col">
           {isImage ? (
-            <div className="relative group">
-              <img
-                src={url}
-                alt={title}
-                className="max-w-full max-h-[60vh] object-contain rounded-2xl shadow-2xl border-4 border-white"
-              />
-              <a 
-                href={url} 
-                target="_blank" 
-                className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"
-              >
-                <span className="px-4 py-2 bg-white rounded-lg text-xs font-bold shadow-lg">Lihat Ukuran Penuh</span>
-              </a>
+            <div className="p-8 sm:p-12 overflow-auto flex items-center justify-center min-h-[40vh]">
+              <div className="relative group">
+                <img
+                  src={url}
+                  alt={title}
+                  className="max-w-full max-h-[70vh] object-contain rounded-2xl shadow-2xl border-4 border-white"
+                />
+                <a 
+                  href={url} 
+                  target="_blank" 
+                  className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"
+                >
+                  <span className="px-4 py-2 bg-white rounded-lg text-xs font-bold shadow-lg">Lihat Ukuran Penuh</span>
+                </a>
+              </div>
             </div>
           ) : (
-            <div className="text-center max-w-md">
-              <div className="mx-auto h-24 w-24 bg-emerald-50 rounded-3xl flex items-center justify-center mb-6 shadow-inner border border-emerald-100/50">
-                <FileText className="h-10 w-10 text-emerald-600 animate-pulse" />
-              </div>
-              <h4 className="text-lg font-black text-slate-800 mb-2">Dokumen Siap Dibuka</h4>
-              <p className="text-sm text-slate-500 mb-8 leading-relaxed">
-                Demi keamanan, beberapa dokumen (PDF) hanya bisa dibuka di jendela baru. Silakan klik tombol di bawah untuk melihat dokumen.
-              </p>
-              
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all active:scale-95"
-              >
-                <ExternalLink className="h-5 w-5" />
-                Buka Dokumen Sekarang
-              </a>
+            <div className="w-full flex-1 min-h-[70vh]">
+              <iframe
+                src={`${url}#toolbar=0`}
+                className="w-full h-full border-0"
+                title={title}
+              />
             </div>
           )}
         </div>

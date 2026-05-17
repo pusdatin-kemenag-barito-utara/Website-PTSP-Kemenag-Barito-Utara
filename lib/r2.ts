@@ -60,3 +60,18 @@ export async function getR2SignedUrl(path: string, expiresIn: number = 3600) {
 export function isR2Path(path: string) {
   return path.startsWith("r2:");
 }
+
+export async function getR2Usage() {
+  if (!R2_BUCKET_NAME) return { totalSize: 0, fileCount: 0 };
+  
+  const { ListObjectsV2Command } = await import("@aws-sdk/client-s3");
+  const command = new ListObjectsV2Command({
+    Bucket: R2_BUCKET_NAME,
+  });
+
+  const response = await s3Client.send(command);
+  const totalSize = (response.Contents || []).reduce((acc, curr) => acc + (curr.Size || 0), 0);
+  const fileCount = response.KeyCount || 0;
+
+  return { totalSize, fileCount };
+}

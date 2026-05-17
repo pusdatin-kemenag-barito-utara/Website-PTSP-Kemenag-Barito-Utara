@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
-import { registerPemohonAction } from "@/lib/actions/register-pemohon";
+import { registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
 
 function normalizeWhatsappNumber(value: string) {
   const digits = value.replace(/\D/g, "");
@@ -18,7 +18,7 @@ function normalizeWhatsappNumber(value: string) {
   return digits;
 }
 
-export function RegisterForm() {
+export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -53,14 +53,17 @@ export function RegisterForm() {
         );
 
         // Automatic redirect after 2 seconds
+        const loginUrl = callbackUrl 
+          ? `/login/pemohon?callbackUrl=${encodeURIComponent(callbackUrl)}`
+          : "/login/pemohon";
+          
         setTimeout(() => {
-          router.push("/login/pemohon");
-          router.refresh();
+          window.location.href = loginUrl;
         }, 2000);
+        // We keep loading as true to prevent double clicks during the 2-second wait
       }
     } catch (err: any) {
       setError(err.message || "Gagal membuat akun.");
-    } finally {
       setLoading(false);
     }
   };

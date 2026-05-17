@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   Phone,
   KeyRound,
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import {
   resetPasswordByPhoneAction,
   checkPhoneExistsAction,
-} from "@/lib/actions/reset-password";
+} from "@/lib/actions/auth/reset-password";
 
 export function PemohonResetForm() {
   const router = useRouter();
@@ -88,7 +88,7 @@ export function PemohonResetForm() {
 
       <AnimatePresence mode="wait">
         {step === 1 ? (
-          <motion.div
+          <m.div
             key="step1"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -119,9 +119,9 @@ export function PemohonResetForm() {
               ) : null}
               Lanjutkan
             </Button>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.div
+          <m.div
             key="step2"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -185,7 +185,7 @@ export function PemohonResetForm() {
               ) : null}
               Update Password
             </Button>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

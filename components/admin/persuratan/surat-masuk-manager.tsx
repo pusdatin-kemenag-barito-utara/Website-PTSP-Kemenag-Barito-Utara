@@ -18,9 +18,10 @@ import {
   saveSuratMasukAction,
   deleteSuratMasukAction,
   getNextNomorSuratSuggestionAction,
-} from "@/lib/actions/admin-persuratan";
+} from "@/lib/actions/admin/admin-persuratan";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface SuratMasuk {
   id: string;
@@ -53,13 +54,6 @@ export function SuratMasukManager() {
   // Delete Confirmation State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // Toast Notification State
-  const [toast, setToast] = useState<{
-    show: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ show: false, message: "", type: "success" });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -178,24 +172,19 @@ export function SuratMasukManager() {
     setSubmitting(true);
     try {
       const result = await deleteSuratMasukAction(deletingId);
-      if (result?.error) {
-        showToast(result.error, "error");
-      } else {
+      if (result.success) {
+        toast.success(result.message || "Data surat berhasil dihapus");
         await fetchData();
         setShowDeleteConfirm(false);
         setDeletingId(null);
-        showToast("Data surat berhasil dihapus", "success");
+      } else {
+        toast.error(result.error || "Gagal menghapus data");
       }
     } catch (error) {
-      showToast("Gagal menghapus data", "error");
+      toast.error("Gagal menghapus data");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -208,18 +197,15 @@ export function SuratMasukManager() {
 
       const result = await saveSuratMasukAction(form);
 
-      if (result?.error) {
-        showToast(result.error, "error");
-      } else {
+      if (result.success) {
+        toast.success(result.message || "Data berhasil disimpan");
         await fetchData();
         setShowForm(false);
-        showToast(
-          editingId ? "Data berhasil diperbarui" : "Data berhasil disimpan",
-          "success",
-        );
+      } else {
+        toast.error(result.error || "Gagal menyimpan data");
       }
     } catch (error) {
-      showToast("Gagal menyimpan data", "error");
+      toast.error("Gagal menyimpan data");
     } finally {
       setSubmitting(false);
     }
@@ -275,7 +261,7 @@ export function SuratMasukManager() {
       {/* Advanced Filter Panel */}
       <AnimatePresence>
         {showFilters && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0, marginBottom: 0 }}
             animate={{ height: "auto", opacity: 1, marginBottom: 24 }}
             exit={{ height: 0, opacity: 0, marginBottom: 0 }}
@@ -311,7 +297,7 @@ export function SuratMasukManager() {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -683,31 +669,6 @@ export function SuratMasukManager() {
         </div>
       )}
 
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-8 fade-in duration-300">
-          <div
-            className={`px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${
-              toast.type === "success"
-                ? "bg-emerald-600 border-emerald-500 text-white"
-                : "bg-red-600 border-red-500 text-white"
-            }`}
-          >
-            {toast.type === "success" ? (
-              <div className="p-1 bg-white/20 rounded-full">
-                <ArrowDownLeft className="h-4 w-4 rotate-180" />
-              </div>
-            ) : (
-              <div className="p-1 bg-white/20 rounded-full">
-                <X className="h-4 w-4" />
-              </div>
-            )}
-            <span className="text-sm font-extrabold tracking-wide uppercase">
-              {toast.message}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

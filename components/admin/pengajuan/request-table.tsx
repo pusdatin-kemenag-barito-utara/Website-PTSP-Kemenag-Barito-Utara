@@ -60,13 +60,13 @@ export function AdminRequestTable({
               >
                 <td className="px-5 py-3.5">
                   <span className="font-mono text-xs font-semibold text-[#059669] bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
-                    {request.request_number}
+                    {request.requestNumber}
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
                   <div>
                     <p className="font-medium text-slate-900 text-sm">
-                      {request.profiles?.full_name || "-"}
+                      {request.profiles?.fullName || "-"}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {request.profiles?.email}
@@ -78,9 +78,9 @@ export function AdminRequestTable({
                     <p className="text-slate-700 font-medium text-sm">
                       {request.services?.name}
                     </p>
-                    {request.service_items?.name && (
+                    {request.serviceItems?.name && (
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {request.service_items?.name}
+                        {request.serviceItems?.name}
                       </p>
                     )}
                   </div>
@@ -89,7 +89,7 @@ export function AdminRequestTable({
                   <StatusBadge status={request.status} />
                 </td>
                 <td className="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
-                  {formatDate(request.created_at)}
+                  {formatDate(request.createdAt)}
                 </td>
                 <td className="px-5 py-3.5 text-right">
                   <Link

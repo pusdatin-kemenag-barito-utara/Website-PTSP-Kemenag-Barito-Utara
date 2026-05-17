@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,14 +30,14 @@ export function AddEditRequirementModal({
     <AnimatePresence>
       {(isOpen || editingRequirement) && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -59,10 +59,10 @@ export function AddEditRequirementModal({
             <form onSubmit={onSubmit} className="p-6 space-y-5">
               <Field label="Item Layanan" required>
                 <Select
-                  name="service_item_id"
-                  value={formData.service_item_id}
+                  name="serviceItemId"
+                  value={formData.serviceItemId}
                   onChange={(e) =>
-                    onChangeFormData({ service_item_id: e.target.value })
+                    onChangeFormData({ serviceItemId: e.target.value })
                   }
                   required
                   className="font-medium"
@@ -82,10 +82,10 @@ export function AddEditRequirementModal({
                 hint="Nama dokumen yang harus diupload (misal: Kartu Keluarga)"
               >
                 <Input
-                  name="document_name"
-                  value={formData.document_name}
+                  name="documentName"
+                  value={formData.documentName}
                   onChange={(e) =>
-                    onChangeFormData({ document_name: e.target.value })
+                    onChangeFormData({ documentName: e.target.value })
                   }
                   required
                   placeholder="Contoh: KTP Asli"
@@ -122,8 +122,8 @@ export function AddEditRequirementModal({
                       "xls",
                       "xlsx",
                     ].map((ext) => {
-                      const currentExts = formData.allowed_extensions
-                        ? formData.allowed_extensions
+                      const currentExts = formData.allowedExtensions
+                        ? formData.allowedExtensions
                             .split(",")
                             .map((e: string) => e.trim())
                         : [];
@@ -152,11 +152,11 @@ export function AddEditRequirementModal({
                 <Field label="Maksimal Ukuran File (MB)" required>
                   <Input
                     type="number"
-                    name="max_file_size_mb"
-                    value={formData.max_file_size_mb}
+                    name="maxFileSizeMb"
+                    value={formData.maxFileSizeMb}
                     onChange={(e) =>
                       onChangeFormData({
-                        max_file_size_mb: parseInt(e.target.value) || 1,
+                        maxFileSizeMb: parseInt(e.target.value) || 1,
                       })
                     }
                     required
@@ -169,9 +169,9 @@ export function AddEditRequirementModal({
                   <div className="flex items-center justify-center">
                     <input
                       type="checkbox"
-                      checked={formData.is_required}
+                      checked={formData.isRequired}
                       onChange={(e) =>
-                        onChangeFormData({ is_required: e.target.checked })
+                        onChangeFormData({ isRequired: e.target.checked })
                       }
                       className="peer sr-only"
                     />
@@ -211,7 +211,7 @@ export function AddEditRequirementModal({
                 </button>
               </div>
             </form>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

@@ -6,17 +6,17 @@ import { ActivityLogActions } from "./activity-log-actions";
 
 export function HistoryTimelineCard({ request }: { request: any }) {
   const combined = [
-    ...(request.service_request_reviews || []).map((r: any) => ({
+    ...(request.serviceRequestReviews || []).map((r: any) => ({
       ...r,
       type: "review",
     })),
-    ...(request.activity_logs || []).map((l: any) => ({
+    ...(request.activityLogs || []).map((l: any) => ({
       ...l,
       type: "log",
     })),
   ].sort(
     (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   return (
@@ -57,7 +57,7 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                       </span>
                     )}
                     <span className="text-[10px] font-bold text-slate-400">
-                      {formatDate(item.created_at)}
+                      {formatDate(item.createdAt)}
                     </span>
                   </div>
 
@@ -72,7 +72,7 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                       </p>
                       <p className="mt-2 text-[10px] font-bold text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
                         <User className="h-3 w-3" />
-                        Oleh: {item.profiles?.full_name || "-"}
+                        Oleh: {item.profiles?.fullName || "-"}
                       </p>
                     </>
                   ) : (
@@ -80,9 +80,9 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                       <p className="text-sm font-bold text-slate-800">
                         {item.action}
                       </p>
-                      <ActivityLogActions 
+                      <ActivityLogActions
                         logId={item.id.toString()}
-                        requestId={item.request_id}
+                        requestId={item.requestId}
                         initialNotes={item.notes}
                       />
                     </>

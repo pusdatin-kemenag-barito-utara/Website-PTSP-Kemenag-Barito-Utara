@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   X,
   Check,
@@ -19,7 +19,7 @@ import {
   Database,
 } from "lucide-react";
 import { toast } from "sonner";
-import { updateUserPermissionsAction } from "@/lib/actions/user-permissions";
+import { updateUserPermissionsAction } from "@/lib/actions/user/user-permissions";
 import { DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
 
 const MENU_GROUPS = [
@@ -95,7 +95,7 @@ export function UserPermissionsModal({
         toast.error("Gagal menyimpan hak akses", { description: result.error });
       } else {
         toast.success("Hak Akses Diperbarui!", {
-          description: `Hak akses untuk ${user.full_name || user.email} telah disimpan.`,
+          description: `Hak akses untuk ${user.fullName || user.email} telah disimpan.`,
         });
         onSave(user.id, permissions);
         onClose();
@@ -105,14 +105,14 @@ export function UserPermissionsModal({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
       >
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -130,7 +130,7 @@ export function UserPermissionsModal({
                   Pengaturan Izin
                 </h3>
                 <p className="text-sm text-slate-500 font-bold">
-                  {user.full_name || user.email}
+                  {user.fullName || user.email}
                 </p>
               </div>
             </div>
@@ -198,7 +198,7 @@ export function UserPermissionsModal({
                           <div
                             className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${isChecked ? "bg-[#059669]" : "bg-slate-200"}`}
                           >
-                            <motion.div
+                            <m.div
                               animate={{ x: isChecked ? 20 : 2 }}
                               transition={{
                                 type: "spring",
@@ -239,8 +239,8 @@ export function UserPermissionsModal({
               Simpan Hak Akses
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

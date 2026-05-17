@@ -1,12 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { updateRequestStatusAction } from "@/lib/actions/admin-requests";
+import { updateRequestStatusAction } from "@/lib/actions/admin/admin-requests";
 import { DeleteRequestButton } from "@/components/admin/delete-request-button";
 import { MessageSquare, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,24 +19,30 @@ export function ReviewActionCard({
   adminProfile: any;
 }) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (formData: FormData) => {
     startTransition(async () => {
       try {
-        await updateRequestStatusAction(formData);
-        toast.success("Keputusan berhasil disimpan");
-        router.refresh();
+        const result = await updateRequestStatusAction(formData);
+        if (result.success) {
+          toast.success(result.message || "Keputusan berhasil disimpan");
+          formRef.current?.reset();
+          router.refresh();
+        } else {
+          toast.error(result.error || "Gagal menyimpan keputusan");
+        }
       } catch (error: any) {
-        toast.error("Gagal menyimpan keputusan: " + error.message);
+        toast.error("Terjadi kesalahan sistem: " + error.message);
       }
     });
   };
 
   return (
     <Card title="Aksi Review" icon={MessageSquare}>
-      <form action={handleSubmit} className="space-y-5">
-        <input type="hidden" name="request_id" value={request.id} />
+      <form ref={formRef} action={handleSubmit} className="space-y-5">
+        <input type="hidden" name="requestId" value={request.id} />
         <div className="space-y-4">
           <Field label="Status Keputusan">
             <div className="relative">
@@ -51,6 +57,7 @@ export function ReviewActionCard({
                 <option value="rejected">❌ Ditolak</option>
                 <option value="approved">✅ Disetujui</option>
                 <option value="completed">🎉 Selesai</option>
+                <option value="spam">🚮 Spam / Palsu</option>
               </select>
             </div>
           </Field>
@@ -60,7 +67,7 @@ export function ReviewActionCard({
               <input
                 type="text"
                 disabled
-                value={adminProfile.full_name || adminProfile.email}
+                value={adminProfile.fullName || adminProfile.email}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-3 text-sm font-bold text-slate-500 cursor-not-allowed outline-none"
               />
             </div>
@@ -71,15 +78,12 @@ export function ReviewActionCard({
           >
             <Textarea
               name="notes"
-              defaultValue={
-                request.revision_note || request.rejection_reason || ""
-              }
               className="min-h-[100px] rounded-xl border-slate-300 focus:border-[#059669] focus:ring-[#059669]/20 text-sm shadow-sm"
               placeholder="Tuliskan catatan di sini..."
             />
           </Field>
         </div>
-        <Button 
+        <Button
           disabled={isPending}
           className="w-full h-12 rounded-xl text-sm font-bold bg-gradient-to-r from-[#059669] to-[#047857] hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98] disabled:opacity-70"
         >

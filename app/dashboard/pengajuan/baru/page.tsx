@@ -9,9 +9,7 @@ export default async function NewRequestPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <Card className="border-slate-200 p-2 sm:p-5 shadow-sm">
-        <NewRequestForm catalog={catalog} />
-      </Card>
+      <NewRequestForm catalog={catalog} />
     </div>
   );
 }

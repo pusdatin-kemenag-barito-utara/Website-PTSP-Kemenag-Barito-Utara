@@ -1,7 +1,14 @@
 import { requireAdmin } from "@/lib/auth";
-import prisma, { serializeBigInt } from "@/lib/prisma";
+import { db, serializeBigInt } from "@/lib/db";
+import {
+  serviceRequests as serviceRequestsTable,
+  services as servicesTable,
+  profiles as profilesTable,
+  generatedDocuments as generatedDocumentsTable,
+  serviceItems as serviceItemsTable,
+} from "@/lib/db/schema";
+import { eq, and, or, ilike, sql, desc, asc } from "drizzle-orm";
 import { DokumenHasilClient } from "@/components/admin/dokumen-hasil/dokumen-hasil-client";
-import { getDrivePreviewUrl } from "@/lib/google-drive";
 import { AdminPagination } from "@/components/admin/pengajuan/admin-pagination";
 import { ReportExportButton } from "@/components/admin/report-export-button";
 import { getR2SignedUrl } from "@/lib/r2";
@@ -10,12 +17,6 @@ import { FileOutput } from "lucide-react";
 
 async function getSignedUrl(path?: string | null) {
   if (!path) return null;
-
-  // Handle Google Drive links
-  if (path.startsWith("gdrive:")) {
-    const fileId = path.replace("gdrive:", "");
-    return getDrivePreviewUrl(fileId);
-  }
 
   // Handle Cloudflare R2 links
   if (path.startsWith("r2:") || path.startsWith("results/")) {
@@ -30,76 +31,94 @@ async function getSignedUrl(path?: string | null) {
   return path;
 }
 
+import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
+
 export default async function AdminGeneratedDocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; service_id?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; serviceId?: string; page?: string }>;
 }) {
-  await requireAdmin();
-  const { q = "", service_id = "", page = "1" } = await searchParams;
+  const profile = await requireAdmin();
+  const isSuper = isSuperAdmin(profile.email);
+  const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+  const isGeneralAdmin = specificRole === "admin_ptsp";
+
+  const roleOwnerFilter = isSuper || isGeneralAdmin ? undefined : specificRole;
+
+  const { q = "", serviceId = "", page = "1" } = await searchParams;
 
   const currentPage = Math.max(1, parseInt(page));
   const pageSize = 20;
-  const skip = (currentPage - 1) * pageSize;
+  const offset = (currentPage - 1) * pageSize;
 
-  const where: any = {
-    // Only show requests that have a generated document
-    generated_documents: { isNot: null },
-  };
+  const filters = [
+    sql`EXISTS (SELECT 1 FROM generated_documents WHERE generated_documents.request_id = ${serviceRequestsTable.id})`,
+  ];
 
-  if (service_id) {
-    where.service_id = BigInt(service_id);
+  if (roleOwnerFilter) {
+    filters.push(
+      sql`EXISTS (SELECT 1 FROM ${servicesTable} WHERE ${servicesTable.id} = ${serviceRequestsTable.serviceId} AND ${servicesTable.roleOwner} = ${roleOwnerFilter})`
+    );
+  }
+
+  if (serviceId) {
+    filters.push(eq(serviceRequestsTable.serviceId, BigInt(serviceId)));
   }
 
   if (q) {
-    where.OR = [
-      { request_number: { contains: q, mode: "insensitive" } },
-      { profiles: { full_name: { contains: q, mode: "insensitive" } } },
-    ];
+    const qFilter = `%${q}%`;
+    filters.push(
+      or(
+        ilike(serviceRequestsTable.requestNumber, qFilter),
+        sql`EXISTS (SELECT 1 FROM profiles WHERE profiles.id = ${serviceRequestsTable.userId} AND profiles.full_name ILIKE ${qFilter})`,
+      ) as any,
+    );
   }
 
+  const whereClause = and(...filters);
+
   // Fetch data and count in parallel
-  const [rawRequests, totalCount] = await Promise.all([
-    prisma.service_requests.findMany({
-      where,
-      select: {
-        id: true,
-        request_number: true,
-        status: true,
-        created_at: true,
+  const [rawRequests, [{ count: totalCount }]] = await Promise.all([
+    db.query.serviceRequests.findMany({
+      where: whereClause,
+      with: {
         profiles: {
-          select: { full_name: true },
+          columns: { fullName: true },
         },
         services: {
-          select: { id: true, name: true },
+          columns: { id: true, name: true },
         },
-        service_items: {
-          select: { name: true },
+        serviceItems: {
+          columns: { name: true },
         },
-        generated_documents: true,
+        generatedDocuments: true,
       },
-      orderBy: { created_at: "desc" },
-      skip,
-      take: pageSize,
+      orderBy: [desc(serviceRequestsTable.createdAt)],
+      limit: pageSize,
+      offset: offset,
     }),
-    prisma.service_requests.count({ where }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(serviceRequestsTable)
+      .where(whereClause),
   ]);
 
   // Fetch list of services for the filter dropdown
-  const rawServices = await prisma.services.findMany({
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
+  const rawServices = await db.query.services.findMany({
+    columns: { id: true, name: true },
+    where: roleOwnerFilter ? eq(servicesTable.roleOwner, roleOwnerFilter as any) : undefined,
+    orderBy: [asc(servicesTable.name)],
   });
 
   const requests = serializeBigInt(rawRequests);
   const services = serializeBigInt(rawServices);
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = Math.ceil(Number(totalCount) / pageSize);
 
   // Generate signed URLs for existing documents
   const urlEntries = await Promise.all(
     requests.map(async (request: any) => ({
       id: request.id,
-      url: await getSignedUrl(request.generated_documents?.file_path),
+      url: await getSignedUrl(request.generatedDocuments?.[0]?.filePath),
     })),
   );
 
@@ -116,7 +135,7 @@ export default async function AdminGeneratedDocumentsPage({
         actions={
           <ReportExportButton
             type="documents"
-            where={where}
+            where={{ q, serviceId }}
             fileName="Laporan_Dokumen_Hasil_PTSP"
           />
         }
@@ -128,14 +147,14 @@ export default async function AdminGeneratedDocumentsPage({
           urlMap={urlMap}
           services={services || []}
           q={q}
-          service_id={service_id}
+          serviceId={serviceId}
         />
 
         {totalPages > 1 && (
           <AdminPagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalCount={totalCount}
+            totalCount={Number(totalCount)}
           />
         )}
       </div>

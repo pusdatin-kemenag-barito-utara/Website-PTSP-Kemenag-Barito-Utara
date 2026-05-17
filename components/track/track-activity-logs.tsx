@@ -19,8 +19,8 @@ export function TrackActivityLogs({ logs }: { logs: any[] }) {
         {logs
           .sort(
             (a: any, b: any) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime(),
+              new Date(b.createdAt).getTime() -
+              new Date(a.createdAt).getTime(),
           )
           .map((log: any) => (
             <div key={log.id} className="relative pl-6">
@@ -28,7 +28,7 @@ export function TrackActivityLogs({ logs }: { logs: any[] }) {
               <div>
                 <p className="text-sm font-bold text-slate-900">{log.action}</p>
                 <p className="mt-0.5 text-[11px] font-semibold text-slate-400">
-                  {formatDate(log.created_at)}
+                  {formatDate(log.createdAt)}
                 </p>
                 {log.notes && (
                   <p className="mt-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
