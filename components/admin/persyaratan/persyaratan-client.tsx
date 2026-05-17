@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useTransition, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
