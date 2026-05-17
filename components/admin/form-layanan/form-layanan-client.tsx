@@ -24,7 +24,7 @@ export function FormLayananClient({
   items: any[];
 }) {
   const [fields, setFields] = useState(
-    [...initialFields].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    [...initialFields].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
   );
   const [isPending, startTransition] = useTransition();
 
@@ -264,4 +264,3 @@ export function FormLayananClient({
     </div>
   );
 }
-

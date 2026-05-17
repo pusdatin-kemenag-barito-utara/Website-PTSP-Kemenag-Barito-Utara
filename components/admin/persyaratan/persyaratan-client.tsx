@@ -22,7 +22,9 @@ export function PersyaratanClient({
   items: any[];
 }) {
   const [requirements, setRequirements] = useState(
-    [...initialRequirements].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    [...initialRequirements].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
+    ),
   );
   const [isPending, startTransition] = useTransition();
 
@@ -263,5 +265,3 @@ export function PersyaratanClient({
     </div>
   );
 }
-
-
