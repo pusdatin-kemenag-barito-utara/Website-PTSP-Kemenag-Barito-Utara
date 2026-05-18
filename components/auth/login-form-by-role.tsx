@@ -2,12 +2,12 @@
 
 import {
   getEmailByPhoneAction,
-  verifyRecaptchaAction,
+  verifyTurnstileAction,
 } from "@/lib/actions/auth/login-helper";
 import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
-import ReCAPTCHA from "react-google-recaptcha";
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { isAdminRole } from "@/lib/constants";
 
 // Local Components
-import { LoginRecaptcha } from "./_components/login-recaptcha";
+import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
 type LoginRoleMode = "pemohon" | "petugas";
 
@@ -37,8 +37,8 @@ export function LoginFormByRole({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -79,21 +79,19 @@ export function LoginFormByRole({
       return;
     }
 
-    if (mode === "petugas") {
-      if (!recaptchaToken) {
-        setLoading(false);
-        setError("Silakan selesaikan reCAPTCHA untuk verifikasi keamanan.");
-        return;
-      }
+    if (!turnstileToken) {
+      setLoading(false);
+      setError("Silakan selesaikan verifikasi keamanan.");
+      return;
+    }
 
-      const verifyResult = await verifyRecaptchaAction(recaptchaToken);
-      if (!verifyResult.success) {
-        setLoading(false);
-        setError(verifyResult.error || "Verifikasi reCAPTCHA gagal. Silakan coba lagi.");
-        recaptchaRef.current?.reset();
-        setRecaptchaToken(null);
-        return;
-      }
+    const verifyResult = await verifyTurnstileAction(turnstileToken);
+    if (!verifyResult.success) {
+      setLoading(false);
+      setError(verifyResult.error || "Verifikasi keamanan gagal. Silakan coba lagi.");
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
+      return;
     }
 
     try {
@@ -160,7 +158,22 @@ export function LoginFormByRole({
         </Field>
       )}
 
-      <Field label="Password" required>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="block text-sm font-medium text-slate-700">
+            Password <span className="text-red-500">*</span>
+          </span>
+          <Link
+            href="/forgot-password"
+            className={`text-xs font-bold hover:underline transition-colors ${
+              mode === "petugas"
+                ? "text-[#0f8a54] hover:text-[#0b7446]"
+                : "text-[#059669] hover:text-[#047857]"
+            }`}
+          >
+            Lupa password?
+          </Link>
+        </div>
         <div className="relative">
           <Input
             type={showPassword ? "text" : "password"}
@@ -177,22 +190,19 @@ export function LoginFormByRole({
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-      </Field>
+      </div>
 
-      {mode === "petugas" && (
-        <LoginRecaptcha
-          mounted={mounted}
-          recaptchaRef={recaptchaRef}
-          recaptchaToken={recaptchaToken}
-          onTokenChange={setRecaptchaToken}
-        />
-      )}
+      <LoginTurnstile
+        mounted={mounted}
+        ref={turnstileRef}
+        onTokenChange={setTurnstileToken}
+      />
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <Button
         className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]!" : "bg-[#059669]! hover:bg-[#047857]!"}`}
-        disabled={loading || (mode === "petugas" && !recaptchaToken)}
+        disabled={loading || !turnstileToken}
       >
         {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : "Masuk Sebagai Pemohon"}
       </Button>

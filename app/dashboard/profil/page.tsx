@@ -1,31 +1,38 @@
 import { requireAuth } from "@/lib/auth";
-import { Card } from "@/components/ui/card";
 import { ProfileForm } from "@/components/user/profile-form";
+import { User } from "lucide-react";
 
 export default async function ProfilePage() {
   const profile = await requireAuth();
 
   return (
-    <div className="space-y-5 md:space-y-7">
-      <section className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8 shadow-sm border border-slate-200">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#059669] to-[#0f8a54]"></div>
+    <div className="space-y-6 md:space-y-8">
+      {/* Premium Glassmorphic Header */}
+      <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-[#064e3b] via-[#059669] to-[#047857] p-6 sm:p-8 md:p-12 shadow-[0_20px_50px_-20px_rgba(4,120,87,0.4)]">
+        {/* Decorative backdrop glow */}
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" />
+        
         <div className="relative">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#059669]">
-            👤 Pengaturan Akun
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-4 py-1.5 backdrop-blur-md">
+            <User className="h-3.5 w-3.5 text-emerald-300" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
+              Pengaturan Akun
+            </span>
           </div>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h1 className="mt-6 text-3xl sm:text-4xl font-black text-white md:text-5xl tracking-tighter">
             Profil Saya
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-500 sm:text-base max-w-xl">
-            Perbarui data pribadi Anda untuk memastikan semua informasi pada
-            dokumen layanan nantinya akurat.
+          <p className="mt-4 text-sm font-medium text-emerald-50/70 max-w-xl leading-relaxed">
+            Perbarui data pribadi Anda untuk memastikan semua informasi pada dokumen layanan nantinya akurat.
           </p>
         </div>
       </section>
 
-      <Card className="border-slate-200 p-2 sm:p-4">
+      {/* Premium Form Container */}
+      <div className="rounded-[2rem] border border-slate-100 bg-white p-6 sm:p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
         <ProfileForm profile={profile} />
-      </Card>
+      </div>
     </div>
   );
 }

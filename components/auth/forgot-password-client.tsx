@@ -27,22 +27,23 @@ export function ForgotPasswordClient() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="bg-white rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden"
+            className="relative overflow-hidden rounded-[2.5rem] bg-white/95 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-white/20"
           >
-            {/* Form Header */}
-            <div
-              className={`h-1.5 w-full ${
-                role === "user" ? "bg-emerald-500" : "bg-[#059669]"
-              }`}
-            />
+            {/* Form Header Line */}
+            <div className="absolute left-0 top-0 h-2 w-full bg-gradient-to-r from-[#0f8a54] via-[#14b870] to-[#0f8a54]" />
 
-            <div className="p-8">
-              <button
-                onClick={resetAll}
-                className="mb-6 flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> Kembali
-              </button>
+            <div className="p-8 pt-10">
+              <div className="flex items-center justify-between mb-8">
+                <button
+                  onClick={resetAll}
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-[#0f8a54] transition-colors"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Kembali
+                </button>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#0f8a54] bg-emerald-50 px-3 py-1 rounded-full">
+                  {role === "user" ? "Pemohon" : "Petugas"}
+                </span>
+              </div>
 
               {role === "user" ? <PemohonResetForm /> : <PetugasResetForm />}
             </div>

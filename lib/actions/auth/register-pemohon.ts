@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { AuthService } from "@/lib/services/auth-service";
+import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 
 export type ActionResult = {
   success: boolean;
@@ -18,6 +19,12 @@ const RegisterSchema = z.object({
 
 export async function registerPemohonAction(formData: FormData): Promise<ActionResult> {
   try {
+    const turnstileToken = String(formData.get("turnstile_token") || "");
+    const verifyRes = await verifyTurnstileAction(turnstileToken);
+    if (!verifyRes.success) {
+      return { success: false, error: "Verifikasi keamanan gagal. Silakan coba lagi." };
+    }
+
     const validated = RegisterSchema.safeParse({
       fullName: formData.get("full_name"),
       phone: formData.get("phone"),

@@ -35,6 +35,8 @@ export const DEFAULT_ADMIN_PERMISSIONS = [
   "dokumen_hasil",
   "surat_masuk",
   "surat_keluar",
+  "buku_tamu",
+  "janji_temu",
 ];
 
 /**
@@ -48,6 +50,8 @@ export const ALL_ADMIN_MENUS = [
   "dokumen_hasil",
   "surat_masuk",
   "surat_keluar",
+  "buku_tamu",
+  "janji_temu",
   "log_audit",
   "pemeliharaan_storage",
 ];

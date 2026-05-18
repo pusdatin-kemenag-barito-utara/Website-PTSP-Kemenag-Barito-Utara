@@ -1,0 +1,202 @@
+"use client";
+
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { GuestEntry } from "./types";
+import { formatDate, maskPhoneNumber, formatDateHeading } from "./utils";
+
+interface GuestBookListProps {
+  entries: GuestEntry[];
+  statsDate: string;
+  onSwitchTab: (tab: "form" | "list" | "stats") => void;
+}
+
+export default function GuestBookList({ entries, statsDate, onSwitchTab }: GuestBookListProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredEntries = entries.filter((entry) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      entry.guestName.toLowerCase().includes(query) ||
+      entry.whatsapp.includes(query) ||
+      (entry.institutionName || "").toLowerCase().includes(query) ||
+      entry.institutionType.toLowerCase().includes(query) ||
+      entry.intendedOfficer.toLowerCase().includes(query) ||
+      entry.purpose.toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Breadcrumb */}
+      <div className="mb-6 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400">
+        <button onClick={() => onSwitchTab("form")} className="hover:text-emerald-600 transition-colors">
+          Buku Tamu
+        </button>
+        <span className="text-slate-300">/</span>
+        <button onClick={() => onSwitchTab("list")} className="text-emerald-600 font-bold">
+          Daftar Tamu
+        </button>
+        <span className="text-slate-300">/</span>
+        <button onClick={() => onSwitchTab("stats")} className="hover:text-emerald-600 transition-colors flex items-center gap-1">
+          Statistik Tamu 📊
+        </button>
+      </div>
+
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-800">
+            Daftar Kunjungan Tamu
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Berikut adalah riwayat kunjungan tamu di Kantor Kemenag Barito Utara.
+          </p>
+        </div>
+
+        {/* Search Box */}
+        <div className="relative w-full max-w-sm">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search className="h-4.5 w-4.5 text-slate-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Cari nama, instansi, atau keperluan..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white/70 py-2.5 pl-10 pr-4 text-sm text-slate-800 placeholder-slate-400 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+      </div>
+
+      {/* Date Heading Banner */}
+      <div className="mb-4 text-center md:text-left">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50/80 px-4 py-2.5 rounded-xl border border-emerald-100/50 inline-block">
+          Daftar Tamu Tanggal {formatDateHeading(statsDate)}
+        </h3>
+      </div>
+
+      {/* Empty State */}
+      {filteredEntries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-slate-800">
+            Tidak Ada Data Kunjungan
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {searchQuery ? "Tidak ada hasil pencarian yang cocok." : "Belum ada tamu yang terdaftar hari ini."}
+          </p>
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="mt-4 text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+              Reset Pencarian
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* DESKTOP VIEW: Table */}
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-100 bg-white/50 md:block">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200/80 bg-slate-50/70 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-4">Tamu / WhatsApp</th>
+                  <th className="px-6 py-4">Instansi</th>
+                  <th className="px-6 py-4">Tujuan / Pejabat</th>
+                  <th className="px-6 py-4">Keperluan</th>
+                  <th className="px-6 py-4 text-right">Waktu</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+                {filteredEntries.map((entry) => (
+                  <tr key={entry.id} className="transition-colors hover:bg-slate-50/50">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-slate-900">{entry.guestName}</div>
+                      <div className="mt-0.5 flex items-center gap-1.5 text-xs text-emerald-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                          <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 0 0 1.333 4.978L2 22l5.19-1.354a9.92 9.92 0 0 0 4.82 1.354h.005c5.507 0 9.99-4.478 9.99-9.984A9.99 9.99 0 0 0 12.012 2Zm4.87 14.153c-.27.756-1.38 1.488-1.9 1.554-.51.066-1.02.324-3.23-.58-2.67-1.09-4.38-3.8-4.51-3.98a5.27 5.27 0 0 1-1.12-2.83 3.09 3.09 0 0 1 1-2.31c.14-.14.28-.21.41-.21h.33c.1 0 .23 0 .36.3.13.33.47 1.15.51 1.24a.32.32 0 0 1 .02.3c-.08.16-.18.26-.3.4l-.38.45c-.12.13-.25.27-.1.53.15.25.66 1.09 1.42 1.76.98.87 1.8 1.14 2.06 1.27.26.13.41.11.56-.06.15-.17.66-.76.84-.96.18-.2.36-.16.6-.08l1.52.75c.24.12.4.18.46.28.06.1.06.6-.21 1.35Z" />
+                        </svg>
+                        <a href={`https://wa.me/${entry.whatsapp}`} target="_blank" rel="noreferrer" className="hover:underline font-medium">
+                          {maskPhoneNumber(entry.whatsapp)}
+                        </a>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-800">
+                        {entry.institutionType}
+                      </span>
+                      {entry.institutionName && (
+                        <div className="mt-1 text-xs font-medium text-slate-500">
+                          {entry.institutionName}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-slate-900">{entry.intendedOfficer}</div>
+                    </td>
+                    <td className="px-6 py-4 max-w-xs truncate" title={entry.purpose}>
+                      <div className="text-slate-600 line-clamp-2">{entry.purpose}</div>
+                    </td>
+                    <td className="px-6 py-4 text-right text-xs text-slate-500 whitespace-nowrap">
+                      {formatDate(entry.visitDate)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* MOBILE VIEW: Grid */}
+          <div className="grid gap-4 sm:grid-cols-2 md:hidden">
+            {filteredEntries.map((entry) => (
+              <div key={entry.id} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/30 bg-white/70 p-5 shadow-md transition-all duration-300 hover:shadow-lg hover:border-emerald-500/20">
+                <div className="absolute right-0 top-0 rounded-bl-xl bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                  {entry.institutionType}
+                </div>
+
+                <div className="space-y-3.5">
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-base">{entry.guestName}</h4>
+                    <a href={`https://wa.me/${entry.whatsapp}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-emerald-600 hover:underline">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 0 0 1.333 4.978L2 22l5.19-1.354a9.92 9.92 0 0 0 4.82 1.354h.005c5.507 0 9.99-4.478 9.99-9.984A9.99 9.99 0 0 0 12.012 2Zm4.87 14.153c-.27.756-1.38 1.488-1.9 1.554-.51.066-1.02.324-3.23-.58-2.67-1.09-4.38-3.8-4.51-3.98a5.27 5.27 0 0 1-1.12-2.83 3.09 3.09 0 0 1 1-2.31c.14-.14.28-.21.41-.21h.33c.1 0 .23 0 .36.3.13.33.47 1.15.51 1.24a.32.32 0 0 1 .02.3c-.08.16-.18.26-.3.4l-.38.45c-.12.13-.25.27-.1.53.15.25.66 1.09 1.42 1.76.98.87 1.8 1.14 2.06 1.27.26.13.41.11.56-.06.15-.17.66-.76.84-.96.18-.2.36-.16.6-.08l1.52.75c.24.12.4.18.46.28.06.1.06.6-.21 1.35Z" />
+                      </svg>
+                      {maskPhoneNumber(entry.whatsapp)}
+                    </a>
+                  </div>
+
+                  <div className="space-y-1 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                    {entry.institutionName && (
+                      <div className="text-xs text-slate-600">
+                        <span className="font-medium text-slate-500">Instansi: </span>
+                        {entry.institutionName}
+                      </div>
+                    )}
+                    <div className="text-xs text-slate-600">
+                      <span className="font-medium text-slate-500">Menemui: </span>
+                      <span className="font-semibold text-slate-800">{entry.intendedOfficer}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs">
+                    <span className="font-semibold text-slate-700">Keperluan: </span>
+                    <p className="mt-1 text-slate-600 line-clamp-3 bg-white/60 p-2.5 rounded-lg border border-slate-100/50">
+                      {entry.purpose}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                  <span>Buku Tamu PTSP</span>
+                  <span>{formatDate(entry.visitDate)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

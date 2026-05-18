@@ -24,20 +24,30 @@ export async function getEmailByPhoneAction(phone: string) {
   return { email: profile.email };
 }
 
-export async function verifyRecaptchaAction(token: string) {
+export async function verifyTurnstileAction(token: string) {
   if (!token)
-    return { success: false, error: "Token reCAPTCHA tidak ditemukan." };
+    return { success: false, error: "Token keamanan tidak ditemukan." };
 
   try {
     const response = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
-      { method: "POST" },
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET_KEY || "",
+          response: token,
+        }),
+      }
     );
 
     const data = await response.json();
     return { success: data.success };
   } catch (err) {
-    console.error("reCAPTCHA verify error:", err);
-    return { success: false, error: "Gagal memverifikasi reCAPTCHA." };
+    console.error("Turnstile verify error:", err);
+    return { success: false, error: "Gagal memverifikasi keamanan." };
   }
 }
+

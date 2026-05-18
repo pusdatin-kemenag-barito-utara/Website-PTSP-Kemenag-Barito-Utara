@@ -5,9 +5,15 @@ import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 
-export async function checkPhoneExistsAction(phone: string) {
+export async function checkPhoneExistsAction(phone: string, token: string) {
   if (!phone) return { error: "Nomor HP wajib diisi." };
+
+  const verifyRes = await verifyTurnstileAction(token);
+  if (!verifyRes.success) {
+    return { error: "Verifikasi keamanan gagal. Silakan coba lagi." };
+  }
 
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.phone, phone),
@@ -19,6 +25,31 @@ export async function checkPhoneExistsAction(phone: string) {
   }
   return { exists: true };
 }
+
+export async function checkEmailExistsAction(email: string, token: string) {
+  if (!email) return { error: "Email wajib diisi." };
+
+  const verifyRes = await verifyTurnstileAction(token);
+  if (!verifyRes.success) {
+    return { error: "Verifikasi keamanan gagal. Silakan coba lagi." };
+  }
+
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.email, email),
+    columns: { id: true, role: true },
+  });
+
+  if (!profile) {
+    return { error: "Email tidak terdaftar sebagai petugas." };
+  }
+
+  if (profile.role === "user") {
+    return { error: "Email ini terdaftar sebagai Pemohon. Silakan hubungi admin atau gunakan Lupa Password Pemohon." };
+  }
+
+  return { success: true };
+}
+
 
 export async function resetPasswordByPhoneAction(
   phone: string,

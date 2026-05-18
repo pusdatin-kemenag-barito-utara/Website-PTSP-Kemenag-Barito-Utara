@@ -23,12 +23,29 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
         {fields
           .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
           .map((field: any) => {
+            const handleInvalid = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+              const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+              if (field.type === "select") {
+                target.setCustomValidity("Silakan pilih salah satu opsi dari daftar.");
+              } else {
+                target.setCustomValidity(`Harap isi kolom ${field.label} terlebih dahulu.`);
+              }
+            };
+
+            const handleInput = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+              const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+              target.setCustomValidity("");
+            };
+
             const common = {
               name: `answer_${field.id}`,
               required: field.isRequired,
               placeholder: field.placeholder || "",
+              onInvalid: handleInvalid,
+              onInput: handleInput,
+              onChange: handleInput,
             };
-
+ 
             return (
               <div
                 key={field.id}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
-import { ShieldCheck, ArrowLeft, RefreshCw } from "lucide-react";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 
 export default async function LoginPetugasPage({
@@ -62,38 +62,11 @@ export default async function LoginPetugasPage({
               mode="petugas"
               callbackUrl={callbackUrl as string}
             />
-
-            <div className="mt-10 flex flex-col gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-100" />
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
-                  <span className="bg-white px-4 font-black text-slate-300">
-                    Bantuan Akses
-                  </span>
-                </div>
-              </div>
-
-              <Link
-                href="/register/petugas"
-                className="group flex w-full items-center justify-center gap-2.5 rounded-2xl border border-slate-100 bg-slate-50/50 px-4 py-3.5 text-sm font-bold text-slate-600 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-[#0f8a54]"
-              >
-                Buat Akun Petugas Baru
-                <RefreshCw className="h-4 w-4 transition-transform group-hover:rotate-180 duration-500" />
-              </Link>
-            </div>
           </div>
 
           {/* Footer links */}
           <div className="bg-slate-50/50 px-8 py-6 text-center border-t border-slate-50">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-              <Link
-                href="/forgot-password"
-                className="hover:text-[#0f8a54] transition-colors"
-              >
-                Lupa Password?
-              </Link>
+            <div className="flex items-center justify-center text-xs font-bold uppercase tracking-wider text-slate-400">
               <Link
                 href={`/login/pemohon${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
                 className="flex items-center gap-2 hover:text-[#059669] transition-all hover:-translate-x-1"

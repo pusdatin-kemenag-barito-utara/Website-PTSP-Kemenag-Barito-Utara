@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,6 +8,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
 import { registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
 
@@ -24,12 +25,25 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const turnstileRef = useRef<TurnstileRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setMessage("");
     setLoading(true);
+
+    if (!turnstileToken) {
+      setLoading(false);
+      setError("Silakan selesaikan verifikasi keamanan.");
+      return;
+    }
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -38,6 +52,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
 
     // Replace the phone in formData with normalized one
     formData.set("phone", normalizedPhone);
+    formData.append("turnstile_token", turnstileToken);
 
     if (!normalizedPhone || normalizedPhone.length < 10) {
       setLoading(false);
@@ -61,10 +76,17 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
           window.location.href = loginUrl;
         }, 2000);
         // We keep loading as true to prevent double clicks during the 2-second wait
+      } else {
+        setError(result.error || "Gagal membuat akun.");
+        setLoading(false);
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
       }
     } catch (err: any) {
       setError(err.message || "Gagal membuat akun.");
       setLoading(false);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     }
   };
 
@@ -141,9 +163,15 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         </p>
       ) : null}
 
+      <LoginTurnstile
+        mounted={mounted}
+        ref={turnstileRef}
+        onTokenChange={setTurnstileToken}
+      />
+
       <Button
         className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"
-        disabled={loading}
+        disabled={loading || !turnstileToken}
       >
         {loading ? "Memproses..." : "Buat Akun"}
       </Button>

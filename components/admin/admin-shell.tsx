@@ -17,6 +17,8 @@ import {
   Send,
   History,
   Database,
+  BookOpen,
+  Calendar,
 } from "lucide-react";
 import { isSuperAdmin as checkSuperAdmin } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -61,6 +63,20 @@ const ADMIN_NAV: NavItem[] = [
     icon: FileText,
     group: "Master Data",
     id: "layanan",
+  },
+  {
+    label: "Buku Tamu",
+    href: "/admin/buku-tamu",
+    icon: BookOpen,
+    group: "Layanan Publik",
+    id: "buku_tamu",
+  },
+  {
+    label: "Janji Temu",
+    href: "/admin/janji-temu",
+    icon: Calendar,
+    group: "Layanan Publik",
+    id: "janji_temu",
   },
   {
     label: "Surat Masuk",

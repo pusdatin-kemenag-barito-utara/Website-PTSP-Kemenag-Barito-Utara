@@ -25,6 +25,7 @@ export default async function LoginPemohonPage({
           src="/kantor-kemenag.jpg"
           alt="Kantor Kemenag Barito Utara"
           fill
+          priority
           className="object-cover object-center opacity-20"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-[#059669]/95 via-[#047857]/95 to-[#064e3b]/95" />
@@ -90,10 +91,7 @@ export default async function LoginPemohonPage({
           
           {/* Footer links */}
           <div className="bg-slate-50 px-8 py-3 text-center text-sm border-t border-slate-100">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm font-medium text-slate-500">
-              <Link href="/forgot-password" className="hover:text-[#059669] hover:underline transition-colors">
-                Lupa password?
-              </Link>
+            <div className="flex items-center justify-center text-sm font-medium text-slate-500">
               <Link
                 href={`/login/petugas${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
                 className="flex items-center gap-1.5 hover:text-[#0f8a54] transition-colors"

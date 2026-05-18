@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
+import { checkEmailExistsAction } from "@/lib/actions/auth/reset-password";
 
 export function PetugasResetForm() {
   const router = useRouter();
@@ -14,11 +16,30 @@ export function PetugasResetForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [mounted, setMounted] = useState(false);
+  const turnstileRef = useRef<TurnstileRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleSendEmailLink = async () => {
     if (!email) return setError("Masukkan email petugas Anda.");
+    if (!turnstileToken) return setError("Silakan selesaikan verifikasi keamanan.");
     setLoading(true);
     setError("");
 
+    // 1. Verifikasi Turnstile dan Cek Keberadaan & Hak Akses Email Petugas
+    const checkRes = await checkEmailExistsAction(email, turnstileToken);
+    if (checkRes.error) {
+      setLoading(false);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
+      return setError(checkRes.error);
+    }
+
+    // 2. Kirim Link Reset Password melalui Supabase Auth
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
@@ -29,6 +50,8 @@ export function PetugasResetForm() {
 
     setLoading(false);
     if (resetError) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       setError(resetError.message);
     } else {
       toast.success("Email Terkirim!", {
@@ -66,10 +89,17 @@ export function PetugasResetForm() {
             <AlertCircle className="h-3.5 w-3.5" /> {error}
           </p>
         )}
+
+        <LoginTurnstile
+          mounted={mounted}
+          ref={turnstileRef}
+          onTokenChange={setTurnstileToken}
+        />
+
         <Button
           onClick={handleSendEmailLink}
-          disabled={loading}
-          className="w-full h-14 rounded-2xl bg-[#059669] hover:bg-[#047857] font-bold text-base shadow-lg shadow-emerald-500/20"
+          disabled={loading || !turnstileToken}
+          className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
           Kirim Link Reset

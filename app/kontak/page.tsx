@@ -1,21 +1,28 @@
-import { ContactHeader } from "@/components/contact/contact-header";
 import { ContactInfoCards } from "@/components/contact/contact-info-cards";
 import { ContactChannels } from "@/components/contact/contact-channels";
 import { ContactFaq } from "@/components/contact/contact-faq";
+import PageBanner from "@/components/common/PageBanner";
 
 export default function ContactPage() {
   return (
-    <div className="w-full overflow-hidden">
-      <ContactHeader />
+    <main className="min-h-screen bg-slate-50/50 pb-16">
+      <PageBanner
+        title="Hubungi Kami"
+        description="Silakan hubungi kami untuk pertanyaan terkait pengajuan layanan, dokumen persyaratan, atau kendala teknis pada portal PTSP. Kami siap melayani Anda sepenuh hati."
+        breadcrumb={[
+          { label: "Beranda", href: "/" },
+          { label: "Kontak" },
+        ]}
+        eyebrow="LAYANAN BANTUAN & SUPPORT"
+      />
 
-      {/* Main Content */}
-      <section className="relative -mt-16 mb-24 px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8">
         <div className="mx-auto w-full space-y-8">
           <ContactInfoCards />
           <ContactChannels />
           <ContactFaq />
         </div>
-      </section>
-    </div>
+      </div>
+    </main>
   );
 }

@@ -18,6 +18,8 @@ import {
   UserCircle2,
   Shield,
   Activity,
+  BookOpen,
+  Calendar,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { isAdminRole } from "@/lib/constants";
@@ -32,6 +34,8 @@ const navItems = [
   { label: "Beranda", href: "/", icon: Home },
   { label: "Jenis Layanan", href: "/layanan", icon: LayoutGrid },
   { label: "Lacak Layanan", href: "/track", icon: Search },
+  { label: "Janji Temu", href: "/janji-temu", icon: Calendar },
+  { label: "Buku Tamu", href: "/buku-tamu", icon: BookOpen },
   { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 

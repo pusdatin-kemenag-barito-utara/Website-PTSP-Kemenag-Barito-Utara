@@ -5,3 +5,5 @@ export * from "./requests";
 export * from "./logs";
 export * from "./notifications";
 export * from "./relations";
+export * from "./guest-book";
+export * from "./appointments";

@@ -4,9 +4,25 @@ import { db } from "@/lib/db";
 import { serviceRequests as serviceRequestsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getCurrentProfile } from "@/lib/auth";
+import { verifyTurnstileToken } from "@/lib/turnstile";
+import { headers } from "next/headers";
 
-export async function getPublicRequestStatus(query: string) {
+export async function getPublicRequestStatus(query: string, turnstileToken?: string) {
   if (!query) return { error: "Nomor permohonan tidak boleh kosong." };
+
+  // Get client IP address if available
+  const headersList = await headers();
+  const clientIp = headersList.get("x-forwarded-for")?.split(",")[0] || 
+                   headersList.get("x-real-ip") || 
+                   undefined;
+
+  // Verify Turnstile token
+  const isHuman = await verifyTurnstileToken(turnstileToken || "", clientIp);
+  if (!isHuman) {
+    return {
+      error: "Verifikasi keamanan (Turnstile) gagal atau kedaluwarsa. Silakan selesaikan tantangan bot terlebih dahulu.",
+    };
+  }
 
   const profile = await getCurrentProfile();
   const currentYear = new Date().getFullYear();

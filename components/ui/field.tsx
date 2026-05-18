@@ -4,16 +4,20 @@ export function Field({
   label,
   required,
   hint,
-  children
+  children,
+  className,
+  labelClassName
 }: {
   label: string;
   required?: boolean;
   hint?: string;
   children: ReactNode;
+  className?: string;
+  labelClassName?: string;
 }) {
   return (
-    <label className="block space-y-1.5">
-      <span className="block text-sm font-medium text-slate-700">
+    <label className={`block space-y-1.5 ${className || ""}`}>
+      <span className={`block text-sm font-medium text-slate-700 ${labelClassName || ""}`}>
         {label}
         {required ? <span className="ml-0.5 text-red-500">*</span> : null}
       </span>

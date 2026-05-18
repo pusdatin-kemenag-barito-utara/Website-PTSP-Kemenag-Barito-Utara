@@ -17,6 +17,8 @@ import {
   Users,
   History,
   Database,
+  BookOpen,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateUserPermissionsAction } from "@/lib/actions/user/user-permissions";
@@ -34,6 +36,13 @@ const MENU_GROUPS = [
   {
     name: "Master Data",
     menus: [{ id: "layanan", label: "Manajemen Layanan", icon: FileText }],
+  },
+  {
+    name: "Layanan Publik",
+    menus: [
+      { id: "buku_tamu", label: "Monitoring Buku Tamu", icon: BookOpen },
+      { id: "janji_temu", label: "Monitoring Janji Temu", icon: Calendar },
+    ],
   },
   {
     name: "Tata Naskah",

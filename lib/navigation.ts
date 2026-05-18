@@ -69,6 +69,7 @@ export const USER_NAV: NavItem[] = [
     href: "/dashboard/pengajuan/baru",
     icon: PlusCircle,
   },
+  { label: "Arsip Dokumen", href: "/dashboard/arsip", icon: Files },
   { label: "Profil", href: "/dashboard/profil", icon: UserCircle2 },
 ];
 

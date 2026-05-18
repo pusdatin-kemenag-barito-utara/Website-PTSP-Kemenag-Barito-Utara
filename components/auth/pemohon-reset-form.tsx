@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
 import {
@@ -19,6 +19,34 @@ import {
   resetPasswordByPhoneAction,
   checkPhoneExistsAction,
 } from "@/lib/actions/auth/reset-password";
+import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
+
+const getPasswordStrength = (pass: string) => {
+  if (!pass) return { score: 0, label: "", color: "bg-slate-200", textColor: "text-slate-400" };
+  
+  let score = 0;
+  
+  if (pass.length >= 6) score += 1;
+  if (/\d/.test(pass)) score += 1;
+  if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score += 1;
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) score += 1;
+
+  if (pass.length < 6) {
+    return { score: 0, label: "Terlalu Pendek (Min. 6 Karakter)", color: "bg-rose-500", textColor: "text-rose-500" };
+  }
+
+  switch (score) {
+    case 1:
+      return { score: 1, label: "Lemah 😕", color: "bg-orange-400", textColor: "text-orange-500" };
+    case 2:
+      return { score: 2, label: "Sedang 😐", color: "bg-yellow-400", textColor: "text-yellow-600" };
+    case 3:
+      return { score: 3, label: "Kuat 🙂", color: "bg-green-500", textColor: "text-green-600" };
+    case 4:
+    default:
+      return { score: 4, label: "Sangat Kuat! 💪🚀", color: "bg-emerald-500", textColor: "text-emerald-600" };
+  }
+};
 
 export function PemohonResetForm() {
   const router = useRouter();
@@ -31,20 +59,35 @@ export function PemohonResetForm() {
   const [phone, setPhone] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const strength = getPasswordStrength(newPassword);
+
+  const [mounted, setMounted] = useState(false);
+  const turnstileRef = useRef<TurnstileRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCheckPhone = async () => {
     if (!phone) return setError("Masukkan nomor HP Anda.");
+    if (!turnstileToken) return setError("Silakan selesaikan verifikasi keamanan.");
     setLoading(true);
     setError("");
 
-    const result = await checkPhoneExistsAction(phone);
+    const result = await checkPhoneExistsAction(phone, turnstileToken);
 
     setLoading(false);
     if (result.error) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       return setError(result.error);
     }
 
     if (!result.exists) {
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       return setError("Nomor HP tidak ditemukan dalam sistem.");
     }
 
@@ -109,10 +152,17 @@ export function PemohonResetForm() {
                 <AlertCircle className="h-3.5 w-3.5" /> {error}
               </p>
             )}
+
+            <LoginTurnstile
+              mounted={mounted}
+              ref={turnstileRef}
+              onTokenChange={setTurnstileToken}
+            />
+
             <Button
               onClick={handleCheckPhone}
-              disabled={loading}
-              className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-bold text-base shadow-lg shadow-emerald-600/20"
+              disabled={loading || !turnstileToken}
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -149,6 +199,30 @@ export function PemohonResetForm() {
                 )}
               </button>
             </div>
+            {newPassword.length > 0 ? (
+              <div className="space-y-1.5 mt-2 transition-all duration-300">
+                <div className="flex gap-1.5 h-1.5">
+                  {[1, 2, 3, 4].map((index) => (
+                    <div
+                      key={index}
+                      className={`h-full flex-1 rounded-full transition-all duration-300 ${
+                        index <= (strength.score === 0 && newPassword.length >= 6 ? 1 : strength.score)
+                          ? strength.color
+                          : "bg-slate-200"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-between items-center text-[11px] font-bold">
+                  <span className="text-slate-400">Kekuatan Password</span>
+                  <span className={`transition-colors duration-300 ${strength.textColor}`}>
+                    {strength.label}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-400 font-medium pl-1">Minimal 6 karakter.</p>
+            )}
             <div className="relative">
               <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
@@ -178,7 +252,7 @@ export function PemohonResetForm() {
             <Button
               onClick={handleUpdatePassword}
               disabled={loading}
-              className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-bold text-base shadow-lg shadow-emerald-600/20"
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
