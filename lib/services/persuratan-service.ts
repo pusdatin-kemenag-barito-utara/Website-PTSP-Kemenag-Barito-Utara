@@ -49,14 +49,16 @@ export class PersuratanService {
    */
   static async getSuratMasuk() {
     const data = await getSheetData(`${SHEETS.MASUK}!A2:F`);
-    return data.map((row: any) => ({
-      id: row[0],
-      nomor_surat: row[1],
-      tanggal_surat: row[2],
-      tanggal_terima: row[3],
-      asal_surat: row[4],
-      perihal: row[5],
-    }));
+    return data
+      .filter((row: any) => row[0]) // Ensure ID exists
+      .map((row: any) => ({
+        id: row[0],
+        nomor_surat: row[1] || "",
+        tanggal_surat: row[2] || "",
+        tanggal_terima: row[3] || "",
+        asal_surat: row[4] || "",
+        perihal: row[5] || "",
+      }));
   }
 
   /**
@@ -100,15 +102,17 @@ export class PersuratanService {
    */
   static async getSuratKeluar() {
     const data = await getSheetData(`${SHEETS.KELUAR}!A2:G`);
-    return data.map((row: any) => ({
-      id: row[0],
-      nomor_surat: row[1],
-      tanggal_surat: row[2],
-      agenda: row[3],
-      tujuan_surat: row[4],
-      perihal: row[5],
-      unit_kerja: row[6],
-    }));
+    return data
+      .filter((row: any) => row[0]) // Ensure ID exists
+      .map((row: any) => ({
+        id: row[0],
+        nomor_surat: row[1] || "",
+        tanggal_surat: row[2] || "",
+        agenda: row[3] || "",
+        tujuan_surat: row[4] || "",
+        perihal: row[5] || "",
+        unit_kerja: row[6] || "",
+      }));
   }
 
   /**

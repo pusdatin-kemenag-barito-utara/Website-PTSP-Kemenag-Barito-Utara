@@ -1,13 +1,16 @@
 import { Inbox } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { SuratMasukManager } from "@/components/admin/persuratan/surat-masuk-manager";
+import { requirePermission } from "@/lib/auth";
 
 export const metadata = {
   title: "Surat Masuk | Admin PTSP",
   description: "Kelola data surat masuk Kemenag Barito Utara",
 };
 
-export default function SuratMasukPage() {
+export default async function SuratMasukPage() {
+  await requirePermission("surat_masuk");
+
   return (
     <div className="space-y-6">
       <PageHeader

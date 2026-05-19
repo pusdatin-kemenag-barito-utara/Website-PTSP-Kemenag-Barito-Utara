@@ -10,7 +10,11 @@ export async function getSheetsClient() {
   }
 
   // Format the private key if it's coming from an environment variable with escaped newlines
-  const formattedKey = PRIVATE_KEY.replace(/\\n/g, "\n").replace(/^"|"$/g, "");
+  let formattedKey = PRIVATE_KEY;
+  if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+    formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+  }
+  formattedKey = formattedKey.split('\\n').join('\n');
 
   const auth = new google.auth.JWT({
     email: SERVICE_ACCOUNT_EMAIL,

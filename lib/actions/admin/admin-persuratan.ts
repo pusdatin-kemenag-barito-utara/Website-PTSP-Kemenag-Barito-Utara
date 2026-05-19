@@ -94,12 +94,12 @@ export async function saveSuratMasukAction(formData: FormData): Promise<ActionRe
     await requirePermission("surat_masuk");
     
     const validated = SuratMasukSchema.safeParse({
-      id: formData.get("id"),
-      nomor_surat: formData.get("nomor_surat"),
-      tanggal_surat: formData.get("tanggal_surat"),
-      tanggal_terima: formData.get("tanggal_terima"),
-      asal_surat: formData.get("asal_surat"),
-      perihal: formData.get("perihal"),
+      id: formData.get("id")?.toString() || "",
+      nomor_surat: formData.get("nomor_surat")?.toString() || "",
+      tanggal_surat: formData.get("tanggal_surat")?.toString() || "",
+      tanggal_terima: formData.get("tanggal_terima")?.toString() || "",
+      asal_surat: formData.get("asal_surat")?.toString() || "",
+      perihal: formData.get("perihal")?.toString() || "",
     });
 
     if (!validated.success) {
@@ -146,13 +146,13 @@ export async function saveSuratKeluarAction(formData: FormData): Promise<ActionR
     await requirePermission("surat_keluar");
     
     const validated = SuratKeluarSchema.safeParse({
-      id: formData.get("id"),
-      nomor_surat: formData.get("nomor_surat"),
-      tanggal_surat: formData.get("tanggal_surat"),
-      agenda: formData.get("agenda"),
-      tujuan_surat: formData.get("tujuan_surat"),
-      perihal: formData.get("perihal"),
-      unit_kerja: formData.get("unit_kerja"),
+      id: formData.get("id")?.toString() || "",
+      nomor_surat: formData.get("nomor_surat")?.toString() || "",
+      tanggal_surat: formData.get("tanggal_surat")?.toString() || "",
+      agenda: formData.get("agenda")?.toString() || "",
+      tujuan_surat: formData.get("tujuan_surat")?.toString() || "",
+      perihal: formData.get("perihal")?.toString() || "",
+      unit_kerja: formData.get("unit_kerja")?.toString() || "",
     });
 
     if (!validated.success) {
