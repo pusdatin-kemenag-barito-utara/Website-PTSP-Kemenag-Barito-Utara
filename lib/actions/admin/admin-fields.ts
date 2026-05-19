@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { serviceFormFields as fieldsTable } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -26,8 +26,8 @@ export type ActionResult = {
 };
 
 export async function createFieldAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const validated = fieldSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
       label: formData.get("label"),
@@ -59,8 +59,8 @@ export async function createFieldAction(formData: FormData): Promise<ActionResul
 }
 
 export async function updateFieldAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const id = BigInt(formData.get("id") as string);
     const validated = fieldSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
@@ -96,8 +96,8 @@ export async function updateFieldAction(formData: FormData): Promise<ActionResul
 }
 
 export async function deleteFieldAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const id = BigInt(formData.get("id") as string);
     await db.delete(fieldsTable).where(eq(fieldsTable.id, id));
     revalidatePath("/admin/layanan/[id]", "page");
@@ -111,8 +111,8 @@ export async function deleteFieldAction(formData: FormData): Promise<ActionResul
 }
 
 export async function reorderFieldsAction(ids: string[]): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     await db.transaction(async (tx: any) => {
       for (let i = 0; i < ids.length; i++) {
         await tx

@@ -26,6 +26,10 @@ export function NewRequestForm({ catalog }: { catalog: Catalog }) {
   const [requirementFiles, setRequirementFiles] = useState<Record<string, File>>({});
 
   useEffect(() => {
+    setRequirementFiles({});
+  }, [serviceItemId]);
+
+  useEffect(() => {
     if (urlServiceItemId && catalog.length > 0) {
       for (const service of catalog) {
         const item = service.serviceItems?.find((i: any) => String(i.id) === urlServiceItemId);

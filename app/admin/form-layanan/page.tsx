@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import {
   serviceItems as serviceItemsTable,
@@ -11,7 +11,7 @@ import { FormLayananClient } from "@/components/admin/form-layanan/form-layanan-
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 
 export default async function AdminFormFieldsPage() {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("layanan");
   const isSuper = isSuperAdmin(profile.email);
   const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
   const isGeneralAdmin = specificRole === "admin_ptsp";

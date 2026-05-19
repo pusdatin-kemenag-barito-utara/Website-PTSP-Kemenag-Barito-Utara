@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/admin/page-header";
 import { ArrowLeft, PlusCircle } from "lucide-react";
 import { AddServiceForm } from "@/components/admin/layanan/add-service-form";
 
 export default async function AddServicePage() {
-  await requireAdmin();
+  await requirePermission("layanan");
 
   return (
     <div className="space-y-6">

@@ -16,6 +16,7 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { DocumentPreviewModal } from "@/components/ui/document-preview-modal";
+import { getFileUrl } from "@/lib/utils";
 
 interface ArchiveDocument {
   id: string;
@@ -104,7 +105,7 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
   const handleOpenPreview = (doc: ArchiveDocument) => {
     setPreviewModal({
       isOpen: true,
-      url: doc.filePath,
+      url: getFileUrl(doc.filePath),
       title: doc.fileName,
       fileType: doc.fileType,
     });
@@ -341,7 +342,7 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
                     Pratinjau
                   </button>
                   <a
-                    href={doc.filePath}
+                    href={getFileUrl(doc.filePath)}
                     download={doc.fileName}
                     target="_blank"
                     rel="noreferrer"

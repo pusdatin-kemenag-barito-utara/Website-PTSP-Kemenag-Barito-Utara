@@ -79,6 +79,13 @@ const ADMIN_NAV: NavItem[] = [
     id: "janji_temu",
   },
   {
+    label: "Saran & Pengaduan",
+    href: "/admin/saran-pengaduan",
+    icon: Mail,
+    group: "Layanan Publik",
+    id: "saran_pengaduan",
+  },
+  {
     label: "Surat Masuk",
     href: "/admin/persuratan/surat-masuk",
     icon: Inbox,

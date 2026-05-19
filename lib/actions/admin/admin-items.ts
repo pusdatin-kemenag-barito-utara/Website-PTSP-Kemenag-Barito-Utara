@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { serviceItems as serviceItemsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -29,9 +29,8 @@ export type ActionResult = {
 export async function createServiceItemAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
-
     const validated = itemSchema.safeParse({
       serviceId: formData.get("serviceId"),
       name: formData.get("name"),
@@ -67,8 +66,8 @@ export async function createServiceItemAction(
 export async function updateServiceItemAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const id = BigInt(formData.get("id") as string);
 
     const validated = itemSchema.safeParse({
@@ -113,8 +112,8 @@ export async function updateServiceItemAction(
 export async function deleteServiceItemAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const id = BigInt(formData.get("id") as string);
 
     await db.delete(serviceItemsTable).where(eq(serviceItemsTable.id, id));
@@ -135,9 +134,8 @@ export async function deleteServiceItemAction(
 export async function reorderServiceItemsAction(
   ids: number[],
 ): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
-
     await db.transaction(async (tx: any) => {
       for (let i = 0; i < ids.length; i++) {
         await tx

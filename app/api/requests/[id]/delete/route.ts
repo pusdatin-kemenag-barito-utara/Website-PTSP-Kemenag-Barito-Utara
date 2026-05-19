@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { getCurrentProfile } from "@/lib/auth";
 import { RequestService } from "@/lib/services/request-service";
 
 export async function DELETE(
@@ -7,7 +7,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const profile = await requireAuth();
+    const profile = await getCurrentProfile();
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
 
     await RequestService.deleteByApplicant(id, profile.id);

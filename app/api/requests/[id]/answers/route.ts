@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { getCurrentProfile } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   serviceRequests as serviceRequestsTable,
@@ -16,7 +16,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const profile = await requireAuth();
+    const profile = await getCurrentProfile();
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
     const body = await request.json();
     const { updates } = body;

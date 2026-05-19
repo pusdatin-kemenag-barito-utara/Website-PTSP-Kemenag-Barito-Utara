@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import { serviceRequests as serviceRequestsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -39,7 +39,7 @@ export default async function AdminRequestDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const adminProfile = await requireAdmin();
+  const adminProfile = await requirePermission("pengajuan");
   const { id } = await params;
 
   const dataFinal = await db.query.serviceRequests.findFirst({

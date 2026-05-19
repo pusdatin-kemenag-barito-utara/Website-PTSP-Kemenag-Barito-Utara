@@ -14,8 +14,8 @@ export type ActionResult = {
 };
 
 export async function deleteGuestBookAction(idStr: string): Promise<ActionResult> {
+  const profile = await requirePermission("buku_tamu");
   try {
-    const profile = await requirePermission("buku_tamu");
     const id = BigInt(idStr);
 
     const entry = await db.query.guestBook.findFirst({
@@ -48,8 +48,8 @@ export async function deleteGuestBookAction(idStr: string): Promise<ActionResult
 }
 
 export async function deleteAppointmentAction(idStr: string): Promise<ActionResult> {
+  const profile = await requirePermission("janji_temu");
   try {
-    const profile = await requirePermission("janji_temu");
     const id = BigInt(idStr);
 
     const entry = await db.query.appointments.findFirst({
@@ -85,8 +85,8 @@ export async function updateAppointmentStatusAction(
   idStr: string,
   status: "pending" | "approved" | "rejected"
 ): Promise<ActionResult> {
+  const profile = await requirePermission("janji_temu");
   try {
-    const profile = await requirePermission("janji_temu");
     const id = BigInt(idStr);
 
     const entry = await db.query.appointments.findFirst({

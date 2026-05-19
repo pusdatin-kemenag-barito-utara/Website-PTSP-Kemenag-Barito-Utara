@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import {
   services as servicesTable,
@@ -19,7 +19,7 @@ export default async function ServiceWizardPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("layanan");
   const isSuper = isSuperAdmin(profile.email);
 
   // Next.js 15: params harus di-await terlebih dahulu

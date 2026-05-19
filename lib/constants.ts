@@ -37,6 +37,7 @@ export const DEFAULT_ADMIN_PERMISSIONS = [
   "surat_keluar",
   "buku_tamu",
   "janji_temu",
+  "saran_pengaduan",
 ];
 
 /**
@@ -52,6 +53,7 @@ export const ALL_ADMIN_MENUS = [
   "surat_keluar",
   "buku_tamu",
   "janji_temu",
+  "saran_pengaduan",
   "log_audit",
   "pemeliharaan_storage",
 ];

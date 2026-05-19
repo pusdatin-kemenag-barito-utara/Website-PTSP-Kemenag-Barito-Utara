@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.google.com https://www.gstatic.com",
               "img-src 'self' data: blob: https://ruunarawpewddmxexddl.supabase.co https://*.googleusercontent.com https://www.gstatic.com https://www.google.com https://*.vercel-storage.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "frame-src 'self' https://www.google.com https://challenges.cloudflare.com blob:",
+              "frame-src 'self' https://www.google.com https://challenges.cloudflare.com https://www.youtube.com https://youtube.com blob:",
               "connect-src 'self' https://ruunarawpewddmxexddl.supabase.co wss://ruunarawpewddmxexddl.supabase.co https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com https://challenges.cloudflare.com",
               "worker-src 'self' blob: https://cdnjs.cloudflare.com",
             ].join("; "),

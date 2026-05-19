@@ -113,8 +113,12 @@ export default async function AdminHomePage() {
       color: "text-rose-600",
       bg: "bg-rose-50",
     },
-  ].filter((menu: { id: string }) => allowedMenus.includes(menu.id));
-
+  ].filter((menu: { id: string }) => {
+    if (menu.id === "item_layanan" || menu.id === "form_layanan") {
+      return allowedMenus.includes("layanan");
+    }
+    return allowedMenus.includes(menu.id);
+  });
   return (
     <div className="space-y-6">
       <DashboardRealtimeSync />

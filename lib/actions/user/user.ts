@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAuth } from "@/lib/auth";
+import { getCurrentProfile } from "@/lib/auth";
 import { z } from "zod";
 import { UserService } from "@/lib/services/user-service";
 
@@ -19,9 +19,12 @@ const UpdateProfileSchema = z.object({
 });
 
 export async function updateProfileAction(formData: FormData): Promise<ActionResult> {
-  try {
-    const profile = await requireAuth();
+  const profile = await getCurrentProfile();
+  if (!profile) {
+    return { success: false, error: "Sesi Anda telah berakhir. Silakan login kembali." };
+  }
 
+  try {
     const validated = UpdateProfileSchema.safeParse({
       fullName: formData.get("full_name"),
       phone: formData.get("phone"),

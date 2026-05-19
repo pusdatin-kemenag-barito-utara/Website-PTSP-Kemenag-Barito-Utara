@@ -11,9 +11,12 @@ import {
   Zap,
   Headphones,
   Award,
+  Users,
+  Search,
 } from "lucide-react";
 
 export function HomeHero() {
+  const currentYear = new Date().getFullYear();
   return (
     <section className="relative min-h-[92vh] flex items-center overflow-hidden">
       {/* Background image */}
@@ -74,49 +77,19 @@ export function HomeHero() {
                 </span>
               </h1>
               <p className="max-w-2xl text-base leading-relaxed text-white/70 md:text-lg lg:text-xl">
-                Portal resmi layanan administrasi keagamaan — perizinan,
-                legalisir, konsultasi, dan surat menyurat — secara online,
-                cepat, dan terdokumentasi.
+                Portal Digital Resmi Pelayanan Terpadu Satu Pintu (PTSP) Kantor
+                Kementerian Agama Kabupaten Barito Utara. Ajukan izin
+                operasional lembaga, rekomendasi kegiatan, legalisir dokumen,
+                hingga pendaftaran janji temu secara online, aman, transparan,
+                dan efisien.
               </p>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-              {[
-                {
-                  value: "10+",
-                  label: "Jenis Layanan",
-                  color: "text-emerald-400",
-                },
-                {
-                  value: "500+",
-                  label: "Pengajuan Diproses",
-                  color: "text-emerald-400",
-                },
-                {
-                  value: "200+",
-                  label: "Pengguna Aktif",
-                  color: "text-emerald-300",
-                },
-              ].map((stat) => (
-                <div key={stat.label} className="flex flex-col">
-                  <span
-                    className={`text-3xl font-black ${stat.color} leading-none`}
-                  >
-                    {stat.value}
-                  </span>
-                  <span className="mt-1 text-xs font-medium text-white/50 uppercase tracking-wider">
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
             </div>
 
             {/* CTA */}
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 href="/login/pemohon"
-                className="group inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#047857] to-[#065f46] px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-emerald-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-900/40 active:translate-y-0"
+                className="group inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#047857] to-[#065f46] px-7 py-3.5 text-sm font-bold !text-white shadow-xl shadow-emerald-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-900/40 active:translate-y-0"
               >
                 <FilePlus2 className="h-4 w-4" />
                 Mulai Pengajuan
@@ -124,15 +97,152 @@ export function HomeHero() {
               </Link>
               <Link
                 href="/layanan"
-                className="inline-flex items-center gap-2.5 rounded-2xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/20"
+                className="inline-flex items-center gap-2.5 rounded-2xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-bold !text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/20"
               >
                 <LayoutGrid className="h-4 w-4" />
                 Lihat Layanan
               </Link>
             </div>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap gap-2 pt-2">
+            {/* Lacak Status Permohonan Widget */}
+            <div className="relative mt-8 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-10 duration-700">
+              <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-emerald-500/15 to-teal-500/15 blur-2xl opacity-75 animate-pulse" />
+              <div className="relative overflow-hidden rounded-[1.75rem] border border-white/15 bg-white/10 p-5 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:border-white/20">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+                  </span>
+                  <p className="text-[10px] font-black tracking-[0.15em] uppercase text-emerald-300">
+                    Lacak Status Permohonan Instan
+                  </p>
+                </div>
+                <form action="/track" method="get" className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="relative flex-1">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 shrink-0 select-none pointer-events-none z-10">
+                      <Search className="h-4.5 w-4.5 text-white/50" />
+                      <span className="text-xs font-black text-emerald-300 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-lg tracking-wider">
+                        PTSP-{currentYear}-
+                      </span>
+                      <div className="h-4 w-[1px] bg-white/20" />
+                    </div>
+                    <input
+                      type="text"
+                      name="q"
+                      required
+                      placeholder="000123"
+                      className="w-full rounded-2xl border border-white/10 bg-black/35 py-3.5 pl-[10.5rem] pr-4 text-sm font-bold text-white placeholder-white/25 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300 shadow-inner"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-7 py-3.5 text-sm font-black !text-white hover:from-emerald-400 hover:to-emerald-500 active:scale-95 transition-all duration-300 shadow-lg shadow-emerald-950/30"
+                  >
+                    <span>Lacak Sekarang</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: floating card with 4 Easy Steps */}
+          <div className="hidden lg:block">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-white/5 blur-2xl" />
+              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                {/* Card header */}
+                <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#10b981] to-[#059669]">
+                    <Zap className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-white">
+                      Alur Pengajuan
+                    </p>
+                    <p className="text-xs text-white/50">
+                      4 Langkah Mudah Proses Layanan
+                    </p>
+                  </div>
+                </div>
+
+                {/* Vertical Step Timeline */}
+                <div className="space-y-5 relative">
+                  {/* Vertical line connector */}
+                  <div className="absolute left-6 top-3 bottom-3 w-0.5 bg-white/10" />
+
+                  {[
+                    {
+                      step: "01",
+                      icon: Users,
+                      title: "Daftar Akun",
+                      desc: "Buat akun pemohon terverifikasi",
+                    },
+                    {
+                      step: "02",
+                      icon: LayoutGrid,
+                      title: "Pilih Layanan",
+                      desc: "Pilih jenis layanan sesuai kebutuhan",
+                    },
+                    {
+                      step: "03",
+                      icon: FilePlus2,
+                      title: "Isi & Upload",
+                      desc: "Lengkapi form & unggah berkas",
+                    },
+                    {
+                      step: "04",
+                      icon: FileCheck2,
+                      title: "Terima Hasil",
+                      desc: "Unduh dokumen hasil digital",
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.step}
+                        className="flex gap-4 relative group z-10"
+                      >
+                        {/* Step Icon circle */}
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-400 transition-all duration-300 group-hover:bg-[#059669] group-hover:text-white">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        {/* Step Details */}
+                        <div className="flex flex-col justify-center">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-950/50 border border-emerald-800/60 px-1.5 py-0.5 rounded">
+                              Langkah {item.step}
+                            </span>
+                            <h4 className="text-sm font-bold text-white transition-colors duration-300">
+                              {item.title}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-white/60 font-medium mt-0.5 leading-normal">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Operating hours */}
+                <div className="mt-6 overflow-hidden rounded-2xl bg-gradient-to-r from-[#059669]/40 to-[#047857]/30 p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="h-3.5 w-3.5 text-white/60" />
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
+                      Jam Operasional
+                    </p>
+                  </div>
+                  <p className="text-xs font-black text-white">
+                    Senin – Jumat, 08.00 – 16.00 WIB
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Trust badges (Moved below the big card) */}
+            <div className="mt-6 flex flex-wrap gap-2.5 justify-center">
               {[
                 { icon: ShieldCheck, text: "Aman & Terverifikasi" },
                 { icon: Clock, text: "Proses Transparan" },
@@ -140,100 +250,12 @@ export function HomeHero() {
               ].map(({ icon: Icon, text }) => (
                 <span
                   key={text}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3.5 py-1.5 text-xs font-medium text-white/70 backdrop-blur-sm"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-xs font-bold text-white/80 backdrop-blur-md shadow-lg"
                 >
                   <Icon className="h-3.5 w-3.5 text-emerald-400" />
                   {text}
                 </span>
               ))}
-            </div>
-          </div>
-
-          {/* Right: floating card */}
-          <div className="hidden lg:block">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-white/5 blur-2xl" />
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-xl">
-                {/* Card header */}
-                <div className="mb-5 flex items-center gap-3 border-b border-white/10 pb-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#10b981] to-[#059669]">
-                    <Zap className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-white">
-                      Layanan Aktif
-                    </p>
-                    <p className="text-xs text-white/50">
-                      Siap diakses kapanpun
-                    </p>
-                  </div>
-                  <div className="ml-auto flex items-center gap-1.5 rounded-full bg-emerald-900/25 px-2.5 py-1">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                    <span className="text-[10px] font-bold text-emerald-400">
-                      LIVE
-                    </span>
-                  </div>
-                </div>
-
-                {/* Feature list */}
-                <div className="space-y-2.5">
-                  {[
-                    {
-                      icon: CheckCircle2,
-                      text: "Pengajuan 100% online",
-                      color: "text-emerald-400",
-                      bg: "bg-emerald-400/10",
-                    },
-                    {
-                      icon: Clock,
-                      text: "Pantau status real-time",
-                      color: "text-emerald-400",
-                      bg: "bg-emerald-400/10",
-                    },
-                    {
-                      icon: FileCheck2,
-                      text: "Unduh dokumen hasil",
-                      color: "text-emerald-300",
-                      bg: "bg-emerald-300/10",
-                    },
-                    {
-                      icon: ShieldCheck,
-                      text: "Data aman & terlindungi",
-                      color: "text-emerald-400",
-                      bg: "bg-emerald-400/10",
-                    },
-                    {
-                      icon: Headphones,
-                      text: "Dukungan teknis 24/7",
-                      color: "text-emerald-500",
-                      bg: "bg-emerald-500/10",
-                    },
-                  ].map(({ icon: Icon, text, color, bg }) => (
-                    <div
-                      key={text}
-                      className={`flex items-center gap-3 rounded-2xl ${bg} px-4 py-3 border border-white/5`}
-                    >
-                      <Icon className={`h-4 w-4 flex-shrink-0 ${color}`} />
-                      <span className="text-sm font-medium text-white/80">
-                        {text}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Operating hours */}
-                <div className="mt-5 overflow-hidden rounded-2xl bg-gradient-to-r from-[#059669]/40 to-[#047857]/30 p-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Clock className="h-3.5 w-3.5 text-white/60" />
-                    <p className="text-[10.5px] font-semibold uppercase tracking-wider text-white/50">
-                      Jam Operasional
-                    </p>
-                  </div>
-                  <p className="text-sm font-black text-white">
-                    Senin – Jumat, 08.00 – 16.00 WIB
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -249,12 +271,12 @@ export function HomeHero() {
         >
           <path
             d="M0 60C240 120 480 0 720 60C960 120 1200 20 1440 60V120H0V60Z"
-            fill="#f8fafc"
+            fill="white"
             fillOpacity="0.4"
           />
           <path
             d="M0 80C360 130 720 30 1080 80C1440 130 1440 80 1440 80V120H0V80Z"
-            fill="#f8fafc"
+            fill="white"
           />
         </svg>
       </div>

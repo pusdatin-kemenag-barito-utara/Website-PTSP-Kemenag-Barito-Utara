@@ -17,6 +17,7 @@ interface Answer {
 
 interface Document {
   id: string;
+  requirementId: string;
   fileName: string;
   filePath: string;
   serviceRequirements?: {
@@ -54,14 +55,14 @@ export function EditRequestForm({
 
     // Add files
     const fileEntries = Array.from(rawFormData.entries()).filter(([key]: any) =>
-      key.startsWith("doc_"),
+      key.startsWith("requirement_"),
     );
 
     await Promise.all(
       fileEntries.map(async ([key, value]: any) => {
         if (value instanceof File && value.size > 0) {
           if (value.type.startsWith("image/")) {
-            const compressed = await compressImageToUnder(value, 150);
+            const compressed = await compressImageToUnder(value, 800);
             finalFormData.append(key, compressed);
           } else {
             finalFormData.append(key, value);
@@ -114,7 +115,7 @@ export function EditRequestForm({
         <Button
           type="button"
           variant="outline"
-          onClick={onSuccess}
+          onClick={() => onSuccess?.()}
           className="h-11 px-6 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
         >
           Batal

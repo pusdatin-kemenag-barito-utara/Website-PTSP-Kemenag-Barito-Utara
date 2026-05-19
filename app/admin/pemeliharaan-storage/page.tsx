@@ -1,5 +1,5 @@
 import { Database, ShieldAlert, History } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { PageHeader } from "@/components/admin/page-header";
 import { isSuperAdmin } from "@/lib/constants";
 import { redirect } from "next/navigation";
@@ -8,12 +8,8 @@ import { StorageQuotaGrid } from "@/components/admin/dashboard/storage-quota-gri
 import { Card } from "@/components/ui/card";
 
 export default async function AdminStorageMaintenancePage() {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("pemeliharaan_storage");
 
-  // Only Super Admin can see storage maintenance
-  if (profile.role !== "super_admin" && !isSuperAdmin(profile.email)) {
-    redirect("/admin");
-  }
 
   return (
     <div className="space-y-6">

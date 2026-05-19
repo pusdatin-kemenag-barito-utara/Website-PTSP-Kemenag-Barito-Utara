@@ -1,5 +1,5 @@
 import { Users } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import { profiles as profilesTable } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { PenggunaClient } from "@/components/admin/pengguna/pengguna-client";
 
 export default async function AdminUsersPage() {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("pengguna");
 
   const data = await db.query.profiles.findMany({
     orderBy: [desc(profilesTable.createdAt)],

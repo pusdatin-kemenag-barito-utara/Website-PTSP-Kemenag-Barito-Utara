@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import { services as servicesTable } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { LayananClient } from "@/components/admin/layanan/layanan-client";
 
 export default async function AdminServicesPage() {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("layanan");
 
   const isSuper = isSuperAdmin(profile.email);
   

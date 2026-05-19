@@ -35,8 +35,8 @@ const SuratKeluarSchema = z.object({
 // --- UTILS ---
 
 export async function fixSpreadsheetHeadersAction(): Promise<ActionResult> {
+  await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
     
     await updateSheetRow(`${SHEETS.MASUK}!A1:F1`, [
       ["ID", "Nomor Surat", "Tgl Surat", "Tgl Terima", "Asal Surat", "Perihal"],
@@ -80,8 +80,8 @@ export async function getNextNomorSuratSuggestionAction(
 // --- SURAT MASUK ---
 
 export async function getSuratMasukAction(): Promise<ActionResult> {
+  await requirePermission("surat_masuk");
   try {
-    await requirePermission("surat_masuk");
     const data = await PersuratanService.getSuratMasuk();
     return { success: true, data };
   } catch (error: any) {
@@ -90,9 +90,8 @@ export async function getSuratMasukAction(): Promise<ActionResult> {
 }
 
 export async function saveSuratMasukAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("surat_masuk");
   try {
-    await requirePermission("surat_masuk");
-    
     const validated = SuratMasukSchema.safeParse({
       id: formData.get("id")?.toString() || "",
       nomor_surat: formData.get("nomor_surat")?.toString() || "",
@@ -116,8 +115,8 @@ export async function saveSuratMasukAction(formData: FormData): Promise<ActionRe
 }
 
 export async function deleteSuratMasukAction(id: string): Promise<ActionResult> {
+  await requirePermission("surat_masuk");
   try {
-    await requirePermission("surat_masuk");
     if (!id) return { success: false, error: "ID tidak valid" };
 
     await PersuratanService.deleteSuratMasuk(id);
@@ -132,8 +131,8 @@ export async function deleteSuratMasukAction(id: string): Promise<ActionResult> 
 // --- SURAT KELUAR ---
 
 export async function getSuratKeluarAction(): Promise<ActionResult> {
+  await requirePermission("surat_keluar");
   try {
-    await requirePermission("surat_keluar");
     const data = await PersuratanService.getSuratKeluar();
     return { success: true, data };
   } catch (error: any) {
@@ -142,9 +141,8 @@ export async function getSuratKeluarAction(): Promise<ActionResult> {
 }
 
 export async function saveSuratKeluarAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("surat_keluar");
   try {
-    await requirePermission("surat_keluar");
-    
     const validated = SuratKeluarSchema.safeParse({
       id: formData.get("id")?.toString() || "",
       nomor_surat: formData.get("nomor_surat")?.toString() || "",
@@ -169,8 +167,8 @@ export async function saveSuratKeluarAction(formData: FormData): Promise<ActionR
 }
 
 export async function deleteSuratKeluarAction(id: string): Promise<ActionResult> {
+  await requirePermission("surat_keluar");
   try {
-    await requirePermission("surat_keluar");
     if (!id) return { success: false, error: "ID tidak valid" };
 
     await PersuratanService.deleteSuratKeluar(id);

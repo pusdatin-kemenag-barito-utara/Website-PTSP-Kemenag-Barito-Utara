@@ -29,7 +29,7 @@ export function EditFormDocuments({ documents }: { documents: any[] }) {
               <div className="relative">
                 <Input
                   type="file"
-                  name={`doc_${doc.id}`}
+                  name={`requirement_${doc.requirementId}`}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {

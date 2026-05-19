@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import {
   serviceRequests as serviceRequestsTable,
@@ -38,7 +38,7 @@ export default async function AdminGeneratedDocumentsPage({
 }: {
   searchParams: Promise<{ q?: string; serviceId?: string; page?: string }>;
 }) {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("dokumen_hasil");
   const isSuper = isSuperAdmin(profile.email);
   const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
   const isGeneralAdmin = specificRole === "admin_ptsp";

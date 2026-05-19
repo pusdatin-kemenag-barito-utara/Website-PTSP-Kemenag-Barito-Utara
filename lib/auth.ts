@@ -91,7 +91,7 @@ export function hasPermission(profile: any, permission: string): boolean {
 export async function requirePermission(permission: string) {
   const profile = await requireAdmin();
   if (!hasPermission(profile, permission)) {
-    throw new Error(`Anda tidak memiliki hak akses untuk: ${permission}`);
+    redirect("/admin");
   }
   return profile;
 }

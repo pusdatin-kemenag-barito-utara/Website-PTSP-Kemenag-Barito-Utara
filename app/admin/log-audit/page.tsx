@@ -1,5 +1,5 @@
 import { History } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { serializeBigInt } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { isSuperAdmin } from "@/lib/constants";
@@ -14,12 +14,7 @@ export default async function AdminLogAuditPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string; action?: string }>;
 }) {
-  const profile = await requireAdmin();
-
-  // Only Super Admin can see audit logs
-  if (profile.role !== "super_admin" && !isSuperAdmin(profile.email)) {
-    redirect("/admin");
-  }
+  const profile = await requirePermission("log_audit");
 
   const { page = "1", q = "", action = "" } = await searchParams;
   const currentPage = Math.max(1, parseInt(page));

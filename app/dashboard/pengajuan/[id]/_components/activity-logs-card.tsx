@@ -7,6 +7,18 @@ interface ActivityLogsCardProps {
   activityLogs: any[];
 }
 
+const ACTION_MAPPINGS: Record<string, string> = {
+  submitted: "Pengajuan Dikirim",
+  request_updated: "Pembaruan Data & Dokumen",
+  revision_uploaded: "Dokumen Revisi Diunggah",
+  review_submitted: "Peninjauan oleh Petugas",
+  "Pemohon memperbarui data formulir": "Formulir Diperbarui",
+};
+
+function formatAction(action: string): string {
+  return ACTION_MAPPINGS[action] || action;
+}
+
 export function ActivityLogsCard({ activityLogs }: ActivityLogsCardProps) {
   return (
     <div className="rounded-2xl sm:rounded-[2.5rem] bg-white p-5 sm:p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
@@ -32,7 +44,7 @@ export function ActivityLogsCard({ activityLogs }: ActivityLogsCardProps) {
             </div>
 
             <p className="text-xs font-black text-slate-800 tracking-tight group-hover:text-emerald-700 transition-colors">
-              {log.action}
+              {formatAction(log.action)}
             </p>
             <p className="text-[10px] font-medium text-slate-500 leading-relaxed mt-1">
               {log.notes || "Sistem memproses status otomatis"}

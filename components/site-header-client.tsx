@@ -101,23 +101,23 @@ export function SiteHeaderClient({
           <div className="h-full bg-emerald-500/20 rounded-full" />
         </div>
 
-        <div className="mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-20">
-          <div className="flex h-[72px] items-center justify-between gap-4 md:h-[84px]">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:px-4 xl:px-12 2xl:px-16">
+          <div className="flex h-[72px] items-center justify-between gap-1.5 md:h-[84px]">
             {/* Logo (Left aligned) */}
             <div className="flex shrink-0 items-center justify-start">
               <Link
                 href="/"
-                className="group flex items-center gap-2.5 transition-transform duration-300 hover:scale-105 active:scale-95"
+                className="group flex items-center gap-2 transition-transform duration-300 hover:scale-105 active:scale-95"
               >
                 <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-md transition-all duration-500 sm:h-14 sm:w-14 sm:rounded-[1.25rem] bg-white`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md transition-all duration-500 sm:h-12 sm:w-12 xl:h-13 xl:w-13 xl:rounded-[1rem] bg-white`}
                 >
                   <Image
                     src="/kemenag.svg"
                     alt="Logo Kemenag"
                     width={32}
                     height={32}
-                    className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
+                    className="w-7 h-7 sm:w-8 h-8 xl:w-8.5 xl:h-8.5 object-contain"
                     style={{ width: "auto", height: "auto" }}
                     priority
                   />
@@ -129,19 +129,19 @@ export function SiteHeaderClient({
                   <span className="text-[8.5px] sm:text-[10px] font-bold tracking-wider leading-tight transition-colors duration-500 lg:hidden text-emerald-100/80">
                     KEMENTERIAN AGAMA KABUPATEN BARITO UTARA
                   </span>
-                  {/* Desktop text */}
-                  <span className="hidden lg:block text-[13px] font-black tracking-[0.05em] leading-tight transition-colors duration-500 text-white">
+                  {/* Desktop text (highly responsive) */}
+                  <span className="hidden lg:block text-[11px] xl:text-[13px] font-black tracking-[0.05em] leading-tight transition-colors duration-500 text-white">
                     PELAYANAN TERPADU SATU PINTU (PTSP)
                   </span>
-                  <span className="hidden lg:block text-[9px] font-bold tracking-[0.08em] leading-tight transition-colors duration-500 text-emerald-100/70">
+                  <span className="hidden lg:block text-[8px] xl:text-[9px] font-bold tracking-[0.08em] leading-tight transition-colors duration-500 text-emerald-100/70">
                     KEMENTERIAN AGAMA KABUPATEN BARITO UTARA
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* Desktop Nav (Right aligned) */}
-            <nav className="hidden items-center justify-end gap-1 lg:flex ml-auto">
+            {/* Desktop Nav (Right aligned with responsive gap & text) */}
+            <nav className="hidden items-center justify-end gap-0.5 xl:gap-1.5 lg:flex ml-auto">
               {navItems.map((item: any) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
@@ -149,7 +149,7 @@ export function SiteHeaderClient({
                   <Link
                     key={item.label}
                     href={item.href}
-                    className={`group relative flex items-center gap-2.5 rounded-2xl px-5 py-2.5 text-[14px] font-bold transition-all duration-500 ${
+                    className={`group relative flex items-center gap-1.5 xl:gap-2.5 rounded-xl px-2.5 py-2 xl:px-4 xl:py-2.5 text-[12.5px] xl:text-[14px] font-bold transition-all duration-500 ${
                       isActive
                         ? "!text-white"
                         : "!text-white/70 hover:!text-white"
@@ -160,7 +160,7 @@ export function SiteHeaderClient({
                   >
                     {/* Active/Hover Background Pill */}
                     <div
-                      className={`absolute inset-0 rounded-2xl transition-all duration-500 ${
+                      className={`absolute inset-0 rounded-xl transition-all duration-500 ${
                         isActive
                           ? "bg-white/10 opacity-100 shadow-inner"
                           : "bg-transparent opacity-0 group-hover:opacity-100 group-hover:bg-white/5"
@@ -168,10 +168,10 @@ export function SiteHeaderClient({
                     />
 
                     <Icon
-                      className={`relative z-10 h-4.5 w-4.5 transition-all duration-500 ${isActive ? "scale-110" : "opacity-60 group-hover:scale-110 group-hover:opacity-100"}`}
+                      className={`relative z-10 h-4 w-4 transition-all duration-500 ${isActive ? "scale-110" : "opacity-60 group-hover:scale-110 group-hover:opacity-100"}`}
                     />
                     <span
-                      className="relative z-10"
+                      className="relative z-10 whitespace-nowrap"
                       style={{ color: "inherit" }}
                     >
                       {item.label}
@@ -187,7 +187,7 @@ export function SiteHeaderClient({
               {profile && (
                 <Link
                   href={dashboardHref}
-                  className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-bold transition-all duration-300 ${
+                  className={`group flex items-center gap-1.5 xl:gap-2 rounded-full px-3 py-2 xl:px-4 xl:py-2.5 text-[12px] xl:text-[13.5px] font-bold transition-all duration-300 ${
                     pathname.startsWith("/dashboard") ||
                     pathname.startsWith("/admin")
                       ? "bg-white/20 !text-white shadow-inner"
@@ -196,22 +196,22 @@ export function SiteHeaderClient({
                   style={{ color: "white" }}
                 >
                   <LayoutDashboard className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 opacity-70 group-hover:opacity-100" />
-                  <span style={{ color: "inherit" }}>Dashboard</span>
+                  <span style={{ color: "inherit" }} className="whitespace-nowrap">Dashboard</span>
                 </Link>
               )}
             </nav>
 
-            {/* Desktop CTA (Right aligned) */}
-            <div className="hidden items-center justify-end lg:flex">
+            {/* Desktop CTA (Right aligned with responsive padding) */}
+            <div className="hidden items-center justify-end lg:flex gap-2 xl:gap-3 ml-2">
               {profile ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md transition-colors duration-300 bg-white/10 border border-white/20 text-white">
+                <div className="flex items-center gap-2 xl:gap-3">
+                  <div className="flex items-center gap-1.5 xl:gap-2 rounded-full px-2.5 py-1.5 xl:px-4 xl:py-2 backdrop-blur-md transition-colors duration-300 bg-white/10 border border-white/20 text-white">
                     {isAdmin ? (
-                      <Shield className="h-4 w-4 text-emerald-400" />
+                      <Shield className="h-3.5 w-3.5 text-emerald-400" />
                     ) : (
-                      <UserCircle2 className="h-4 w-4 text-emerald-200" />
+                      <UserCircle2 className="h-3.5 w-3.5 text-emerald-200" />
                     )}
-                    <span className="text-sm font-bold">
+                    <span className="text-xs xl:text-sm font-bold whitespace-nowrap">
                       {isAdmin ? "Admin" : "Pemohon"}
                     </span>
                   </div>

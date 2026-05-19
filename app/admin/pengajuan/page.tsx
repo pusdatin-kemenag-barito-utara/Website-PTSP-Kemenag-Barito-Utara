@@ -1,5 +1,5 @@
 import { FolderKanban } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { serializeBigInt } from "@/lib/db";
 import { PageHeader } from "@/components/admin/page-header";
 import { AdminRequestFilter } from "@/components/admin/pengajuan/request-filter";
@@ -20,7 +20,7 @@ export default async function AdminRequestsPage({
     page?: string;
   }>;
 }) {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("pengajuan");
   const isSuper = isSuperAdmin(profile.email);
   const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
   const isGeneralAdmin = specificRole === "admin_ptsp";

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { RequestService } from "@/lib/services/request-service";
+import { db } from "@/lib/db";
+import { serviceItems as serviceItemsTable } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 
 export const runtime = "nodejs";
 
@@ -27,6 +30,27 @@ export async function POST(request: Request) {
 
   const serviceId = BigInt(serviceIdInput);
   const serviceItemId = BigInt(serviceItemIdInput);
+
+  // Validasi kecocokan relasi serviceItem dengan serviceId, serta status aktif keduanya
+  const item = await db.query.serviceItems.findFirst({
+    where: and(
+      eq(serviceItemsTable.id, serviceItemId),
+      eq(serviceItemsTable.serviceId, serviceId),
+      eq(serviceItemsTable.isActive, true)
+    ),
+    with: {
+      service: {
+        columns: { isActive: true }
+      }
+    }
+  });
+
+  if (!item || !item.service || !item.service.isActive) {
+    return NextResponse.json(
+      { error: "Layanan tidak aktif atau tidak ditemukan." },
+      { status: 400 }
+    );
+  }
 
   try {
     const result = await RequestService.createByApplicant({

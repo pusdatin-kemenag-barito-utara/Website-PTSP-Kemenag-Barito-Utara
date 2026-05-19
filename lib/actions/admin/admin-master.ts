@@ -28,9 +28,8 @@ export type ActionResult = {
 
 // --- SERVICES ---
 export async function createServiceAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
-
     const validated = serviceSchema.safeParse({
       name: formData.get("name"),
       slug: slugify(String(formData.get("slug") || formData.get("name") || "")),
@@ -57,8 +56,8 @@ export async function createServiceAction(formData: FormData): Promise<ActionRes
 }
 
 export async function updateServiceAction(formData: FormData): Promise<ActionResult> {
+  const profile = await requirePermission("layanan");
   try {
-    const profile = await requireAdmin();
     const isSuper = isEmailSuperAdmin(profile.email);
     
     const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
@@ -101,8 +100,8 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
 }
 
 export async function deleteServiceAction(formData: FormData): Promise<ActionResult> {
+  const profile = await requirePermission("layanan");
   try {
-    const profile = await requireAdmin();
     const isSuper = isEmailSuperAdmin(profile.email);
     
     const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
@@ -133,9 +132,8 @@ export async function deleteServiceAction(formData: FormData): Promise<ActionRes
 }
 
 export async function reorderServicesAction(ids: number[]): Promise<ActionResult> {
+  await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
-
     await LayananService.reorderServices(ids);
 
     revalidatePath("/admin/layanan");

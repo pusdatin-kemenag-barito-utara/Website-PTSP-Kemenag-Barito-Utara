@@ -32,9 +32,8 @@ const DeleteUserSchema = z.object({
 });
 
 export async function updateUserRoleAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
-    
     const validated = UpdateUserRoleSchema.safeParse({
       id: formData.get("id"),
       role: formData.get("role"),
@@ -58,9 +57,8 @@ export async function updateUserPermissionsAction(
   userId: string,
   permissions: string[],
 ): Promise<ActionResult> {
+  await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
-
     const validated = UpdateUserPermissionsSchema.safeParse({ userId, permissions });
     if (!validated.success) {
       return { success: false, error: validated.error.issues[0].message };
@@ -76,9 +74,8 @@ export async function updateUserPermissionsAction(
 }
 
 export async function deleteUserPermanentlyAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
-
     const validated = DeleteUserSchema.safeParse({
       userId: formData.get("userId"),
     });

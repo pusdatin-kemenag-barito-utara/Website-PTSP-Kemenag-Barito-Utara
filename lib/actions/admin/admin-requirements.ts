@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { serviceRequirements as requirementsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -24,8 +24,8 @@ export type ActionResult = {
 };
 
 export async function createRequirementAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const validated = reqSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
       documentName: formData.get("documentName"),
@@ -55,8 +55,8 @@ export async function createRequirementAction(formData: FormData): Promise<Actio
 }
 
 export async function updateRequirementAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const id = BigInt(formData.get("id") as string);
     const validated = reqSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
@@ -90,8 +90,8 @@ export async function updateRequirementAction(formData: FormData): Promise<Actio
 }
 
 export async function deleteRequirementAction(formData: FormData): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     const id = BigInt(formData.get("id") as string);
     await db.delete(requirementsTable).where(eq(requirementsTable.id, id));
     revalidatePath("/admin/layanan/[id]", "page");
@@ -105,8 +105,8 @@ export async function deleteRequirementAction(formData: FormData): Promise<Actio
 }
 
 export async function reorderRequirementsAction(ids: string[]): Promise<ActionResult> {
+  await requirePermission("layanan");
   try {
-    await requireAdmin();
     await db.transaction(async (tx: any) => {
       for (let i = 0; i < ids.length; i++) {
         await tx

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getR2SignedUrl, isR2Path } from "@/lib/r2";
-import { requireAuth } from "@/lib/auth";
+import { getCurrentProfile } from "@/lib/auth";
 
 export async function GET(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     }
 
     // Basic security: check if user is logged in
-    const profile = await requireAuth();
+    const profile = await getCurrentProfile();
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

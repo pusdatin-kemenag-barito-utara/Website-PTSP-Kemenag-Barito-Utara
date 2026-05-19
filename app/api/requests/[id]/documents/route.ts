@@ -77,6 +77,14 @@ export async function POST(
     );
   }
 
+  // Pastikan requirement ini benar-benar ditujukan untuk tipe item layanan yang diajukan
+  if (BigInt(requirement.serviceItemId) !== BigInt(serviceRequest.serviceItemId)) {
+    return NextResponse.json(
+      { error: "Persyaratan dokumen tidak sesuai dengan pengajuan ini." },
+      { status: 400 },
+    );
+  }
+
   if (file.size > (Number(requirement.maxFileSizeMb) || 5) * 1024 * 1024) {
     return NextResponse.json(
       { error: "Ukuran file melebihi batas." },

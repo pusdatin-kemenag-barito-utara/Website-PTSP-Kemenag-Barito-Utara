@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
+import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { services as servicesTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -11,7 +12,7 @@ export default async function EditServicePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const profile = await requirePermission("layanan");
   const { id } = await params;
 
   const service = await db.query.services.findFirst({
@@ -19,6 +20,14 @@ export default async function EditServicePage({
   });
 
   if (!service) {
+    notFound();
+  }
+
+  const isSuper = isSuperAdmin(profile.email);
+  const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+  const isGeneralAdmin = specificRole === "admin_ptsp";
+
+  if (!isSuper && !isGeneralAdmin && service.roleOwner !== specificRole) {
     notFound();
   }
 

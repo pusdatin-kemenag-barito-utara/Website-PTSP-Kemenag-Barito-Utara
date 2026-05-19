@@ -4,6 +4,18 @@ import { History, MessageSquare, Activity, User } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { ActivityLogActions } from "./activity-log-actions";
 
+const ACTION_MAPPINGS: Record<string, string> = {
+  submitted: "Pengajuan Dikirim",
+  request_updated: "Pembaruan Data & Dokumen",
+  revision_uploaded: "Dokumen Revisi Diunggah",
+  review_submitted: "Peninjauan oleh Petugas",
+  "Pemohon memperbarui data formulir": "Formulir Diperbarui",
+};
+
+function formatAction(action: string): string {
+  return ACTION_MAPPINGS[action] || action;
+}
+
 export function HistoryTimelineCard({ request }: { request: any }) {
   const combined = [
     ...(request.serviceRequestReviews || []).map((r: any) => ({
@@ -78,7 +90,7 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                   ) : (
                     <>
                       <p className="text-sm font-bold text-slate-800">
-                        {item.action}
+                        {formatAction(item.action)}
                       </p>
                       <ActivityLogActions
                         logId={item.id.toString()}

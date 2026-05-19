@@ -24,7 +24,7 @@ export default async function DashboardHomePage() {
     revision: requests.filter((item) => item.status === "revision_required")
       .length,
     finished: requests.filter((item) =>
-      ["approved", "completed"].includes(item.status || ""),
+      ["approved", "completed", "rejected"].includes(item.status || ""),
     ).length,
   };
 

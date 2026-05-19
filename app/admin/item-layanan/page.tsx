@@ -1,5 +1,5 @@
 import { Layers } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import {
   services as servicesTable,
@@ -12,7 +12,7 @@ import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { eq, sql } from "drizzle-orm";
 
 export default async function AdminServiceItemsPage() {
-  const profile = await requireAdmin();
+  const profile = await requirePermission("layanan");
   const isSuper = isSuperAdmin(profile.email);
   const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
   const isGeneralAdmin = specificRole === "admin_ptsp";

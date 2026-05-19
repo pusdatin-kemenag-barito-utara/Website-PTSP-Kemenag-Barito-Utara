@@ -7,8 +7,30 @@ import { z } from "zod";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 import { RequestService } from "@/lib/services/request-service";
 import { db } from "@/lib/db";
-import { activityLogs } from "@/lib/db/schema";
+import { activityLogs, serviceRequests } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
+
+async function verifyRequestOwnership(requestId: string, email: string, role: string) {
+  const isSuper = isSuperAdmin(email);
+  const specificRole = getAdminSpecificRole(email, role);
+  const isGeneralAdmin = specificRole === "admin_ptsp";
+
+  if (isSuper || isGeneralAdmin) return true;
+
+  const request = await db.query.serviceRequests.findFirst({
+    where: eq(serviceRequests.id, requestId),
+    with: {
+      services: { columns: { roleOwner: true } },
+    },
+  });
+
+  if (!request || request.services?.roleOwner !== specificRole) {
+    throw new Error("Anda tidak memiliki akses ke pengajuan ini");
+  }
+
+  return true;
+}
 
 export type ActionResult = {
   success: boolean;
@@ -32,9 +54,8 @@ const UpdateStatusSchema = z.object({
 export async function updateRequestStatusAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  const adminProfile = await requireAdmin();
   try {
-    const adminProfile = await requireAdmin();
-
     const validated = UpdateStatusSchema.safeParse({
       requestId: formData.get("requestId"),
       status: formData.get("status"),
@@ -46,6 +67,8 @@ export async function updateRequestStatusAction(
     }
 
     const { requestId, status, notes = "" } = validated.data;
+
+    await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
 
     await RequestService.updateStatus(requestId, status, notes, adminProfile.id);
 
@@ -73,9 +96,8 @@ const UploadResultSchema = z.object({
 export async function uploadResultDocumentAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  const adminProfile = await requireAdmin();
   try {
-    const adminProfile = await requireAdmin();
-
     const validated = UploadResultSchema.safeParse({
       requestId: formData.get("requestId"),
       file: formData.get("file"),
@@ -86,6 +108,8 @@ export async function uploadResultDocumentAction(
     }
 
     const { requestId, file } = validated.data;
+
+    await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
 
     await RequestService.uploadResult(requestId, file, adminProfile.id);
 
@@ -110,10 +134,9 @@ const DeleteRequestSchema = z.object({
 export async function deleteRequestAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  const adminProfile = await requireAdmin();
   let shouldRedirect = false;
   try {
-    const adminProfile = await requireAdmin();
-
     const validated = DeleteRequestSchema.safeParse({
       requestId: formData.get("requestId"),
     });
@@ -123,6 +146,8 @@ export async function deleteRequestAction(
     }
 
     const { requestId } = validated.data;
+
+    await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
 
     await RequestService.deleteRequest(requestId, adminProfile.id);
 
@@ -151,9 +176,8 @@ const LogActionSchema = z.object({
 export async function deleteActivityLogAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  const adminProfile = await requireAdmin();
   try {
-    await requireAdmin();
-
     const validated = LogActionSchema.safeParse({
       logId: formData.get("logId"),
       requestId: formData.get("requestId"),
@@ -164,6 +188,8 @@ export async function deleteActivityLogAction(
     }
 
     const { logId, requestId } = validated.data;
+
+    await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
 
     await db.delete(activityLogs).where(eq(activityLogs.id, BigInt(logId)));
 
@@ -184,9 +210,8 @@ const UpdateLogSchema = LogActionSchema.extend({
 export async function updateActivityLogAction(
   formData: FormData,
 ): Promise<ActionResult> {
+  const adminProfile = await requireAdmin();
   try {
-    await requireAdmin();
-
     const validated = UpdateLogSchema.safeParse({
       logId: formData.get("logId"),
       requestId: formData.get("requestId"),
@@ -198,6 +223,8 @@ export async function updateActivityLogAction(
     }
 
     const { logId, requestId, notes = "" } = validated.data;
+
+    await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
 
     await db
       .update(activityLogs)
