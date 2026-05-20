@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/footer";
 import { ConditionalShell } from "@/components/layout/conditional-shell";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ChatWidget } from "@/components/features/chat/ChatWidget";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
@@ -127,6 +128,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <ConditionalShell header={<SiteHeader />} footer={<SiteFooter />}>
               {children}
               <Analytics />
+              <SpeedInsights />
             </ConditionalShell>
             <Toaster 
               position="top-center" 
