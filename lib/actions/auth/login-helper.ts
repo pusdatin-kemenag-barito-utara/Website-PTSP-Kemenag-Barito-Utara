@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function getEmailByPhoneAction(phone: string) {
   if (!phone) throw new Error("Nomor WhatsApp wajib diisi.");
@@ -29,22 +30,8 @@ export async function verifyTurnstileAction(token: string) {
     return { success: false, error: "Token keamanan tidak ditemukan." };
 
   try {
-    const response = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          secret: process.env.TURNSTILE_SECRET_KEY || "",
-          response: token,
-        }),
-      }
-    );
-
-    const data = await response.json();
-    return { success: data.success };
+    const success = await verifyTurnstileToken(token);
+    return { success };
   } catch (err) {
     console.error("Turnstile verify error:", err);
     return { success: false, error: "Gagal memverifikasi keamanan." };

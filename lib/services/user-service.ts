@@ -20,9 +20,16 @@ export class UserService {
 
     const authUpdates: any = {};
     
-    // If phone changes, we update email (phone@ptsp.id pattern used in this project)
+    // If phone changes, we update email (based on user role pattern)
     if (phone) {
-      const newEmail = `${phone}@ptsp.id`;
+      const digits = phone.replace(/\D/g, "");
+      const profile = await db.query.profiles.findFirst({
+        where: eq(profilesTable.id, userId),
+        columns: { role: true },
+      });
+      const prefix = profile?.role === "user" ? "p" : "staff_";
+      const newEmail = `${prefix}${digits}@ptsp.id`;
+      
       authUpdates.email = newEmail;
       authUpdates.email_confirm = true;
       updateData.email = newEmail;

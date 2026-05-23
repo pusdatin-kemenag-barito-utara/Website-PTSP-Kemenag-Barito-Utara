@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { feedbacks } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { createAuditLog } from "@/lib/audit";
 
 export type ActionResult = {
@@ -17,21 +18,17 @@ export async function deleteFeedbackAction(idStr: string): Promise<ActionResult>
   try {
     const id = BigInt(idStr);
 
-    // Fetch the feedback to log in audit trail
-    const result = await db.execute(sql`
-      SELECT name, phone, content FROM feedbacks WHERE id = ${id} LIMIT 1;
-    `);
-
-    const entry = result.rows[0] as { name: string; phone: string; content: string } | undefined;
+    // Fetch the feedback to log in audit trail using Drizzle ORM
+    const entry = await db.query.feedbacks.findFirst({
+      where: eq(feedbacks.id, id),
+    });
 
     if (!entry) {
       return { success: false, error: "Saran & pengaduan tidak ditemukan" };
     }
 
-    // Delete feedback
-    await db.execute(sql`
-      DELETE FROM feedbacks WHERE id = ${id};
-    `);
+    // Delete feedback using Drizzle ORM
+    await db.delete(feedbacks).where(eq(feedbacks.id, id));
 
     // Create Audit Log
     await createAuditLog({

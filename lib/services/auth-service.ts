@@ -92,10 +92,11 @@ export class AuthService {
           role,
           permissions,
           plainPassword: password,
+          isVerified: false,
         })
         .onConflictDoUpdate({
           target: profilesTable.id,
-          set: { fullName, email: internalEmail, phone, address, role, permissions, plainPassword: password, updatedAt: new Date() },
+          set: { fullName, email: internalEmail, phone, address, role, permissions, plainPassword: password, isVerified: false, updatedAt: new Date() },
         });
     } catch (err) {
       await admin.auth.admin.deleteUser(authUser.user.id);

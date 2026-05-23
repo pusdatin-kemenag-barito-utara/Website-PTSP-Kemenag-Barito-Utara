@@ -125,7 +125,7 @@ export function LoginFormByRole({
       const role = String(profile.role || "user");
       const isPetugasRole = isAdminRole(role);
 
-      if (mode === "petugas" && isPetugasRole && profile.isVerified === false) {
+      if (isPetugasRole && profile.isVerified === false) {
         await supabase.auth.signOut();
         setLoading(false);
         setError("Akun Anda sedang menunggu verifikasi dari Super Admin.");

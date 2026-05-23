@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getR2SignedUrl, isR2Path } from "@/lib/r2";
 import { getCurrentProfile } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { serviceRequestDocuments, generatedDocuments } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { isAdminRole, isSuperAdmin } from "@/lib/constants";
 
 export async function GET(request: Request) {
   try {
@@ -15,6 +19,40 @@ export async function GET(request: Request) {
     const profile = await getCurrentProfile();
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Authorization & Ownership Verification
+    const isUserAdmin = isAdminRole(profile.role) || isSuperAdmin(profile.email);
+    if (!isUserAdmin) {
+      // Find if this path exists in serviceRequestDocuments
+      const doc = await db.query.serviceRequestDocuments.findFirst({
+        where: eq(serviceRequestDocuments.filePath, path),
+        with: {
+          request: true,
+        },
+      });
+
+      let hasAccess = false;
+      if (doc && doc.request && doc.request.userId === profile.id) {
+        hasAccess = true;
+      }
+
+      if (!hasAccess) {
+        // Check if this path exists in generatedDocuments
+        const genDoc = await db.query.generatedDocuments.findFirst({
+          where: eq(generatedDocuments.filePath, path),
+          with: {
+            request: true,
+          },
+        });
+        if (genDoc && genDoc.request && genDoc.request.userId === profile.id) {
+          hasAccess = true;
+        }
+      }
+
+      if (!hasAccess) {
+        return NextResponse.json({ error: "Forbidden - You do not have permission to access this file" }, { status: 403 });
+      }
     }
 
     // Generate a signed URL that expires in 1 hour

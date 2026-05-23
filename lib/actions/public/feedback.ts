@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { feedbacks } from "@/lib/db/schema";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { headers } from "next/headers";
 
@@ -36,24 +36,13 @@ export async function submitFeedbackAction(input: FeedbackInput) {
   }
 
   try {
-    // Self-healing table creation in PostgreSQL if it does not exist yet
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS feedbacks (
-        id BIGSERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
-
-    // Insert record safely
-    await db.execute(sql`
-      INSERT INTO feedbacks (name, email, phone, content)
-      VALUES (${name}, ${email}, ${phone}, ${content});
-    `);
+    // Insert record safely using Drizzle ORM
+    await db.insert(feedbacks).values({
+      name,
+      email,
+      phone,
+      content,
+    });
 
     return { success: true };
   } catch (error) {

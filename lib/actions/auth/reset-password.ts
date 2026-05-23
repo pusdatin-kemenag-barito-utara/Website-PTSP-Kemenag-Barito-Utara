@@ -4,8 +4,33 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
+import crypto from "crypto";
+
+const JWT_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_reset";
+
+function generateResetToken(phone: string): string {
+  const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes expiry
+  const data = `${phone}:${expiresAt}`;
+  const signature = crypto.createHmac("sha256", JWT_SECRET).update(data).digest("hex");
+  return `${phone}:${expiresAt}:${signature}`;
+}
+
+function verifyResetToken(phone: string, token: string): boolean {
+  try {
+    const [tokenPhone, expiresAtStr, signature] = token.split(":");
+    if (tokenPhone !== phone) return false;
+    
+    const expiresAt = Number(expiresAtStr);
+    if (Date.now() > expiresAt) return false; // Expired
+    
+    const data = `${phone}:${expiresAt}`;
+    const expectedSignature = crypto.createHmac("sha256", JWT_SECRET).update(data).digest("hex");
+    return signature === expectedSignature;
+  } catch (e) {
+    return false;
+  }
+}
 
 export async function checkPhoneExistsAction(phone: string, token: string) {
   if (!phone) return { error: "Nomor HP wajib diisi." };
@@ -23,7 +48,9 @@ export async function checkPhoneExistsAction(phone: string, token: string) {
   if (!profile) {
     return { exists: false };
   }
-  return { exists: true };
+  
+  const resetToken = generateResetToken(phone);
+  return { exists: true, resetToken };
 }
 
 export async function checkEmailExistsAction(email: string, token: string) {
@@ -50,17 +77,22 @@ export async function checkEmailExistsAction(email: string, token: string) {
   return { success: true };
 }
 
-
 export async function resetPasswordByPhoneAction(
   phone: string,
   newPassword: string,
+  resetToken: string,
 ) {
-  if (!phone || !newPassword) {
-    return { error: "Data tidak lengkap." };
+  if (!phone || !newPassword || !resetToken) {
+    return { error: "Data tidak lengkap atau token tidak valid." };
   }
 
   if (newPassword.length < 6) {
     return { error: "Password minimal 6 karakter." };
+  }
+
+  // Verify cryptographic reset token
+  if (!verifyResetToken(phone, resetToken)) {
+    return { error: "Sesi verifikasi Anda telah kedaluwarsa atau tidak valid. Silakan ulangi dari langkah pertama." };
   }
 
   const admin = createAdminClient();

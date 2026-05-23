@@ -58,6 +58,9 @@ export async function requireAdmin() {
   if (!isAdminRole(profile.role) && !isSuperAdmin(profile.email)) {
     redirect("/dashboard");
   }
+  if (!profile.isVerified && !isSuperAdmin(profile.email)) {
+    redirect("/dashboard");
+  }
   return profile;
 }
 

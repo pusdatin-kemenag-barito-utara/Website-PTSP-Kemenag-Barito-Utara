@@ -30,7 +30,7 @@ export async function deleteGuestBookAction(idStr: string): Promise<ActionResult
 
     await createAuditLog({
       adminId: profile.id,
-      action: "HAPUS_BUKU_MUTASI",
+      action: "HAPUS_BUKU_TAMU",
       entityType: "guest_book",
       entityId: idStr,
       details: {

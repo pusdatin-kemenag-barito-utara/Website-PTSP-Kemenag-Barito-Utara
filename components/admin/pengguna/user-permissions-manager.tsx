@@ -22,7 +22,7 @@ import {
   Mail,
 } from "lucide-react";
 import { toast } from "sonner";
-import { updateUserPermissionsAction } from "@/lib/actions/user/user-permissions";
+import { updateUserPermissionsAction } from "@/lib/actions/admin/admin-users";
 import { DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
 
 const MENU_GROUPS = [

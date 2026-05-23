@@ -8,7 +8,7 @@ import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 import { RequestService } from "@/lib/services/request-service";
 import { db } from "@/lib/db";
 import { activityLogs, serviceRequests } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 
 async function verifyRequestOwnership(requestId: string, email: string, role: string) {
@@ -191,7 +191,14 @@ export async function deleteActivityLogAction(
 
     await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
 
-    await db.delete(activityLogs).where(eq(activityLogs.id, BigInt(logId)));
+    await db
+      .delete(activityLogs)
+      .where(
+        and(
+          eq(activityLogs.id, BigInt(logId)),
+          eq(activityLogs.requestId, requestId)
+        )
+      );
 
     revalidatePath(`/admin/pengajuan/${requestId}`);
     revalidatePath("/track");
@@ -229,7 +236,12 @@ export async function updateActivityLogAction(
     await db
       .update(activityLogs)
       .set({ notes })
-      .where(eq(activityLogs.id, BigInt(logId)));
+      .where(
+        and(
+          eq(activityLogs.id, BigInt(logId)),
+          eq(activityLogs.requestId, requestId)
+        )
+      );
 
     revalidatePath(`/admin/pengajuan/${requestId}`);
     revalidatePath("/track");

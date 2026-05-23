@@ -44,7 +44,9 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getClaims();
+  try {
+    await supabase.auth.getUser();
+  } catch (e) {}
 
   return supabaseResponse;
 }

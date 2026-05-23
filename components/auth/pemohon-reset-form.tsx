@@ -59,6 +59,7 @@ export function PemohonResetForm() {
   const [phone, setPhone] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetToken, setResetToken] = useState("");
   
   const strength = getPasswordStrength(newPassword);
 
@@ -91,6 +92,9 @@ export function PemohonResetForm() {
       return setError("Nomor HP tidak ditemukan dalam sistem.");
     }
 
+    if (result.resetToken) {
+      setResetToken(result.resetToken);
+    }
     setStep(2);
   };
 
@@ -102,7 +106,7 @@ export function PemohonResetForm() {
     setLoading(true);
     setError("");
 
-    const result = await resetPasswordByPhoneAction(phone, newPassword);
+    const result = await resetPasswordByPhoneAction(phone, newPassword, resetToken);
 
     setLoading(false);
     if (result.error) {
