@@ -17,7 +17,7 @@ const inter = Inter({
   display: "swap",
   variable: "--font-inter",
 });
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ptsp.kemenag-baritoutara.com";
+const appUrl = "https://ptsp.kemenag-baritoutara.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
