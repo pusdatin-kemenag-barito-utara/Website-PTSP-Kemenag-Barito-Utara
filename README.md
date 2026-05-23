@@ -1,112 +1,128 @@
 # PTSP Kemenag Barito Utara
 
-Starter project Next.js untuk sistem PTSP Kemenag Barito Utara.
+Starter project Next.js untuk sistem Pelayanan Terpadu Satu Pintu (PTSP) Kemenag Barito Utara.
 
-## Stack
+## Teknologi & Dependensi Utama
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Turbopack
-- Supabase Auth, Database, Storage
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router) dengan React 19
+- **Bahasa**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling & UI**: 
+  - [Tailwind CSS v4](https://tailwindcss.com/)
+  - [Framer Motion](https://www.framer.com/motion/)
+  - [Lucide React](https://lucide.dev/) (Icons)
+  - [Sonner](https://sonner.emilkowal.ski/) (Toast Notifications)
+- **Database & ORM**: 
+  - [PostgreSQL](https://www.postgresql.org/)
+  - [Drizzle ORM](https://orm.drizzle.team/)
+- **Backend as a Service (BaaS)**: [Supabase](https://supabase.com/) (Auth, PostgreSQL Database, Storage)
+- **Form & Validasi**: 
+  - [React Hook Form](https://react-hook-form.com/)
+  - [Zod](https://zod.dev/)
+- **Utilitas Dokumen**:
+  - `pdf-lib`, `jspdf` (Pemrosesan PDF)
+  - `exceljs` (Ekspor Excel)
+- **Fitur Tambahan**: 
+  - PWA Support (`@ducanh2912/next-pwa`)
+  - Vercel Analytics & Speed Insights
 
-## Cara menjalankan
+## Prasyarat
 
-1. Install dependency
+- Node.js versi 24.x
+- Akun dan Project Supabase
 
-```bash
-npm install
-```
+## Cara Menjalankan secara Lokal
 
-2. Salin file environment
+1. **Install dependensi**
 
-```bash
-cp .env.example .env.local
-```
+   ```bash
+   npm install
+   ```
 
-3. Isi nilai Supabase pada `.env.local`
+2. **Pengaturan Environment**
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+   Salin `.env.example` ke `.env.local` (atau buat file `.env.local` baru jika tidak ada) lalu sesuaikan nilainya dengan konfigurasi Supabase Anda:
 
-4. Buat project Supabase lalu jalankan SQL di file berikut secara berurutan
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://[YOUR_PROJECT_REF].supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=[YOUR_ANON_KEY]
+   DATABASE_URL=postgres://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+   ```
 
-- `supabase/schema.sql`
-- `supabase/seed.sql`
+3. **Inisialisasi Database (Drizzle ORM)**
 
-5. Siapkan bucket storage
+   Project ini menggunakan Drizzle ORM untuk manajemen skema. Dorong skema terbaru ke database Supabase Anda:
 
-Sebenarnya bucket sudah dibuat di `schema.sql`. Pastikan bucket berikut tersedia:
+   ```bash
+   npx drizzle-kit push
+   ```
 
-- `request-documents`
-- `generated-documents`
+4. **Siapkan Bucket Storage**
 
-6. Jalankan aplikasi
+   Pastikan bucket berikut tersedia di Supabase Storage (bisa dibuat via UI Supabase):
+   - `request-documents`
+   - `generated-documents`
 
-```bash
-npm run dev
-```
+5. **Jalankan Aplikasi**
 
-7. Buka browser
+   ```bash
+   npm run dev
+   ```
 
-```text
-http://localhost:3000
-```
+6. **Buka Browser**
 
-## Akun admin
+   Akses [http://localhost:3000](http://localhost:3000)
 
-Project ini tidak membuat user auth admin secara otomatis karena tabel auth.users dikelola Supabase Auth.
+## Pengaturan Akun Admin
 
-Langkah cepat:
+Project ini tidak secara otomatis membuat user ber-role admin karena sistem otentikasi terpusat pada Supabase Auth.
+Langkah memberikan akses admin:
 
-1. Register user biasa dari aplikasi
-2. Buka SQL Editor Supabase
-3. Jalankan query ini
+1. Register akun biasa melalui halaman registrasi aplikasi.
+2. Buka Supabase Dashboard > SQL Editor, lalu jalankan query berikut:
 
-```sql
-update public.profiles
-set role = 'admin'
-where email = 'email-admin-anda@example.com';
-```
+   ```sql
+   UPDATE public.profiles
+   SET role = 'admin'
+   WHERE email = 'email-admin-anda@example.com';
+   ```
 
-Setelah itu login ulang. User tersebut akan masuk sebagai admin.
+3. Login ulang ke dalam aplikasi dengan akun tersebut untuk memuat role admin yang baru.
 
-## Fitur utama
+## Fitur Utama
 
-- Registrasi, login, logout, reset password
-- Dashboard pemohon
-- Dashboard admin
-- CRUD layanan
-- CRUD item layanan
-- CRUD field form dinamis
-- CRUD persyaratan dokumen
-- Pengajuan layanan berbasis database
-- Upload dokumen
-- Workflow revisi, tolak, terima
-- Riwayat aktivitas
-- Download dokumen hasil
+- **Autentikasi**: Registrasi, login, logout, reset password terintegrasi Supabase Auth.
+- **Dashboard**: Panel interaktif untuk pemohon dan admin.
+- **Manajemen Layanan**: CRUD layanan, item layanan, field form dinamis, dan persyaratan dokumen.
+- **Pengajuan Layanan**: Pengisian form berbasis database yang dinamis.
+- **Manajemen Dokumen**: Upload dan penyimpanan berkas terintegrasi dengan Supabase Storage.
+- **Workflow**: Proses review dokumen (terima, revisi, tolak).
+- **Ekspor Dokumen**: Download dokumen hasil layanan (PDF/Excel) & log aktivitas.
+- **Buku Tamu**: Pencatatan tamu (Guest Book) digital.
+- **Janji Temu**: Penjadwalan pertemuan (Appointments).
+- **Notifikasi**: Sistem notifikasi dalam aplikasi untuk melacak status pengajuan.
 
-## Catatan penting
+## Struktur Direktori Utama
 
-- Upload dokumen memakai `SUPABASE_SERVICE_ROLE_KEY` di sisi server.
-- Route admin dicek dari role pada tabel `profiles`.
-- Middleware dipakai untuk refresh session Supabase berbasis cookie.
-- Semua query penting memakai validasi sisi server.
+- `app/` - Routing aplikasi Next.js (App Router), halaman, dan API routes.
+- `components/` - Komponen UI React yang dapat digunakan ulang.
+- `lib/` - Helper, konfigurasi library, dan definisi skema Drizzle ORM (`lib/db/schema`).
+- `drizzle/` - File migrasi Drizzle (jika menggunakan workflow migrasi manual).
+- `public/` - Aset statis seperti logo dan file PWA.
 
-## Struktur ringkas
+## Catatan Penting
 
-```text
-app/
-components/
-lib/
-supabase/
-```
+- Validasi rute (admin vs pemohon) dilakukan melalui role pada tabel `profiles` dan diproses menggunakan middleware di sisi server.
+- Semua kueri dan pembaruan database kritikal direkomendasikan berjalan di server-side untuk memastikan keamanan.
+- Integrasi *Service Role Key* diperlukan pada kondisi backend khusus (misalnya server actions tertentu) jika dibutuhkan operasi tanpa RLS (Row Level Security).
 
-## Saran deployment
+## Panduan Deployment
 
-- Frontend: Vercel
-- Database/Auth/Storage: Supabase
-- Simpan environment variable di platform deployment
-- Aktifkan email auth yang sesuai kebutuhan
-- Tambahkan domain resmi instansi pada redirect URL Supabase
+Rekomendasi Deployment:
+- **Frontend**: [Vercel](https://vercel.com)
+- **Database, Auth & Storage**: [Supabase](https://supabase.com)
+
+**Langkah Deployment**:
+1. Impor project ke Vercel.
+2. Atur Environment Variables di Vercel sama seperti di `.env.local`.
+3. Pada Supabase Dashboard > Authentication > URL Configuration, pastikan URL produksi Vercel didaftarkan sebagai *Site URL* dan *Redirect URLs*.
+4. Pastikan migrasi/push schema Drizzle telah dijalankan pada database produksi.

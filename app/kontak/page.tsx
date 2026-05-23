@@ -2,6 +2,12 @@ import { ContactInfoCards } from "@/components/contact/contact-info-cards";
 import { ContactChannels } from "@/components/contact/contact-channels";
 import { ContactFaq } from "@/components/contact/contact-faq";
 import PageBanner from "@/components/common/PageBanner";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Hubungi Kami & Pusat Bantuan",
+  description: "Kontak resmi, jam operasional, alamat kantor, dan FAQ Pelayanan Terpadu Satu Pintu (PTSP) Kemenag Barito Utara.",
+};
 
 export default function ContactPage() {
   return (

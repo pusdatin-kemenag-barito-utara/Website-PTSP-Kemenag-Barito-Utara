@@ -2,6 +2,12 @@ import { Building2, Layers3 } from "lucide-react";
 import { ServicesFilter } from "@/components/services/services-filter";
 import { getPublicServices } from "@/lib/queries";
 import PageBanner from "@/components/common/PageBanner";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Katalog Jenis Layanan",
+  description: "Cari tahu jenis layanan publik, persyaratan, biaya, dan estimasi waktu proses dokumen di PTSP Kemenag Barito Utara.",
+};
 
 export default async function ServicesPage() {
   const services = await getPublicServices();

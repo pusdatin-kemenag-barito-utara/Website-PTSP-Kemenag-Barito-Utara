@@ -1,6 +1,12 @@
 import { getPublicRequestStatus } from "@/lib/actions/public/public-track";
 import { RealtimeSync } from "@/components/ui/realtime-sync";
 import PageBanner from "@/components/common/PageBanner";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Lacak Permohonan Layanan",
+  description: "Lacak status permohonan dokumen administrasi keagamaan Anda secara real-time dan transparan di Kemenag Barito Utara.",
+};
 
 // Local Components
 import { TrackSearchForm } from "./_components/track-search-form";

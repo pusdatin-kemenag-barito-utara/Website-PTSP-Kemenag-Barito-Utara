@@ -162,12 +162,12 @@ export function SiteFooter() {
             </span>
             <span className="hidden md:block h-3 w-[1px] bg-white/10" />
             <a
-              href="https://www.kemenag-baritoutara.com/"
+              href="https://baritoutara.kemenag.go.id/"
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 transition-all hover:text-white"
             >
-              www.kemenag-baritoutara.com{" "}
+              baritoutara.kemenag.go.id{" "}
               <ExternalLink className="h-2.5 w-2.5" />
             </a>
           </div>

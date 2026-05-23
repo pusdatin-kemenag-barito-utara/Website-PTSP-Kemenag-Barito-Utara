@@ -17,8 +17,10 @@ const inter = Inter({
   display: "swap",
   variable: "--font-inter",
 });
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ptsp.kemenag-baritoutara.com";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ptsp.kemenag-baritoutara.com"),
+  metadataBase: new URL(appUrl),
   title: {
     default: "Pelayanan Terpadu Satu Pintu (PTSP) - Kemenag Barito Utara",
     template: "%s | PTSP Kemenag Barito Utara",
@@ -53,14 +55,16 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "PTSP Kemenag Barito Utara",
     title: "Pelayanan Terpadu Satu Pintu (PTSP) - Kemenag Barito Utara",
-    description: "Portal resmi layanan administrasi keagamaan (PTSP) Kantor Kementerian Agama Kabupaten Barito Utara.",
-    url: "https://ptsp.kemenag-baritoutara.com",
+    description:
+      "Portal resmi layanan administrasi keagamaan (PTSP) Kantor Kementerian Agama Kabupaten Barito Utara.",
+    url: appUrl,
     locale: "id_ID",
   },
   twitter: {
     card: "summary_large_image",
     title: "PTSP Kemenag Barito Utara",
-    description: "Portal resmi layanan administrasi keagamaan Kantor Kementerian Agama Kabupaten Barito Utara.",
+    description:
+      "Portal resmi layanan administrasi keagamaan Kantor Kementerian Agama Kabupaten Barito Utara.",
     creator: "@kemenag_barut",
   },
   robots: {
@@ -86,33 +90,41 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const jsonLd = [
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "PTSP Kemenag Barito Utara",
-      "alternateName": ["PTSP Barut", "Kemenag Barito Utara"],
-      "url": "https://ptsp.kemenag-baritoutara.com",
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "GovernmentOrganization",
-      "name": "Kantor Kementerian Agama Kabupaten Barito Utara",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Jl. A. Yani No. 6",
-        "addressLocality": "Muara Teweh",
-        "addressRegion": "Kalimantan Tengah",
-        "addressCountry": "ID"
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${appUrl}/#website`,
+        url: appUrl,
+        name: "PTSP Kemenag Barito Utara",
+        alternateName: ["PTSP Barito Utara", "Kemenag Barito Utara"],
+        publisher: {
+          "@id": `${appUrl}/#organization`,
+        },
       },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+6251921xxx",
-        "contactType": "customer service"
+      {
+        "@type": "GovernmentOrganization",
+        "@id": `${appUrl}/#organization`,
+        name: "Kantor Kementerian Agama Kabupaten Barito Utara",
+        url: appUrl,
+        logo: `${appUrl}/kemenag-512.png`,
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "Jl. Ahmad Yani No. 126",
+          addressLocality: "Muara Teweh",
+          addressRegion: "Kalimantan Tengah",
+          postalCode: "73811",
+          addressCountry: "ID",
+        },
+        contactPoint: {
+          "@type": "ContactPoint",
+          telephone: "+6251921269",
+          contactType: "customer service",
+        },
       },
-      "logo": "https://ptsp.kemenag-baritoutara.com/kemenag-512.png"
-    }
-  ];
+    ],
+  };
 
   return (
     <html lang="id" className={`${inter.variable}`}>
@@ -130,18 +142,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Analytics />
               <SpeedInsights />
             </ConditionalShell>
-            <Toaster 
-              position="top-center" 
+            <Toaster
+              position="top-center"
               richColors
               toastOptions={{
                 style: {
-                  borderRadius: '14px',
-                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid rgba(226, 232, 240, 0.8)',
-                  padding: '16px',
-                  fontWeight: '500'
+                  borderRadius: "14px",
+                  boxShadow:
+                    "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                  border: "1px solid rgba(226, 232, 240, 0.8)",
+                  padding: "16px",
+                  fontWeight: "500",
                 },
-                className: "text-[14px]"
+                className: "text-[14px]",
               }}
             />
             <ChatWidget />

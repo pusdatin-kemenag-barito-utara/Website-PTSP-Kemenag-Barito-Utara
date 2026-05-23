@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     // Default URL Website Utama (Bisa di-override jika ada variabel environment)
     const mainApiUrl =
       process.env.MAIN_WEBSITE_API_URL ||
-      "https://www.kemenag-baritoutara.com/api/chat";
+      "https://baritoutara.kemenag.go.id/api/chat";
 
     // Informasi khusus yang di-inject dari PTSP
     const ptspContext = `
@@ -25,12 +25,16 @@ USER SEDANG BERADA DI PORTAL PTSP:
 - Jika ada kendala teknis dalam menggunakan portal PTSP ini, sampaikan bahwa website ini dikelola oleh Bapak Muhammad Nazilah, S.E.
 `;
 
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://ptsp.kemenag-baritoutara.com";
+
     const response = await fetch(mainApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         // Menambahkan referer agar OpenRouter di server utama mengetahui asalnya
-        "HTTP-Referer": "https://ptsp.kemenag-baritoutara.com",
+        "HTTP-Referer": appUrl,
         "X-Title": "PTSP Kemenag Barut AI",
       },
       body: JSON.stringify({ messages, system_injection: ptspContext }),
