@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { Home, LogOut } from "lucide-react";
+import { signOutAction } from "@/lib/actions/auth/sign-out";
 
 export function SidebarFooter() {
   const handleSignOut = async () => {
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    await signOutAction();
   };
 
   return (

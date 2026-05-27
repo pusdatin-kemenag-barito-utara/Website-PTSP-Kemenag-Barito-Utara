@@ -5,6 +5,8 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/auth";
 import { AuthService } from "@/lib/services/auth-service";
 import { AdminService } from "@/lib/services/admin-service";
+import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
+import { UserService } from "@/lib/services/user-service";
 
 export type ActionResult = {
   success: boolean;
@@ -23,7 +25,12 @@ const RegisterPetugasSchema = z.object({
 
 export async function registerPetugasAction(formData: FormData): Promise<ActionResult> {
   try {
-    // For now, anyone can register as staff but they MUST be verified by Super Admin
+    const turnstileToken = String(formData.get("turnstile_token") || "");
+    const verifyRes = await verifyTurnstileAction(turnstileToken);
+    if (!verifyRes.success) {
+      return { success: false, error: "Verifikasi keamanan gagal. Silakan coba lagi." };
+    }
+
     const validated = RegisterPetugasSchema.safeParse({
       fullName: formData.get("full_name"),
       phone: formData.get("phone"),
@@ -89,5 +96,3 @@ export async function updatePetugasAction(data: any): Promise<ActionResult> {
     return { success: false, error: error.message || "Gagal memperbarui data petugas" };
   }
 }
-
-import { UserService } from "@/lib/services/user-service";

@@ -92,6 +92,17 @@ export function FormLayananClient({
       return;
     }
 
+    const duplicateName = fields.some(
+      (f) =>
+        f.name === formData.name &&
+        f.serviceItemId.toString() === formData.serviceItemId &&
+        f.id !== editingField?.id,
+    );
+    if (duplicateName) {
+      toast.error("Nama field sudah digunakan dalam item layanan ini.");
+      return;
+    }
+
     const data = new FormData();
     data.append("serviceItemId", formData.serviceItemId);
     data.append("label", formData.label);

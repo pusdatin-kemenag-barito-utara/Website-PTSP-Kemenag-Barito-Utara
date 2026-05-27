@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
 import { registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
+import { isSafeRedirect } from "@/lib/utils";
 
 function normalizeWhatsappNumber(value: string) {
   const digits = value.replace(/\D/g, "");
@@ -68,8 +69,9 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         );
 
         // Automatic redirect after 2 seconds
-        const loginUrl = callbackUrl 
-          ? `/login/pemohon?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        const safeCallback = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : "";
+        const loginUrl = safeCallback 
+          ? `/login/pemohon?callbackUrl=${encodeURIComponent(safeCallback)}`
           : "/login/pemohon";
           
         setTimeout(() => {

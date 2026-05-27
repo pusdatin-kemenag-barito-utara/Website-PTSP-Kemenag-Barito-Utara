@@ -53,14 +53,14 @@ export default async function RequestDetailPage({
   if (requestData.userId !== profile.id) redirect("/dashboard");
 
   const request = serializeBigInt(requestData);
-  const docUrls = await Promise.all(
+  const docUrls = (await Promise.allSettled(
     (request.serviceRequestDocuments ?? []).map(async (doc: any) => ({
       id: doc.id,
       url: await getSignedUrl("request-documents", doc.filePath),
     })),
-  );
+  )).filter((r) => r.status === "fulfilled").map((r: any) => r.value);
 
-  const generatedDoc = Array.isArray(request.generatedDocuments)
+  const generatedDoc = Array.isArray(request.generatedDocuments) && request.generatedDocuments.length > 0
     ? request.generatedDocuments[0]
     : request.generatedDocuments;
 

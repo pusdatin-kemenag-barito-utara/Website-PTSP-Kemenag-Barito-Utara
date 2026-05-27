@@ -20,8 +20,7 @@ import { AdminDashboardMetrics } from "@/components/admin/dashboard/admin-dashbo
 import { AdminStatusProgress } from "@/components/admin/dashboard/admin-status-progress";
 import { AdminQuickLinks } from "@/components/admin/dashboard/admin-quick-links";
 import { DashboardRealtimeSync } from "@/components/admin/dashboard/dashboard-realtime-sync";
-import { AdminServiceAnalytics } from "@/components/admin/dashboard/admin-service-analytics";
-import { AdminTrendAnalytics } from "@/components/admin/dashboard/admin-trend-analytics";
+import { AdminAnalyticsWrapper } from "@/components/admin/dashboard/admin-analytics-wrapper";
 
 // Lib Functions
 import {
@@ -32,7 +31,9 @@ import {
 import { getAdminSpecificRole } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
+// Note: revalidate = 0 is redundant when force-dynamic is used
+// Data is always fresh because the page is never statically rendered.
 
 export default async function AdminHomePage() {
   const profile = await requireAdmin();
@@ -142,11 +143,10 @@ export default async function AdminHomePage() {
         <AdminQuickLinks quickMenus={quickMenus} />
       </div>
 
-      {/* Analytics Charts Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <AdminServiceAnalytics data={serviceAnalytics} />
-        <AdminTrendAnalytics data={trendAnalytics} />
-      </div>
+      <AdminAnalyticsWrapper
+        serviceAnalytics={serviceAnalytics}
+        trendAnalytics={trendAnalytics}
+      />
     </div>
   );
 }

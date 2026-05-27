@@ -131,10 +131,11 @@ export async function deleteServiceAction(formData: FormData): Promise<ActionRes
   }
 }
 
-export async function reorderServicesAction(ids: number[]): Promise<ActionResult> {
+export async function reorderServicesAction(ids: (number | bigint | string)[]): Promise<ActionResult> {
   await requirePermission("super_admin");
   try {
-    await LayananService.reorderServices(ids);
+    const bigintIds = ids.map(id => BigInt(id));
+    await LayananService.reorderServices(bigintIds);
 
     revalidatePath("/admin/layanan");
     revalidatePath("/layanan");

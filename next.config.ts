@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   typedRoutes: false,
   // @ts-ignore
   turbopack: {},
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "50mb",

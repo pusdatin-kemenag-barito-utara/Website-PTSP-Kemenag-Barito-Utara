@@ -75,6 +75,21 @@ export function sanitizeFilename(name: string) {
   return name.replace(/[^a-z0-9.]/gi, "_").toLowerCase();
 }
 
+export function stripHtml(value: string): string {
+  return value.replace(/<[^>]*>/g, "").trim();
+}
+
+export function isSafeRedirect(url: string, origin?: string): boolean {
+  if (url.startsWith("/")) return true;
+  try {
+    const parsed = new URL(url);
+    const allowedOrigin = origin || (typeof window !== "undefined" ? window.location.origin : "");
+    return parsed.origin === allowedOrigin;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Mendapatkan URL publik untuk file berdasarkan prefix storage
  */

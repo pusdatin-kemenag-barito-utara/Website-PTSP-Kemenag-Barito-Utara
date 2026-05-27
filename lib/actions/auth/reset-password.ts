@@ -6,13 +6,40 @@ import { profiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 import crypto from "crypto";
+import { headers } from "next/headers";
 
-const JWT_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret_for_reset";
+const RATE_LIMIT_WINDOW = 60 * 1000;
+const RATE_LIMIT_MAX = 10;
+const rateLimitStore = new Map<string, { count: number; lastReset: number }>();
+
+async function checkRateLimit(): Promise<boolean> {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || headersList.get("x-real-ip")
+    || "unknown";
+  const now = Date.now();
+  const data = rateLimitStore.get(ip) || { count: 0, lastReset: now };
+  if (now - data.lastReset > RATE_LIMIT_WINDOW) {
+    data.count = 0;
+    data.lastReset = now;
+  }
+  data.count++;
+  rateLimitStore.set(ip, data);
+  return data.count <= RATE_LIMIT_MAX;
+}
+
+const JWT_SECRET = process.env.PASSWORD_RESET_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!JWT_SECRET) {
+  throw new Error("PASSWORD_RESET_SECRET or SUPABASE_SERVICE_ROLE_KEY environment variable is required");
+}
+
+const JWT_SECRET_BUF: crypto.BinaryLike = JWT_SECRET;
 
 function generateResetToken(phone: string): string {
   const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes expiry
   const data = `${phone}:${expiresAt}`;
-  const signature = crypto.createHmac("sha256", JWT_SECRET).update(data).digest("hex");
+  const signature = crypto.createHmac("sha256", JWT_SECRET_BUF).update(data).digest("hex");
   return `${phone}:${expiresAt}:${signature}`;
 }
 
@@ -25,7 +52,7 @@ function verifyResetToken(phone: string, token: string): boolean {
     if (Date.now() > expiresAt) return false; // Expired
     
     const data = `${phone}:${expiresAt}`;
-    const expectedSignature = crypto.createHmac("sha256", JWT_SECRET).update(data).digest("hex");
+    const expectedSignature = crypto.createHmac("sha256", JWT_SECRET_BUF).update(data).digest("hex");
     return signature === expectedSignature;
   } catch (e) {
     return false;
@@ -34,6 +61,9 @@ function verifyResetToken(phone: string, token: string): boolean {
 
 export async function checkPhoneExistsAction(phone: string, token: string) {
   if (!phone) return { error: "Nomor HP wajib diisi." };
+
+  const allowed = await checkRateLimit();
+  if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
 
   const verifyRes = await verifyTurnstileAction(token);
   if (!verifyRes.success) {
@@ -55,6 +85,9 @@ export async function checkPhoneExistsAction(phone: string, token: string) {
 
 export async function checkEmailExistsAction(email: string, token: string) {
   if (!email) return { error: "Email wajib diisi." };
+
+  const allowed = await checkRateLimit();
+  if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
 
   const verifyRes = await verifyTurnstileAction(token);
   if (!verifyRes.success) {
@@ -90,6 +123,9 @@ export async function resetPasswordByPhoneAction(
     return { error: "Password minimal 6 karakter." };
   }
 
+  const allowed = await checkRateLimit();
+  if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
+
   // Verify cryptographic reset token
   if (!verifyResetToken(phone, resetToken)) {
     return { error: "Sesi verifikasi Anda telah kedaluwarsa atau tidak valid. Silakan ulangi dari langkah pertama." };
@@ -120,12 +156,6 @@ export async function resetPasswordByPhoneAction(
           "Gagal memperbarui password di sistem keamanan: " + authError.message,
       };
     }
-
-    // 3. Update plain_password di tabel profiles agar tetap sinkron untuk Super Admin
-    await db
-      .update(profiles)
-      .set({ plainPassword: newPassword })
-      .where(eq(profiles.id, profile.id));
 
     return { success: true, name: profile.fullName };
   } catch (err: any) {

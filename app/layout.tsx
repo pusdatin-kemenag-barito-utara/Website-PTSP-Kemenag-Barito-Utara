@@ -8,12 +8,12 @@ import { ConditionalShell } from "@/components/layout/conditional-shell";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { ChatWidget } from "@/components/features/chat/ChatWidget";
+import { ChatWidgetClient } from "@/components/features/chat/chat-widget-client";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-inter",
 });
@@ -131,8 +131,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+          id="json-ld"
+          suppressHydrationWarning
+        >{JSON.stringify(jsonLd)}</script>
       </head>
       <body className="text-slate-900 antialiased">
         <FramerWrapper>
@@ -157,7 +158,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 className: "text-[14px]",
               }}
             />
-            <ChatWidget />
+            <ChatWidgetClient />
           </div>
         </FramerWrapper>
       </body>

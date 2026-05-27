@@ -8,44 +8,49 @@ export async function getAdminDashboardStats(roleOwner?: string) {
     ? sql`EXISTS (SELECT 1 FROM ${services} WHERE ${services.id} = ${serviceRequests.serviceId} AND ${services.roleOwner} = ${roleOwner})`
     : undefined;
 
-  const [serviceCountResult, userCountResult, statusCounts] = await Promise.all([
-    db.select({ value: count() }).from(services).where(serviceCountWhere),
-    db.select({ value: count() }).from(profiles),
-    db
-      .select({
-        status: serviceRequests.status,
-        count: count(),
-      })
-      .from(serviceRequests)
-      .where(requestCountWhere)
-      .groupBy(serviceRequests.status),
-  ]);
+  try {
+    const [serviceCountResult, userCountResult, statusCounts] = await Promise.all([
+      db.select({ value: count() }).from(services).where(serviceCountWhere),
+      db.select({ value: count() }).from(profiles),
+      db
+        .select({
+          status: serviceRequests.status,
+          count: count(),
+        })
+        .from(serviceRequests)
+        .where(requestCountWhere)
+        .groupBy(serviceRequests.status),
+    ]);
 
-  const serviceCount = Number(serviceCountResult[0].value);
-  const userCount = Number(userCountResult[0].value);
+    const serviceCount = Number(serviceCountResult[0].value);
+    const userCount = Number(userCountResult[0].value);
 
-  const stats = {
-    submitted: Number(
-      statusCounts.find((s) => s.status === "submitted")?.count || 0,
-    ),
-    underReview: Number(
-      statusCounts.find((s) => s.status === "under_review")?.count || 0,
-    ),
-    revision: Number(
-      statusCounts.find((s) => s.status === "revision_required")?.count || 0,
-    ),
-    finished: statusCounts
-      .filter((s) => ["approved", "completed"].includes(s.status || ""))
-      .reduce((acc, curr) => acc + Number(curr.count), 0),
-  };
+    const stats = {
+      submitted: Number(
+        statusCounts.find((s) => s.status === "submitted")?.count || 0,
+      ),
+      underReview: Number(
+        statusCounts.find((s) => s.status === "under_review")?.count || 0,
+      ),
+      revision: Number(
+        statusCounts.find((s) => s.status === "revision_required")?.count || 0,
+      ),
+      finished: statusCounts
+        .filter((s) => ["approved", "completed"].includes(s.status || ""))
+        .reduce((acc, curr) => acc + Number(curr.count), 0),
+    };
 
-  const totalRequests = statusCounts.reduce(
-    (acc, curr) => acc + Number(curr.count),
-    0,
-  );
-  const needAction = stats.submitted + stats.underReview;
+    const totalRequests = statusCounts.reduce(
+      (acc, curr) => acc + Number(curr.count),
+      0,
+    );
+    const needAction = stats.submitted + stats.underReview;
 
-  return { serviceCount, userCount, stats, totalRequests, needAction };
+    return { serviceCount, userCount, stats, totalRequests, needAction };
+  } catch (error) {
+    console.error("getAdminDashboardStats failed:", error);
+    return { serviceCount: 0, userCount: 0, stats: { submitted: 0, underReview: 0, revision: 0, finished: 0 }, totalRequests: 0, needAction: 0 };
+  }
 }
 
 export async function getAdminDashboardAnalytics(roleOwner?: string) {

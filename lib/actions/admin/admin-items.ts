@@ -6,16 +6,16 @@ import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { serviceItems as serviceItemsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { slugify } from "@/lib/utils";
+import { slugify, stripHtml } from "@/lib/utils";
 import { isSuperAdmin } from "@/lib/constants";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 
 const itemSchema = z.object({
   serviceId: z.coerce.string(),
-  name: z.string().min(3),
-  slug: z.string().min(3),
-  description: z.string().optional(),
-  estimatedTime: z.string().optional(),
+  name: z.string().min(3).transform(stripHtml),
+  slug: z.string().min(3).transform(stripHtml),
+  description: z.string().optional().transform((v) => v ? stripHtml(v) : v),
+  estimatedTime: z.string().optional().transform((v) => v ? stripHtml(v) : v),
   isActive: z.boolean().optional(),
 });
 

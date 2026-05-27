@@ -167,8 +167,7 @@ export function SiteFooter() {
               rel="noreferrer"
               className="flex items-center gap-1.5 transition-all hover:text-white"
             >
-              baritoutara.kemenag.go.id{" "}
-              <ExternalLink className="h-2.5 w-2.5" />
+              baritoutara.kemenag.go.id <ExternalLink className="h-2.5 w-2.5" />
             </a>
           </div>
         </div>

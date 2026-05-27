@@ -8,9 +8,11 @@ import { toast } from "sonner";
 export function DashboardRealtimeSync() {
   const router = useRouter();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
 
   useEffect(() => {
+    const supabase = supabaseRef.current;
+
     // Initialize audio from local public folder to satisfy CSP
     audioRef.current = new Audio("/sounds/notification.mp3");
     
@@ -53,7 +55,7 @@ export function DashboardRealtimeSync() {
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, [router, supabase]);
+  }, [router]);
 
   return null; // Logic-only component
 }

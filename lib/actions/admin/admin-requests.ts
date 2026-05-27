@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { z } from "zod";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
@@ -72,8 +71,8 @@ export async function updateRequestStatusAction(
 
     await RequestService.updateStatus(requestId, status, notes, adminProfile.id);
 
-    revalidatePath("/track");
-    revalidatePath("/");
+    revalidatePath("/admin/pengajuan");
+    revalidatePath(`/admin/pengajuan/${requestId}`);
     await emitRefreshSignal();
 
     return { success: true, message: "Status pengajuan berhasil diperbarui" };
@@ -113,8 +112,8 @@ export async function uploadResultDocumentAction(
 
     await RequestService.uploadResult(requestId, file, adminProfile.id);
 
-    revalidatePath("/track");
-    revalidatePath("/");
+    revalidatePath("/admin/pengajuan");
+    revalidatePath("/admin/dokumen-hasil");
     await emitRefreshSignal();
 
     return { success: true, message: "Dokumen hasil berhasil diunggah" };
@@ -135,7 +134,6 @@ export async function deleteRequestAction(
   formData: FormData,
 ): Promise<ActionResult> {
   const adminProfile = await requireAdmin();
-  let shouldRedirect = false;
   try {
     const validated = DeleteRequestSchema.safeParse({
       requestId: formData.get("requestId"),
@@ -156,16 +154,11 @@ export async function deleteRequestAction(
     revalidatePath("/track");
     revalidatePath("/");
 
-    shouldRedirect = true;
+    return { success: true, message: "Pengajuan berhasil dihapus" };
   } catch (error: any) {
     console.error("Error deleting request:", error);
     return { success: false, error: error.message || "Gagal menghapus pengajuan" };
   }
-
-  if (shouldRedirect) {
-    redirect("/admin/pengajuan");
-  }
-  return { success: true };
 }
 
 const LogActionSchema = z.object({
@@ -201,8 +194,6 @@ export async function deleteActivityLogAction(
       );
 
     revalidatePath(`/admin/pengajuan/${requestId}`);
-    revalidatePath("/track");
-    revalidatePath("/");
 
     return { success: true, message: "Log aktivitas berhasil dihapus" };
   } catch (error: any) {
@@ -244,8 +235,6 @@ export async function updateActivityLogAction(
       );
 
     revalidatePath(`/admin/pengajuan/${requestId}`);
-    revalidatePath("/track");
-    revalidatePath("/");
 
     return { success: true, message: "Log aktivitas berhasil diperbarui" };
   } catch (error: any) {

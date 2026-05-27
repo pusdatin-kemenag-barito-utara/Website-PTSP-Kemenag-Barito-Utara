@@ -28,6 +28,7 @@ export class SystemService {
         SELECT 1 FROM ${serviceRequestDocumentsTable} 
         WHERE ${serviceRequestDocumentsTable.requestId} = ${serviceRequestsTable.id} 
         AND ${serviceRequestDocumentsTable.filePath} <> 'CLEANED_UP'
+        AND ${serviceRequestDocumentsTable.filePath} <> 'EXPIRED'
       )`,
     );
 

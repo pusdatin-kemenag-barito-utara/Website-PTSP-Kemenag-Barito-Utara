@@ -21,27 +21,36 @@ export class PersuratanService {
     excludeId?: string
   ) {
     const data = await getSheetData(`${sheetName}!A:B`);
-    return data.some((row: any) => row[1] === nomor && row[0] !== excludeId);
+    return data.some((row: any) => row[1] === nomor && (!excludeId || row[0] !== excludeId));
   }
 
   /**
    * Generate the next ID for a given sheet and prefix
+   * Uses a retry loop to prevent race conditions on concurrent writes.
    */
   static async generateNextId(sheetName: string, prefix: string) {
-    const data = await getSheetData(`${sheetName}!A:A`);
     const year = new Date().getFullYear();
     const pattern = new RegExp(`^${prefix}-${year}-(\\d+)$`);
+    const maxRetries = 5;
 
-    let maxNum = 0;
-    data.forEach((row: any) => {
-      const match = String(row[0]).match(pattern);
-      if (match) {
-        const num = parseInt(match[1]);
-        if (num > maxNum) maxNum = num;
-      }
-    });
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const data = await getSheetData(`${sheetName}!A:A`);
+      let maxNum = 0;
+      data.forEach((row: any) => {
+        const match = String(row[0]).match(pattern);
+        if (match) {
+          const num = parseInt(match[1]);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+      const newId = `${prefix}-${year}-${String(maxNum + 1).padStart(3, "0")}`;
 
-    return `${prefix}-${year}-${String(maxNum + 1).padStart(3, "0")}`;
+      // Verify uniqueness before returning
+      const duplicate = await this.checkDuplicateNomorSurat(sheetName, newId);
+      if (!duplicate) return newId;
+    }
+
+    throw new Error("Gagal generate ID unik setelah beberapa percobaan.");
   }
 
   /**

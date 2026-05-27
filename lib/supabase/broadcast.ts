@@ -1,3 +1,4 @@
+import "server-only";
 import { getEnv } from "@/lib/env";
 
 export async function emitRefreshSignal() {

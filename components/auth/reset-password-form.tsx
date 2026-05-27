@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { updatePlainPasswordAction } from "@/lib/actions/auth/auth";
+import { updatePasswordHashAction } from "@/lib/actions/auth/auth";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -86,12 +86,11 @@ export function ResetPasswordForm() {
         return;
       }
 
-      // Update juga plain_password di tabel profiles agar Super Admin bisa lihat
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        await updatePlainPasswordAction(user.id, password);
+        await updatePasswordHashAction(user.id, password);
       }
 
       setSuccess(true);

@@ -1,41 +1,40 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteRequestAction } from "@/lib/actions/admin/admin-requests";
 import { toast } from "sonner";
 
 export function DeleteRequestButton({ requestId }: { requestId: string }) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   const handleDelete = async () => {
+    setIsPending(true);
     const toastId = toast.loading("Sedang membersihkan file Cloudflare R2...");
     
-    startTransition(async () => {
-      try {
-        const formData = new FormData();
-        formData.append("requestId", requestId);
-        
-        const result = await deleteRequestAction(formData);
-        
-        if (result?.success) {
-          toast.success("Pengajuan berhasil dihapus!", { id: toastId });
-        } else {
-          toast.error(`Gagal menghapus: ${result?.error || "Terjadi kesalahan"}`, { id: toastId });
-        }
-      } catch (error: any) {
-        // Abaikan error NEXT_REDIRECT karena itu artinya redirect berhasil
-        if (error.message === "NEXT_REDIRECT" || error.digest?.includes("NEXT_REDIRECT")) {
-          toast.success("Pengajuan berhasil dihapus!", { id: toastId });
-          return;
-        }
-        
-        console.error("Delete error:", error);
-        toast.error(`Terjadi kesalahan sistem: ${error.message}`, { id: toastId });
+    try {
+      const formData = new FormData();
+      formData.append("requestId", requestId);
+      
+      const result = await deleteRequestAction(formData);
+      
+      if (result?.success) {
+        toast.success("Pengajuan berhasil dihapus!", { id: toastId });
+        setIsOpen(false);
+        router.refresh();
+      } else {
+        toast.error(`Gagal menghapus: ${result?.error || "Terjadi kesalahan"}`, { id: toastId });
       }
-    });
+    } catch (error: any) {
+      console.error("Delete error:", error);
+      toast.error(`Terjadi kesalahan sistem: ${error.message}`, { id: toastId });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (

@@ -200,12 +200,7 @@ export function PemohonTable({
                   </td>
                   {viewerIsSuperAdmin && (
                     <td className="px-5 py-3.5">
-                      <PasswordCell
-                        password={user.plainPassword}
-                        canView={viewerIsSuperAdmin}
-                        isVisible={visibleUserId === user.id}
-                        onToggle={() => onTogglePassword(user.id)}
-                      />
+                      <PasswordCell hasPassword={!!user.email} />
                     </td>
                   )}
                   <td className="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">

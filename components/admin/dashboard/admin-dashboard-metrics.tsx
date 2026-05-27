@@ -1,5 +1,15 @@
 import { Layers3, Users, FileClock, TrendingUp } from "lucide-react";
 
+function getHoverClass(color: string) {
+  const map: Record<string, string> = {
+    "from-emerald-500 to-teal-600": "bg-gradient-to-br from-emerald-500 to-teal-600",
+    "from-blue-500 to-indigo-600": "bg-gradient-to-br from-blue-500 to-indigo-600",
+    "from-amber-500 to-orange-600": "bg-gradient-to-br from-amber-500 to-orange-600",
+    "from-slate-600 to-slate-800": "bg-gradient-to-br from-slate-600 to-slate-800",
+  };
+  return map[color] || "bg-gradient-to-br from-emerald-500 to-teal-600";
+}
+
 export function AdminDashboardMetrics({
   serviceCount,
   userCount,
@@ -57,9 +67,9 @@ export function AdminDashboardMetrics({
 
   return (
     <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      {metrics.map((item, idx) => (
+      {metrics.map((item) => (
         <div
-          key={idx}
+          key={item.title}
           className={`group relative overflow-hidden rounded-3xl border ${item.border} bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/5`}
         >
           {/* Background Decorative Gradient */}
@@ -67,7 +77,7 @@ export function AdminDashboardMetrics({
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.bg} ${item.text} transition-colors duration-300 group-hover:bg-gradient-to-br group-hover:${item.color} group-hover:text-white`}>
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.bg} ${item.text} transition-colors duration-300 group-hover:text-white ${getHoverClass(item.color)}`}>
                 <item.icon className="h-6 w-6" />
               </div>
               {item.urgent && needAction > 0 && (

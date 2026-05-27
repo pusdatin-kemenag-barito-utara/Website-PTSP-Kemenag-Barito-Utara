@@ -225,9 +225,30 @@ export class RequestApplicantService {
   }) {
     const safeUserName = sanitizeFilename(fullName || "User").replace(/\s+/g, "_");
 
+    function isAllowedExtension(fileName: string, allowedExtensions: string) {
+      const extension = fileName.split(".").pop()?.toLowerCase() || "";
+      const allowed = allowedExtensions
+        .split(",")
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean);
+      return allowed.includes(extension);
+    }
+
     const uploadPromises = (requirements ?? []).map(async (requirement) => {
       const file = formData.get(`requirement_${requirement.id}`) as File | null;
       if (!file || file.size === 0) return;
+
+      // Validasi file extension berdasarkan konfigurasi requirement
+      const allowedExts = requirement.allowedExtensions || "pdf,jpg,jpeg,png";
+      if (!isAllowedExtension(file.name, allowedExts)) {
+        throw new Error(`Format file untuk "${requirement.documentName}" tidak diizinkan. Diperbolehkan: ${allowedExts}.`);
+      }
+
+      // Validasi ukuran file
+      const maxSize = (Number(requirement.maxFileSizeMb) || 5) * 1024 * 1024;
+      if (file.size > maxSize) {
+        throw new Error(`Ukuran file untuk "${requirement.documentName}" melebihi batas ${requirement.maxFileSizeMb || 5} MB.`);
+      }
 
       const originalFileName = sanitizeFilename(file.name);
       const safeReqName = sanitizeFilename(requirement.documentName).replace(/\s+/g, "_");

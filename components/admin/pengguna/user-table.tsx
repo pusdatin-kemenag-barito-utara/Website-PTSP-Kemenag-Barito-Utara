@@ -110,9 +110,6 @@ export function UserTable({
             phone: editForm.phone,
             unitKerja: editForm.unitKerja,
             role: editForm.role,
-            ...(editForm.newPassword
-              ? { plainPassword: editForm.newPassword }
-              : {}),
           });
           setEditingUser(null);
         } else {

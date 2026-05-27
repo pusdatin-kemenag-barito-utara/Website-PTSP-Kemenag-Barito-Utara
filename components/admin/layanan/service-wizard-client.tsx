@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useServiceWizard } from "@/hooks/use-service-wizard";
 import dynamic from "next/dynamic";
 import { AddEditItemModal } from "@/components/admin/item-layanan/add-edit-item-modal";
@@ -23,10 +23,12 @@ export function ServiceWizardClient({
   const { service, isPending, modals, forms } = wizard;
 
   // Items sorted by sort_order for modals
-  const sortedItems =
-    [...(service.serviceItems || [])].sort(
+  const sortedItems = useMemo(
+    () => [...(service.serviceItems || [])].sort(
       (a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-    ) || [];
+    ) || [],
+    [service.serviceItems],
+  );
 
   return (
     <div className="space-y-8">

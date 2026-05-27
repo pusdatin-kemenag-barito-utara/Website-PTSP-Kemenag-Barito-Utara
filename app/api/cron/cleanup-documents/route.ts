@@ -19,7 +19,10 @@ export async function GET(request: Request) {
       searchParams.get("secret") ||
       request.headers.get("Authorization")?.replace("Bearer ", "");
 
-    const validSecret = process.env.CRON_SECRET || "super-secret-cron-key-123";
+    if (!process.env.CRON_SECRET) {
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    }
+    const validSecret = process.env.CRON_SECRET;
 
     if (secret !== validSecret) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

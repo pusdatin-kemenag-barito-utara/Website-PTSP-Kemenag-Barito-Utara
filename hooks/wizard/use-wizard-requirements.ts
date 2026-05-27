@@ -14,7 +14,7 @@ export function useWizardRequirements(startTransition: any) {
   const router = useRouter();
   const [isModalOpen, setModalOpen] = useState(false);
   const [editingReq, setEditingReq] = useState<any>(null);
-  const reorderTimeout = useRef<Record<number, NodeJS.Timeout | null>>({});
+  const reorderTimeout = useRef<Record<number, ReturnType<typeof setTimeout> | null>>({});
 
   const [formData, setFormData] = useState({
     serviceItemId: "",

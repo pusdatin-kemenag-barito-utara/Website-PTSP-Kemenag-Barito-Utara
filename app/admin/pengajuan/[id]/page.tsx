@@ -74,7 +74,7 @@ export default async function AdminRequestDetailPage({
   const specificRole = getAdminSpecificRole(adminProfile.email, adminProfile.role ?? "");
   const isGeneralAdmin = specificRole === "admin_ptsp";
 
-  if (!isSuper && !isGeneralAdmin && dataFinal.services?.roleOwner !== specificRole) {
+  if (!isSuper && !isGeneralAdmin && dataFinal.services?.roleOwner && dataFinal.services?.roleOwner !== specificRole) {
     notFound();
   }
 

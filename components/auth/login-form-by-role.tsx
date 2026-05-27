@@ -13,6 +13,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { isAdminRole } from "@/lib/constants";
+import { isSafeRedirect } from "@/lib/utils";
 
 // Local Components
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
@@ -139,7 +140,8 @@ export function LoginFormByRole({
         return;
       }
 
-      window.location.href = callbackUrl || (mode === "petugas" ? "/admin" : "/dashboard");
+      const safeRedirect = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : (mode === "petugas" ? "/admin" : "/dashboard");
+      window.location.href = safeRedirect;
     } catch (err: any) {
       setLoading(false);
       setError(err.message || "Terjadi kesalahan saat login.");

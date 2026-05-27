@@ -11,6 +11,11 @@ export class AuthService {
     const { fullName, phone, address, password } = data;
     const admin = createAdminClient();
 
+    // 0. Validate password
+    if (!password || password.length < 6) {
+      throw new Error("Password minimal 6 karakter.");
+    }
+
     // 1. Check uniqueness
     const existing = await db.query.profiles.findFirst({
       where: eq(profilesTable.phone, phone),
@@ -43,11 +48,10 @@ export class AuthService {
           phone,
           address,
           role: "user",
-          plainPassword: password,
         })
         .onConflictDoUpdate({
           target: profilesTable.id,
-          set: { fullName, email: internalEmail, phone, address, plainPassword: password, updatedAt: new Date() },
+          set: { fullName, email: internalEmail, phone, address, updatedAt: new Date() },
         });
     } catch (err) {
       await admin.auth.admin.deleteUser(authUser.user.id);
@@ -61,6 +65,10 @@ export class AuthService {
   static async registerPetugas(data: any) {
     const { fullName, phone, address, password, role, permissions = [] } = data;
     const admin = createAdminClient();
+
+    if (!password || password.length < 6) {
+      throw new Error("Password minimal 6 karakter.");
+    }
 
     const existing = await db.query.profiles.findFirst({
       where: eq(profilesTable.phone, phone),
@@ -91,12 +99,11 @@ export class AuthService {
           address,
           role,
           permissions,
-          plainPassword: password,
           isVerified: false,
         })
         .onConflictDoUpdate({
           target: profilesTable.id,
-          set: { fullName, email: internalEmail, phone, address, role, permissions, plainPassword: password, isVerified: false, updatedAt: new Date() },
+          set: { fullName, email: internalEmail, phone, address, role, permissions, isVerified: false, updatedAt: new Date() },
         });
     } catch (err) {
       await admin.auth.admin.deleteUser(authUser.user.id);

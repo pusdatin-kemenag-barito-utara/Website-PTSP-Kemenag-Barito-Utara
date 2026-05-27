@@ -83,6 +83,7 @@ export function hasPermission(profile: any, permission: string): boolean {
   if (!profile) return false;
   if (isSuperAdmin(profile.email)) return true;
   
+  if (profile.role === permission) return true;
   const permissions = (profile.permissions as string[]) || [];
   return permissions.includes(permission);
 }

@@ -3,7 +3,7 @@
  * Super Admin adalah satu-satunya pengguna dengan hak akses tertinggi.
  * Tidak dapat diubah melalui UI.
  */
-export const SUPER_ADMIN_EMAIL = "nazilahmuhammad1998@gmail.com";
+export const SUPER_ADMIN_EMAIL = "nazilahdeveloper@gmail.com";
 
 /**
  * Semua role yang termasuk petugas/admin (bisa akses admin panel).
@@ -73,18 +73,34 @@ export function isAdminRole(role?: string | null): boolean {
 }
 
 /**
- * Dapatkan role spesifik bidang berdasarkan email untuk admin_ptsp.
+ * Dapatkan role spesifik bidang — sekarang langsung menggunakan role dari database.
+ * Tidak perlu hardcode email karena role sudah di-set saat registrasi.
  */
-export function getAdminSpecificRole(email: string | null | undefined, baseRole: string): string {
-  if (!email) return baseRole;
-  const emailLower = email.toLowerCase();
-  if (emailLower === "admin.penmad@kemenagbarut.go.id") return "admin_pendidikan_madrasah";
-  if (emailLower === "admin.pais@kemenagbarut.go.id") return "admin_pendidikan_agama_islam";
-  if (emailLower === "admin.pdpontren@kemenagbarut.go.id") return "admin_pendidikan_diniyah_pondok_pesantren";
-  if (emailLower === "admin.bimasislam@kemenagbarut.go.id") return "admin_bimbingan_masyarakat_islam";
-  if (emailLower === "admin.kristen@kemenagbarut.go.id") return "admin_bimbingan_masyarakat_kristen_katolik";
-  if (emailLower === "admin.zawa@kemenagbarut.go.id") return "admin_penyelenggara_zakat_wakaf";
-  if (emailLower === "admin.hindu@kemenagbarut.go.id") return "admin_penyelenggara_hindu";
+export function getAdminSpecificRole(_email: string | null | undefined, baseRole: string): string {
   return baseRole;
+}
+
+/**
+ * Dapatkan label display untuk sebuah role.
+ */
+export function getRoleLabel(role?: string | null, email?: string | null): string {
+  if (isSuperAdmin(email)) return "Super Admin";
+
+  const labels: Record<string, string> = {
+    admin_ptsp: "Admin PTSP (Umum)",
+    admin_sub_bagian_tata_usaha: "Admin Sub Bagian Tata Usaha",
+    admin_pendidikan_madrasah: "Admin Pendidikan Madrasah",
+    admin_pendidikan_agama_islam: "Admin Pendidikan Agama Islam",
+    admin_pendidikan_diniyah_pondok_pesantren: "Admin Pendidikan Diniyah & Pondok Pesantren",
+    admin_bimbingan_masyarakat_islam: "Admin Bimbingan Masyarakat Islam",
+    admin_bimbingan_masyarakat_kristen_katolik: "Admin Bimbingan Masyarakat Kristen & Katolik",
+    admin_penyelenggara_zakat_wakaf: "Admin Penyelenggara Zakat & Wakaf",
+    admin_penyelenggara_hindu: "Admin Penyelenggara Hindu",
+    kasubag_tu: "Kasubag TU",
+    kepala_kantor: "Kepala Kantor",
+    user: "Pemohon",
+  };
+
+  return labels[role ?? ""] || role || "Administrator";
 }
 

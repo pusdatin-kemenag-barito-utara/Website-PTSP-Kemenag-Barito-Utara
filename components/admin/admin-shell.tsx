@@ -144,10 +144,10 @@ export function AdminShell({
     new Set(authorizedNav.map((item: NavItem) => item.group || "")),
   );
 
-  const initials = (profile?.fullName || profile?.email || "A")
+  const initials = ((profile?.fullName || profile?.email || "A") + " ")
     .split(" ")
-    .map((w: any[]) => w[0])
     .slice(0, 2)
+    .map((w) => w[0] || "")
     .join("")
     .toUpperCase();
 
@@ -159,9 +159,6 @@ export function AdminShell({
           groups={groups}
           authorizedNav={authorizedNav}
           pathname={pathname}
-          profile={profile}
-          isSuperAdmin={isSuperAdmin}
-          initials={initials}
         />
       </aside>
 
@@ -180,9 +177,6 @@ export function AdminShell({
               groups={groups}
               authorizedNav={authorizedNav}
               pathname={pathname}
-              profile={profile}
-              isSuperAdmin={isSuperAdmin}
-              initials={initials}
               onNavClick={() => setMobileOpen(false)}
             />
           </aside>
@@ -195,6 +189,8 @@ export function AdminShell({
           mobileOpen={mobileOpen}
           setMobileOpen={setMobileOpen}
           isSuperAdmin={isSuperAdmin}
+          profile={profile}
+          initials={initials}
         />
 
         {/* Page content */}

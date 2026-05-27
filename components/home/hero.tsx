@@ -25,6 +25,7 @@ export function HomeHero() {
           src="/kantor-kemenag.jpg"
           alt="Kantor Kemenag Barito Utara"
           fill
+          sizes="100vw"
           className="object-cover object-center"
           priority
         />

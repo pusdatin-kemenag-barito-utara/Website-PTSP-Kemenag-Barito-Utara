@@ -37,7 +37,6 @@ export class UserService {
 
     if (password) {
       authUpdates.password = password;
-      updateData.plainPassword = password;
     }
 
     // 1. Sync with Supabase Auth

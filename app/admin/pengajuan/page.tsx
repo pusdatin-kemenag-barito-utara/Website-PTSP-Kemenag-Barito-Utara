@@ -34,7 +34,7 @@ export default async function AdminRequestsPage({
     page = "1",
   } = await searchParams;
 
-  const currentPage = Math.max(1, parseInt(page));
+  const currentPage = Math.max(1, parseInt(page) || 1);
   const pageSize = 20;
 
   const [services, { data: rawRequests, totalCount, totalPages }] = await Promise.all([

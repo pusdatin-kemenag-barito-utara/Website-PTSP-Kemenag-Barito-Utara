@@ -21,7 +21,7 @@ export class LayananService {
     await db.delete(servicesTable).where(eq(servicesTable.id, id));
   }
 
-  static async reorderServices(ids: number[]) {
+  static async reorderServices(ids: bigint[]) {
     await db.transaction(async (tx) => {
       for (let i = 0; i < ids.length; i++) {
         await tx

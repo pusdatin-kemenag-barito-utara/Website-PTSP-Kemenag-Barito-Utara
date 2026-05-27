@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 import { registerPetugasAction } from "@/lib/actions/auth/register-petugas";
 
 const UNIT_KERJA_OPTIONS = [
@@ -38,18 +40,29 @@ const PETUGAS_ROLES = [
 export function RegisterPetugasForm() {
   const router = useRouter();
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const turnstileRef = useRef<TurnstileRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-    setMessage("");
     setLoading(true);
 
+    if (!turnstileToken) {
+      setLoading(false);
+      setError("Silakan selesaikan verifikasi keamanan.");
+      return;
+    }
+
     const formData = new FormData(event.currentTarget);
+    formData.append("turnstile_token", turnstileToken);
 
     const result = await registerPetugasAction(formData);
 
@@ -60,13 +73,11 @@ export function RegisterPetugasForm() {
       return;
     }
 
-    setMessage(
-      "Registrasi berhasil! Akun Anda sedang menunggu verifikasi dari Super Admin.",
-    );
-    setShowSuccessToast(true);
+    toast.success("Pendaftaran Berhasil!", {
+      description: "Akun Anda menunggu verifikasi dari Super Admin sebelum dapat digunakan.",
+    });
 
     setTimeout(() => {
-      setShowSuccessToast(false);
       router.push("/login/petugas");
       router.refresh();
     }, 3000);
@@ -74,25 +85,6 @@ export function RegisterPetugasForm() {
 
   return (
     <>
-      {showSuccessToast ? (
-        <div className="pointer-events-none fixed right-4 top-20 z-70 w-[min(92vw,360px)] animate-[fadeIn_0.25s_ease-out] rounded-xl border border-emerald-200 bg-white/95 p-3 shadow-2xl backdrop-blur">
-          <div className="flex items-start gap-2">
-            <div className="mt-0.5 rounded-full bg-emerald-100 p-1 text-emerald-700">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-emerald-800">
-                Pendaftaran Berhasil!
-              </p>
-              <p className="text-xs text-emerald-700">
-                Akun Anda menunggu verifikasi dari Super Admin sebelum dapat
-                digunakan.
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       <form className="space-y-3" onSubmit={onSubmit}>
         <Field label="Nama Lengkap" required>
           <Input
@@ -175,15 +167,16 @@ export function RegisterPetugasForm() {
             {error}
           </p>
         ) : null}
-        {message ? (
-          <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-            {message}
-          </p>
-        ) : null}
+
+        <LoginTurnstile
+          mounted={mounted}
+          ref={turnstileRef}
+          onTokenChange={setTurnstileToken}
+        />
 
         <Button
           className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#0f8a54]! hover:bg-[#0b7446]! hover:shadow-emerald-500/25"
-          disabled={loading}
+          disabled={loading || !turnstileToken}
         >
           {loading ? "Memproses..." : "Daftar Akun Petugas"}
         </Button>

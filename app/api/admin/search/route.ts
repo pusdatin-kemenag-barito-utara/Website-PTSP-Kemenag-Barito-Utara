@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db, serializeBigInt } from "@/lib/db";
 import {
   serviceRequests as serviceRequestsTable,
   profiles as profilesTable,
@@ -103,7 +103,7 @@ export async function GET(request: Request) {
       .orderBy(desc(auditLogsTable.createdAt))
       .limit(5);
 
-    return NextResponse.json({ requests, profiles, services, auditLogs });
+    return NextResponse.json(serializeBigInt({ requests, profiles, services, auditLogs }));
   } catch (error) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

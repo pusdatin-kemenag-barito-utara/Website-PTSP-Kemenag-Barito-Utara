@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useRef } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
@@ -20,23 +20,24 @@ export function ReviewActionCard({
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
-  const handleSubmit = (formData: FormData) => {
-    startTransition(async () => {
-      try {
-        const result = await updateRequestStatusAction(formData);
-        if (result.success) {
-          toast.success(result.message || "Keputusan berhasil disimpan");
-          formRef.current?.reset();
-          router.refresh();
-        } else {
-          toast.error(result.error || "Gagal menyimpan keputusan");
-        }
-      } catch (error: any) {
-        toast.error("Terjadi kesalahan sistem: " + error.message);
+  const handleSubmit = async (formData: FormData) => {
+    setIsPending(true);
+    try {
+      const result = await updateRequestStatusAction(formData);
+      if (result.success) {
+        toast.success(result.message || "Keputusan berhasil disimpan");
+        formRef.current?.reset();
+        router.refresh();
+      } else {
+        toast.error(result.error || "Gagal menyimpan keputusan");
       }
-    });
+    } catch (error: any) {
+      toast.error("Terjadi kesalahan sistem: " + error.message);
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (

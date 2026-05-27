@@ -99,12 +99,7 @@ export function UserTableContent({
                 )}
                 {viewerIsSuperAdmin && (
                   <td className="px-5 py-4">
-                    <PasswordCell
-                      password={user.plainPassword}
-                      canView={viewerIsSuperAdmin}
-                      isVisible={visibleUserId === user.id}
-                      onToggle={() => onTogglePassword(user.id)}
-                    />
+                    <PasswordCell hasPassword={!!user.email} />
                   </td>
                 )}
                 <td className="px-5 py-4 text-right">

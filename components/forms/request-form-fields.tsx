@@ -20,7 +20,7 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {fields
+        {[...fields]
           .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
           .map((field: any) => {
             const handleInvalid = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

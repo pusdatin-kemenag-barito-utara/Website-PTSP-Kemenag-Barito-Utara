@@ -1,40 +1,20 @@
 "use client";
 
-import { Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 export function PasswordCell({
-  password,
-  canView,
-  isVisible,
-  onToggle,
+  hasPassword,
 }: {
-  password?: string;
-  canView: boolean;
-  isVisible: boolean;
-  onToggle: () => void;
+  hasPassword?: boolean;
 }) {
-  if (!canView) return <span className="text-slate-300 text-xs italic">—</span>;
-  if (!password)
-    return (
-      <span className="text-slate-400 text-xs italic">Tidak tersedia</span>
-    );
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-sm text-slate-700 font-mono tabular-nums tracking-wide select-all">
-        {isVisible ? password : "••••••••"}
-      </span>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="p-1 rounded-md text-slate-400 hover:text-[#059669] hover:bg-emerald-50 transition-colors"
-        title={isVisible ? "Sembunyikan" : "Tampilkan"}
-      >
-        {isVisible ? (
-          <EyeOff className="h-3.5 w-3.5" />
-        ) : (
-          <Eye className="h-3.5 w-3.5" />
-        )}
-      </button>
-    </div>
+  if (hasPassword === undefined) return <span className="text-slate-300 text-xs italic">—</span>;
+  return hasPassword ? (
+    <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+      <CheckCircle2 className="h-3 w-3" /> Tersimpan
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+      <XCircle className="h-3 w-3" /> Belum diset
+    </span>
   );
 }

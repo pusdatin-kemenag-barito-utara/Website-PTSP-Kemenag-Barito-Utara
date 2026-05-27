@@ -1,7 +1,9 @@
 import PageBanner from "@/components/common/PageBanner";
 import AppointmentClient from "./_components/appointment-client";
 
-export const metadata = {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Janji Temu Online - PTSP Kemenag Barito Utara",
   description: "Buat janji temu online secara resmi dengan Kepala Kantor, Kasubag TU, atau Kepala Seksi/Kasi Kemenag Barito Utara.",
 };

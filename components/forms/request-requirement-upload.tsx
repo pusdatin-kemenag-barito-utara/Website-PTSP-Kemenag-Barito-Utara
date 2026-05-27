@@ -1,6 +1,6 @@
 "use client";
  
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FileCheck2, Eye, X, FileText, Image as ImageIcon, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { compressImageToUnder } from "@/lib/image-compression";
@@ -26,6 +26,14 @@ export function RequestRequirementUpload({
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [previewModal, setPreviewModal] = useState<{ url: string; name: string; type: string } | null>(null);
 
+  const intervalRefs = useRef<Record<string, NodeJS.Timeout>>({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(intervalRefs.current).forEach(clearInterval);
+    };
+  }, []);
+
   // Reset uploaded files when requirements list changes to prevent crossover & memory leaks
   useEffect(() => {
     Object.values(uploadedFiles).forEach((uploaded) => {
@@ -34,7 +42,8 @@ export function RequestRequirementUpload({
       }
     });
     setUploadedFiles({});
-  }, [requirements]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(requirements)]);
 
   const processFile = async (requirement: any, file: File) => {
     const reqId = String(requirement.id);
@@ -61,7 +70,7 @@ export function RequestRequirementUpload({
     try {
       // Smooth progress animation simulation during file reading/compression
       let progress = 15;
-      const progressInterval = setInterval(() => {
+      intervalRefs.current[reqId] = setInterval(() => {
         progress = Math.min(progress + 15, 85);
         setUploadProgress(prev => ({ ...prev, [reqId]: progress }));
       }, 70);
@@ -77,7 +86,8 @@ export function RequestRequirementUpload({
         }
       }
 
-      clearInterval(progressInterval);
+      clearInterval(intervalRefs.current[reqId]);
+      delete intervalRefs.current[reqId];
       setUploadProgress(prev => ({ ...prev, [reqId]: 95 }));
 
       // 2. Validasi Ukuran Akhir (terutama untuk PDF)

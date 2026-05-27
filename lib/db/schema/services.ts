@@ -5,6 +5,7 @@ import {
   boolean,
   bigint,
   integer,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const services = pgTable("services", {
@@ -33,7 +34,7 @@ export const serviceItems = pgTable("service_items", {
     .notNull()
     .references(() => services.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
+  slug: text("slug").notNull(),
   description: text("description"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })

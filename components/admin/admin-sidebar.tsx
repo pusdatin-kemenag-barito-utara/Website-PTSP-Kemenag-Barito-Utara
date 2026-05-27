@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Shield, Crown, LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { ChevronRight, Shield } from "lucide-react";
 import { SystemHealthBadge } from "./system-health-badge";
 
 function NavLink({
@@ -44,25 +43,13 @@ export function AdminSidebar({
   groups,
   authorizedNav,
   pathname,
-  profile,
-  isSuperAdmin,
-  initials,
   onNavClick,
 }: {
   groups: string[];
   authorizedNav: any[];
   pathname: string;
-  profile: any;
-  isSuperAdmin: boolean;
-  initials: string;
   onNavClick?: () => void;
 }) {
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = "/";
-  };
-
   return (
     <div className="flex h-full flex-col">
       {/* Logo / Brand */}
@@ -117,46 +104,6 @@ export function AdminSidebar({
       </nav>
 
       <SystemHealthBadge />
-
-      {/* User info + Logout */}
-      <div className="border-t border-slate-100 bg-slate-50/50 p-4 space-y-3">
-        {/* Profile card */}
-        <div className="flex items-center gap-3 rounded-2xl bg-white border border-slate-200/60 px-3 py-3 shadow-sm">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 border border-emerald-200/50 text-xs font-black text-[#059669]">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-800 truncate">
-              {profile?.fullName || profile?.email || "Admin"}
-            </p>
-            <div className="flex items-center gap-1 mt-0.5">
-              {isSuperAdmin ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600">
-                  <Crown className="h-3 w-3" />
-                  Super Admin
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#059669]">
-                  <Shield className="h-3 w-3" />
-                  Administrator
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Logout button */}
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-bold text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 border border-transparent hover:border-red-100"
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition-colors group-hover:bg-red-100 group-hover:text-red-600">
-            <LogOut className="h-4 w-4" />
-          </span>
-          <span>Keluar dari Panel</span>
-        </button>
-      </div>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
   DEFAULT_ADMIN_PERMISSIONS,
 } from "@/lib/constants";
 
-import { PageTransition } from "@/components/ui/page-transition";
+
 
 export default async function AdminLayout({
   children,
@@ -27,7 +27,7 @@ export default async function AdminLayout({
 
   return (
     <AdminShell profile={profile} allowedMenus={allowedMenus}>
-      <PageTransition>{children}</PageTransition>
+      {children}
     </AdminShell>
   );
 }

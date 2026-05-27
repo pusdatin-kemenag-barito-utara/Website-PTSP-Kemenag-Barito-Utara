@@ -5,17 +5,33 @@ import { z } from "zod";
 import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { serviceFormFields as fieldsTable } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, ne } from "drizzle-orm";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
+import { stripHtml } from "@/lib/utils";
+
+async function checkDuplicateFieldName(name: string, serviceItemId: string, excludeId?: bigint): Promise<boolean> {
+  const conditions: any[] = [
+    eq(fieldsTable.name, name),
+    eq(fieldsTable.serviceItemId, BigInt(serviceItemId)),
+  ];
+  if (excludeId) {
+    conditions.push(ne(fieldsTable.id, excludeId));
+  }
+  const existing = await db.query.serviceFormFields.findFirst({
+    where: and(...conditions),
+    columns: { id: true },
+  });
+  return !!existing;
+}
 
 const fieldSchema = z.object({
   serviceItemId: z.coerce.string(),
-  label: z.string().min(1),
-  name: z.string().min(1),
+  label: z.string().min(1).transform(stripHtml),
+  name: z.string().min(1).transform(stripHtml),
   type: z.string().default("text"),
-  placeholder: z.string().optional(),
+  placeholder: z.string().optional().transform((v) => v ? stripHtml(v) : v),
   isRequired: z.boolean().optional(),
-  options: z.string().optional(),
+  options: z.string().optional().transform((v) => v ? stripHtml(v) : v),
 });
 
 export type ActionResult = {
@@ -40,6 +56,11 @@ export async function createFieldAction(formData: FormData): Promise<ActionResul
 
     if (!validated.success) {
       return { success: false, error: validated.error.issues[0].message };
+    }
+
+    const duplicate = await checkDuplicateFieldName(validated.data.name, validated.data.serviceItemId);
+    if (duplicate) {
+      return { success: false, error: "Nama field sudah digunakan dalam item layanan ini." };
     }
 
     await db.insert(fieldsTable).values({
@@ -74,6 +95,11 @@ export async function updateFieldAction(formData: FormData): Promise<ActionResul
 
     if (!validated.success) {
       return { success: false, error: validated.error.issues[0].message };
+    }
+
+    const duplicate = await checkDuplicateFieldName(validated.data.name, validated.data.serviceItemId, id);
+    if (duplicate) {
+      return { success: false, error: "Nama field sudah digunakan dalam item layanan ini." };
     }
 
     await db

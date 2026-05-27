@@ -80,7 +80,7 @@ export const profiles = pgTable("profiles", {
     .references(() => users.id, { onDelete: "cascade" }),
   fullName: text("full_name"),
   email: text("email").unique(),
-  phone: text("phone"),
+  phone: text("phone").unique(),
   address: text("address"),
   role: appRoleEnum("role").notNull().default("user"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
@@ -90,13 +90,13 @@ export const profiles = pgTable("profiles", {
     .notNull()
     .defaultNow(),
   unitKerja: text("unit_kerja"),
-  plainPassword: text("plain_password"),
   isVerified: boolean("is_verified").default(true),
   permissions: jsonb("permissions").default([
     "ringkasan",
     "pengajuan",
     "dokumen_hasil",
   ]),
+  avatarUrl: text("avatar_url"),
 });
 
 import { pgTable } from "drizzle-orm/pg-core";

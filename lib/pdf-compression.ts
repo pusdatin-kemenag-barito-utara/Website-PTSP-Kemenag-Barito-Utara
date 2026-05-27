@@ -1,11 +1,10 @@
 /**
- * Utilitas PDF Compression sederhana.
- * Mengembalikan file asli sesuai permintaan user (Non-Kompresi).
+ * Utilitas PDF Compression — saat ini hanya pass-through.
+ * TODO: Implementasi kompresi PDF menggunakan library seperti pdf-lib.
  */
 export async function compressPdfToUnder(
   file: File,
   _maxSizeKb: number = 1024
 ): Promise<File> {
-  // Langsung kembalikan file asli tanpa diproses
   return file;
 }
