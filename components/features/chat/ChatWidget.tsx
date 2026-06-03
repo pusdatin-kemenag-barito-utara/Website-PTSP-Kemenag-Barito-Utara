@@ -169,7 +169,7 @@ export const ChatWidget = () => {
           animation: !isOpen ? "pulseGreen 2.5s ease-in-out infinite" : "none",
         }}
       >
-        <Image src="/kemenag.svg" alt="Kemenag" width={40} height={40} />
+        <Image src="/kemenag.svg" alt="Kemenag" width={40} height={40} style={{ width: "auto", height: "auto" }} />
         <span style={{ position: "absolute", top: 0, right: 0, width: 14, height: 14, background: "#ef4444", borderRadius: "50%", border: "2px solid #fff" }} />
       </button>
 
@@ -209,7 +209,7 @@ export const ChatWidget = () => {
         <div style={{ background: "linear-gradient(135deg, #065f46 0%, #10b981 100%)", padding: "18px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 44, height: 44, background: "rgba(255,255,255,0.15)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid rgba(255,255,255,0.2)" }}>
-              <Image src="/kemenag.svg" alt="Logo" width={32} height={32} />
+              <Image src="/kemenag.svg" alt="Logo" width={32} height={32} style={{ width: "auto", height: "auto" }} />
             </div>
             <div>
               <div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>Asisten PTSP</div>

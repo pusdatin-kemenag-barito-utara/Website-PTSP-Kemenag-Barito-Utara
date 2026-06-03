@@ -56,6 +56,7 @@ export const ALL_ADMIN_MENUS = [
   "saran_pengaduan",
   "log_audit",
   "pemeliharaan_storage",
+  "mode_pemeliharaan",
 ];
 
 /**

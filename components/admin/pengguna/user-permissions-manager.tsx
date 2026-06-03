@@ -20,6 +20,7 @@ import {
   BookOpen,
   Calendar,
   Mail,
+  Construction,
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateUserPermissionsAction } from "@/lib/actions/admin/admin-users";
@@ -62,6 +63,11 @@ const MENU_GROUPS = [
         id: "pemeliharaan_storage",
         label: "Pemeliharaan Storage",
         icon: Database,
+      },
+      {
+        id: "mode_pemeliharaan",
+        label: "Mode Pemeliharaan",
+        icon: Construction,
       },
     ],
   },

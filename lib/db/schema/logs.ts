@@ -6,6 +6,7 @@ import {
   bigint,
   bigserial,
   jsonb,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { profiles } from "./auth";
@@ -47,4 +48,15 @@ export const systemStatus = pgTable("system_status", {
     .notNull()
     .defaultNow(),
   notes: text("notes").default("Keep-alive trigger"),
+  maintenanceMode: boolean("maintenance_mode").default(false),
+  maintenanceMessage: text("maintenance_message").default(
+    "Sistem sedang dalam pemeliharaan berkala. Silakan kembali beberapa saat lagi.",
+  ),
+  maintenanceStartedAt: timestamp("maintenance_started_at", {
+    withTimezone: true,
+    precision: 6,
+  }),
+  maintenanceStartedBy: uuid("maintenance_started_by").references(
+    () => profiles.id,
+  ),
 });

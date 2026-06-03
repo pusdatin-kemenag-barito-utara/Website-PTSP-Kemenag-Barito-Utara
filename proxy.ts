@@ -32,6 +32,25 @@ function isSameOrigin(request: NextRequest): boolean {
   return true;
 }
 
+async function checkMaintenanceStatus(): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/system_status?id=eq.maintenance&select=maintenance_mode`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        },
+        cache: "no-store", // Jangan di-cache agar perubahan instan
+      }
+    );
+    const data = await response.json();
+    return data?.[0]?.maintenance_mode === true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const ip = getIp(request);
   const path = request.nextUrl.pathname;
@@ -47,8 +66,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Rate limiting for sensitive routes
-  if (path.startsWith("/login")) {
+  // Rate limiting for sensitive routes (only apply to POST/PUT methods to allow normal page views)
+  if (path.startsWith("/login") && method === "POST") {
     const { allowed } = checkRateLimit(ip, "login", RATE_LIMITS.LOGIN);
     if (!allowed) {
       return NextResponse.json(
@@ -68,7 +87,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (path.startsWith("/api/feedback") || path.startsWith("/buku-tamu") || path.startsWith("/janji-temu")) {
+  if ((path.startsWith("/api/feedback") || path.startsWith("/buku-tamu") || path.startsWith("/janji-temu")) && method === "POST") {
     const { allowed } = checkRateLimit(ip, "feedback", RATE_LIMITS.FEEDBACK);
     if (!allowed) {
       return NextResponse.json(
@@ -80,13 +99,30 @@ export async function proxy(request: NextRequest) {
 
   const publicPaths = [
     "/", "/layanan", "/tentang", "/kontak", "/faq",
-    "/track", "/buku-tamu", "/janji-temu",
+    "/track", "/buku-tamu", "/janji-temu", "/cek-cuti",
     "/register", "/forgot-password",
     "/berita", "/artikel",
   ];
-  const isPublicPage = publicPaths.some(
+  const isPublicPage = path === "/" || publicPaths.some(
     (p) => path === p || path.startsWith(p + "/"),
   );
+  
+  // Check maintenance mode
+  const isMaintenanceMode = await checkMaintenanceStatus();
+  const isExemptFromMaintenance = 
+    path === "/maintenance" || 
+    path.startsWith("/admin") || 
+    path === "/login/petugas" ||
+    path.startsWith("/api");
+
+  if (isMaintenanceMode && !isExemptFromMaintenance) {
+    let response = NextResponse.redirect(new URL("/maintenance", request.url), 302);
+    response.headers.set("X-RateLimit-Limit", "60");
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    return response;
+  }
 
   let response: NextResponse;
   if (isPublicPage) {

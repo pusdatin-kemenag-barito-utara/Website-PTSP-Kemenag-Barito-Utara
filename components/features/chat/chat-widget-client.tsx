@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 const ChatWidgetInner = dynamic(
   () =>
@@ -9,5 +10,11 @@ const ChatWidgetInner = dynamic(
 );
 
 export function ChatWidgetClient() {
+  const pathname = usePathname();
+  
+  if (pathname === "/maintenance") {
+    return null;
+  }
+
   return <ChatWidgetInner />;
 }

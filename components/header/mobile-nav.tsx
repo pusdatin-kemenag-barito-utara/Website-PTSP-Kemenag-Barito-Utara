@@ -1,12 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { 
   X, 
   UserCircle2, 
   Shield, 
-  LayoutDashboard
+  LayoutDashboard,
+  ChevronDown
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
@@ -31,6 +33,12 @@ export function MobileNav({
   dashboardHref,
   isAdmin,
 }: MobileNavProps) {
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (label: string) => {
+    setExpandedItems(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
     <div
       className={`fixed inset-0 z-[9999] lg:hidden transition-all duration-500 ease-in-out ${
@@ -92,41 +100,106 @@ export function MobileNav({
           <nav className="flex flex-col gap-2">
             {navItems.map((item, idx) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              const hasChildren = !!item.children;
+              const isActive = pathname === item.href || (hasChildren && item.children.some((child: any) => pathname === child.href));
+              const isExpanded = expandedItems[item.label];
+
               return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  style={{ transitionDelay: `${idx * 30}ms` }}
-                  className={`group relative flex items-center gap-3.5 rounded-2xl px-4 py-3.5 text-[14px] font-semibold transition-all duration-300 overflow-hidden ${
-                    mobileOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
-                  } ${
-                    isActive
-                      ? "bg-gradient-to-r from-emerald-500/15 to-teal-500/5 text-white border border-emerald-500/20 shadow-lg shadow-emerald-950/20"
-                      : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
-                  }`}
-                >
-                  {/* Left Accent Glow Line for Active State */}
-                  {isActive && (
-                    <div className="absolute left-0 top-1/4 h-1/2 w-[3px] rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <div key={item.label} className="flex flex-col gap-1">
+                  {hasChildren ? (
+                    <button
+                      onClick={() => toggleExpand(item.label)}
+                      style={{ transitionDelay: `${idx * 30}ms` }}
+                      className={`group relative flex items-center justify-between rounded-2xl px-4 py-3.5 text-[14px] font-semibold transition-all duration-300 overflow-hidden w-full ${
+                        mobileOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+                      } ${
+                        isActive || isExpanded
+                          ? "bg-gradient-to-r from-emerald-500/15 to-teal-500/5 text-white border border-emerald-500/20 shadow-lg shadow-emerald-950/20"
+                          : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
+                      }`}
+                    >
+                      {/* Left Accent Glow Line for Active State */}
+                      {isActive && (
+                        <div className="absolute left-0 top-1/4 h-1/2 w-[3px] rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      )}
+
+                      <div className="flex items-center gap-3.5">
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${
+                          isActive 
+                            ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25" 
+                            : "bg-white/5 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-105"
+                        }`}>
+                          <Icon className="h-4.5 w-4.5 flex-shrink-0" />
+                        </div>
+                        <span className={`tracking-wide transition-all ${
+                          isActive ? "font-bold text-white pl-0.5" : "font-medium text-white/70 group-hover:text-white"
+                        }`}>
+                          {item.label}
+                        </span>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? "rotate-180 text-white" : "text-white/50"}`} />
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      style={{ transitionDelay: `${idx * 30}ms` }}
+                      className={`group relative flex items-center gap-3.5 rounded-2xl px-4 py-3.5 text-[14px] font-semibold transition-all duration-300 overflow-hidden ${
+                        mobileOpen ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+                      } ${
+                        isActive
+                          ? "bg-gradient-to-r from-emerald-500/15 to-teal-500/5 text-white border border-emerald-500/20 shadow-lg shadow-emerald-950/20"
+                          : "text-white/60 hover:bg-white/5 hover:text-white border border-transparent"
+                      }`}
+                    >
+                      {/* Left Accent Glow Line for Active State */}
+                      {isActive && (
+                        <div className="absolute left-0 top-1/4 h-1/2 w-[3px] rounded-r-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      )}
+
+                      {/* Icon Wrapper Container */}
+                      <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${
+                        isActive 
+                          ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25" 
+                          : "bg-white/5 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-105"
+                      }`}>
+                        <Icon className="h-4.5 w-4.5 flex-shrink-0" />
+                      </div>
+
+                      <span className={`tracking-wide transition-all ${
+                        isActive ? "font-bold text-white pl-0.5" : "font-medium text-white/70 group-hover:text-white"
+                      }`}>
+                        {item.label}
+                      </span>
+                    </Link>
                   )}
 
-                  {/* Icon Wrapper Container */}
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${
-                    isActive 
-                      ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25" 
-                      : "bg-white/5 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-105"
-                  }`}>
-                    <Icon className="h-4.5 w-4.5 flex-shrink-0" />
-                  </div>
-
-                  <span className={`tracking-wide transition-all ${
-                    isActive ? "font-bold text-white pl-0.5" : "font-medium text-white/70 group-hover:text-white"
-                  }`}>
-                    {item.label}
-                  </span>
-                </Link>
+                  {/* Render Children (Accordion Content) */}
+                  {hasChildren && isExpanded && (
+                    <div className="flex flex-col gap-1 pl-[52px] pr-2 pt-1 pb-2">
+                      {item.children.map((child: any) => {
+                        const ChildIcon = child.icon;
+                        const isChildActive = pathname === child.href;
+                        return (
+                          <Link
+                            key={child.label}
+                            href={child.href}
+                            onClick={() => setMobileOpen(false)}
+                            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-semibold transition-all duration-200 group/child ${
+                              isChildActive
+                                ? "bg-emerald-500/30 text-white border border-emerald-500/30 shadow-sm"
+                                : "text-emerald-50 hover:bg-white/10 hover:text-white border border-transparent"
+                            }`}
+                            style={{ color: "white" }}
+                          >
+                            <ChildIcon className={`h-4 w-4 ${isChildActive ? "text-emerald-300" : "text-emerald-200/70 group-hover/child:text-emerald-300"}`} />
+                            <span style={{ color: "inherit" }}>{child.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
             

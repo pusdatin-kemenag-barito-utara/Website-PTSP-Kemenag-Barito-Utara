@@ -32,10 +32,25 @@ type HeaderProfile = {
 
 const navItems = [
   { label: "Beranda", href: "/", icon: Home },
-  { label: "Jenis Layanan", href: "/layanan", icon: LayoutGrid },
-  { label: "Lacak Layanan", href: "/track", icon: Search },
-  { label: "Janji Temu", href: "/janji-temu", icon: Calendar },
-  { label: "Buku Tamu", href: "/buku-tamu", icon: BookOpen },
+  { 
+    label: "Layanan", 
+    href: "#", 
+    icon: LayoutGrid,
+    children: [
+      { label: "Pilih Layanan", href: "/layanan", icon: LayoutGrid },
+      { label: "Lacak Layanan", href: "/track", icon: Search },
+      { label: "Cek Sisa Cuti", href: "/cek-cuti", icon: FilePlus },
+    ]
+  },
+  { 
+    label: "Tamu", 
+    href: "#", 
+    icon: BookOpen,
+    children: [
+      { label: "Buku Tamu", href: "/buku-tamu", icon: BookOpen },
+      { label: "Janji Temu", href: "/janji-temu", icon: Calendar },
+    ]
+  },
   { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 
@@ -46,6 +61,7 @@ export function SiteHeaderClient({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
@@ -58,6 +74,7 @@ export function SiteHeaderClient({
   useEffect(() => {
     setMobileOpen(false);
     setLoginOpen(false);
+    setOpenDropdown(null);
   }, [pathname]);
 
   // Close login dropdown when clicking outside
@@ -70,6 +87,17 @@ export function SiteHeaderClient({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [loginOpen]);
+
+  // Close nav dropdown when clicking outside
+  useEffect(() => {
+    if (!openDropdown) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-nav-dropdown]")) setOpenDropdown(null);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [openDropdown]);
 
   const dashboardHref = isAdminRole(profile?.role) ? "/admin" : "/dashboard";
 
@@ -143,45 +171,128 @@ export function SiteHeaderClient({
             {/* Desktop Nav (Right aligned with responsive gap & text) */}
             <nav className="hidden items-center justify-end gap-0.5 xl:gap-1.5 lg:flex ml-auto">
               {navItems.map((item: any) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || (item.children && item.children.some((child: any) => pathname === child.href));
                 const Icon = item.icon;
+                const hasChildren = !!item.children;
+                
                 return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`group relative flex items-center gap-1.5 xl:gap-2.5 rounded-xl px-2.5 py-2 xl:px-4 xl:py-2.5 text-[12.5px] xl:text-[14px] font-bold transition-all duration-500 ${
-                      isActive
-                        ? "!text-white"
-                        : "!text-white/70 hover:!text-white"
-                    }`}
-                    style={{
-                      color: isActive ? "white" : "rgba(255,255,255,0.7)",
-                    }}
-                  >
-                    {/* Active/Hover Background Pill */}
-                    <div
-                      className={`absolute inset-0 rounded-xl transition-all duration-500 ${
-                        isActive
-                          ? "bg-white/10 opacity-100 shadow-inner"
-                          : "bg-transparent opacity-0 group-hover:opacity-100 group-hover:bg-white/5"
-                      }`}
-                    />
+                  <div key={item.label} className="relative group" tabIndex={0} data-nav-dropdown>
+                    {hasChildren ? (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setOpenDropdown(openDropdown === item.label ? null : item.label);
+                        }}
+                        className={`relative flex items-center gap-1.5 xl:gap-2.5 rounded-xl px-2.5 py-2 xl:px-4 xl:py-2.5 text-[12.5px] xl:text-[14px] font-bold transition-all duration-500 cursor-pointer ${
+                          isActive || openDropdown === item.label
+                            ? "!text-white"
+                            : "!text-white/70 hover:!text-white"
+                        }`}
+                        style={{
+                          color: isActive || openDropdown === item.label ? "white" : "rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        {/* Active/Hover Background Pill */}
+                        <div
+                          className={`absolute inset-0 rounded-xl transition-all duration-500 ${
+                            isActive || openDropdown === item.label
+                              ? "bg-white/10 opacity-100 shadow-inner"
+                              : "bg-transparent opacity-0 group-hover:bg-white/5 group-hover:opacity-100"
+                          }`}
+                        />
 
-                    <Icon
-                      className={`relative z-10 h-4 w-4 transition-all duration-500 ${isActive ? "scale-110" : "opacity-60 group-hover:scale-110 group-hover:opacity-100"}`}
-                    />
-                    <span
-                      className="relative z-10 whitespace-nowrap"
-                      style={{ color: "inherit" }}
-                    >
-                      {item.label}
-                    </span>
+                        <Icon
+                          className={`relative z-10 h-4 w-4 transition-all duration-500 ${isActive || openDropdown === item.label ? "scale-110 opacity-100" : "opacity-60 group-hover:scale-110 group-hover:opacity-100"}`}
+                        />
+                        <span
+                          className="relative z-10 whitespace-nowrap flex items-center gap-1"
+                          style={{ color: "inherit" }}
+                        >
+                          {item.label}
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${openDropdown === item.label ? "rotate-180 opacity-100" : "opacity-70 group-hover:opacity-100"}`} />
+                        </span>
 
-                    {/* Subtle active indicator dot */}
-                    {isActive && (
-                      <div className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-all duration-500 bg-white" />
+                        {/* Subtle active indicator dot */}
+                        {isActive && (
+                          <div className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-all duration-500 bg-white" />
+                        )}
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpenDropdown(null)}
+                        className={`relative flex items-center gap-1.5 xl:gap-2.5 rounded-xl px-2.5 py-2 xl:px-4 xl:py-2.5 text-[12.5px] xl:text-[14px] font-bold transition-all duration-500 ${
+                          isActive
+                            ? "!text-white"
+                            : "!text-white/70 hover:!text-white"
+                        }`}
+                        style={{
+                          color: isActive ? "white" : "rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        {/* Active/Hover Background Pill */}
+                        <div
+                          className={`absolute inset-0 rounded-xl transition-all duration-500 ${
+                            isActive
+                              ? "bg-white/10 opacity-100 shadow-inner"
+                              : "bg-transparent opacity-0 group-hover:opacity-100 group-hover:bg-white/5"
+                          }`}
+                        />
+
+                        <Icon
+                          className={`relative z-10 h-4 w-4 transition-all duration-500 ${isActive ? "scale-110" : "opacity-60 group-hover:scale-110 group-hover:opacity-100"}`}
+                        />
+                        <span
+                          className="relative z-10 whitespace-nowrap flex items-center gap-1"
+                          style={{ color: "inherit" }}
+                        >
+                          {item.label}
+                        </span>
+
+                        {/* Subtle active indicator dot */}
+                        {isActive && (
+                          <div className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-all duration-500 bg-white" />
+                        )}
+                      </Link>
                     )}
-                  </Link>
+
+                    {/* Desktop Dropdown Menu */}
+                    {hasChildren && (
+                      <div 
+                        className={`absolute top-full left-0 pt-4 z-50 transition-all duration-300 ${
+                          openDropdown === item.label 
+                            ? "opacity-100 pointer-events-auto" 
+                            : "opacity-0 pointer-events-none"
+                        }`}
+                      >
+                        <div 
+                          className={`min-w-[220px] w-max bg-white backdrop-blur-xl border border-slate-100 rounded-2xl p-2 shadow-2xl shadow-emerald-900/10 flex flex-col gap-1 origin-top-left transition-all duration-300 ${
+                            openDropdown === item.label ? "translate-y-0 scale-100" : "translate-y-2 scale-95"
+                          }`}
+                        >
+                          {item.children.map((child: any) => {
+                            const isChildActive = pathname === child.href;
+                            const ChildIcon = child.icon;
+                            return (
+                              <Link
+                                key={child.label}
+                                href={child.href}
+                                onClick={() => setOpenDropdown(null)}
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group/child whitespace-nowrap ${
+                                  isChildActive
+                                    ? "bg-emerald-50 text-emerald-700 font-bold"
+                                    : "text-slate-600 hover:bg-slate-50 hover:text-emerald-600 font-semibold"
+                                }`}
+                              >
+                                <ChildIcon className={`h-4.5 w-4.5 transition-colors ${isChildActive ? "text-emerald-600" : "text-slate-400 group-hover/child:text-emerald-500"}`} />
+                                <span className="text-[13.5px]">{child.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
               {profile && (

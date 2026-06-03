@@ -19,6 +19,7 @@ import {
   Database,
   BookOpen,
   Calendar,
+  Construction,
 } from "lucide-react";
 import { isSuperAdmin as checkSuperAdmin } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -119,6 +120,13 @@ const ADMIN_NAV: NavItem[] = [
     icon: Database,
     group: "Sistem",
     id: "pemeliharaan_storage",
+  },
+  {
+    label: "Mode Pemeliharaan",
+    href: "/admin/mode-pemeliharaan",
+    icon: Construction,
+    group: "Sistem",
+    id: "mode_pemeliharaan",
   },
 ];
 
