@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Menghapus cache lama berdasarkan tag
-    revalidateTag("cuti-data");
+    revalidateTag("cuti-data", "max");
     
     console.log("[Webhook] Sinkronisasi data cuti berhasil dipicu oleh Google Sheet.");
     return NextResponse.json({ success: true, message: "Cache cuti-data berhasil diperbarui!" });
