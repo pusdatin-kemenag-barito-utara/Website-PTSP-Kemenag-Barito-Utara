@@ -22,8 +22,8 @@ export default async function AdminFormFieldsPage() {
   let fieldsWhere = undefined;
 
   if (roleOwnerFilter) {
-    itemsWhere = sql`EXISTS (SELECT 1 FROM services WHERE services.id = ${serviceItemsTable.serviceId} AND services.role_owner = ${roleOwnerFilter})`;
-    fieldsWhere = sql`EXISTS (SELECT 1 FROM service_items JOIN services ON service_items.service_id = services.id WHERE service_items.id = ${serviceFormFieldsTable.serviceItemId} AND services.role_owner = ${roleOwnerFilter})`;
+    itemsWhere = sql`EXISTS (SELECT 1 FROM ptsp_services WHERE ptsp_services.id = ${serviceItemsTable.serviceId} AND ptsp_services.role_owner = ${roleOwnerFilter})`;
+    fieldsWhere = sql`EXISTS (SELECT 1 FROM ptsp_service_items JOIN ptsp_services ON ptsp_service_items.service_id = ptsp_services.id WHERE ptsp_service_items.id = ${serviceFormFieldsTable.serviceItemId} AND ptsp_services.role_owner = ${roleOwnerFilter})`;
   }
 
   const [itemsData, fieldsData] = await Promise.all([

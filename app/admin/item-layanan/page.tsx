@@ -24,7 +24,7 @@ export default async function AdminServiceItemsPage() {
 
   if (roleOwnerFilter) {
     servicesWhere = eq(servicesTable.roleOwner, roleOwnerFilter as any);
-    itemsWhere = sql`EXISTS (SELECT 1 FROM services WHERE services.id = ${serviceItemsTable.serviceId} AND services.role_owner = ${roleOwnerFilter})`;
+    itemsWhere = sql`EXISTS (SELECT 1 FROM ptsp_services WHERE ptsp_services.id = ${serviceItemsTable.serviceId} AND ptsp_services.role_owner = ${roleOwnerFilter})`;
   }
 
   const [servicesData, itemsData] = await Promise.all([

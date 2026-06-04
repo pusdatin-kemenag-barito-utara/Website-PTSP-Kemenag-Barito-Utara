@@ -52,7 +52,7 @@ export default async function AdminGeneratedDocumentsPage({
   const offset = (currentPage - 1) * pageSize;
 
   const filters = [
-    sql`EXISTS (SELECT 1 FROM generated_documents WHERE generated_documents.request_id = ${serviceRequestsTable.id})`,
+    sql`EXISTS (SELECT 1 FROM ptsp_generated_documents WHERE ptsp_generated_documents.request_id = ${serviceRequestsTable.id})`,
   ];
 
   if (roleOwnerFilter) {
@@ -70,7 +70,7 @@ export default async function AdminGeneratedDocumentsPage({
     filters.push(
       or(
         ilike(serviceRequestsTable.requestNumber, qFilter),
-        sql`EXISTS (SELECT 1 FROM profiles WHERE profiles.id = ${serviceRequestsTable.userId} AND profiles.full_name ILIKE ${qFilter})`,
+        sql`EXISTS (SELECT 1 FROM ptsp_profiles WHERE ptsp_profiles.id = ${serviceRequestsTable.userId} AND ptsp_profiles.full_name ILIKE ${qFilter})`,
       ) as any,
     );
   }

@@ -35,7 +35,7 @@ function isSameOrigin(request: NextRequest): boolean {
 async function checkMaintenanceStatus(): Promise<boolean> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/system_status?id=eq.maintenance&select=maintenance_mode`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/ptsp_system_status?id=eq.maintenance&select=maintenance_mode`,
       {
         headers: {
           apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

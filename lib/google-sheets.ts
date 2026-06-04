@@ -9,12 +9,28 @@ export async function getSheetsClient() {
     throw new Error("Google Service Account credentials are missing");
   }
 
-  // Format the private key if it's coming from an environment variable with escaped newlines
+  // Sangat tangguh dalam menangani berbagai format dari VPS / Coolify
   let formattedKey = PRIVATE_KEY;
+  
+  // 1. Jika terbungkus tanda kutip, coba parse sebagai JSON string, atau hapus kutipnya
   if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+    try {
+      formattedKey = JSON.parse(formattedKey);
+    } catch (e) {
+      formattedKey = formattedKey.substring(1, formattedKey.length - 1);
+    }
+  } else if (formattedKey.startsWith("'") && formattedKey.endsWith("'")) {
     formattedKey = formattedKey.substring(1, formattedKey.length - 1);
   }
-  formattedKey = formattedKey.split('\\n').join('\n');
+
+  // 2. Ganti karakter literal "\n" atau "\\n" menjadi enter sungguhan
+  formattedKey = formattedKey.replace(/\\\\n/g, '\n').replace(/\\n/g, '\n');
+
+  // 3. Jika entah kenapa semua enter hilang dan jadi spasi
+  if (!formattedKey.includes('\n')) {
+    formattedKey = formattedKey.replace('-----BEGIN PRIVATE KEY----- ', '-----BEGIN PRIVATE KEY-----\n');
+    formattedKey = formattedKey.replace(' -----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----');
+  }
 
   const auth = new google.auth.JWT({
     email: SERVICE_ACCOUNT_EMAIL,
