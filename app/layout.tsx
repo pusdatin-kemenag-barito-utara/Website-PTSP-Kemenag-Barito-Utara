@@ -6,8 +6,7 @@ import { SiteHeader } from "@/components/layout/header";
 import { SiteFooter } from "@/components/layout/footer";
 import { ConditionalShell } from "@/components/layout/conditional-shell";
 import { Toaster } from "sonner";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { ChatWidgetClient } from "@/components/features/chat/chat-widget-client";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
@@ -140,8 +139,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="flex min-h-dvh flex-col">
             <ConditionalShell header={<SiteHeader />} footer={<SiteFooter />}>
               {children}
-              <Analytics />
-              <SpeedInsights />
+
             </ConditionalShell>
             <Toaster
               position="top-center"
