@@ -8,7 +8,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-export const services = pgTable("services", {
+export const services = pgTable("ptsp_services", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "services_id_seq" }),
@@ -26,7 +26,7 @@ export const services = pgTable("services", {
   sortOrder: integer("sort_order").default(0),
 });
 
-export const serviceItems = pgTable("service_items", {
+export const serviceItems = pgTable("ptsp_service_items", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_items_id_seq" }),
@@ -47,7 +47,7 @@ export const serviceItems = pgTable("service_items", {
   estimatedTime: text("estimated_time").default("1-3 Hari Kerja"),
 });
 
-export const serviceRequirements = pgTable("service_requirements", {
+export const serviceRequirements = pgTable("ptsp_service_requirements", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_requirements_id_seq" }),
@@ -68,7 +68,7 @@ export const serviceRequirements = pgTable("service_requirements", {
     .defaultNow(),
 });
 
-export const serviceFormFields = pgTable("service_form_fields", {
+export const serviceFormFields = pgTable("ptsp_service_form_fields", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_form_fields_id_seq" }),

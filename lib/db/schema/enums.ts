@@ -2,7 +2,7 @@ import { pgEnum, pgSchema } from "drizzle-orm/pg-core";
 
 export const authSchema = pgSchema("auth");
 
-export const appRoleEnum = pgEnum("app_role", [
+export const appRoleEnum = pgEnum("ptsp_app_role", [
   "user",
   "admin_ptsp",
   "kepala_kantor",
@@ -10,7 +10,7 @@ export const appRoleEnum = pgEnum("app_role", [
   "super_admin",
 ]);
 
-export const requestStatusEnum = pgEnum("request_status", [
+export const requestStatusEnum = pgEnum("ptsp_request_status", [
   "draft",
   "submitted",
   "under_review",

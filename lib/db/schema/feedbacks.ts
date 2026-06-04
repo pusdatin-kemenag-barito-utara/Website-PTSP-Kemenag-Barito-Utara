@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, bigint } from "drizzle-orm/pg-core";
 
-export const feedbacks = pgTable("feedbacks", {
+export const feedbacks = pgTable("ptsp_feedbacks", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "feedbacks_id_seq" }),

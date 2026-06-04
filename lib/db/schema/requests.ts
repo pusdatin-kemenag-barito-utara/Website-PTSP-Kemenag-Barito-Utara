@@ -11,7 +11,7 @@ import { requestStatusEnum } from "./enums";
 import { profiles } from "./auth";
 import { services, serviceItems, serviceFormFields, serviceRequirements } from "./services";
 
-export const serviceRequests = pgTable("service_requests", {
+export const serviceRequests = pgTable("ptsp_service_requests", {
   id: uuid("id")
     .primaryKey()
     .notNull()
@@ -41,7 +41,7 @@ export const serviceRequests = pgTable("service_requests", {
     .defaultNow(),
 });
 
-export const serviceRequestAnswers = pgTable("service_request_answers", {
+export const serviceRequestAnswers = pgTable("ptsp_service_request_answers", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_request_answers_id_seq" }),
@@ -62,7 +62,7 @@ export const serviceRequestAnswers = pgTable("service_request_answers", {
 });
 
 export const serviceRequestDocuments = pgTable(
-  "service_request_documents",
+  "ptsp_service_request_documents",
   {
     id: bigint("id", { mode: "bigint" })
       .primaryKey()
@@ -88,12 +88,12 @@ export const serviceRequestDocuments = pgTable(
   },
   (table) => ({
     requestRequirementIdx: uniqueIndex(
-      "service_request_documents_request_id_requirement_id_key",
+      "ptsp_service_request_documents_request_id_requirement_id_key",
     ).on(table.requestId, table.requirementId),
   }),
 );
 
-export const serviceRequestReviews = pgTable("service_request_reviews", {
+export const serviceRequestReviews = pgTable("ptsp_service_request_reviews", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_request_reviews_id_seq" }),
@@ -110,7 +110,7 @@ export const serviceRequestReviews = pgTable("service_request_reviews", {
     .defaultNow(),
 });
 
-export const generatedDocuments = pgTable("generated_documents", {
+export const generatedDocuments = pgTable("ptsp_generated_documents", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "generated_documents_id_seq" }),
