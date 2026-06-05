@@ -1,8 +1,10 @@
 import { db, serializeBigInt } from "@/lib/db";
 import { guestBook } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { systemStatus } from "@/lib/db/schema/logs";
+import { eq } from "drizzle-orm";
 import PageBanner from "@/components/common/PageBanner";
 import GuestBookClient from "./_components/guest-book-client";
+import { RealtimeSync } from "@/components/ui/realtime-sync";
 import type { Metadata } from "next";
 
 export const revalidate = 0; // Real-time data loading without caching
@@ -13,12 +15,23 @@ export const metadata: Metadata = {
 };
 
 export default async function GuestBookPage() {
+  const { desc } = await import("drizzle-orm");
   const rawEntries = await db
     .select()
     .from(guestBook)
     .orderBy(desc(guestBook.visitDate));
 
   const entries = serializeBigInt(rawEntries) || [];
+  
+  let allowManualGuestBookDate = false;
+  try {
+    const statusRecord = await db.query.systemStatus.findFirst({
+      where: eq(systemStatus.id, "heartbeat"),
+    });
+    allowManualGuestBookDate = statusRecord?.notes === "MANUAL_GUESTBOOK_ON";
+  } catch (err) {
+    console.error("Failed to query systemStatus:", err);
+  }
 
   return (
     <main className="min-h-screen bg-slate-50/50 pb-16">
@@ -32,8 +45,9 @@ export default async function GuestBookPage() {
         eyebrow="PTSP KEMENAG BARITO UTARA"
       />
       <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8">
-        <GuestBookClient initialEntries={entries} />
+        <GuestBookClient initialEntries={entries} isManualMode={allowManualGuestBookDate} />
       </div>
+      <RealtimeSync />
     </main>
   );
 }

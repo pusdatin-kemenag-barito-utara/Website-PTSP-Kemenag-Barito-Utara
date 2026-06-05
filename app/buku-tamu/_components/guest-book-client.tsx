@@ -7,7 +7,7 @@ import GuestBookForm from "./guest-book-form";
 import GuestBookList from "./guest-book-list";
 import GuestBookStats from "./guest-book-stats";
 
-export default function GuestBookClient({ initialEntries }: GuestBookClientProps) {
+export default function GuestBookClient({ initialEntries, isManualMode = false }: GuestBookClientProps) {
   const [activeTab, setActiveTab] = useState<"form" | "list" | "stats">("form");
   const [entries, setEntries] = useState(initialEntries);
 
@@ -93,6 +93,7 @@ export default function GuestBookClient({ initialEntries }: GuestBookClientProps
               setEntries((prev) => [newEntry, ...prev]);
               setActiveTab("list");
             }}
+            isManualMode={isManualMode}
           />
         )}
 

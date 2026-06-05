@@ -5,11 +5,13 @@ import { isSuperAdmin } from "@/lib/constants";
 import { redirect } from "next/navigation";
 import { StorageCleanupCard } from "@/components/admin/dashboard/storage-cleanup-card";
 import { StorageQuotaGrid } from "@/components/admin/dashboard/storage-quota-grid";
+import { AiChatToggle } from "@/components/admin/dashboard/ai-chat-toggle";
 import { Card } from "@/components/ui/card";
+import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
 
 export default async function AdminStorageMaintenancePage() {
   const profile = await requirePermission("pemeliharaan_storage");
-
+  const maintenance = await getMaintenanceStatus();
 
   return (
     <div className="space-y-6">
@@ -23,6 +25,7 @@ export default async function AdminStorageMaintenancePage() {
         <div className="lg:col-span-1 space-y-6">
           <StorageQuotaGrid />
           <StorageCleanupCard />
+          <AiChatToggle initialStatus={maintenance.aiChatEnabled} />
         </div>
 
         <div className="lg:col-span-2 space-y-6">

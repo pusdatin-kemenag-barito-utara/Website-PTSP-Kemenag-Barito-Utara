@@ -9,14 +9,17 @@ interface FeedbackInput {
   name: string;
   email?: string;
   phone: string;
+  category: string;
+  serviceType: string;
+  isAnonymous: boolean;
   content: string;
   turnstileToken?: string;
 }
 
 export async function submitFeedbackAction(input: FeedbackInput) {
-  const { name, email = "-", phone, content, turnstileToken } = input;
+  const { name, email = "-", phone, category, serviceType, isAnonymous, content, turnstileToken } = input;
 
-  if (!name || !phone || !content) {
+  if (!name || !phone || !content || !category || !serviceType) {
     return { error: "Semua kolom formulir harus diisi." };
   }
 
@@ -41,6 +44,9 @@ export async function submitFeedbackAction(input: FeedbackInput) {
       name,
       email,
       phone,
+      category,
+      serviceType,
+      isAnonymous,
       content,
     });
 

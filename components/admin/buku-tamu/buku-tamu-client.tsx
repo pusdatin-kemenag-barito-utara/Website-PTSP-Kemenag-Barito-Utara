@@ -16,7 +16,7 @@ import {
   X
 } from "lucide-react";
 import { toast } from "sonner";
-import { deleteGuestBookAction } from "@/lib/actions/admin/admin-visitations";
+import { toggleGuestBookModeAction, deleteGuestBookAction } from "@/lib/actions/admin/admin-visitations";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GuestBookEntry {
@@ -33,13 +33,18 @@ interface GuestBookEntry {
 
 export function BukuTamuClient({
   initialEntries,
+  initialAllowManual = false,
 }: {
   initialEntries: GuestBookEntry[];
+  initialAllowManual?: boolean;
 }) {
   const [entries, setEntries] = useState<GuestBookEntry[]>(initialEntries);
   const [search, setSearch] = useState("");
   const [instTypeFilter, setInstTypeFilter] = useState("all");
   const [datePreset, setDatePreset] = useState("all"); // all, today, week, month
+  
+  const [isManualMode, setIsManualMode] = useState(initialAllowManual);
+  const [isToggling, setIsToggling] = useState(false);
   
   // Deletion Modal State
   const [deletingEntry, setDeletingEntry] = useState<GuestBookEntry | null>(null);
@@ -142,8 +147,58 @@ export function BukuTamuClient({
     });
   };
 
+  const handleToggleMode = async () => {
+    setIsToggling(true);
+    const newMode = !isManualMode;
+    const res = await toggleGuestBookModeAction(newMode);
+    if (res.success) {
+      setIsManualMode(newMode);
+      toast.success("Mode Berhasil Diubah", {
+        description: res.message,
+      });
+    } else {
+      toast.error("Gagal Mengubah Mode", {
+        description: res.error,
+      });
+    }
+    setIsToggling(false);
+  };
+
   return (
     <div className="space-y-6">
+      {/* ── MODE CARD ─────────────────────────────────────────── */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm">Mode Input Buku Tamu (Publik)</h3>
+          <p className="text-xs text-slate-500 font-medium max-w-md mt-1">
+            {isManualMode 
+              ? "Mode Manual Aktif. Pengunjung atau admin di halaman publik dapat memilih tanggal kunjungan secara bebas (Backdate)." 
+              : "Mode Otomatis Aktif. Tanggal kunjungan di halaman publik terkunci pada hari ini."}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className={`text-[10px] font-black uppercase tracking-wider ${!isManualMode ? 'text-emerald-600' : 'text-slate-400'}`}>
+            Otomatis
+          </span>
+          <button
+            onClick={handleToggleMode}
+            disabled={isToggling}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+              isManualMode ? 'bg-emerald-500' : 'bg-slate-200'
+            } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isManualMode ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className={`text-[10px] font-black uppercase tracking-wider ${isManualMode ? 'text-emerald-600' : 'text-slate-400'}`}>
+            Manual
+          </span>
+        </div>
+      </div>
+
       {/* ── FILTER CARD ─────────────────────────────────────────── */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

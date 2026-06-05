@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { ModernTimePicker } from "@/components/ui/modern-time-picker";
 import { ModernSelect } from "@/components/ui/modern-select";
-import { LoginTurnstile, TurnstileRef } from "@/components/auth/_components/login-turnstile";
+import {
+  LoginTurnstile,
+  TurnstileRef,
+} from "@/components/auth/_components/login-turnstile";
 
 const OFFICER_OPTIONS = [
   "Kepala Kantor",
@@ -74,13 +77,14 @@ export default function AppointmentForm() {
 
     if (!turnstileToken) {
       toast.error("Verifikasi Keamanan Diperlukan", {
-        description: "Silakan tunggu hingga verifikasi Cloudflare Turnstile selesai.",
+        description:
+          "Silakan tunggu hingga verifikasi Cloudflare Turnstile selesai.",
       });
       return;
     }
 
-    const cleanWhatsapp = whatsapp.replace(/\D/g, "");
-    if (cleanWhatsapp.length < 9) {
+    const cleanWhatsapp = whatsapp === "-" ? "-" : whatsapp.replace(/\D/g, "");
+    if (cleanWhatsapp !== "-" && cleanWhatsapp.length < 9) {
       toast.error("Nomor WhatsApp Tidak Valid", {
         description: "Silakan masukkan nomor WhatsApp yang benar.",
       });
@@ -183,7 +187,7 @@ export default function AppointmentForm() {
             type="text"
             required
             value={guestName}
-            onChange={(e) => setGuestName(e.target.value)}
+            onChange={(e) => setGuestName(e.target.value.replace(/[0-9]/g, ""))}
             placeholder="Contoh: Muhammad Nazilah"
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
@@ -202,7 +206,7 @@ export default function AppointmentForm() {
             type="tel"
             required
             value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
+            onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d-]/g, ""))}
             placeholder="Contoh: 081234567890"
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
@@ -246,7 +250,7 @@ export default function AppointmentForm() {
             type="text"
             value={institutionName}
             onChange={(e) => setInstitutionName(e.target.value)}
-            placeholder="Contoh: KUA Teweh Tengah / Umat"
+            placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
         </div>

@@ -6,7 +6,11 @@ import { Calendar, Building2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GuestEntry } from "./types";
 import { ModernSelect } from "@/components/ui/modern-select";
-import { LoginTurnstile, TurnstileRef } from "@/components/auth/_components/login-turnstile";
+import { ModernDatePicker } from "@/components/ui/modern-date-picker";
+import {
+  LoginTurnstile,
+  TurnstileRef,
+} from "@/components/auth/_components/login-turnstile";
 
 const OFFICER_OPTIONS = [
   "Kepala Kantor",
@@ -24,9 +28,13 @@ const OFFICER_OPTIONS = [
 
 interface GuestBookFormProps {
   onSuccess: (newEntry: GuestEntry) => void;
+  isManualMode?: boolean;
 }
 
-export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
+export default function GuestBookForm({
+  onSuccess,
+  isManualMode = false,
+}: GuestBookFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -35,6 +43,16 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
   const [intendedOfficerSelect, setIntendedOfficerSelect] = useState("");
   const [customOfficer, setCustomOfficer] = useState("");
   const [purpose, setPurpose] = useState("");
+
+  // Manual Date State
+  const [manualDate, setManualDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const turnstileRef = useRef<TurnstileRef>(null);
@@ -56,7 +74,8 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
       !whatsapp ||
       !institutionType ||
       !intendedOfficer ||
-      !purpose
+      !purpose ||
+      (isManualMode && !manualDate)
     ) {
       toast.error("Formulir Belum Lengkap", {
         description: "Silakan isi semua bidang wajib (bertanda bintang).",
@@ -64,17 +83,21 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
       return;
     }
 
+    // Skip turnstile verification if admin in manual mode? Actually we don't know who is using the form.
+    // If it's a public form, Turnstile is still required.
     if (!turnstileToken) {
       toast.error("Verifikasi Keamanan Diperlukan", {
-        description: "Silakan tunggu hingga verifikasi Cloudflare Turnstile selesai.",
+        description:
+          "Silakan tunggu hingga verifikasi Cloudflare Turnstile selesai.",
       });
       return;
     }
 
-    const cleanWhatsapp = whatsapp.replace(/\D/g, "");
-    if (cleanWhatsapp.length < 9) {
+    const cleanWhatsapp = whatsapp === "-" ? "-" : whatsapp.replace(/\D/g, "");
+    if (cleanWhatsapp !== "-" && cleanWhatsapp.length < 9) {
       toast.error("Nomor WhatsApp Tidak Valid", {
-        description: "Silakan masukkan nomor WhatsApp yang benar.",
+        description:
+          "Silakan masukkan nomor WhatsApp yang benar atau tanda strip (-) jika dikosongkan.",
       });
       return;
     }
@@ -82,6 +105,10 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
     setSubmitting(true);
 
     try {
+      const finalVisitDate = isManualMode
+        ? new Date(`${manualDate}T00:00:00`).toISOString()
+        : new Date().toISOString();
+
       const response = await fetch("/api/buku-tamu", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,7 +119,7 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
           institutionName: institutionName || null,
           intendedOfficer,
           purpose,
-          visitDate: new Date().toISOString(),
+          visitDate: finalVisitDate,
           turnstileToken,
         }),
       });
@@ -115,7 +142,7 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
         institutionName: institutionName || null,
         intendedOfficer,
         purpose,
-        visitDate: new Date().toISOString(),
+        visitDate: finalVisitDate,
       };
 
       setGuestName("");
@@ -127,6 +154,12 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
       setPurpose("");
       setTurnstileToken(null);
       turnstileRef.current?.reset();
+
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      setManualDate(`${year}-${month}-${day}`);
 
       onSuccess(newEntry);
     } catch (err: any) {
@@ -152,25 +185,38 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-6 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Tanggal Kunjungan{" "}
-              <span className="text-xs text-slate-400">
-                (Otomatis Hari Ini)
-              </span>
-            </label>
-            <div className="w-full rounded-xl border border-emerald-200/60 bg-emerald-50/30 px-4 py-3 text-sm text-emerald-800 shadow-inner flex items-center gap-2">
-              <Calendar className="h-4.5 w-4.5 text-emerald-600 animate-pulse" />
-              <span className="font-bold">
-                {new Date().toLocaleDateString("id-ID", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
+          {!isManualMode ? (
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label className="text-sm font-semibold text-slate-700">
+                Tanggal Kunjungan{" "}
+                <span className="text-xs text-slate-400">
+                  (Otomatis Hari Ini)
+                </span>
+              </label>
+              <div className="w-full rounded-xl border border-emerald-200/60 bg-emerald-50/30 px-4 py-3 text-sm text-emerald-800 shadow-inner flex items-center gap-2">
+                <Calendar className="h-4.5 w-4.5 text-emerald-600 animate-pulse" />
+                <span className="font-bold">
+                  {new Date().toLocaleDateString("id-ID", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label className="text-sm font-semibold text-slate-700">
+                Tanggal Kunjungan <span className="text-red-500">*</span>
+              </label>
+              <ModernDatePicker
+                value={manualDate}
+                onChange={(val) => setManualDate(val)}
+                required
+              />
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <label
@@ -184,7 +230,7 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
               type="text"
               required
               value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
+              onChange={(e) => setGuestName(e.target.value.replace(/[0-9]/g, ""))}
               placeholder="Contoh: Muhammad Nazilah"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -202,7 +248,7 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
               type="tel"
               required
               value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
+              onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d-]/g, ""))}
               placeholder="Contoh: 081234567890"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -244,7 +290,7 @@ export default function GuestBookForm({ onSuccess }: GuestBookFormProps) {
               type="text"
               value={institutionName}
               onChange={(e) => setInstitutionName(e.target.value)}
-              placeholder="Contoh: KUA Teweh Tengah"
+              placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>

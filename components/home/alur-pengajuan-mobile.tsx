@@ -50,7 +50,7 @@ export function HomeAlurPengajuanMobile() {
               {
                 step: "02",
                 icon: LayoutGrid,
-                title: "Pilih Layanan",
+                title: "Pilih Katalog Layanan",
                 desc: "Pilih jenis layanan sesuai kebutuhan",
               },
               {

@@ -29,7 +29,7 @@ export function RequestsDesktopTable({ requests }: RequestsDesktopTableProps) {
               Belum ada pengajuan layanan.
             </p>
             <p className="text-xs font-bold text-slate-400 max-w-xs mx-auto leading-relaxed">
-              Silakan pilih layanan yang tersedia untuk memulai pengajuan pertama Anda.
+              Silakan pilih Katalog layanan yang tersedia untuk memulai pengajuan pertama Anda.
             </p>
           </div>
           <Link

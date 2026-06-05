@@ -76,6 +76,8 @@ export function MobileNav({
                   height={28}
                   className="object-contain"
                   style={{ width: "auto", height: "auto" }}
+                  priority
+                  loading="eager"
                 />
               </div>
               <div>

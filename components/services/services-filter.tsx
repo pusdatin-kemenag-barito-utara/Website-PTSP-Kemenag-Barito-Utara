@@ -141,7 +141,7 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
               className="h-12 sm:h-14 w-full rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/50 pl-11 pr-4 text-[13px] sm:text-sm font-medium text-slate-700 transition-all focus:bg-white focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/10 outline-none"
             />
           </div>
- 
+
           <button
             type="button"
             onClick={() => {
@@ -265,7 +265,7 @@ function ServicesFilterContent({ services }: { services: Service[] }) {
                         <div className="grid gap-8 lg:grid-cols-12">
                           <div className="lg:col-span-12 space-y-4">
                             <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">
-                              Pilih Layanan Spesifik:
+                              Pilih Katalog Layanan Spesifik:
                             </h4>
                             <div className="grid gap-3 sm:grid-cols-2">
                               {service.serviceItems &&

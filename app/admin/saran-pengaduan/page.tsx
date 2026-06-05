@@ -20,6 +20,9 @@ export default async function AdminSaranPengaduanPage() {
     name: entry.name || "",
     email: entry.email || "-",
     phone: entry.phone || "",
+    category: entry.category || "Saran",
+    serviceType: entry.serviceType || "Lainnya",
+    isAnonymous: !!entry.isAnonymous,
     content: entry.content || "",
     createdAt: entry.createdAt ? new Date(entry.createdAt).toISOString() : new Date().toISOString(),
   }));

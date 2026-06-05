@@ -46,7 +46,7 @@ export function HomeHowItWorks() {
             {
               step: "02",
               icon: LayoutGrid,
-              title: "Pilih Layanan",
+              title: "Pilih Katalog Layanan",
               desc: "Pilih jenis layanan sesuai kebutuhan.",
               gradient: "from-[#0f8a54] to-[#059669]",
             },

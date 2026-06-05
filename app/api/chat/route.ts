@@ -36,6 +36,7 @@ USER SEDANG BERADA DI PORTAL PTSP:
         // Menambahkan referer agar OpenRouter di server utama mengetahui asalnya
         "HTTP-Referer": appUrl,
         "X-Title": "PTSP Kemenag Barut AI",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
       body: JSON.stringify({ messages, system_injection: ptspContext }),
     });
@@ -55,7 +56,7 @@ USER SEDANG BERADA DI PORTAL PTSP:
     return NextResponse.json(
       {
         error:
-          "Asisten sedang sibuk atau koneksi ke server utama terputus. Mohon coba lagi sebentar lagi ya! 🙏",
+          "Asisten sedang sibuk atau koneksi ke server utama terputus. Detail: " + (error.message || error.toString()),
       },
       { status: 500 },
     );

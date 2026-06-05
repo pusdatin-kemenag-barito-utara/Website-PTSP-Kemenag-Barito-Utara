@@ -59,4 +59,5 @@ export const systemStatus = pgTable("ptsp_system_status", {
   maintenanceStartedBy: uuid("maintenance_started_by").references(
     () => profiles.id,
   ),
+  aiChatEnabled: boolean("ai_chat_enabled").default(true).notNull(),
 });

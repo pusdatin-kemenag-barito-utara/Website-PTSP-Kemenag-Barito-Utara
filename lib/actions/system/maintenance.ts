@@ -11,6 +11,7 @@ export type MaintenanceStatus = {
   message: string;
   startedAt: Date | null;
   startedBy: string | null;
+  aiChatEnabled: boolean;
 };
 
 /**
@@ -29,6 +30,7 @@ export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
         "Sistem sedang dalam pemeliharaan berkala. Silakan kembali beberapa saat lagi.",
       startedAt: result?.maintenanceStartedAt ?? null,
       startedBy: result?.maintenanceStartedBy ?? null,
+      aiChatEnabled: result?.aiChatEnabled ?? true,
     };
   } catch {
     return {
@@ -37,6 +39,7 @@ export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
         "Sistem sedang dalam pemeliharaan berkala. Silakan kembali beberapa saat lagi.",
       startedAt: null,
       startedBy: null,
+      aiChatEnabled: true,
     };
   }
 }
@@ -102,3 +105,53 @@ export async function toggleMaintenanceAction(
     };
   }
 }
+
+/**
+ * Toggle AI Chat ON or OFF. Super Admin only.
+ */
+export async function toggleAIChatAction(enabled: boolean) {
+  try {
+    const profile = await requirePermission("pemeliharaan_storage"); // Using the same permission as the page
+
+    await db
+      .insert(systemStatus)
+      .values({
+        id: "maintenance",
+        aiChatEnabled: enabled,
+      })
+      .onConflictDoUpdate({
+        target: systemStatus.id,
+        set: {
+          aiChatEnabled: enabled,
+        },
+      });
+
+    // Log audit
+    await db.insert(auditLogs).values({
+      adminId: profile.id,
+      action: enabled ? "AI_CHAT_ON" : "AI_CHAT_OFF",
+      entityType: "system",
+      entityId: "ai_chat",
+      details: {
+        action: enabled ? "Mengaktifkan AI Chat Widget" : "Menonaktifkan AI Chat Widget",
+      },
+    });
+
+    revalidatePath("/admin/pemeliharaan-storage");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: enabled
+        ? "Widget AI Chat telah diaktifkan."
+        : "Widget AI Chat telah disembunyikan dari semua halaman.",
+    };
+  } catch (error: any) {
+    console.error("Toggle AI Chat error:", error);
+    return {
+      success: false,
+      error: error.message || "Gagal mengubah status AI Chat.",
+    };
+  }
+}
+

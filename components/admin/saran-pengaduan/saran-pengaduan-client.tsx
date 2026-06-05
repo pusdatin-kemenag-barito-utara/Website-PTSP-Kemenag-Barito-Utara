@@ -11,7 +11,8 @@ import {
   Download, 
   AlertTriangle,
   Loader2,
-  X
+  X,
+  EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteFeedbackAction } from "@/lib/actions/admin/admin-feedbacks";
@@ -22,6 +23,9 @@ interface FeedbackEntry {
   name: string;
   email: string;
   phone: string;
+  category: string;
+  serviceType: string;
+  isAnonymous: boolean;
   content: string;
   createdAt: string;
 }
@@ -46,6 +50,8 @@ export function SaranPengaduanClient({
     const matchesSearch = 
       entry.name.toLowerCase().includes(searchLower) ||
       entry.phone.includes(searchLower) ||
+      entry.category.toLowerCase().includes(searchLower) ||
+      entry.serviceType.toLowerCase().includes(searchLower) ||
       entry.content.toLowerCase().includes(searchLower);
 
     // 2. Date Preset Filter
@@ -97,13 +103,15 @@ export function SaranPengaduanClient({
       return;
     }
 
-    const headers = ["ID", "Waktu Pengiriman", "Nama Pengirim", "Handphone", "Isi Saran / Pengaduan"];
+    const headers = ["ID", "Waktu Pengiriman", "Kategori", "Jenis Layanan", "Nama Pengirim", "Handphone", "Isi Saran / Pengaduan"];
     const csvContent = [
       headers.join(","),
       ...filteredEntries.map((e) => [
         e.id,
         `"${new Date(e.createdAt).toLocaleString("id-ID")}"`,
-        `"${e.name.replace(/"/g, '""')}"`,
+        `"${e.category}"`,
+        `"${e.serviceType}"`,
+        `"${e.name.replace(/"/g, '""')}${e.isAnonymous ? " (Memilih Anonim)" : ""}"`,
         `"${e.phone}"`,
         `"${e.content.replace(/"/g, '""')}"`,
       ].join(","))
@@ -186,6 +194,7 @@ export function SaranPengaduanClient({
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-100">
                 <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Pengirim</th>
+                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Kategori & Layanan</th>
                 <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Isi Saran / Pengaduan</th>
                 <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Tanggal Pengiriman</th>
                 <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Aksi</th>
@@ -209,7 +218,19 @@ export function SaranPengaduanClient({
                           {entry.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-800">{entry.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-slate-800">
+                              {entry.name}
+                            </p>
+                            {entry.isAnonymous && (
+                              <span 
+                                title="Pengguna meminta identitas dirahasiakan (Anonim) di Publik" 
+                                className="flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest cursor-help"
+                              >
+                                <EyeOff className="h-3 w-3" /> Anonim
+                              </span>
+                            )}
+                          </div>
                           <a 
                             href={`https://wa.me/${entry.phone.replace(/\D/g, "")}`}
                             target="_blank"
@@ -220,6 +241,22 @@ export function SaranPengaduanClient({
                             {entry.phone}
                           </a>
                         </div>
+                      </div>
+                    </td>
+
+                    {/* Kategori & Layanan */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1.5">
+                        <span className={`inline-flex w-fit items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
+                          entry.category === 'Pengaduan' 
+                            ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                            : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                        }`}>
+                          {entry.category}
+                        </span>
+                        <span className="text-xs font-bold text-slate-600">
+                          {entry.serviceType}
+                        </span>
                       </div>
                     </td>
 

@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/header";
 import { SiteFooter } from "@/components/layout/footer";
 import { ConditionalShell } from "@/components/layout/conditional-shell";
 import { Toaster } from "sonner";
+import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
 
 import { ChatWidgetClient } from "@/components/features/chat/chat-widget-client";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
@@ -88,7 +89,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const maintenance = await getMaintenanceStatus();
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -156,7 +158,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 className: "text-[14px]",
               }}
             />
-            <ChatWidgetClient />
+            <ChatWidgetClient initialEnabled={maintenance.aiChatEnabled} />
           </div>
         </FramerWrapper>
       </body>

@@ -37,7 +37,7 @@ const navItems = [
     href: "#", 
     icon: LayoutGrid,
     children: [
-      { label: "Pilih Layanan", href: "/layanan", icon: LayoutGrid },
+      { label: "Katalog Layanan", href: "/layanan", icon: LayoutGrid },
       { label: "Lacak Layanan", href: "/track", icon: Search },
       { label: "Cek Sisa Cuti", href: "/cek-cuti", icon: FilePlus },
     ]
@@ -148,6 +148,7 @@ export function SiteHeaderClient({
                     className="w-7 h-7 sm:w-8 h-8 xl:w-8.5 xl:h-8.5 object-contain"
                     style={{ width: "auto", height: "auto" }}
                     priority
+                    loading="eager"
                   />
                 </div>
                 <div className="flex flex-col justify-center min-w-0 whitespace-nowrap pl-1">
