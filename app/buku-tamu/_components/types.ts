@@ -11,4 +11,5 @@ export interface GuestEntry {
 
 export interface GuestBookClientProps {
   initialEntries: GuestEntry[];
+  isManualMode?: boolean;
 }

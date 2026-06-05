@@ -13,7 +13,9 @@ export type ActionResult = {
   error?: string;
 };
 
-export async function deleteGuestBookAction(idStr: string): Promise<ActionResult> {
+export async function deleteGuestBookAction(
+  idStr: string,
+): Promise<ActionResult> {
   const profile = await requirePermission("buku_tamu");
   try {
     const id = BigInt(idStr);
@@ -43,7 +45,10 @@ export async function deleteGuestBookAction(idStr: string): Promise<ActionResult
     revalidatePath("/admin/buku-tamu");
     return { success: true, message: "Catatan buku tamu berhasil dihapus" };
   } catch (error: any) {
-    return { success: false, error: error.message || "Gagal menghapus data buku tamu" };
+    return {
+      success: false,
+      error: error.message || "Gagal menghapus data buku tamu",
+    };
   }
 }
 
@@ -67,7 +72,7 @@ export async function addManualGuestBookAction(data: {
         institutionName: data.institutionName || null,
         intendedOfficer: data.intendedOfficer,
         purpose: data.purpose,
-        visitDate: data.visitDate,
+        visitDate: new Date(data.visitDate),
       })
       .returning();
 
@@ -83,13 +88,22 @@ export async function addManualGuestBookAction(data: {
     });
 
     revalidatePath("/admin/buku-tamu");
-    return { success: true, message: "Kunjungan berhasil ditambahkan secara manual", data: inserted[0] };
+    return {
+      success: true,
+      message: "Kunjungan berhasil ditambahkan secara manual",
+      data: inserted[0],
+    };
   } catch (error: any) {
-    return { success: false, error: error.message || "Gagal menyimpan data kunjungan" };
+    return {
+      success: false,
+      error: error.message || "Gagal menyimpan data kunjungan",
+    };
   }
 }
 
-export async function deleteAppointmentAction(idStr: string): Promise<ActionResult> {
+export async function deleteAppointmentAction(
+  idStr: string,
+): Promise<ActionResult> {
   const profile = await requirePermission("janji_temu");
   try {
     const id = BigInt(idStr);
@@ -119,13 +133,16 @@ export async function deleteAppointmentAction(idStr: string): Promise<ActionResu
     revalidatePath("/admin/janji-temu");
     return { success: true, message: "Catatan janji temu berhasil dihapus" };
   } catch (error: any) {
-    return { success: false, error: error.message || "Gagal menghapus data janji temu" };
+    return {
+      success: false,
+      error: error.message || "Gagal menghapus data janji temu",
+    };
   }
 }
 
 export async function updateAppointmentStatusAction(
   idStr: string,
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "approved" | "rejected",
 ): Promise<ActionResult> {
   const profile = await requirePermission("janji_temu");
   try {
@@ -157,21 +174,31 @@ export async function updateAppointmentStatusAction(
     });
 
     revalidatePath("/admin/janji-temu");
-    return { success: true, message: `Status janji temu berhasil diubah menjadi ${status === "approved" ? "Disetujui" : status === "rejected" ? "Ditolak" : "Menunggu"}` };
+    return {
+      success: true,
+      message: `Status janji temu berhasil diubah menjadi ${status === "approved" ? "Disetujui" : status === "rejected" ? "Ditolak" : "Menunggu"}`,
+    };
   } catch (error: any) {
-    return { success: false, error: error.message || "Gagal memperbarui status janji temu" };
+    return {
+      success: false,
+      error: error.message || "Gagal memperbarui status janji temu",
+    };
   }
 }
 
-export async function toggleGuestBookModeAction(allowManual: boolean): Promise<ActionResult> {
+export async function toggleGuestBookModeAction(
+  allowManual: boolean,
+): Promise<ActionResult> {
   const profile = await requirePermission("buku_tamu");
   try {
     // Import systemStatus schema
     const { systemStatus } = await import("@/lib/db/schema/logs");
-    
+
     await db
       .update(systemStatus)
-      .set({ notes: allowManual ? "MANUAL_GUESTBOOK_ON" : "MANUAL_GUESTBOOK_OFF" })
+      .set({
+        notes: allowManual ? "MANUAL_GUESTBOOK_ON" : "MANUAL_GUESTBOOK_OFF",
+      })
       .where(eq(systemStatus.id, "heartbeat"));
 
     await createAuditLog({
@@ -192,13 +219,21 @@ export async function toggleGuestBookModeAction(allowManual: boolean): Promise<A
       const { createClient } = await import("@/lib/supabase/server");
       const supabase = await createClient();
       // @ts-ignore
-      await supabase.channel('app-sync').httpSend('refresh', { action: 'toggle_guest_book_mode', allowManual });
+      await supabase
+        .channel("app-sync")
+        .httpSend("refresh", { action: "toggle_guest_book_mode", allowManual });
     } catch (broadcastErr) {
       console.error("Failed to broadcast refresh:", broadcastErr);
     }
 
-    return { success: true, message: `Mode Buku Tamu berhasil diubah menjadi ${allowManual ? "Manual" : "Otomatis"}` };
+    return {
+      success: true,
+      message: `Mode Buku Tamu berhasil diubah menjadi ${allowManual ? "Manual" : "Otomatis"}`,
+    };
   } catch (error: any) {
-    return { success: false, error: error.message || "Gagal mengubah mode buku tamu" };
+    return {
+      success: false,
+      error: error.message || "Gagal mengubah mode buku tamu",
+    };
   }
 }
