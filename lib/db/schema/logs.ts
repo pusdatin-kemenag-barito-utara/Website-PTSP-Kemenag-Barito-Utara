@@ -25,7 +25,7 @@ export const activityLogs = pgTable("ptsp_activity_logs", {
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const auditLogs = pgTable("ptsp_audit_logs", {
   id: bigserial("id", { mode: "bigint" }).primaryKey().notNull(),
