@@ -8,12 +8,13 @@ import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { m, AnimatePresence } from "framer-motion";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { isAdminRole } from "@/lib/constants";
 import { isSafeRedirect } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 // Local Components
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
@@ -148,19 +149,55 @@ export function LoginFormByRole({
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring" as const, stiffness: 300, damping: 24 },
+    },
+  };
+
   return (
-    <form className="space-y-3" onSubmit={onSubmit}>
+    <m.form 
+      className="space-y-3" 
+      onSubmit={onSubmit}
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
       {mode === "pemohon" ? (
-        <Field label="Nomor WhatsApp" required hint="Contoh: 08123456789">
-          <Input name="phone" required placeholder="Masukkan nomor WhatsApp" />
-        </Field>
+        <m.div variants={itemVariants}>
+          <Field label="Nomor WhatsApp" required hint="Contoh: 08123456789">
+            <Input 
+              name="phone" 
+              required 
+              placeholder="Masukkan nomor WhatsApp" 
+              type="tel"
+              inputMode="numeric"
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+              }}
+            />
+          </Field>
+        </m.div>
       ) : (
-        <Field label="Email" required>
-          <Input type="email" name="email" required placeholder="nama@gmail.com" />
-        </Field>
+        <m.div variants={itemVariants}>
+          <Field label="Email" required>
+            <Input type="email" name="email" required placeholder="nama@gmail.com" />
+          </Field>
+        </m.div>
       )}
 
-      <div className="space-y-1.5">
+      <m.div variants={itemVariants} className="space-y-1.5">
         <div className="flex items-center justify-between">
           <span className="block text-sm font-medium text-slate-700">
             Password <span className="text-red-500">*</span>
@@ -192,22 +229,41 @@ export function LoginFormByRole({
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-      </div>
+      </m.div>
 
-      <LoginTurnstile
-        mounted={mounted}
-        ref={turnstileRef}
-        onTokenChange={setTurnstileToken}
-      />
+      <m.div variants={itemVariants}>
+        <LoginTurnstile
+          mounted={mounted}
+          ref={turnstileRef}
+          onTokenChange={setTurnstileToken}
+        />
+      </m.div>
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <AnimatePresence mode="wait">
+        {error && (
+          <m.div
+            key="error-msg"
+            initial={{ opacity: 0, height: 0, y: -10 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 mb-2">{error}</p>
+          </m.div>
+        )}
+      </AnimatePresence>
 
-      <Button
-        className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]!" : "bg-[#059669]! hover:bg-[#047857]!"}`}
-        disabled={loading || !turnstileToken}
-      >
-        {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : "Masuk Sebagai Pemohon"}
-      </Button>
-    </form>
+      <m.div variants={itemVariants}>
+        <m.div whileTap={loading || !turnstileToken ? {} : { scale: 0.96 }}>
+          <Button
+            className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]!" : "bg-[#059669]! hover:bg-[#047857]!"}`}
+            disabled={loading || !turnstileToken}
+          >
+            {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : "Masuk Sebagai Pemohon"}
+          </Button>
+        </m.div>
+      </m.div>
+    </m.form>
   );
 }

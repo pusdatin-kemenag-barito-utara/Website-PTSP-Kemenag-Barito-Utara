@@ -10,6 +10,7 @@ import {
   TurnstileRef,
 } from "@/components/auth/_components/login-turnstile";
 import { submitFeedbackAction } from "@/lib/actions/public/feedback";
+import { motion } from "framer-motion";
 
 export function HomeSaranPengaduan() {
   const [submitting, setSubmitting] = useState(false);
@@ -93,7 +94,13 @@ export function HomeSaranPengaduan() {
 
       <div className="mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-24 relative z-10">
         {/* Section Header */}
-        <div className="mb-8 text-center max-w-3xl mx-auto space-y-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-8 text-center max-w-3xl mx-auto space-y-4"
+        >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100/80 animate-pulse">
             <MessageSquare className="h-4 w-4 text-emerald-600" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
@@ -110,10 +117,16 @@ export function HomeSaranPengaduan() {
             hadapi saat menggunakan Layanan kami. Isikan nomor HP yang valid
             untuk keperluan konfirmasi tanggapan atas pengaduan Anda.
           </p>
-        </div>
+        </motion.div>
 
         {/* Form Container */}
-        <div className="max-w-3xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="max-w-3xl mx-auto"
+        >
           {/* Feedback Form */}
           <div className="bg-[#f8fafc] rounded-3xl border border-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.03)] p-8 sm:p-10 relative">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -281,7 +294,7 @@ export function HomeSaranPengaduan() {
               </div>
             </form>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

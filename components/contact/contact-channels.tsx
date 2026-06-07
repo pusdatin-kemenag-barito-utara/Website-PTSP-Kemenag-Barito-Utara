@@ -6,6 +6,7 @@ import {
   Search,
   HelpCircle,
   Mail,
+  MapPin,
 } from "lucide-react";
 
 export function ContactChannels() {
@@ -43,55 +44,54 @@ export function ContactChannels() {
         </div>
       </div>
 
-      {/* Quick Links */}
-      <div className="rounded-[2rem] bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100">
+      {/* Lokasi Kantor */}
+      <div className="rounded-[2rem] bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 flex flex-col">
         <div className="flex items-center gap-3 mb-5">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
-            <ArrowRight className="h-6 w-6 text-[#059669]" />
+            <MapPin className="h-6 w-6 text-[#059669]" />
           </div>
-          <h2 className="text-xl font-black text-slate-900">Akses Cepat</h2>
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Lokasi Kantor</h3>
+            <h2 className="text-xl font-black text-slate-900 leading-tight">Temukan kami di peta</h2>
+          </div>
         </div>
         <p className="text-sm leading-relaxed text-slate-600 mb-6">
-          Gunakan tautan di bawah ini untuk navigasi langsung ke fitur utama
-          portal PTSP.
+          Gunakan peta di bawah ini untuk melihat lokasi kantor, lalu buka petunjuk arah jika ingin datang langsung.
         </p>
-        <div className="space-y-3">
-          <Link
-            href="/track"
-            className="group flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:border-[#059669]/20 hover:bg-[#059669]/5"
+        
+        {/* Google Maps Embed */}
+        <div className="w-full h-[250px] rounded-2xl overflow-hidden border border-slate-200 mb-6 shrink-0 relative bg-slate-50">
+          <iframe 
+            src="https://www.google.com/maps?q=Kantor+Kementerian+Agama+Kabupaten+Barito+Utara&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+            width="100%" 
+            height="100%" 
+            style={{ border: 0 }} 
+            allowFullScreen 
+            loading="lazy" 
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Peta Lokasi Kantor Kemenag Barito Utara"
+            className="absolute inset-0"
+          ></iframe>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-3 mt-auto">
+          <a
+            href="https://www.google.com/maps/dir/?api=1&destination=Kantor+Kemenag+Barito+Utara"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#059669] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#047857] hover:-translate-y-0.5 shadow-md hover:shadow-lg"
           >
-            <div className="flex items-center gap-3">
-              <Search className="h-5 w-5 text-[#059669]" />
-              <span className="text-sm font-bold text-slate-800 group-hover:text-[#059669]">
-                Lacak Pengajuan
-              </span>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-[#059669]" />
-          </Link>
-          <Link
-            href="/layanan"
-            className="group flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:border-[#059669]/20 hover:bg-[#059669]/5"
+            Petunjuk Arah
+          </a>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Kantor+Kemenag+Barito+Utara"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5"
           >
-            <div className="flex items-center gap-3">
-              <HelpCircle className="h-5 w-5 text-emerald-600" />
-              <span className="text-sm font-bold text-slate-800 group-hover:text-[#059669]">
-                Katalog Layanan
-              </span>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-[#059669]" />
-          </Link>
-          <Link
-            href="/dashboard/pengajuan/baru"
-            className="group flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:border-[#059669]/20 hover:bg-[#059669]/5"
-          >
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-purple-600" />
-              <span className="text-sm font-bold text-slate-800 group-hover:text-[#059669]">
-                Ajukan Permohonan Baru
-              </span>
-            </div>
-            <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-[#059669]" />
-          </Link>
+            Buka di Google Maps
+          </a>
         </div>
       </div>
     </div>

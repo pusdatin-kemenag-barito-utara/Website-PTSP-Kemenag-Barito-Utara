@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Calendar, Building2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, Variants } from "framer-motion";
 import { GuestEntry } from "./types";
 import { ModernSelect } from "@/components/ui/modern-select";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
@@ -171,9 +172,27 @@ export default function GuestBookForm({
     }
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  };
+
   return (
-    <div className="mx-auto max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8 text-center">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="mx-auto max-w-3xl"
+    >
+      <motion.div variants={itemVariants} className="mb-8 text-center">
         <h2 className="text-2xl font-bold tracking-tight text-slate-800 md:text-3xl">
           Formulir Kunjungan Tamu
         </h2>
@@ -181,12 +200,12 @@ export default function GuestBookForm({
           Silakan lengkapi data kunjungan Anda agar kami dapat memberikan
           pelayanan terbaik.
         </p>
-      </div>
+      </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-6 sm:grid-cols-2">
           {!isManualMode ? (
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <motion.div variants={itemVariants} className="flex flex-col gap-1.5 sm:col-span-2">
               <label className="text-sm font-semibold text-slate-700">
                 Tanggal Kunjungan{" "}
                 <span className="text-xs text-slate-400">
@@ -204,9 +223,9 @@ export default function GuestBookForm({
                   })}
                 </span>
               </div>
-            </div>
+            </motion.div>
           ) : (
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <motion.div variants={itemVariants} className="flex flex-col gap-1.5 sm:col-span-2">
               <label className="text-sm font-semibold text-slate-700">
                 Tanggal Kunjungan <span className="text-red-500">*</span>
               </label>
@@ -215,10 +234,10 @@ export default function GuestBookForm({
                 onChange={(val) => setManualDate(val)}
                 required
               />
-            </div>
+            </motion.div>
           )}
 
-          <div className="flex flex-col gap-1.5">
+          <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
             <label
               htmlFor="guestName"
               className="text-sm font-semibold text-slate-700"
@@ -234,9 +253,9 @@ export default function GuestBookForm({
               placeholder="Contoh: Muhammad Nazilah"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col gap-1.5">
+          <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
             <label
               htmlFor="whatsapp"
               className="text-sm font-semibold text-slate-700"
@@ -255,9 +274,9 @@ export default function GuestBookForm({
             <p className="text-xs text-slate-400">
               Format angka saja (misal: 0812xxx).
             </p>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col gap-1.5">
+          <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">
               Jenis Instansi <span className="text-red-500">*</span>
             </label>
@@ -275,9 +294,9 @@ export default function GuestBookForm({
               placeholder="Pilih Jenis Instansi"
               required
             />
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col gap-1.5">
+          <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
             <label
               htmlFor="institutionName"
               className="text-sm font-semibold text-slate-700"
@@ -293,10 +312,10 @@ export default function GuestBookForm({
               placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
-          </div>
+          </motion.div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">
             Pejabat / Pegawai yang Dituju{" "}
             <span className="text-red-500">*</span>
@@ -316,10 +335,10 @@ export default function GuestBookForm({
             enableSearch={true}
             required
           />
-        </div>
+        </motion.div>
 
         {intendedOfficerSelect === "Unit Lainnya (Bisa Tulis Manual)" && (
-          <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+          <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
             <label
               htmlFor="customOfficer"
               className="text-sm font-semibold text-slate-700"
@@ -336,10 +355,10 @@ export default function GuestBookForm({
               placeholder="Tulis nama unit / pegawai lainnya..."
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
-          </div>
+          </motion.div>
         )}
 
-        <div className="flex flex-col gap-1.5">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label
             htmlFor="purpose"
             className="text-sm font-semibold text-slate-700"
@@ -355,17 +374,17 @@ export default function GuestBookForm({
             placeholder="Jelaskan secara singkat keperluan kedatangan Anda..."
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
-        </div>
+        </motion.div>
 
-        <div className="pt-2">
+        <motion.div variants={itemVariants} className="pt-2">
           <LoginTurnstile
             mounted={mounted}
             ref={turnstileRef}
             onTokenChange={setTurnstileToken}
           />
-        </div>
+        </motion.div>
 
-        <div className="flex justify-center pt-2">
+        <motion.div variants={itemVariants} className="flex justify-center pt-2">
           <Button
             type="submit"
             disabled={submitting}
@@ -373,8 +392,8 @@ export default function GuestBookForm({
           >
             {submitting ? "Menyimpan Data..." : "Kirim & Catat Kunjungan"}
           </Button>
-        </div>
+        </motion.div>
       </form>
-    </div>
+    </motion.div>
   );
 }

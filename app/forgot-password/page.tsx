@@ -1,5 +1,6 @@
 import { ForgotPasswordClient } from "@/components/auth/forgot-password-client";
 import Image from "next/image";
+import { AuthCardMotion, AuthBgMotionPetugas } from "@/components/auth/auth-motion-wrapper";
 
 export default function ForgotPasswordPage() {
   return (
@@ -23,12 +24,13 @@ export default function ForgotPasswordPage() {
             backgroundSize: "40px 40px",
           }}
         />
+        <AuthBgMotionPetugas />
       </div>
 
       {/* Card container */}
-      <div className="relative z-10 w-full max-w-[480px]">
+      <AuthCardMotion className="relative z-10 w-full max-w-[480px]">
         <ForgotPasswordClient />
-      </div>
+      </AuthCardMotion>
     </div>
   );
 }

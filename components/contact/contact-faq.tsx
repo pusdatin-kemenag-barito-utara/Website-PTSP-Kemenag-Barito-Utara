@@ -1,4 +1,8 @@
-import { HelpCircle } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { HelpCircle, ChevronDown } from "lucide-react";
+import { m, AnimatePresence } from "framer-motion";
 
 const faqItems = [
   {
@@ -20,6 +24,8 @@ const faqItems = [
 ];
 
 export function ContactFaq() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
   return (
     <div className="rounded-[2rem] bg-white p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100">
       <div className="flex items-center gap-3 mb-8">
@@ -35,27 +41,70 @@ export function ContactFaq() {
           </p>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {faqItems.map((item, idx) => (
-          <div
-            key={item.q}
-            className="group rounded-2xl border border-slate-100 bg-slate-50/50 p-5 transition-colors hover:border-[#059669]/20 hover:bg-[#059669]/5"
-          >
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#059669]/10 text-xs font-black text-[#059669]">
-                {String(idx + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <p className="text-sm font-bold text-slate-900 group-hover:text-[#059669] transition-colors">
-                  {item.q}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {item.a}
-                </p>
+      
+      <div className="grid gap-4 md:grid-cols-2 items-start">
+        {faqItems.map((item, idx) => {
+          const isOpen = openIndex === idx;
+          
+          return (
+            <div
+              key={item.q}
+              className={`group rounded-2xl border transition-colors cursor-pointer ${
+                isOpen
+                  ? "border-[#059669]/30 bg-[#059669]/5"
+                  : "border-slate-100 bg-slate-50/50 hover:border-[#059669]/20 hover:bg-[#059669]/5"
+              }`}
+              onClick={() => setOpenIndex(isOpen ? null : idx)}
+            >
+              <div className="flex items-start gap-3 p-5">
+                <span
+                  className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black transition-colors ${
+                    isOpen
+                      ? "bg-[#059669] text-white"
+                      : "bg-[#059669]/10 text-[#059669]"
+                  }`}
+                >
+                  {String(idx + 1).padStart(2, "0")}
+                </span>
+                
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <p
+                      className={`text-sm font-bold transition-colors pt-0.5 ${
+                        isOpen
+                          ? "text-[#059669]"
+                          : "text-slate-900 group-hover:text-[#059669]"
+                      }`}
+                    >
+                      {item.q}
+                    </p>
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 mt-1 transition-transform duration-300 ${
+                        isOpen ? "rotate-180 text-[#059669]" : "text-slate-400"
+                      }`}
+                    />
+                  </div>
+                  
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <m.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <p className="mt-3 text-sm leading-relaxed text-slate-600 pb-1">
+                          {item.a}
+                        </p>
+                      </m.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

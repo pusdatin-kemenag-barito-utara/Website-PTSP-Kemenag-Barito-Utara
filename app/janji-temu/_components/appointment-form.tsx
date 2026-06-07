@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Building2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, Variants } from "framer-motion";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { ModernTimePicker } from "@/components/ui/modern-time-picker";
 import { ModernSelect } from "@/components/ui/modern-select";
@@ -147,11 +148,30 @@ export default function AppointmentForm() {
     }
   };
 
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <motion.form 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      onSubmit={handleSubmit} 
+      className="space-y-6"
+    >
       <div className="grid gap-6 sm:grid-cols-2">
         {/* Tanggal Rencana */}
-        <div className="flex flex-col gap-1.5">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">
             Tanggal Rencana <span className="text-red-500">*</span>
           </label>
@@ -160,10 +180,10 @@ export default function AppointmentForm() {
             onChange={(val) => setAppointmentDate(val)}
             required
           />
-        </div>
+        </motion.div>
 
         {/* Jam Bertamu */}
-        <div className="flex flex-col gap-1.5">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">
             Jam Bertamu <span className="text-red-500">*</span>
           </label>
@@ -172,10 +192,10 @@ export default function AppointmentForm() {
             onChange={(val) => setAppointmentTime(val)}
             required
           />
-        </div>
+        </motion.div>
 
         {/* Nama Lengkap */}
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5 sm:col-span-2">
           <label
             htmlFor="guestName"
             className="text-sm font-semibold text-slate-700"
@@ -191,10 +211,10 @@ export default function AppointmentForm() {
             placeholder="Contoh: Muhammad Nazilah"
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
-        </div>
+        </motion.div>
 
         {/* No WhatsApp */}
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5 sm:col-span-2">
           <label
             htmlFor="whatsapp"
             className="text-sm font-semibold text-slate-700"
@@ -213,10 +233,10 @@ export default function AppointmentForm() {
           <p className="text-xs text-slate-400">
             Gunakan format angka saja (misal: 0812xxx atau 62812xxx).
           </p>
-        </div>
+        </motion.div>
 
         {/* Jenis Instansi */}
-        <div className="flex flex-col gap-1.5">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">
             Instansi <span className="text-red-500">*</span>
           </label>
@@ -234,10 +254,10 @@ export default function AppointmentForm() {
             placeholder="Pilih Instansi"
             required
           />
-        </div>
+        </motion.div>
 
         {/* Nama Instansi */}
-        <div className="flex flex-col gap-1.5">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label
             htmlFor="institutionName"
             className="text-sm font-semibold text-slate-700"
@@ -253,11 +273,11 @@ export default function AppointmentForm() {
             placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
-        </div>
+        </motion.div>
       </div>
 
       {/* Pejabat yang Dituju Dropdown */}
-      <div className="flex flex-col gap-1.5">
+      <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-slate-700">
           Ingin Bertemu <span className="text-red-500">*</span>
         </label>
@@ -276,11 +296,11 @@ export default function AppointmentForm() {
           enableSearch={true}
           required
         />
-      </div>
+      </motion.div>
 
       {/* Custom Officer Name (if Unit Lainnya selected) */}
       {intendedOfficerSelect === "Unit Lainnya (Bisa Tulis Manual)" && (
-        <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+        <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label
             htmlFor="customOfficer"
             className="text-sm font-semibold text-slate-700"
@@ -297,11 +317,11 @@ export default function AppointmentForm() {
             placeholder="Tulis nama unit / pegawai lainnya..."
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
-        </div>
+        </motion.div>
       )}
 
       {/* Keperluan Kunjungan */}
-      <div className="flex flex-col gap-1.5">
+      <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
         <label
           htmlFor="purpose"
           className="text-sm font-semibold text-slate-700"
@@ -317,18 +337,18 @@ export default function AppointmentForm() {
           placeholder="Tuliskan Keperluan Anda..."
           className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
         />
-      </div>
+      </motion.div>
 
-      <div className="pt-2">
+      <motion.div variants={itemVariants} className="pt-2">
         <LoginTurnstile
           mounted={mounted}
           ref={turnstileRef}
           onTokenChange={setTurnstileToken}
         />
-      </div>
+      </motion.div>
 
       {/* Submit Button */}
-      <div className="flex justify-center pt-2">
+      <motion.div variants={itemVariants} className="flex justify-center pt-2">
         <Button
           type="submit"
           disabled={submitting}
@@ -336,7 +356,7 @@ export default function AppointmentForm() {
         >
           {submitting ? "Menyimpan..." : "SIMPAN"}
         </Button>
-      </div>
-    </form>
+      </motion.div>
+    </motion.form>
   );
 }

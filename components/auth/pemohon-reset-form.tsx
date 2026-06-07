@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  MessageSquareShare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import {
   resetPasswordByPhoneAction,
   checkPhoneExistsAction,
+  verifyOtpAction,
 } from "@/lib/actions/auth/reset-password";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
@@ -50,6 +52,7 @@ const getPasswordStrength = (pass: string) => {
 
 export function PemohonResetForm() {
   const router = useRouter();
+  // 1: Phone, 2: OTP, 3: New Password
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +60,7 @@ export function PemohonResetForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetToken, setResetToken] = useState("");
@@ -92,10 +96,29 @@ export function PemohonResetForm() {
       return setError("Nomor HP tidak ditemukan dalam sistem.");
     }
 
-    if (result.resetToken) {
-      setResetToken(result.resetToken);
-    }
+    toast.success("OTP Dikirim!", {
+      description: "Silakan periksa pesan WhatsApp Anda.",
+    });
     setStep(2);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 6) return setError("Masukkan 6 digit kode OTP.");
+    
+    setLoading(true);
+    setError("");
+
+    const result = await verifyOtpAction(phone, otp);
+
+    setLoading(false);
+    if (result.error) {
+      return setError(result.error);
+    }
+
+    if (result.success && result.resetToken) {
+      setResetToken(result.resetToken);
+      setStep(3);
+    }
   };
 
   const handleUpdatePassword = async () => {
@@ -124,17 +147,19 @@ export function PemohonResetForm() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-2xl font-black text-slate-900">
-          {step === 1 ? "Verifikasi Nomor HP" : "Atur Password Baru"}
+          {step === 1 && "Verifikasi Nomor HP"}
+          {step === 2 && "Masukkan Kode OTP"}
+          {step === 3 && "Atur Password Baru"}
         </h2>
         <p className="text-sm text-slate-500 leading-relaxed">
-          {step === 1
-            ? "Masukkan nomor WhatsApp yang terdaftar untuk verifikasi akun Anda."
-            : "Nomor ditemukan! Sekarang masukkan password baru yang aman."}
+          {step === 1 && "Masukkan nomor WhatsApp yang terdaftar untuk verifikasi akun Anda."}
+          {step === 2 && "Kami telah mengirimkan 6 digit kode OTP ke nomor WhatsApp Anda."}
+          {step === 3 && "Kode OTP valid! Sekarang masukkan password baru yang aman."}
         </p>
       </div>
 
       <AnimatePresence mode="wait">
-        {step === 1 ? (
+        {step === 1 && (
           <m.div
             key="step1"
             initial={{ opacity: 0, y: 10 }}
@@ -171,12 +196,58 @@ export function PemohonResetForm() {
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
               ) : null}
-              Lanjutkan
+              Kirim OTP ke WhatsApp
             </Button>
           </m.div>
-        ) : (
+        )}
+
+        {step === 2 && (
           <m.div
             key="step2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4"
+          >
+            <div className="relative group">
+              <MessageSquareShare className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <Input
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Masukkan 6 Digit OTP"
+                maxLength={6}
+                className="h-14 pl-12 text-center tracking-[0.5em] font-bold text-xl rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 transition-all"
+              />
+            </div>
+            {error && (
+              <p className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
+                <AlertCircle className="h-3.5 w-3.5" /> {error}
+              </p>
+            )}
+
+            <Button
+              onClick={handleVerifyOtp}
+              disabled={loading || otp.length < 6}
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              ) : null}
+              Verifikasi OTP
+            </Button>
+
+            <button 
+              onClick={() => setStep(1)}
+              className="w-full text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors"
+            >
+              Ganti Nomor / Kirim Ulang OTP
+            </button>
+          </m.div>
+        )}
+
+        {step === 3 && (
+          <m.div
+            key="step3"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

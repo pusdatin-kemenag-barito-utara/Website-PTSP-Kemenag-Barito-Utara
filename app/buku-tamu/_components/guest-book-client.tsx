@@ -7,6 +7,8 @@ import GuestBookForm from "./guest-book-form";
 import GuestBookList from "./guest-book-list";
 import GuestBookStats from "./guest-book-stats";
 
+import { m, AnimatePresence } from "framer-motion";
+
 export default function GuestBookClient({ initialEntries, isManualMode = false }: GuestBookClientProps) {
   const [activeTab, setActiveTab] = useState<"form" | "list" | "stats">("form");
   const [entries, setEntries] = useState(initialEntries);
@@ -20,10 +22,10 @@ export default function GuestBookClient({ initialEntries, isManualMode = false }
     <div className="mx-auto max-w-7xl space-y-6">
       {/* Sleek Tab Navigation with Emerald Glow */}
       <div className="flex justify-center w-full px-2 sm:px-0">
-        <div className="flex w-full max-w-lg sm:w-auto rounded-xl bg-slate-100 p-1 shadow-inner backdrop-blur-md">
+        <div className="flex w-full max-w-full overflow-x-auto sm:overflow-visible sm:w-auto rounded-xl bg-slate-100 p-1 shadow-inner backdrop-blur-md hide-scrollbar">
           <button
             onClick={() => setActiveTab("form")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2.5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-3 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
               activeTab === "form"
                 ? "bg-white text-emerald-700 shadow-md ring-1 ring-emerald-500/10"
                 : "text-slate-600 hover:bg-white/50 hover:text-slate-900"
@@ -35,7 +37,7 @@ export default function GuestBookClient({ initialEntries, isManualMode = false }
           </button>
           <button
             onClick={() => setActiveTab("list")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2.5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-3 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
               activeTab === "list"
                 ? "bg-white text-emerald-700 shadow-md ring-1 ring-emerald-500/10"
                 : "text-slate-600 hover:bg-white/50 hover:text-slate-900"
@@ -66,7 +68,7 @@ export default function GuestBookClient({ initialEntries, isManualMode = false }
           </button>
           <button
             onClick={() => setActiveTab("stats")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2.5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-3 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
               activeTab === "stats"
                 ? "bg-white text-emerald-700 shadow-md ring-1 ring-emerald-500/10"
                 : "text-slate-600 hover:bg-white/50 hover:text-slate-900"
@@ -80,37 +82,47 @@ export default function GuestBookClient({ initialEntries, isManualMode = false }
       </div>
 
       {/* Main Glassmorphism Display Box */}
-      <div className="relative isolate rounded-3xl border border-white/20 bg-white/60 p-6 shadow-2xl backdrop-blur-xl sm:p-8 md:p-10">
+      <div className="relative isolate rounded-3xl border border-white/20 bg-white/60 p-6 shadow-2xl backdrop-blur-xl sm:p-8 md:p-10 overflow-hidden">
         {/* Glow accent wrapper to prevent overflow scrollbars while keeping dropdowns unclipped */}
         <div className="absolute inset-0 -z-10 overflow-hidden rounded-3xl pointer-events-none">
           <div className="absolute -left-16 -top-16 h-72 w-72 rounded-full bg-emerald-500/10 blur-[100px]" />
           <div className="absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-teal-500/10 blur-[100px]" />
         </div>
 
-        {activeTab === "form" && (
-          <GuestBookForm
-            onSuccess={(newEntry) => {
-              setEntries((prev) => [newEntry, ...prev]);
-              setActiveTab("list");
-            }}
-            isManualMode={isManualMode}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <m.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            {activeTab === "form" && (
+              <GuestBookForm
+                onSuccess={(newEntry) => {
+                  setEntries((prev) => [newEntry, ...prev]);
+                  setActiveTab("list");
+                }}
+                isManualMode={isManualMode}
+              />
+            )}
 
-        {activeTab === "list" && (
-          <GuestBookList
-            entries={entries}
-            statsDate={todayStr}
-            onSwitchTab={setActiveTab}
-          />
-        )}
+            {activeTab === "list" && (
+              <GuestBookList
+                entries={entries}
+                statsDate={todayStr}
+                onSwitchTab={setActiveTab}
+              />
+            )}
 
-        {activeTab === "stats" && (
-          <GuestBookStats
-            entries={entries}
-            onSwitchTab={setActiveTab}
-          />
-        )}
+            {activeTab === "stats" && (
+              <GuestBookStats
+                entries={entries}
+                onSwitchTab={setActiveTab}
+              />
+            )}
+          </m.div>
+        </AnimatePresence>
       </div>
     </div>
   );

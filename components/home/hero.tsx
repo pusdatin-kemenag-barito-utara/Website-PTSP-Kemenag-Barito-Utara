@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { motion, Variants } from "framer-motion";
 import {
   ArrowRight,
   ShieldCheck,
@@ -15,12 +18,38 @@ import {
   Search,
 } from "lucide-react";
 
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+
+const rightCardVariants: Variants = {
+  hidden: { opacity: 0, x: 30 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut", delay: 0.3 } },
+};
+
 export function HomeHero() {
   const currentYear = new Date().getFullYear();
   return (
     <section className="relative min-h-[92vh] flex items-center overflow-hidden">
       {/* Background image */}
-      <div className="absolute inset-0">
+      <motion.div 
+        initial={{ scale: 1.05 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
+        className="absolute inset-0"
+      >
         <Image
           src="/kantor-kemenag.jpg"
           alt="Kantor Kemenag Barito Utara"
@@ -40,19 +69,32 @@ export function HomeHero() {
             backgroundSize: "60px 60px",
           }}
         />
-      </div>
+      </motion.div>
 
       {/* Ambient emerald glows */}
-      <div className="pointer-events-none absolute -left-40 top-20 h-[600px] w-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
-      <div className="pointer-events-none absolute -right-40 bottom-0 h-[500px] w-[500px] rounded-full bg-emerald-400/10 blur-[100px]" />
+      <motion.div 
+        animate={{ y: [-10, 10, -10], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -left-40 top-20 h-[600px] w-[600px] rounded-full bg-emerald-500/10 blur-[120px]" 
+      />
+      <motion.div 
+        animate={{ y: [10, -10, 10], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -right-40 bottom-0 h-[500px] w-[500px] rounded-full bg-emerald-400/10 blur-[100px]" 
+      />
       <div className="pointer-events-none absolute left-1/3 top-0 h-[300px] w-[300px] rounded-full bg-emerald-600/5 blur-[80px]" />
 
       <div className="relative z-10 mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 py-24 lg:py-32">
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_460px]">
           {/* Left */}
-          <div className="space-y-8">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="space-y-8"
+          >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-5 py-2 backdrop-blur-md">
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-5 py-2 backdrop-blur-md">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
@@ -60,10 +102,10 @@ export function HomeHero() {
               <span className="text-xs font-bold tracking-widest text-white/90 uppercase">
                 PTSP · Kementerian Agama Barito Utara
               </span>
-            </div>
+            </motion.div>
 
             {/* Headline */}
-            <div className="space-y-3">
+            <motion.div variants={itemVariants} className="space-y-3">
               <h1 className="text-4xl font-black leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-[64px] xl:text-[72px]">
                 Pelayanan{" "}
                 <span className="relative inline-block">
@@ -84,10 +126,10 @@ export function HomeHero() {
                 hingga pendaftaran janji temu secara online, aman, transparan,
                 dan efisien.
               </p>
-            </div>
+            </motion.div>
 
             {/* CTA */}
-            <div className="flex flex-wrap gap-3 pt-2">
+            <motion.div variants={itemVariants} className="flex flex-wrap gap-3 pt-2">
               <Link
                 href="/login/pemohon"
                 className="group inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#047857] to-[#065f46] px-7 py-3.5 text-sm font-bold !text-white shadow-xl shadow-emerald-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-900/40 active:translate-y-0"
@@ -103,10 +145,10 @@ export function HomeHero() {
                 <LayoutGrid className="h-4 w-4" />
                 Lihat Layanan
               </Link>
-            </div>
+            </motion.div>
 
             {/* Lacak Status Permohonan Widget */}
-            <div className="relative mt-8 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-10 duration-700">
+            <motion.div variants={itemVariants} className="relative mt-8 max-w-2xl w-full">
               <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-emerald-500/15 to-teal-500/15 blur-2xl opacity-75 animate-pulse" />
               <div className="relative overflow-hidden rounded-[1.75rem] border border-white/15 bg-white/10 p-5 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:border-white/20">
                 <div className="mb-3 flex items-center gap-2">
@@ -144,11 +186,16 @@ export function HomeHero() {
                   </button>
                 </form>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Right: floating card with 4 Easy Steps */}
-          <div className="hidden lg:block">
+          <motion.div 
+            variants={rightCardVariants}
+            initial="hidden"
+            animate="show"
+            className="hidden lg:block"
+          >
             <div className="relative">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-white/5 blur-2xl" />
               <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-xl">
@@ -258,7 +305,7 @@ export function HomeHero() {
                 </span>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 

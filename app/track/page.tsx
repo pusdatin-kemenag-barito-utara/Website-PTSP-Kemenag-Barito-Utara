@@ -1,6 +1,7 @@
 import { getPublicRequestStatus } from "@/lib/actions/public/public-track";
 import { RealtimeSync } from "@/components/ui/realtime-sync";
 import PageBanner from "@/components/common/PageBanner";
+import { MotionDiv, fadeUpVariants, springPopVariants } from "@/components/common/MotionDiv";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -43,10 +44,22 @@ export default async function TrackPage({
       
       <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8 relative z-10">
         <div className="mx-auto max-w-4xl space-y-6">
-          <TrackSearchForm initialQuery={q} />
+          <MotionDiv
+            variants={springPopVariants}
+            initial="hidden"
+            animate="show"
+          >
+            <TrackSearchForm initialQuery={q} />
+          </MotionDiv>
 
           {/* Result Section */}
-          <div className="transition-all duration-300">
+          <MotionDiv 
+            variants={fadeUpVariants}
+            initial="hidden"
+            animate="show"
+            key={q} // Remounts when query changes
+            className="transition-all duration-300"
+          >
             {!q ? (
               <TrackEmptyState />
             ) : result?.error ? (
@@ -54,7 +67,7 @@ export default async function TrackPage({
             ) : result?.data ? (
               <TrackResultCard data={result.data} />
             ) : null}
-          </div>
+          </MotionDiv>
         </div>
       </div>
     </main>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { m, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,40 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
   const [mounted, setMounted] = useState(false);
   const turnstileRef = useRef<TurnstileRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [passwordVal, setPasswordVal] = useState("");
+
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return 0;
+    let score = 0;
+    if (pass.length >= 6) score += 1;
+    if (/[A-Z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+    return score;
+  };
+
+  const strengthScore = getPasswordStrength(passwordVal);
+
+  const getStrengthColor = (score: number) => {
+    if (score <= 1) return "bg-red-500";
+    if (score === 2) return "bg-amber-500";
+    if (score === 3) return "bg-blue-500";
+    return "bg-emerald-500";
+  };
+
+  const getStrengthTextColor = (score: number) => {
+    if (score <= 1) return "text-red-600";
+    if (score === 2) return "text-amber-600";
+    if (score === 3) return "text-blue-600";
+    return "text-emerald-600";
+  };
+
+  const getStrengthLabel = (score: number) => {
+    if (score <= 1) return "Lemah";
+    if (score === 2) return "Sedang";
+    if (score === 3) return "Kuat";
+    return "Sangat Kuat";
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -92,91 +127,174 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring" as const, stiffness: 300, damping: 24 },
+    },
+  };
+
   return (
-    <form className="space-y-3" onSubmit={onSubmit} autoComplete="off">
-      <Field label="Nama Lengkap" required>
-        <Input
-          name="full_name"
-          required
-          placeholder="Masukkan nama lengkap"
-          autoComplete="off"
-        />
-      </Field>
-
-      <Field
-        label="Nomor Telepon / WhatsApp"
-        required
-        hint="Contoh: 081234567890"
-      >
-        <Input
-          name="phone"
-          required
-          placeholder="Masukkan nomor WhatsApp aktif"
-          autoComplete="off"
-        />
-      </Field>
-
-      <Field label="Alamat" required>
-        <Textarea
-          name="address"
-          required
-          placeholder="Masukkan alamat lengkap"
-          className="min-h-24"
-          autoComplete="off"
-        />
-      </Field>
-
-      <Field label="Password" required hint="Minimal 6 karakter">
-        <div className="relative">
+    <m.form 
+      className="space-y-3" 
+      onSubmit={onSubmit} 
+      autoComplete="off"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <m.div variants={itemVariants}>
+        <Field label="Nama Lengkap" required>
           <Input
-            type={showPassword ? "text" : "password"}
-            name="password"
-            minLength={6}
+            name="full_name"
             required
-            placeholder="Masukkan password"
-            className="pr-11"
-            autoComplete="new-password"
+            placeholder="Masukkan nama lengkap"
+            autoComplete="off"
+            onInput={(e) => {
+              e.currentTarget.value = e.currentTarget.value.replace(/[0-9]/g, "");
+            }}
           />
-          <button
-            type="button"
-            aria-label={
-              showPassword ? "Sembunyikan password" : "Tampilkan password"
-            }
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-          >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
+        </Field>
+      </m.div>
+
+      <m.div variants={itemVariants}>
+        <Field
+          label="Nomor Telepon / WhatsApp"
+          required
+          hint="Contoh: 081234567890"
+        >
+          <Input
+            name="phone"
+            required
+            placeholder="Masukkan nomor WhatsApp aktif"
+            autoComplete="off"
+            type="tel"
+            inputMode="numeric"
+            onInput={(e) => {
+              e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+            }}
+          />
+        </Field>
+      </m.div>
+
+      <m.div variants={itemVariants}>
+        <Field label="Alamat" required>
+          <Textarea
+            name="address"
+            required
+            placeholder="Masukkan alamat lengkap"
+            className="min-h-24"
+            autoComplete="off"
+          />
+        </Field>
+      </m.div>
+
+      <m.div variants={itemVariants}>
+        <Field label="Password" required hint="Minimal 6 karakter">
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              minLength={6}
+              required
+              placeholder="Masukkan password"
+              className="pr-11"
+              autoComplete="new-password"
+              value={passwordVal}
+              onChange={(e) => setPasswordVal(e.target.value)}
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          
+          <AnimatePresence>
+            {passwordVal.length > 0 && (
+              <m.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-3 space-y-1.5 overflow-hidden"
+              >
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map((level) => (
+                    <div
+                      key={level}
+                      className={`h-1.5 w-full rounded-full transition-colors ${
+                        strengthScore >= level ? getStrengthColor(strengthScore) : "bg-slate-200"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className={`text-[11px] font-medium ${getStrengthTextColor(strengthScore)}`}>
+                  Kekuatan password: {getStrengthLabel(strengthScore)}
+                </p>
+              </m.div>
             )}
-          </button>
-        </div>
-      </Field>
+          </AnimatePresence>
+        </Field>
+      </m.div>
 
-      {error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      ) : null}
-      {message ? (
-        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-          {message}
-        </p>
-      ) : null}
+      <AnimatePresence mode="wait">
+        {error && (
+          <m.div
+            key="error-msg"
+            initial={{ opacity: 0, height: 0, y: -10 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 mb-2">{error}</p>
+          </m.div>
+        )}
+        {message && (
+          <m.div
+            key="success-msg"
+            initial={{ opacity: 0, height: 0, y: -10 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 mb-2">{message}</p>
+          </m.div>
+        )}
+      </AnimatePresence>
 
-      <LoginTurnstile
-        mounted={mounted}
-        ref={turnstileRef}
-        onTokenChange={setTurnstileToken}
-      />
+      <m.div variants={itemVariants}>
+        <LoginTurnstile
+          mounted={mounted}
+          ref={turnstileRef}
+          onTokenChange={setTurnstileToken}
+        />
+      </m.div>
 
-      <Button
-        className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"
-        disabled={loading || !turnstileToken}
-      >
-        {loading ? "Memproses..." : "Buat Akun"}
-      </Button>
-    </form>
+      <m.div variants={itemVariants}>
+        <m.div whileTap={loading || !turnstileToken ? {} : { scale: 0.96 }}>
+          <Button
+            className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"
+            disabled={loading || !turnstileToken}
+          >
+            {loading ? "Memproses..." : "Buat Akun"}
+          </Button>
+        </m.div>
+      </m.div>
+    </m.form>
   );
 }

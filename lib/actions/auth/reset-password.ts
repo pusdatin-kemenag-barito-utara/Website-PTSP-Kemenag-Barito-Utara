@@ -2,8 +2,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { profiles, authOtps, whatsappOutbox } from "@/lib/db/schema";
+import { eq, and, desc, gt } from "drizzle-orm";
 import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 import crypto from "crypto";
 import { headers } from "next/headers";
@@ -59,6 +59,10 @@ function verifyResetToken(phone: string, token: string): boolean {
   }
 }
 
+function generateOtp(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 export async function checkPhoneExistsAction(phone: string, token: string) {
   if (!phone) return { error: "Nomor HP wajib diisi." };
 
@@ -72,15 +76,76 @@ export async function checkPhoneExistsAction(phone: string, token: string) {
 
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.phone, phone),
-    columns: { id: true },
+    columns: { id: true, fullName: true },
   });
 
   if (!profile) {
     return { exists: false };
   }
   
-  const resetToken = generateResetToken(phone);
-  return { exists: true, resetToken };
+  // Create OTP and save to DB
+  const otpCode = generateOtp();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  try {
+    // 1. Insert OTP
+    await db.insert(authOtps).values({
+      phone,
+      otp: otpCode,
+      expiresAt,
+    });
+
+    // 2. Insert WhatsApp Message Queue
+    const waMessage = `*KODE OTP PTSP KEMENAG*\n\nHalo ${profile.fullName},\n\nKode OTP Anda untuk mengatur ulang password adalah:\n*${otpCode}*\n\nKode ini berlaku selama 5 menit. JANGAN BERIKAN KODE INI KEPADA SIAPAPUN.`;
+    
+    await db.insert(whatsappOutbox).values({
+      phone,
+      message: waMessage,
+      status: 'pending',
+    });
+
+    return { exists: true };
+  } catch (err: any) {
+    console.error("Gagal men-generate OTP:", err);
+    return { error: "Gagal membuat OTP. Silakan coba lagi nanti." };
+  }
+}
+
+export async function verifyOtpAction(phone: string, otp: string) {
+  if (!phone || !otp || otp.length !== 6) {
+    return { error: "Data tidak valid atau OTP kurang dari 6 digit." };
+  }
+
+  const allowed = await checkRateLimit();
+  if (!allowed) return { error: "Terlalu banyak percobaan. Coba lagi nanti." };
+
+  try {
+    const latestOtp = await db.query.authOtps.findFirst({
+      where: and(
+        eq(authOtps.phone, phone),
+        eq(authOtps.isUsed, false),
+        gt(authOtps.expiresAt, new Date())
+      ),
+      orderBy: [desc(authOtps.createdAt)],
+    });
+
+    if (!latestOtp) {
+      return { error: "Kode OTP tidak valid atau sudah kedaluwarsa." };
+    }
+
+    if (latestOtp.otp !== otp) {
+      return { error: "Kode OTP salah." };
+    }
+
+    // Mark as used
+    await db.update(authOtps).set({ isUsed: true }).where(eq(authOtps.id, latestOtp.id));
+
+    const resetToken = generateResetToken(phone);
+    return { success: true, resetToken };
+  } catch (err: any) {
+    console.error("Gagal verifikasi OTP:", err);
+    return { error: "Terjadi kesalahan internal saat verifikasi OTP." };
+  }
 }
 
 export async function checkEmailExistsAction(email: string, token: string) {

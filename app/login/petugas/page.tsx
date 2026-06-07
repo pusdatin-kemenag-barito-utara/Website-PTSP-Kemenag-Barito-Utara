@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { AuthCardMotion, AuthBgMotionPetugas } from "@/components/auth/auth-motion-wrapper";
 
 export default async function LoginPetugasPage({
   searchParams,
@@ -11,7 +12,7 @@ export default async function LoginPetugasPage({
   const { callbackUrl } = await searchParams;
 
   return (
-    <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-80px)] items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-80px)] items-center justify-center py-10 pb-20 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -31,10 +32,11 @@ export default async function LoginPetugasPage({
             backgroundSize: "40px 40px",
           }}
         />
+        <AuthBgMotionPetugas />
       </div>
 
       {/* Card container */}
-      <div className="relative z-10 w-full max-w-[480px]">
+      <AuthCardMotion className="relative z-10 w-full max-w-[480px]">
         <div className="overflow-hidden rounded-[2.5rem] bg-white/95 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-white/20">
           {/* Header area */}
           <div className="relative bg-gradient-to-b from-slate-50/80 to-white px-8 pt-12 pb-8 text-center">
@@ -76,7 +78,7 @@ export default async function LoginPetugasPage({
             </div>
           </div>
         </div>
-      </div>
+      </AuthCardMotion>
     </div>
   );
 }

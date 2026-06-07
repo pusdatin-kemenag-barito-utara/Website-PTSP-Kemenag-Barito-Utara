@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import PageBanner from "@/components/common/PageBanner";
 import {
   Search,
@@ -63,7 +64,12 @@ export default function CekCutiPage() {
 
         <div className="w-full flex flex-col gap-10">
           {/* Search Box */}
-          <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl shadow-emerald-900/5 border border-slate-100">
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 100, damping: 15 }}
+            className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl shadow-emerald-900/5 border border-slate-100"
+          >
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-50 text-emerald-600 mb-4">
                 <Search className="h-7 w-7" />
@@ -115,11 +121,19 @@ export default function CekCutiPage() {
                 )}
               </button>
             </form>
-          </div>
+          </motion.div>
 
           {/* Results Area */}
+          <AnimatePresence mode="wait">
           {searched && !loading && (
-            <div className="animate-fade-in-up">
+            <motion.div 
+              key="results"
+              initial={{ opacity: 0, height: 0, y: -20 }}
+              animate={{ opacity: 1, height: "auto", y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
               {result ? (
                 <div className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-emerald-900/5 border border-slate-100 p-6 sm:p-10">
                   <div className="flex items-center gap-4 mb-8">
@@ -224,8 +238,9 @@ export default function CekCutiPage() {
                   </p>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </div>
     </main>

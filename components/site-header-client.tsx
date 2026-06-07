@@ -54,6 +54,8 @@ const navItems = [
   { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 
+import { m } from "framer-motion";
+
 export function SiteHeaderClient({
   profile,
 }: {
@@ -118,8 +120,11 @@ export function SiteHeaderClient({
 
   return (
     <>
-      <header
-        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-700 ease-in-out ${headerClass}`}
+      <m.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className={`fixed left-0 right-0 top-0 z-50 transition-colors duration-700 ease-in-out ${headerClass}`}
         style={{ backgroundColor: isDarkBg ? "#022c22" : "transparent" }}
       >
         {/* Scroll Progress Bar (visible when scrolled) */}
@@ -371,7 +376,7 @@ export function SiteHeaderClient({
             </div>
           </div>
         </div>
-      </header>
+      </m.header>
       <MobileNav
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}

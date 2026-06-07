@@ -125,7 +125,6 @@ export function ModernSelect({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
                   className="w-full bg-transparent border-0 px-2 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0"
-                  autoFocus
                 />
                 {searchQuery && (
                   <button

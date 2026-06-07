@@ -2,6 +2,7 @@ import { Building2, Layers3 } from "lucide-react";
 import { ServicesFilter } from "@/components/services/services-filter";
 import { getPublicServices } from "@/lib/queries";
 import PageBanner from "@/components/common/PageBanner";
+import { MotionDiv, springPopVariants, staggerContainerVariants, fadeUpVariants } from "@/components/common/MotionDiv";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -30,8 +31,14 @@ export default async function ServicesPage() {
 
       <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8 space-y-8">
         {/* Sleek Premium Stats Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          <div className="flex items-center gap-4 rounded-2xl border border-emerald-500/10 bg-emerald-50/20 p-4 shadow-sm backdrop-blur-md">
+        <MotionDiv
+          variants={staggerContainerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl"
+        >
+          <MotionDiv variants={springPopVariants} className="flex items-center gap-4 rounded-2xl border border-emerald-500/10 bg-emerald-50/20 p-4 shadow-sm backdrop-blur-md">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
               <Building2 className="h-6 w-6" />
             </div>
@@ -39,8 +46,8 @@ export default async function ServicesPage() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Unit Kerja</p>
               <p className="text-2xl font-black text-slate-800">{services.length}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-4 rounded-2xl border border-emerald-500/10 bg-emerald-50/20 p-4 shadow-sm backdrop-blur-md">
+          </MotionDiv>
+          <MotionDiv variants={springPopVariants} className="flex items-center gap-4 rounded-2xl border border-emerald-500/10 bg-emerald-50/20 p-4 shadow-sm backdrop-blur-md">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
               <Layers3 className="h-6 w-6" />
             </div>
@@ -48,13 +55,19 @@ export default async function ServicesPage() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Layanan</p>
               <p className="text-2xl font-black text-slate-800">{totalItems}</p>
             </div>
-          </div>
-        </div>
+          </MotionDiv>
+        </MotionDiv>
 
         {/* Main Content Area */}
-        <div className="rounded-3xl bg-white p-6 sm:p-10 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.05)] border border-slate-100">
+        <MotionDiv 
+          variants={fadeUpVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
+          className="rounded-3xl bg-white p-6 sm:p-10 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.05)] border border-slate-100"
+        >
           <ServicesFilter services={services} />
-        </div>
+        </MotionDiv>
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 import Image from "next/image";
-import { ServerCrash, ShieldCheck, Clock } from "lucide-react";
+import { ServerCrash, ShieldCheck } from "lucide-react";
 import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
+import { MotionDiv, springPopVariants, fadeUpVariants, staggerContainerVariants } from "@/components/common/MotionDiv";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,14 @@ export default async function MaintenancePage() {
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-40 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-2xl p-4 sm:p-6 lg:p-8 flex flex-col items-center text-center mt-auto mb-auto">
+      <MotionDiv 
+        variants={staggerContainerVariants}
+        initial="hidden"
+        animate="show"
+        className="relative z-10 w-full max-w-2xl p-4 sm:p-6 lg:p-8 flex flex-col items-center text-center mt-auto mb-auto"
+      >
         {/* Kemenag Branding */}
-        <div className="flex flex-col items-center mb-8 sm:mb-10 animate-fade-in-down">
+        <MotionDiv variants={fadeUpVariants} className="flex flex-col items-center mb-8 sm:mb-10">
           <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-3xl bg-white shadow-xl shadow-emerald-900/10 mb-6 border border-emerald-100">
             <Image
               src="/kemenag.svg"
@@ -38,10 +44,10 @@ export default async function MaintenancePage() {
           <h3 className="text-[9.5px] sm:text-[12px] font-bold tracking-widest text-emerald-600/80 mt-1.5 uppercase">
             Kantor Kabupaten Barito Utara
           </h3>
-        </div>
+        </MotionDiv>
 
         {/* Main Content Card */}
-        <div className="w-full rounded-[2rem] border border-slate-200/60 bg-white/80 p-8 sm:p-12 backdrop-blur-xl shadow-2xl shadow-emerald-900/5 animate-fade-in-up relative overflow-hidden">
+        <MotionDiv variants={springPopVariants} className="w-full rounded-[2rem] border border-slate-200/60 bg-white/80 p-8 sm:p-12 backdrop-blur-xl shadow-2xl shadow-emerald-900/5 relative overflow-hidden">
           {/* Subtle gradient line on top of card */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
 
@@ -71,30 +77,18 @@ export default async function MaintenancePage() {
               Data Anda Tetap Aman
             </div>
           </div>
-        </div>
-      </div>
+        </MotionDiv>
+      </MotionDiv>
 
       {/* Footer info (pushed down) */}
-      <div className="relative z-10 w-full pb-8 pt-12 text-center text-[11px] sm:text-xs font-semibold text-slate-400 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+      <MotionDiv 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.8 }}
+        className="relative z-10 w-full pb-8 pt-12 text-center text-[11px] sm:text-xs font-semibold text-slate-400"
+      >
         &copy; {new Date().getFullYear()} PTSP Kemenag Barito Utara. Hak Cipta Dilindungi.
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-down {
-          animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}} />
+      </MotionDiv>
     </div>
   );
 }

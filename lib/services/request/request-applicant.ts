@@ -10,6 +10,7 @@ import {
   serviceRequirements as serviceRequirementsTable,
   serviceRequestAnswers as serviceRequestAnswersTable,
   profiles as profilesTable,
+  serviceItems as serviceItemsTable,
 } from "@/lib/db/schema";
 import { sanitizeFilename } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,7 +41,7 @@ export class RequestApplicantService {
       }),
       db.query.profiles.findFirst({
         where: eq(profilesTable.id, userId),
-        columns: { fullName: true },
+        columns: { fullName: true, phone: true },
       }),
     ]);
 
@@ -80,7 +81,7 @@ export class RequestApplicantService {
     });
 
     // Handle Uploads
-    await this.handleUploads({
+    await RequestApplicantService.handleUploads({
       formData,
       requirements,
       userId,
@@ -96,6 +97,32 @@ export class RequestApplicantService {
       message: `${userProfile?.fullName || "Pemohon"} mengajukan permohonan baru (${result.requestNumber}).`,
       link: `/admin/pengajuan/${result.id}`,
     });
+
+    // Trigger Webhook ke n8n untuk Notifikasi WA User
+    try {
+      const webhookUrl = process.env.N8N_NEW_REQUEST_WEBHOOK_URL;
+      if (webhookUrl && userProfile?.phone) {
+        const itemInfo = await db.query.serviceItems.findFirst({
+          where: eq(serviceItemsTable.id, serviceItemId),
+          with: { service: true }
+        });
+
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ticketNumber: result.requestNumber,
+            userName: userProfile.fullName || "Pemohon",
+            userPhone: userProfile.phone,
+            serviceName: itemInfo?.service?.name || "Layanan PTSP",
+            serviceItemName: itemInfo?.name || "Item Layanan",
+            submittedAt: new Date().toISOString()
+          })
+        }).catch(err => console.error("Webhook n8n fetch error:", err)); // Fire and forget
+      }
+    } catch (e) {
+      console.error("Failed to prepare webhook to n8n:", e);
+    }
 
     return result;
   }
@@ -156,8 +183,8 @@ export class RequestApplicantService {
       });
     });
 
-    // 3. Handle uploads
-    await this.handleUploads({
+    // Handle Uploads
+    await RequestApplicantService.handleUploads({
       formData,
       requirements,
       userId,

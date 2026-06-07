@@ -1,0 +1,28 @@
+import {
+  uuid,
+  text,
+  timestamp,
+  varchar,
+  boolean,
+} from "drizzle-orm/pg-core";
+import { pgTable } from "drizzle-orm/pg-core";
+
+// Tabel untuk menyimpan kode OTP
+export const authOtps = pgTable("ptsp_auth_otps", {
+  id: uuid("id").primaryKey().defaultRandom().notNull(),
+  phone: text("phone").notNull(),
+  otp: varchar("otp", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true, precision: 6 }).notNull(),
+  isUsed: boolean("is_used").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 }).notNull().defaultNow(),
+});
+
+// Tabel untuk antrean pesan WhatsApp
+export const whatsappOutbox = pgTable("ptsp_whatsapp_outbox", {
+  id: uuid("id").primaryKey().defaultRandom().notNull(),
+  phone: text("phone").notNull(),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'sent', 'failed'
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 }).notNull().defaultNow(),
+  sentAt: timestamp("sent_at", { withTimezone: true, precision: 6 }),
+});

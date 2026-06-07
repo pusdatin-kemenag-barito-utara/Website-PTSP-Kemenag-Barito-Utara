@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { Field } from "@/components/ui/field";
 
 interface LoginTurnstileProps {
   mounted: boolean;
@@ -126,30 +125,24 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
 
     return (
       <div className="mx-auto w-full max-w-md">
-        <Field
-          label={label || "Verifikasi Keamanan (Anti-Bot & Spam)"}
-          required
-          labelClassName="text-center"
-        >
-          <div className="relative flex min-h-[65px] items-center justify-center">
-            {mounted ? (
-              <div className="flex flex-col items-center justify-center w-full">
-                <div
-                  ref={containerRef}
-                  className="origin-center scale-[0.85] sm:scale-95 drop-shadow-sm"
-                />
-                {!scriptLoaded && (
-                  <div className="flex items-center gap-2 text-xs text-slate-400 animate-pulse">
-                    <Loader2 className="h-4.5 w-4.5 animate-spin text-emerald-500" />
-                    <span>Memuat verifikasi keamanan...</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="h-[65px] w-full animate-pulse rounded-xl bg-slate-100" />
-            )}
-          </div>
-        </Field>
+        <div className="relative flex min-h-[65px] items-center justify-center">
+          {mounted ? (
+            <div className="flex flex-col items-center justify-center w-full">
+              <div
+                ref={containerRef}
+                className="origin-center scale-[0.85] sm:scale-95 drop-shadow-sm"
+              />
+              {!scriptLoaded && (
+                <div className="flex items-center gap-2 text-xs text-slate-400 animate-pulse">
+                  <Loader2 className="h-4.5 w-4.5 animate-spin text-emerald-500" />
+                  <span>Memuat verifikasi keamanan...</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-[65px] w-full animate-pulse rounded-xl bg-slate-100" />
+          )}
+        </div>
       </div>
     );
   }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { RegisterForm } from "@/components/auth/register-form";
 import { UserPlus2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { AuthCardMotion, AuthBgMotionPemohon } from "@/components/auth/auth-motion-wrapper";
 
 export default async function RegisterPage({
   searchParams,
@@ -11,7 +12,7 @@ export default async function RegisterPage({
   const { callbackUrl } = await searchParams;
 
   return (
-    <div className="relative flex h-[calc(100dvh-72px)] md:h-[calc(100dvh-84px)] items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-84px)] items-center justify-center py-10 pb-20 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -29,10 +30,11 @@ export default async function RegisterPage({
             backgroundSize: "40px 40px",
           }}
         />
+        <AuthBgMotionPemohon />
       </div>
 
       {/* Card container */}
-      <div className="relative z-10 w-full max-w-[600px]">
+      <AuthCardMotion className="relative z-10 w-full max-w-[600px]">
         <div className="overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-slate-200/50">
           
           {/* Header area */}
@@ -73,7 +75,7 @@ export default async function RegisterPage({
             </p>
           </div>
         </div>
-      </div>
+      </AuthCardMotion>
     </div>
   );
 }

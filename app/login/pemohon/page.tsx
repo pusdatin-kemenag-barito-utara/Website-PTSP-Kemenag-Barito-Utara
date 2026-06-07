@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
 import { UserCircle2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { AuthCardMotion, AuthBgMotionPemohon } from "@/components/auth/auth-motion-wrapper";
 
 export const metadata: Metadata = {
   title: "Masuk Pemohon",
@@ -18,7 +19,7 @@ export default async function LoginPemohonPage({
   const { callbackUrl } = await searchParams;
 
   return (
-    <div className="relative flex h-[calc(100dvh-72px)] md:h-[calc(100dvh-84px)] items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-84px)] items-center justify-center py-10 pb-20 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -37,10 +38,11 @@ export default async function LoginPemohonPage({
             backgroundSize: "40px 40px",
           }}
         />
+        <AuthBgMotionPemohon />
       </div>
 
       {/* Card container */}
-      <div className="relative z-10 w-full max-w-[480px]">
+      <AuthCardMotion className="relative z-10 w-full max-w-[480px]">
         <div className="overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-slate-200/50">
           
           {/* Header area */}
@@ -101,7 +103,7 @@ export default async function LoginPemohonPage({
             </div>
           </div>
         </div>
-      </div>
+      </AuthCardMotion>
     </div>
   );
 }
