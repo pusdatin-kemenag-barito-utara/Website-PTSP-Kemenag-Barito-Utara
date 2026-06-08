@@ -36,7 +36,7 @@
 
 ## Rules for Agents
 
-1. **Always** run `npm run typecheck` after any code change. 0 errors required.
+1. **NEVER** run `npm run typecheck` automatically on your own. You must ask for user confirmation first and let the user run it. 0 errors required.
 2. Schema changes → run `npm run db:push`. Use SQL migrations for columns outside Drizzle schema (e.g., `ALTER TABLE profiles ADD COLUMN ...`).
 3. Never write to DB from client code. Use server actions or API routes.
 4. For Supabase Storage operations that hit RLS, use `createAdminClient()` (service_role key) on the server.

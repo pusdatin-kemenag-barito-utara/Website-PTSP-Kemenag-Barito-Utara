@@ -2,7 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Mail, Phone, MapPin, Send, MessageSquare, Info, Layers } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  MessageSquare,
+  Info,
+  Layers,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModernSelect } from "@/components/ui/modern-select";
 import {
@@ -12,7 +20,7 @@ import {
 import { submitFeedbackAction } from "@/lib/actions/public/feedback";
 import { motion } from "framer-motion";
 
-export function HomeSaranPengaduan() {
+export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -87,20 +95,21 @@ export function HomeSaranPengaduan() {
   };
 
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden bg-white">
+    <section className={`relative overflow-hidden bg-white ${hideHeader ? "py-6 md:py-12" : "py-24 md:py-32"}`}>
       {/* Decorative clean ambient gradients */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
-      <div className="mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-24 relative z-10">
+      <div className={`mx-auto w-full ${hideHeader ? "px-0 sm:px-6" : "px-6 sm:px-10"} lg:px-16 xl:px-24 relative z-10`}>
         {/* Section Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-8 text-center max-w-3xl mx-auto space-y-4"
-        >
+        {!hideHeader && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mb-8 text-center max-w-3xl mx-auto space-y-4"
+          >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100/80 animate-pulse">
             <MessageSquare className="h-4 w-4 text-emerald-600" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
@@ -118,9 +127,10 @@ export function HomeSaranPengaduan() {
             untuk keperluan konfirmasi tanggapan atas pengaduan Anda.
           </p>
         </motion.div>
+        )}
 
         {/* Form Container */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
@@ -128,7 +138,7 @@ export function HomeSaranPengaduan() {
           className="max-w-3xl mx-auto"
         >
           {/* Feedback Form */}
-          <div className="bg-[#f8fafc] rounded-3xl border border-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.03)] p-8 sm:p-10 relative">
+          <div className={`bg-[#f8fafc] sm:rounded-3xl border-y sm:border border-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.03)] p-6 sm:p-10 relative ${hideHeader ? "rounded-none" : "rounded-3xl"}`}>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Kategori */}
@@ -162,14 +172,46 @@ export function HomeSaranPengaduan() {
                   </label>
                   <ModernSelect
                     options={[
-                      { value: "PTSP", label: "Pelayanan Terpadu Satu Pintu (PTSP)" },
-                      { value: "Sub Bagian Tata Usaha", label: "Sub Bagian Tata Usaha" },
-                      { value: "Seksi Pendidikan Madrasah", label: "Seksi Pendidikan Madrasah" },
-                      { value: "Seksi Pendidikan Agama Islam", label: "Seksi Pendidikan Agama Islam" },
-                      { value: "Seksi Bimbingan Masyarakat Islam", label: "Seksi Bimbingan Masyarakat Islam" },
-                      { value: "Seksi Penyelenggara Haji & Umrah", label: "Seksi Penyelenggara Haji & Umrah" },
-                      { value: "Penyelenggara Kristen", label: "Penyelenggara Kristen" },
-                      { value: "Penyelenggara Hindu", label: "Penyelenggara Hindu" },
+                      {
+                        value: "PTSP",
+                        label: "Pelayanan Terpadu Satu Pintu (PTSP)",
+                      },
+                      {
+                        value: "Sub Bagian Tata Usaha",
+                        label: "Sub Bagian Tata Usaha",
+                      },
+                      {
+                        value: "Seksi Pendidikan Madrasah",
+                        label: "Seksi Pendidikan Madrasah",
+                      },
+                      {
+                        value: "Seksi Pendidikan Agama Islam",
+                        label: "Seksi Pendidikan Agama Islam",
+                      },
+                      {
+                        value: "Seksi Bimbingan Masyarakat Islam",
+                        label: "Seksi Bimbingan Masyarakat Islam",
+                      },
+                      {
+                        value: "Seksi Penyelenggara Haji & Umrah",
+                        label: "Seksi Penyelenggara Haji & Umrah",
+                      },
+                      {
+                        value: "Seksi Bimbingan Masyarakat Kristen",
+                        label: "Seksi Bimbingan Masyarakat Kristen",
+                      },
+                      {
+                        value: "Seksi Bimbingan Masyarakat Katolik",
+                        label: "Seksi Bimbingan Masyarakat Katolik",
+                      },
+                      {
+                        value: "Penyelenggara Zakat & Wakaf",
+                        label: "Penyelenggara Zakat & Wakaf",
+                      },
+                      {
+                        value: "Penyelenggara Hindu",
+                        label: "Penyelenggara Hindu",
+                      },
                       { value: "Lainnya", label: "Umum / Lainnya" },
                     ]}
                     value={serviceType}

@@ -57,18 +57,18 @@ export default function CekCutiPage() {
         eyebrow="LAYANAN KEPEGAWAIAN"
       />
 
-      <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-16 lg:py-24 relative">
+      <div className="w-full px-0 sm:px-10 lg:px-16 xl:px-20 py-6 sm:py-10 lg:py-2 relative">
         {/* Background Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-slate-100 to-transparent -z-10" />
         <div className="absolute -top-40 right-20 w-96 h-96 bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
 
         <div className="w-full flex flex-col gap-10">
           {/* Search Box */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 100, damping: 15 }}
-            className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl shadow-emerald-900/5 border border-slate-100"
+            className="bg-white rounded-none sm:rounded-3xl p-6 sm:p-10 shadow-2xl shadow-emerald-900/5 border-y sm:border border-slate-100"
           >
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-50 text-emerald-600 mb-4">
@@ -83,169 +83,240 @@ export default function CekCutiPage() {
               </p>
             </div>
 
-            <form
-              onSubmit={handleSearch}
-              className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-3"
-            >
-              <div className="relative flex-1">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  type="text"
-                  value={nip}
-                  onChange={(e) =>
-                    setNip(e.target.value.replace(/[^0-9]/g, ""))
-                  }
-                  placeholder="Contoh: 198501012010011001"
-                  className="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none"
-                  maxLength={18}
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading || !nip.trim()}
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600/60 text-white rounded-2xl font-bold transition-all hover:shadow-xl hover:shadow-emerald-600/20 active:scale-95 whitespace-nowrap"
+            <div className="max-w-2xl mx-auto flex flex-col w-full">
+              <form
+                onSubmit={handleSearch}
+                className="flex flex-col sm:flex-row gap-3 w-full"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Mencari...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-5 w-5" />
-                    Cek Sisa Cuti
-                  </>
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <UserIcon className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={nip}
+                    onChange={(e) =>
+                      setNip(e.target.value.replace(/[^0-9]/g, ""))
+                    }
+                    placeholder="Contoh: 198501012010011001"
+                    className="block w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold outline-none"
+                    maxLength={18}
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading || nip.length !== 18}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600/60 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all hover:shadow-xl hover:shadow-emerald-600/20 active:scale-95 whitespace-nowrap"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Mencari...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-5 w-5" />
+                      Cek Sisa Cuti
+                    </>
+                  )}
+                </button>
+              </form>
+              <AnimatePresence>
+                {nip.length > 0 && nip.length !== 18 && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="text-red-500 text-[13px] font-bold px-2"
+                  >
+                    ⚠️ NIP harus 18 digit.{" "}
+                    {nip.length < 18
+                      ? `Saat ini baru ${nip.length} digit (kurang ${18 - nip.length} digit lagi).`
+                      : "Kelebihan digit."}
+                  </motion.p>
                 )}
-              </button>
-            </form>
+              </AnimatePresence>
+            </div>
           </motion.div>
 
           {/* Results Area */}
           <AnimatePresence mode="wait">
-          {searched && !loading && (
-            <motion.div 
-              key="results"
-              initial={{ opacity: 0, height: 0, y: -20 }}
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={{ opacity: 0, height: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="overflow-hidden"
-            >
-              {result ? (
-                <div className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-emerald-900/5 border border-slate-100 p-6 sm:p-10">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                      <CheckCircle2 className="h-6 w-6" />
+            {searched && !loading && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, height: 0, y: -20 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                {result ? (
+                  <div className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-emerald-900/5 border border-slate-100 p-6 sm:p-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                          <CheckCircle2 className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-slate-800">
+                            Hasil Pencarian
+                          </h3>
+                          <p className="text-slate-500 text-sm">
+                            Data cuti pegawai berhasil ditemukan pada sistem.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-emerald-50/80 border border-emerald-100 rounded-xl px-4 py-2 flex items-center gap-2 self-start sm:self-auto">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-xs font-bold text-emerald-700">
+                          Update per {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-800">
-                        Hasil Pencarian
-                      </h3>
-                      <p className="text-slate-500 text-sm">
-                        Data cuti pegawai berhasil ditemukan pada sistem.
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                    <table className="w-full text-left border-collapse min-w-[800px]">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm">
-                            Nama Pegawai
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm">
-                            NIP
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm">
-                            Jabatan
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center border-l border-slate-200">
-                            Total Cuti Tahunan
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
-                            Cuti Tahunan
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
-                            Cuti Alasan Penting
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
-                            Cuti Bersalin
-                          </th>
-                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
-                            Cuti Sakit
-                          </th>
-                          <th className="py-4 px-4 font-bold text-emerald-700 whitespace-nowrap text-sm text-center bg-emerald-50/50 border-l border-emerald-100">
-                            Sisa Cuti
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="hover:bg-slate-50/50 transition-colors">
-                          <td className="py-4 px-4 text-slate-800 font-bold whitespace-nowrap">
-                            {result.name}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600 font-medium whitespace-nowrap">
-                            {result.nip}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600 whitespace-nowrap text-sm">
-                            {result.jabatan}
-                          </td>
-                          <td className="py-4 px-4 text-slate-800 font-black text-center bg-slate-50 border-l border-slate-200">
-                            {result.totalCuti}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600 font-medium text-center">
-                            {result.cutiTahunan || "-"}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600 font-medium text-center">
-                            {result.cutiPenting || "-"}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600 font-medium text-center">
-                            {result.cutiBersalin || "-"}
-                          </td>
-                          <td className="py-4 px-4 text-slate-600 font-medium text-center">
-                            {result.cutiSakit || "-"}
-                          </td>
-                          <td className="py-4 px-4 text-emerald-600 font-black text-xl text-center bg-emerald-50 border-l border-emerald-100">
-                            {result.sisaCuti}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                    {/* Desktop View: Table */}
+                    <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-200">
+                      <table className="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200">
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Nama Pegawai
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              NIP
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Jabatan
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center border-l border-slate-200">
+                              Total Cuti Tahunan
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Cuti Tahunan
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Cuti Alasan Penting
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Cuti Bersalin
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Cuti Sakit
+                            </th>
+                            <th className="py-4 px-4 font-bold text-emerald-700 whitespace-nowrap text-sm text-center bg-emerald-50/50 border-l border-emerald-100">
+                              Sisa Cuti
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="hover:bg-slate-50/50 transition-colors">
+                            <td className="py-4 px-4 text-slate-800 font-bold whitespace-nowrap text-center">
+                              {result.name}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium whitespace-nowrap text-center">
+                              {result.nip}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 whitespace-nowrap text-sm text-center">
+                              {result.jabatan}
+                            </td>
+                            <td className="py-4 px-4 text-slate-800 font-black text-center bg-slate-50 border-l border-slate-200">
+                              {result.totalCuti}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium text-center">
+                              {result.cutiTahunan || "-"}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium text-center">
+                              {result.cutiPenting || "-"}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium text-center">
+                              {result.cutiBersalin || "-"}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium text-center">
+                              {result.cutiSakit || "-"}
+                            </td>
+                            <td className="py-4 px-4 text-emerald-600 font-black text-xl text-center bg-emerald-50 border-l border-emerald-100">
+                              {result.sisaCuti}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile View: Vertical List */}
+                    <div className="lg:hidden flex flex-col gap-4">
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-3">
+                        <div className="flex justify-between items-start border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider pt-0.5">Nama Pegawai</span>
+                          <span className="text-slate-800 font-bold text-sm text-right leading-tight max-w-[60%]">{result.name}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">NIP</span>
+                          <span className="text-slate-600 font-medium text-sm">{result.nip}</span>
+                        </div>
+                        <div className="flex flex-col gap-1 border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Jabatan</span>
+                          <span className="text-slate-600 text-sm font-medium leading-relaxed">{result.jabatan}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Cuti Tahunan</span>
+                          <span className="text-slate-800 font-black text-sm">{result.totalCuti}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Tahunan</span>
+                          <span className="text-slate-600 font-medium text-sm">{result.cutiTahunan || "-"}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Alasan Penting</span>
+                          <span className="text-slate-600 font-medium text-sm">{result.cutiPenting || "-"}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Bersalin</span>
+                          <span className="text-slate-600 font-medium text-sm">{result.cutiBersalin || "-"}</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Sakit</span>
+                          <span className="text-slate-600 font-medium text-sm">{result.cutiSakit || "-"}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border border-emerald-100 mt-4 shadow-sm shadow-emerald-900/5">
+                          <span className="text-emerald-700 text-sm font-black uppercase tracking-wider">Sisa Cuti</span>
+                          <span className="text-emerald-600 font-black text-2xl">{result.sisaCuti}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ) : errorMsg ? (
-                <div className="bg-red-50/50 rounded-3xl p-10 text-center shadow-xl shadow-red-900/5 border border-red-100">
-                  <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-red-100 text-red-600 mb-6">
-                    <Search className="h-8 w-8" />
+                ) : errorMsg ? (
+                  <div className="bg-red-50/50 rounded-3xl p-10 text-center shadow-xl shadow-red-900/5 border border-red-100">
+                    <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-red-100 text-red-600 mb-6">
+                      <Search className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-800 mb-2">
+                      Terjadi Kesalahan
+                    </h3>
+                    <p className="text-slate-600 font-medium max-w-lg mx-auto">
+                      {errorMsg}
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-black text-slate-800 mb-2">
-                    Terjadi Kesalahan
-                  </h3>
-                  <p className="text-slate-600 font-medium max-w-lg mx-auto">
-                    {errorMsg}
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-3xl p-10 text-center shadow-xl shadow-emerald-900/5 border border-slate-100">
-                  <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-slate-100 text-slate-500 mb-6">
-                    <Search className="h-8 w-8" />
+                ) : (
+                  <div className="bg-white rounded-3xl p-10 text-center shadow-xl shadow-emerald-900/5 border border-slate-100">
+                    <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-slate-100 text-slate-500 mb-6">
+                      <Search className="h-8 w-8" />
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-800 mb-2">
+                      Data Tidak Ditemukan
+                    </h3>
+                    <p className="text-slate-500 font-medium max-w-md mx-auto">
+                      Kami tidak dapat menemukan data pegawai dengan NIP{" "}
+                      <span className="font-bold text-slate-700">"{nip}"</span>.
+                      Silakan periksa kembali NIP yang Anda masukkan.
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-black text-slate-800 mb-2">
-                    Data Tidak Ditemukan
-                  </h3>
-                  <p className="text-slate-500 font-medium max-w-md mx-auto">
-                    Kami tidak dapat menemukan data pegawai dengan NIP{" "}
-                    <span className="font-bold text-slate-700">"{nip}"</span>.
-                    Silakan periksa kembali NIP yang Anda masukkan.
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          )}
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>

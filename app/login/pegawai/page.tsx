@@ -59,7 +59,7 @@ export default async function LoginPegawaiPage({
           </div>
 
           {/* Form area */}
-          <div className="px-8 pb-10">
+          <div className="px-8 pb-6">
             <LoginFormByRole
               mode="pegawai"
               callbackUrl={callbackUrl as string}
@@ -67,7 +67,7 @@ export default async function LoginPegawaiPage({
           </div>
 
           {/* Footer links */}
-          <div className="bg-slate-50/50 px-8 py-6 text-center border-t border-slate-50">
+          <div className="bg-slate-50/50 px-8 py-4 text-center border-t border-slate-50">
             <div className="flex items-center justify-center text-xs font-bold uppercase tracking-wider text-slate-400">
               <Link
                 href={`/login/pemohon${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}

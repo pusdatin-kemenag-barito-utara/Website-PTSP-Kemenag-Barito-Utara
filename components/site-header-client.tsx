@@ -20,6 +20,7 @@ import {
   Activity,
   BookOpen,
   Calendar,
+  MessageSquare,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { isAdminRole } from "@/lib/constants";
@@ -51,6 +52,7 @@ const navItems = [
       { label: "Janji Temu", href: "/janji-temu", icon: Calendar },
     ]
   },
+  { label: "E-Pengaduan", href: "/e-pengaduan", icon: MessageSquare },
   { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 

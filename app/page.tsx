@@ -3,7 +3,7 @@ import { HomeSambutanKepala } from "@/components/home/sambutan";
 import { HomeAlurPengajuanMobile } from "@/components/home/alur-pengajuan-mobile";
 import { HomeServiceCatalogSection } from "@/components/home/service-catalog";
 import { HomeVideoProfile } from "@/components/home/video-profile";
-import { HomeSaranPengaduan } from "@/components/home/saran-pengaduan";
+
 
 export default async function HomePage() {
   return (
@@ -29,15 +29,6 @@ export default async function HomePage() {
       </div>
 
       <HomeVideoProfile />
-
-      {/* Modern Flat Horizontal Layered Divider: Video Profile to Saran & Pengaduan */}
-      <div className="w-full bg-[#f8fafc] flex flex-col">
-        <div className="w-full h-[6px] bg-[#10b981]/15" />
-        <div className="w-full h-[3px] bg-[#10b981]" />
-        <div className="w-full h-8 bg-white" />
-      </div>
-
-      <HomeSaranPengaduan />
     </div>
   );
 }

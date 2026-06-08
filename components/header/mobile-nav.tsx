@@ -8,7 +8,8 @@ import {
   UserCircle2, 
   Shield, 
   LayoutDashboard,
-  ChevronDown
+  ChevronDown,
+  Briefcase
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
@@ -81,8 +82,7 @@ export function MobileNav({
                 />
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-emerald-400">Portal PTSP</p>
-                <h3 className="text-lg font-black text-white tracking-tight leading-none mt-1">Kemenag Barito Utara</h3>
+                <h3 className="text-xl font-black uppercase tracking-widest text-white">PORTAL PTSP</h3>
               </div>
             </div>
 
@@ -246,27 +246,44 @@ export function MobileNav({
                   <SignOutButton />
                 </div>
               ) : (
-                <div className="relative z-10 grid grid-cols-2 gap-2.5">
+                <div className="relative z-10 grid grid-cols-3 gap-2">
                   <Link
                     href="/login/pemohon"
                     onClick={() => setMobileOpen(false)}
-                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-4 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95"
+                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-3 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95 text-center"
                   >
-                    <UserCircle2 className="h-7 w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white">Pemohon</span>
+                    <UserCircle2 className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Pemohon</span>
                   </Link>
                   <Link
                     href="/login/petugas"
                     onClick={() => setMobileOpen(false)}
-                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-4 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-600/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95"
+                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-3 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-600/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95 text-center"
                   >
-                    <Shield className="h-7 w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white">Petugas</span>
+                    <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Petugas</span>
+                  </Link>
+                  <Link
+                    href="/login/pegawai"
+                    onClick={() => setMobileOpen(false)}
+                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-3 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-600/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95 text-center"
+                  >
+                    <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Pegawai</span>
                   </Link>
                 </div>
               )}
             </div>
           </div>
+
+        </div>
+        {/* Pinned Copyright Text at the Bottom */}
+        <div className={`border-t border-white/5 bg-white/[0.01] py-4 px-6 relative z-10 backdrop-blur-md transition-all duration-500 delay-300 ${
+          mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        }`}>
+          <p className="text-center text-[10px] font-medium text-emerald-400/40 tracking-wide">
+            &copy; {new Date().getFullYear()} PTSP Kemenag Barito Utara
+          </p>
         </div>
       </div>
     </div>
