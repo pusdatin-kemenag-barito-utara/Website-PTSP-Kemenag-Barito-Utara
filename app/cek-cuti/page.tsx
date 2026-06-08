@@ -167,6 +167,9 @@ export default function CekCutiPage() {
                             Total Cuti Tahunan
                           </th>
                           <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                            Cuti Tahunan
+                          </th>
+                          <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
                             Cuti Alasan Penting
                           </th>
                           <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
@@ -193,6 +196,9 @@ export default function CekCutiPage() {
                           </td>
                           <td className="py-4 px-4 text-slate-800 font-black text-center bg-slate-50 border-l border-slate-200">
                             {result.totalCuti}
+                          </td>
+                          <td className="py-4 px-4 text-slate-600 font-medium text-center">
+                            {result.cutiTahunan || "-"}
                           </td>
                           <td className="py-4 px-4 text-slate-600 font-medium text-center">
                             {result.cutiPenting || "-"}

@@ -28,9 +28,7 @@ export const formatDate = (dateStr: string): string => {
       day: "numeric",
       month: "short",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }) + " WIB";
+    });
   } catch (e) {
     return dateStr;
   }

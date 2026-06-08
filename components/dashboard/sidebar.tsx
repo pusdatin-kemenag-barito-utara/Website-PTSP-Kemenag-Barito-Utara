@@ -3,20 +3,27 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, ChevronDown } from "lucide-react";
+import { Shield, ChevronDown, User, Briefcase } from "lucide-react";
 import {
   ADMIN_NAV,
   USER_NAV,
+  PEGAWAI_NAV,
   GROUP_ICONS,
 } from "@/lib/navigation";
 import { NavLink } from "./_components/nav-link";
 import { SidebarFooter } from "./_components/sidebar-footer";
 
-export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
+type SidebarMode = "admin" | "pegawai" | "user";
+
+export function DashboardSidebar({ mode = "user" }: { mode?: SidebarMode; isAdmin?: boolean }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const navItems = isAdmin ? ADMIN_NAV : USER_NAV;
+  
+  // Backward compatibility wrapper (in case some old code passes isAdmin)
+  const currentMode = arguments[0]?.isAdmin ? "admin" : mode;
+  
+  const navItems = currentMode === "admin" ? ADMIN_NAV : (currentMode === "pegawai" ? PEGAWAI_NAV : USER_NAV);
 
   // Close when clicking outside
   useEffect(() => {
@@ -40,7 +47,7 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
     setIsOpen(false);
   }, [pathname]);
 
-  const groups = isAdmin
+  const groups = currentMode !== "user"
     ? Array.from(new Set(navItems.map((item: any) => item.group || "")))
     : [""];
 
@@ -57,11 +64,17 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           className="flex w-full items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-4 py-3 hover:bg-slate-50 md:hover:bg-slate-50 md:cursor-default transition-colors"
         >
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#059669]/10">
-              <Shield className="h-3.5 w-3.5 text-[#059669]" />
+            <div className={`flex h-6 w-6 items-center justify-center rounded-lg ${currentMode === "admin" ? "bg-[#059669]/10" : (currentMode === "pegawai" ? "bg-blue-600/10" : "bg-emerald-600/10")}`}>
+              {currentMode === "admin" ? (
+                <Shield className="h-3.5 w-3.5 text-[#059669]" />
+              ) : currentMode === "pegawai" ? (
+                <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+              ) : (
+                <User className="h-3.5 w-3.5 text-emerald-600" />
+              )}
             </div>
             <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
-              {isAdmin ? "Menu Admin" : "Menu Utama"}
+              {currentMode === "admin" ? "Menu Admin" : (currentMode === "pegawai" ? "Menu Pegawai" : "Menu Utama")}
             </p>
           </div>
           <ChevronDown
@@ -78,7 +91,7 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           }`}
         >
           <div className="p-2">
-            {isAdmin ? (
+            {currentMode !== "user" ? (
               <div className="space-y-1">
                 {groups.map((group: any, gi: number) => {
                   const GroupIcon = (GROUP_ICONS as any)[group];
@@ -100,7 +113,7 @@ export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
                       <div className="space-y-0.5">
                         {groupItems.map((item: any) => {
                           const isActive =
-                            item.href === "/admin"
+                            (item.href === "/admin" || item.href === "/pegawai")
                               ? pathname === item.href
                               : pathname.startsWith(item.href);
                           return (

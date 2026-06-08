@@ -74,7 +74,24 @@ export function LoginDropdown({
                 Petugas
               </p>
               <p className="text-xs font-medium text-slate-400">
-                Staff Kemenag
+                Staff PTSP / Admin
+              </p>
+            </div>
+          </Link>
+          <Link
+            href="/login/pegawai"
+            onClick={() => setLoginOpen(false)}
+            className="group/item flex items-center gap-3.5 rounded-2xl p-3.5 transition-all duration-300 hover:bg-emerald-50"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#047857] transition-all duration-300 group-hover/item:bg-emerald-100 group-hover/item:scale-110">
+              <UserCircle2 className="h-5.5 w-5.5" />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-slate-700 transition-colors group-hover/item:text-[#047857]">
+                Pegawai
+              </p>
+              <p className="text-xs font-medium text-slate-400">
+                Pegawai Kemenag
               </p>
             </div>
           </Link>

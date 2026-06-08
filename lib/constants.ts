@@ -22,6 +22,7 @@ export const ADMIN_ROLES = [
   "admin_bimbingan_masyarakat_kristen_katolik",
   "admin_penyelenggara_zakat_wakaf",
   "admin_penyelenggara_hindu",
+  "pegawai",
 ] as const;
 
 export type AppRole = typeof ADMIN_ROLES[number];
@@ -38,6 +39,7 @@ export const DEFAULT_ADMIN_PERMISSIONS = [
   "buku_tamu",
   "janji_temu",
   "saran_pengaduan",
+  "e_laporan_kinerja",
 ];
 
 /**
@@ -57,6 +59,8 @@ export const ALL_ADMIN_MENUS = [
   "log_audit",
   "pemeliharaan_storage",
   "mode_pemeliharaan",
+  "manajemen_pegawai",
+  "e_laporan_kinerja",
 ];
 
 /**
@@ -99,6 +103,7 @@ export function getRoleLabel(role?: string | null, email?: string | null): strin
     admin_penyelenggara_hindu: "Admin Penyelenggara Hindu",
     kasubag_tu: "Kasubag TU",
     kepala_kantor: "Kepala Kantor",
+    pegawai: "Pegawai",
     user: "Pemohon",
   };
 

@@ -3,6 +3,7 @@
 import {
   getEmailByPhoneAction,
   verifyTurnstileAction,
+  handlePegawaiLoginAction,
 } from "@/lib/actions/auth/login-helper";
 import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
 import { useState, useEffect, useRef, type FormEvent } from "react";
@@ -19,7 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 // Local Components
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
-type LoginRoleMode = "pemohon" | "petugas";
+type LoginRoleMode = "pemohon" | "petugas" | "pegawai";
 
 function normalizeWhatsappNumber(raw: string) {
   const digits = raw.replace(/\D/g, "");
@@ -70,6 +71,21 @@ export function LoginFormByRole({
       if (result.error || !result.email) {
         setLoading(false);
         setError(result.error || "Nomor WhatsApp tidak ditemukan.");
+        return;
+      }
+      email = result.email;
+    } else if (mode === "pegawai") {
+      const nip = String(formData.get("nip") || "");
+      if (!nip) {
+        setLoading(false);
+        setError("NIP wajib diisi.");
+        return;
+      }
+      
+      const result = await handlePegawaiLoginAction(nip, password);
+      if (result.error || !result.email) {
+        setLoading(false);
+        setError(result.error || "Gagal memverifikasi NIP.");
         return;
       }
       email = result.email;
@@ -141,7 +157,10 @@ export function LoginFormByRole({
         return;
       }
 
-      const safeRedirect = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : (mode === "petugas" ? "/admin" : "/dashboard");
+      const safeRedirect = callbackUrl && isSafeRedirect(callbackUrl) 
+        ? callbackUrl 
+        : (mode === "petugas" ? "/admin" : (mode === "pegawai" ? "/pegawai" : "/dashboard"));
+        
       window.location.href = safeRedirect;
     } catch (err: any) {
       setLoading(false);
@@ -189,6 +208,20 @@ export function LoginFormByRole({
             />
           </Field>
         </m.div>
+      ) : mode === "pegawai" ? (
+        <m.div variants={itemVariants}>
+          <Field label="NIP (Nomor Induk Pegawai)" required>
+            <Input 
+              type="text" 
+              name="nip" 
+              required 
+              placeholder="Masukkan NIP Anda" 
+              onInput={(e) => {
+                e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+              }}
+            />
+          </Field>
+        </m.div>
       ) : (
         <m.div variants={itemVariants}>
           <Field label="Email" required>
@@ -207,7 +240,9 @@ export function LoginFormByRole({
             className={`text-xs font-bold hover:underline transition-colors ${
               mode === "petugas"
                 ? "text-[#0f8a54] hover:text-[#0b7446]"
-                : "text-[#059669] hover:text-[#047857]"
+                : mode === "pegawai"
+                  ? "text-[#047857] hover:text-[#064e3b]"
+                  : "text-[#059669] hover:text-[#047857]"
             }`}
           >
             Lupa password?
@@ -257,10 +292,16 @@ export function LoginFormByRole({
       <m.div variants={itemVariants}>
         <m.div whileTap={loading || !turnstileToken ? {} : { scale: 0.96 }}>
           <Button
-            className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${mode === "petugas" ? "bg-[#0f8a54]! hover:bg-[#0b7446]!" : "bg-[#059669]! hover:bg-[#047857]!"}`}
+            className={`w-full h-11 text-[15px] font-bold shadow-md transition-all ${
+              mode === "petugas" 
+                ? "bg-[#0f8a54]! hover:bg-[#0b7446]!" 
+                : mode === "pegawai"
+                  ? "bg-[#047857]! hover:bg-[#064e3b]!"
+                  : "bg-[#059669]! hover:bg-[#047857]!"
+            }`}
             disabled={loading || !turnstileToken}
           >
-            {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : "Masuk Sebagai Pemohon"}
+            {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : mode === "pegawai" ? "Masuk Sebagai Pegawai" : "Masuk Sebagai Pemohon"}
           </Button>
         </m.div>
       </m.div>

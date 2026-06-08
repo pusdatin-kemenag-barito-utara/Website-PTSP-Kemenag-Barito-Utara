@@ -11,6 +11,13 @@ import {
   UserCircle2,
   Database,
   Settings2,
+  Briefcase,
+  CalendarDays,
+  ClipboardList,
+  UploadCloud,
+  History,
+  FileCheck2,
+  UserCog,
 } from "lucide-react";
 
 export interface NavItem {
@@ -73,8 +80,58 @@ export const USER_NAV: NavItem[] = [
   { label: "Profil", href: "/dashboard/profil", icon: UserCircle2 },
 ];
 
+export const PEGAWAI_NAV: NavItem[] = [
+  { label: "Ringkasan", href: "/pegawai", icon: LayoutDashboard, group: "Utama" },
+  {
+    label: "Ajukan Layanan",
+    href: "/pegawai/layanan/ajukan",
+    icon: PlusCircle,
+    group: "Layanan ASN",
+  },
+  {
+    label: "Riwayat Pengajuan",
+    href: "/pegawai/layanan/riwayat",
+    icon: History,
+    group: "Layanan ASN",
+  },
+  {
+    label: "E-LK Harian Saya",
+    href: "/pegawai/e-lk/harian",
+    icon: ClipboardList,
+    group: "E-LK Harian",
+  },
+  {
+    label: "Isi LKH Harian",
+    href: "/pegawai/e-lk/isi",
+    icon: FormInput,
+    group: "E-LK Harian",
+  },
+  {
+    label: "Rekap Bulan",
+    href: "/pegawai/e-lk/rekap",
+    icon: CalendarDays,
+    group: "E-LK Harian",
+  },
+  {
+    label: "Upload Final",
+    href: "/pegawai/e-lk/upload",
+    icon: UploadCloud,
+    group: "E-LK Harian",
+  },
+  {
+    label: "Riwayat & Bukti",
+    href: "/pegawai/e-lk/riwayat",
+    icon: FileCheck2,
+    group: "E-LK Harian",
+  },
+  { label: "Profil", href: "/pegawai/profil", icon: UserCog, group: "Pengaturan" },
+];
+
 export const GROUP_ICONS: Record<string, React.ElementType> = {
   Utama: LayoutDashboard,
   "Master Data": Database,
   Sistem: Settings2,
+  "Layanan ASN": Briefcase,
+  "E-LK Harian": ClipboardList,
+  "Pengaturan": Settings2,
 };

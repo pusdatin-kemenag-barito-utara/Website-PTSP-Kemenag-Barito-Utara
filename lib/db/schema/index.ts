@@ -9,3 +9,4 @@ export * from "./services";
 export * from "./enums";
 export * from "./relations";
 export * from "./communications";
+export * from "./kepegawaian";

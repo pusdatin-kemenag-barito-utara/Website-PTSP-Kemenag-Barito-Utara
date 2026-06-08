@@ -8,6 +8,7 @@ export const appRoleEnum = pgEnum("ptsp_app_role", [
   "kepala_kantor",
   "kasubag_tu",
   "super_admin",
+  "pegawai",
 ]);
 
 export const requestStatusEnum = pgEnum("ptsp_request_status", [

@@ -101,6 +101,20 @@ const ADMIN_NAV: NavItem[] = [
     id: "surat_keluar",
   },
   {
+    label: "Manajemen Pegawai",
+    href: "/admin/kepegawaian/pegawai",
+    icon: Users,
+    group: "Kepegawaian",
+    id: "manajemen_pegawai",
+  },
+  {
+    label: "E-Laporan Kinerja",
+    href: "/admin/kepegawaian/laporan",
+    icon: FileText,
+    group: "Kepegawaian",
+    id: "e_laporan_kinerja",
+  },
+  {
     label: "Pengguna",
     href: "/admin/pengguna",
     icon: Users,
