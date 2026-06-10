@@ -15,5 +15,21 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(new URL(safeNext, url.origin));
+  // Mengatasi masalah reverse proxy (Coolify/Nginx) yang membaca host sebagai localhost:3000
+  let origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
+  
+  if (!origin) {
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+    if (forwardedHost) {
+      origin = `${forwardedProto}://${forwardedHost}`;
+    } else {
+      origin = url.origin;
+    }
+  }
+
+  // Pastikan tidak ada slash ganda jika digabung
+  const redirectUrl = new URL(safeNext, origin);
+  
+  return NextResponse.redirect(redirectUrl);
 }
