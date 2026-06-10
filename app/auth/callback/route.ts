@@ -12,7 +12,14 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (error) {
+      console.error("Auth callback error:", error.message);
+      // Fallback origin just in case
+      let redirectOrigin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || url.origin;
+      return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("Gagal masuk dengan Google: " + error.message)}`, redirectOrigin));
+    }
   }
 
   // Mengatasi masalah reverse proxy (Coolify/Nginx) yang membaca host sebagai localhost:3000

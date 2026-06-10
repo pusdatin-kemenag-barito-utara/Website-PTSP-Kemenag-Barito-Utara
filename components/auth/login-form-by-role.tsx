@@ -32,11 +32,13 @@ function normalizeWhatsappNumber(raw: string) {
 export function LoginFormByRole({
   mode,
   callbackUrl,
+  initialError = "",
 }: {
   mode: LoginRoleMode;
   callbackUrl?: string;
+  initialError?: string;
 }) {
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);

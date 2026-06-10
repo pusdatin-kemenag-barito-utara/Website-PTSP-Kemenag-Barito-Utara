@@ -35,9 +35,9 @@ export async function requireAuth(allowIncomplete = false) {
     // Get the current path from the custom header set by middleware
     const currentPath = headersList.get("x-url");
     const referer = headersList.get("referer");
-    
+
     let callbackUrl = "/dashboard";
-    
+
     if (currentPath) {
       callbackUrl = currentPath;
     } else if (referer) {
@@ -61,27 +61,32 @@ export async function requireAuth(allowIncomplete = false) {
         fullName: user.user_metadata?.full_name || "",
         role: "user",
       });
-      profile = await getCurrentProfile(); // Ambil ulang setelah dibuat
+
+      // Ambil langsung dari DB untuk bypass React cache()
+      const newProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.id, user.id),
+      });
+      profile = newProfile ?? null;
     } catch (e) {
       console.error("Gagal auto-create profil:", e);
     }
   }
 
-  if (profile && !allowIncomplete) {
+  // Fallback if profile creation completely failed but we must return something
+  if (!profile) {
+    profile = { id: user.id, email: user.email, role: "user" } as any;
+  }
+
+  if (!allowIncomplete) {
     // Jika role user (pemohon) dan profil belum lengkap, paksa lengkapi profil
-    if (profile.role === "user") {
-      if (!profile.phone || !profile.fullName || !profile.address) {
+    if (profile!.role === "user") {
+      if (!profile!.phone || !profile!.fullName || !profile!.address) {
         redirect("/lengkapi-profil");
       }
     }
   }
 
-  // Fallback if profile creation completely failed but we must return something
-  if (!profile) {
-    return { id: user.id, email: user.email, role: "user" } as any;
-  }
-
-  return profile;
+  return profile as NonNullable<typeof profile>;
 }
 
 export async function requireAdmin() {
@@ -114,7 +119,7 @@ export async function requireRequestOwnership(
 export function hasPermission(profile: any, permission: string): boolean {
   if (!profile) return false;
   if (isSuperAdmin(profile.email)) return true;
-  
+
   if (profile.role === permission) return true;
   const permissions = (profile.permissions as string[]) || [];
   return permissions.includes(permission);

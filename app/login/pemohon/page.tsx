@@ -16,7 +16,7 @@ export default async function LoginPemohonPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, error } = await searchParams;
 
   return (
     <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-84px)] items-center justify-center py-10 pb-20 px-4 sm:px-6 lg:px-8">
@@ -70,6 +70,7 @@ export default async function LoginPemohonPage({
             <LoginFormByRole
               mode="pemohon"
               callbackUrl={callbackUrl as string}
+              initialError={error as string}
             />
             
             <div className="mt-8 flex flex-col gap-3">
