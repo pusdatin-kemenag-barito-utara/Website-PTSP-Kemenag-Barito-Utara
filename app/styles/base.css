@@ -43,8 +43,10 @@ a {
 
 input,
 textarea,
-select {
+select,
+button {
   outline: none;
+  font-family: inherit;
 }
 
 /* Responsive Image Handling */

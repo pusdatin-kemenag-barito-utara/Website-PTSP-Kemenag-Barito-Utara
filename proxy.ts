@@ -102,6 +102,7 @@ export async function proxy(request: NextRequest) {
     "/track", "/buku-tamu", "/janji-temu", "/cek-cuti",
     "/register", "/forgot-password",
     "/berita", "/artikel",
+    "/kebijakan-privasi", "/syarat-ketentuan"
   ];
   const isPublicPage = path === "/" || publicPaths.some(
     (p) => path === p || path.startsWith(p + "/"),

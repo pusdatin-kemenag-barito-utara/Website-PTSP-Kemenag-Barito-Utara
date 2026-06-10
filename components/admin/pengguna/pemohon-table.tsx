@@ -16,6 +16,9 @@ import { formatDate } from "@/lib/utils";
 import { RoleBadge } from "./role-badge";
 import { PasswordCell } from "./password-cell";
 import { DeleteUserModal } from "./delete-user-modal";
+import { UserTablePagination } from "./user-table-pagination";
+
+import { UserTableHeader } from "./user-table-header";
 
 export function PemohonTable({
   users,
@@ -83,39 +86,15 @@ export function PemohonTable({
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-4 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-            <Users className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-black text-slate-800">
-              Daftar Pemohon
-            </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Pengguna yang mengajukan layanan melalui PTSP.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="px-3 py-1 rounded-lg bg-emerald-50 text-xs font-bold text-emerald-600 border border-emerald-200/60">
-            {filteredUsers.length} pemohon
-          </div>
-          {users.length > 5 && (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Cari nama / no HP..."
-                className="rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 w-48 transition-all focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 outline-none placeholder:text-slate-400"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      <UserTableHeader
+        title="Daftar Pemohon"
+        subtitle="Pengguna yang mengajukan layanan melalui PTSP."
+        icon={Users}
+        iconColor="text-[#059669]"
+        count={filteredUsers.length}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearch}
+      />
 
       {/* Table */}
       <div className="overflow-x-auto">
@@ -249,43 +228,11 @@ export function PemohonTable({
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
-          <p className="text-[11px] text-slate-500">
-            Halaman <span className="font-bold text-slate-700">{page}</span>{" "}
-            dari <span className="font-bold text-slate-700">{totalPages}</span>
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`min-w-[28px] h-7 rounded-lg text-[11px] font-bold transition-all duration-200 ${
-                  p === page
-                    ? "bg-gradient-to-r from-[#059669] to-[#047857] text-white shadow-sm shadow-emerald-500/20"
-                    : "text-slate-600 hover:bg-slate-200/60"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <UserTablePagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+      />
 
       {/* Delete User Modal */}
       <DeleteUserModal

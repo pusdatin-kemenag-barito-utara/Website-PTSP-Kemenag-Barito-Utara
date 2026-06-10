@@ -23,6 +23,7 @@ import {
   getNextNomorSuratSuggestionAction,
 } from "@/lib/actions/admin/admin-persuratan";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
+import { ModernSelect } from "@/components/ui/modern-select";
 import { m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -32,6 +33,7 @@ const UNIT_COLORS: Record<string, string> = {
   "Bimas Kristen": "bg-purple-50 text-purple-600 border-purple-100",
   "Pendidikan Madrasah": "bg-amber-50 text-amber-600 border-amber-100",
   "Pendidikan Agama Islam": "bg-sky-50 text-sky-600 border-sky-100",
+  "Pendidikan Diniyah & Pontren": "bg-indigo-50 text-indigo-600 border-indigo-100",
   "Penyelenggara Hindu": "bg-rose-50 text-rose-600 border-rose-100",
   "Penyelenggara Zakat & Wakaf": "bg-teal-50 text-teal-600 border-teal-100",
 };
@@ -59,6 +61,15 @@ interface SuratKeluar {
   agenda: string;
 }
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return dateStr;
+};
+
 export function SuratKeluarManager() {
   const [items, setItems] = useState<SuratKeluar[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +84,7 @@ export function SuratKeluarManager() {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Delete Confirmation State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -140,11 +151,11 @@ export function SuratKeluarManager() {
     setCurrentPage(1);
   }, [search, filterDate]);
 
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredItems.length / rowsPerPage);
   const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredItems, currentPage]);
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    return filteredItems.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredItems, currentPage, rowsPerPage]);
 
   const handleOpenForm = async (item?: SuratKeluar) => {
     if (item) {
@@ -170,11 +181,11 @@ export function SuratKeluarManager() {
       setEditingId(null);
       setShowForm(true);
 
-      // Suggest next number
-      const suggestion = await getNextNomorSuratSuggestionAction("KELUAR");
-      if (suggestion) {
-        setFormData((prev) => ({ ...prev, nomor_surat: suggestion }));
-      }
+      // Suggest next number (Disabled as requested)
+      // const suggestion = await getNextNomorSuratSuggestionAction("KELUAR");
+      // if (suggestion) {
+      //   setFormData((prev) => ({ ...prev, nomor_surat: suggestion }));
+      // }
     }
   };
 
@@ -319,25 +330,25 @@ export function SuratKeluarManager() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-200">
-                <th className="px-4 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-12">
+                <th className="px-4 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-12">
                   No
                 </th>
-                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Info Surat
                 </th>
-                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Tanggal
                 </th>
-                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Agenda
                 </th>
-                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Unit Kerja
                 </th>
-                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Tujuan & Perihal
                 </th>
-                <th className="px-6 py-4 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-right">
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-right">
                   Aksi
                 </th>
               </tr>
@@ -349,12 +360,12 @@ export function SuratKeluarManager() {
                     key={item.id}
                     className="hover:bg-slate-50/50 transition-colors group"
                   >
-                    <td className="px-4 py-4 text-center">
+                    <td className="px-4 py-2.5 text-center">
                       <span className="text-xs font-bold text-slate-400">
-                        {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                        {(currentPage - 1) * rowsPerPage + index + 1}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2.5">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
@@ -369,13 +380,13 @@ export function SuratKeluarManager() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2.5">
                       <div className="flex items-center gap-2 text-xs text-slate-600 font-bold bg-slate-100 w-fit px-3 py-1.5 rounded-lg border border-slate-200">
                         <Calendar className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>{item.tanggal_surat}</span>
+                        <span>{formatDate(item.tanggal_surat)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2.5">
                       <div
                         className={`flex items-center gap-2 text-[10px] font-extrabold w-fit px-2.5 py-1 rounded-md border uppercase tracking-tight ${
                           AGENDA_COLORS[item.agenda] ||
@@ -385,7 +396,7 @@ export function SuratKeluarManager() {
                         {item.agenda}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2.5">
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${
                           UNIT_COLORS[item.unit_kerja] ||
@@ -395,7 +406,7 @@ export function SuratKeluarManager() {
                         {item.unit_kerja}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-2.5">
                       <div className="flex flex-col gap-0.5 max-w-xs">
                         <p className="text-sm font-semibold text-slate-800 line-clamp-1">
                           {item.tujuan_surat}
@@ -405,7 +416,7 @@ export function SuratKeluarManager() {
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => handleOpenForm(item)}
@@ -462,10 +473,32 @@ export function SuratKeluarManager() {
         {/* Pagination Controls */}
         {filteredItems.length > 0 && (
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-              Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
-              {Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}{" "}
-              dari {filteredItems.length} Surat Keluar
+            <div className="flex items-center gap-3">
+              <select
+                value={rowsPerPage === filteredItems.length && filteredItems.length > 0 ? "all" : rowsPerPage}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "all") {
+                    setRowsPerPage(filteredItems.length > 0 ? filteredItems.length : 10);
+                  } else {
+                    setRowsPerPage(Number(val));
+                  }
+                  setCurrentPage(1);
+                }}
+                className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm"
+              >
+                <option value={10}>10 Baris</option>
+                <option value={25}>25 Baris</option>
+                <option value={50}>50 Baris</option>
+                <option value={100}>100 Baris</option>
+                <option value={200}>200 Baris</option>
+                <option value="all">Semua Baris</option>
+              </select>
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                Menampilkan {filteredItems.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} -{" "}
+                {Math.min(currentPage * rowsPerPage, filteredItems.length)}{" "}
+                dari {filteredItems.length} Surat Keluar
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5">
@@ -477,34 +510,12 @@ export function SuratKeluarManager() {
                 Sebelumnya
               </button>
 
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum = i + 1;
-                  if (totalPages > 5) {
-                    if (currentPage > 3) pageNum = currentPage - 2 + i;
-                    if (pageNum + (4 - i) > totalPages)
-                      pageNum = totalPages - 4 + i;
-                  }
-                  if (pageNum <= 0 || pageNum > totalPages) return null;
-
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${
-                        currentPage === pageNum
-                          ? "bg-[#059669] text-white shadow-md shadow-emerald-200"
-                          : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-center px-2 text-xs font-medium text-slate-600">
+                Hal {currentPage} / {totalPages || 1}
               </div>
 
               <button
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() =>
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
@@ -582,47 +593,50 @@ export function SuratKeluarManager() {
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Jenis Agenda
                 </label>
-                <select
+                <ModernSelect
                   name="agenda"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none appearance-none"
+                  options={[
+                    "Surat Dinas",
+                    "Surat Keputusan",
+                    "Surat Tugas",
+                    "Surat Undangan",
+                    "Surat Pengantar",
+                    "Surat Keterangan",
+                    "Surat Pernyataan",
+                    "Surat Cuti",
+                    "Berita Acara",
+                    "Nota Dinas"
+                  ]}
                   value={formData.agenda}
-                  onChange={(e) =>
-                    setFormData({ ...formData, agenda: e.target.value })
-                  }
-                >
-                  <option>Surat Dinas</option>
-                  <option>Surat Keputusan</option>
-                  <option>Surat Tugas</option>
-                  <option>Surat Undangan</option>
-                  <option>Surat Pengantar</option>
-                  <option>Surat Keterangan</option>
-                  <option>Surat Pernyataan</option>
-                  <option>Surat Cuti</option>
-                  <option>Berita Acara</option>
-                  <option>Nota Dinas</option>
-                </select>
+                  onChange={(val) => setFormData({ ...formData, agenda: val })}
+                  enableSearch
+                  searchPlaceholder="Cari agenda..."
+                  placeholder="Pilih agenda"
+                />
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Unit Kerja Pembuat
                 </label>
-                <select
+                <ModernSelect
                   name="unit_kerja"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none appearance-none"
+                  options={[
+                    "Sekjend",
+                    "Bimas Islam",
+                    "Bimas Kristen",
+                    "Pendidikan Madrasah",
+                    "Pendidikan Agama Islam",
+                    "Pendidikan Diniyah & Pontren",
+                    "Penyelenggara Hindu",
+                    "Penyelenggara Zakat & Wakaf"
+                  ]}
                   value={formData.unit_kerja}
-                  onChange={(e) =>
-                    setFormData({ ...formData, unit_kerja: e.target.value })
-                  }
-                >
-                  <option>Sekjend</option>
-                  <option>Bimas Islam</option>
-                  <option>Bimas Kristen</option>
-                  <option>Pendidikan Madrasah</option>
-                  <option>Pendidikan Agama Islam</option>
-                  <option>Penyelenggara Hindu</option>
-                  <option>Penyelenggara Zakat & Wakaf</option>
-                </select>
+                  onChange={(val) => setFormData({ ...formData, unit_kerja: val })}
+                  enableSearch
+                  searchPlaceholder="Cari unit kerja..."
+                  placeholder="Pilih unit kerja"
+                />
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
@@ -636,9 +650,11 @@ export function SuratKeluarManager() {
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
                   placeholder="Instansi atau perorangan penerima..."
                   value={formData.tujuan_surat}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tujuan_surat: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const capitalized = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
+                    setFormData({ ...formData, tujuan_surat: capitalized });
+                  }}
                 />
               </div>
 
@@ -653,9 +669,11 @@ export function SuratKeluarManager() {
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none resize-none"
                   placeholder="Isi ringkas perihal surat..."
                   value={formData.perihal}
-                  onChange={(e) =>
-                    setFormData({ ...formData, perihal: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const capitalized = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
+                    setFormData({ ...formData, perihal: capitalized });
+                  }}
                 />
               </div>
 

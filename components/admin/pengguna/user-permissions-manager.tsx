@@ -55,6 +55,13 @@ const MENU_GROUPS = [
     ],
   },
   {
+    name: "Kepegawaian",
+    menus: [
+      { id: "manajemen_pegawai", label: "Manajemen Pegawai", icon: Users },
+      { id: "e_laporan_kinerja", label: "E-Laporan Kinerja", icon: FileText },
+    ],
+  },
+  {
     name: "Sistem",
     menus: [
       { id: "pengguna", label: "Manajemen Pengguna", icon: Users },

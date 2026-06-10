@@ -20,20 +20,9 @@ export class UserService {
 
     const authUpdates: any = {};
     
-    // If phone changes, we update email (based on user role pattern)
-    if (phone) {
-      const digits = phone.replace(/\D/g, "");
-      const profile = await db.query.profiles.findFirst({
-        where: eq(profilesTable.id, userId),
-        columns: { role: true },
-      });
-      const prefix = profile?.role === "user" ? "p" : "staff_";
-      const newEmail = `${prefix}${digits}@ptsp.id`;
-      
-      authUpdates.email = newEmail;
-      authUpdates.email_confirm = true;
-      updateData.email = newEmail;
-    }
+    // Phone is just updated in the profiles table now.
+    // We no longer overwrite the email address based on the phone number
+    // to preserve custom emails like @kemenag.go.id.
 
     if (password) {
       authUpdates.password = password;

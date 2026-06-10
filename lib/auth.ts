@@ -28,9 +28,9 @@ export const getCurrentProfile = cache(async () => {
 
 import { headers } from "next/headers";
 
-export async function requireAuth() {
-  const profile = await getCurrentProfile();
-  if (!profile) {
+export async function requireAuth(allowIncomplete = false) {
+  const user = await getCurrentUser();
+  if (!user) {
     const headersList = await headers();
     // Get the current path from the custom header set by middleware
     const currentPath = headersList.get("x-url");
@@ -49,6 +49,38 @@ export async function requireAuth() {
 
     redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
+
+  let profile = await getCurrentProfile();
+
+  // Jika user login via Google dan profil belum dibuat oleh trigger
+  if (!profile && user) {
+    try {
+      await db.insert(profiles).values({
+        id: user.id,
+        email: user.email,
+        fullName: user.user_metadata?.full_name || "",
+        role: "user",
+      });
+      profile = await getCurrentProfile(); // Ambil ulang setelah dibuat
+    } catch (e) {
+      console.error("Gagal auto-create profil:", e);
+    }
+  }
+
+  if (profile && !allowIncomplete) {
+    // Jika role user (pemohon) dan profil belum lengkap, paksa lengkapi profil
+    if (profile.role === "user") {
+      if (!profile.phone || !profile.fullName || !profile.address) {
+        redirect("/lengkapi-profil");
+      }
+    }
+  }
+
+  // Fallback if profile creation completely failed but we must return something
+  if (!profile) {
+    return { id: user.id, email: user.email, role: "user" } as any;
+  }
+
   return profile;
 }
 

@@ -1,17 +1,23 @@
 "use client";
 
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Plus, Upload, Trash2, Edit, Save, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createPegawaiAction, updatePegawaiAction, deletePegawaiAction } from "@/lib/actions/admin/kepegawaian";
 
 export function PegawaiManager({ initialData }: { initialData: any[] }) {
+  const router = useRouter();
   const [data, setData] = useState(initialData);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -63,7 +69,7 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
     else {
       toast.success("Pegawai berhasil ditambahkan!");
       resetForm();
-      window.location.reload();
+      router.refresh();
     }
     setLoading(false);
   };
@@ -89,8 +95,9 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
     if (res.error) toast.error(res.error);
     else {
       toast.success("Pegawai berhasil diperbarui!");
+      setData(prev => prev.map(p => p.id === editId ? { ...p, fullName: formName, unitKerja: formJabatan } : p));
       resetForm();
-      window.location.reload();
+      router.refresh();
     }
     setLoading(false);
   };
@@ -103,7 +110,13 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
     if (res.error) toast.error(res.error);
     else {
       toast.success("Pegawai berhasil dihapus!");
-      window.location.reload();
+      setData(prev => prev.filter(p => p.id !== id));
+      router.refresh();
+      
+      const remainingOnPage = currentData.length - 1;
+      if (remainingOnPage === 0 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
+      }
     }
     setLoading(false);
   };
@@ -126,7 +139,7 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
     if (res.error) toast.error(res.error);
     else if (res.success) {
       toast.success(res.message);
-      window.location.reload();
+      router.refresh();
     }
     
     // Reset input
@@ -220,8 +233,30 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
         
         {/* Pagination */}
         <div className="bg-slate-50 p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-500">
-            Menampilkan {filteredData.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} - {Math.min(currentPage * rowsPerPage, filteredData.length)} dari {filteredData.length} Pegawai
+          <div className="flex items-center gap-3">
+            <select
+              value={rowsPerPage === filteredData.length && filteredData.length > 0 ? "all" : rowsPerPage}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "all") {
+                  setRowsPerPage(filteredData.length > 0 ? filteredData.length : 10);
+                } else {
+                  setRowsPerPage(Number(val));
+                }
+                setCurrentPage(1);
+              }}
+              className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm"
+            >
+              <option value={10}>10 Baris</option>
+              <option value={25}>25 Baris</option>
+              <option value={50}>50 Baris</option>
+              <option value={100}>100 Baris</option>
+              <option value={500}>500 Baris</option>
+              <option value="all">Semua Baris</option>
+            </select>
+            <div className="text-xs font-medium text-slate-500">
+              Menampilkan {filteredData.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} - {Math.min(currentPage * rowsPerPage, filteredData.length)} dari {filteredData.length} Pegawai
+            </div>
           </div>
           <div className="flex gap-2">
             <Button 
