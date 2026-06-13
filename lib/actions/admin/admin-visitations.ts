@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { guestBook, appointments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createAuditLog } from "@/lib/audit";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
 
 export type ActionResult = {
   success: boolean;
@@ -172,6 +173,36 @@ export async function updateAppointmentStatusAction(
         newStatus: status,
       },
     });
+
+    if (status === "approved" || status === "rejected") {
+      const [year, month, day] = entry.appointmentDate.split("-");
+      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      const appointmentDateFormatted = dateObj.toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const isApproved = status === "approved";
+      const waMessage =
+        `Halo *${entry.guestName}* 👋\n\n` +
+        `Permintaan janji temu Anda telah *${isApproved ? "DISETUJUI ✅" : "DITOLAK ❌"}* oleh Admin.\n\n` +
+        `📅 *Detail Janji Temu:*\n` +
+        `• Tanggal  : ${appointmentDateFormatted}\n` +
+        `• Jam      : ${entry.appointmentTime} WITA\n` +
+        `• Bertemu  : ${entry.intendedOfficer}\n` +
+        `• Keperluan: ${entry.purpose}\n` +
+        (entry.institutionName ? `• Instansi : ${entry.institutionName}\n` : "") +
+        (isApproved 
+          ? `\nMohon hadir tepat waktu sesuai dengan jadwal yang telah disetujui. Tunjukkan pesan ini kepada petugas saat Anda tiba di lokasi.\n\n`
+          : `\nMohon maaf, janji temu Anda belum dapat dipenuhi saat ini. Silakan hubungi kami untuk informasi lebih lanjut.\n\n`) +
+        `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
+        `_Kemenag Kabupaten Barito Utara_`;
+
+      // Jalankan tanpa await agar tidak memblokir respon
+      sendWhatsAppNotification(entry.whatsapp, waMessage).catch(() => {});
+    }
 
     revalidatePath("/admin/janji-temu");
     return {
