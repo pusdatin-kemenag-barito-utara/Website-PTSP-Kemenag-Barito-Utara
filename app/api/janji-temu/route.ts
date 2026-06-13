@@ -20,16 +20,21 @@ export async function POST(request: Request) {
     } = body;
 
     // Get client IP address if available
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0] || 
-                     request.headers.get("x-real-ip") || 
-                     undefined;
+    const clientIp =
+      request.headers.get("x-forwarded-for")?.split(",")[0] ||
+      request.headers.get("x-real-ip") ||
+      undefined;
 
     // Verify Turnstile token
     const isHuman = await verifyTurnstileToken(turnstileToken, clientIp);
     if (!isHuman) {
       return NextResponse.json(
-        { success: false, error: "Verifikasi keamanan (Turnstile) gagal. Silakan coba lagi atau segarkan halaman." },
-        { status: 400 }
+        {
+          success: false,
+          error:
+            "Verifikasi keamanan (Turnstile) gagal. Silakan coba lagi atau segarkan halaman.",
+        },
+        { status: 400 },
       ) as any;
     }
 
@@ -46,9 +51,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "Semua kolom wajib diisi termasuk Tanggal Rencana dan Jam Bertamu.",
+          error:
+            "Semua kolom wajib diisi termasuk Tanggal Rencana dan Jam Bertamu.",
         },
-        { status: 400 }
+        { status: 400 },
       ) as any;
     }
 
@@ -83,7 +89,7 @@ export async function POST(request: Request) {
       `Permintaan janji temu Anda telah *berhasil dicatat* dan sedang menunggu konfirmasi dari petugas.\n\n` +
       `📅 *Detail Janji Temu:*\n` +
       `• Tanggal  : ${appointmentDateFormatted}\n` +
-      `• Jam      : ${appointmentTime} WITA\n` +
+      `• Jam      : ${appointmentTime} WIB\n` +
       `• Bertemu  : ${intendedOfficer}\n` +
       `• Keperluan: ${purpose}\n` +
       (institutionName ? `• Instansi : ${institutionName}\n` : "") +
@@ -109,8 +115,7 @@ export async function POST(request: Request) {
     console.error("Failed to insert appointment entry:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Gagal membuat janji temu." },
-      { status: 500 }
+      { status: 500 },
     ) as any;
   }
 }
-

@@ -19,4 +19,4 @@ export const appointments = pgTable("ptsp_appointments", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();

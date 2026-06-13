@@ -9,7 +9,7 @@ export default async function LoginPegawaiPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, nip } = await searchParams;
 
   return (
     <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-80px)] items-center justify-center py-10 pb-20 px-4 sm:px-6 lg:px-8">
@@ -63,6 +63,7 @@ export default async function LoginPegawaiPage({
             <LoginFormByRole
               mode="pegawai"
               callbackUrl={callbackUrl as string}
+              nip={nip as string}
             />
           </div>
 

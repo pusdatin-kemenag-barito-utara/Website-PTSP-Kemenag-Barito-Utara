@@ -15,15 +15,40 @@ import { SidebarFooter } from "./_components/sidebar-footer";
 
 type SidebarMode = "admin" | "pegawai" | "user";
 
-export function DashboardSidebar({ mode = "user" }: { mode?: SidebarMode; isAdmin?: boolean }) {
+export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: SidebarMode; isAdmin?: boolean; userNip?: string }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    Utama: true,
+  });
   const sidebarRef = useRef<HTMLDivElement>(null);
   
   // Backward compatibility wrapper (in case some old code passes isAdmin)
   const currentMode = arguments[0]?.isAdmin ? "admin" : mode;
   
-  const navItems = currentMode === "admin" ? ADMIN_NAV : (currentMode === "pegawai" ? PEGAWAI_NAV : USER_NAV);
+  let navItems = currentMode === "admin" ? ADMIN_NAV : (currentMode === "pegawai" ? PEGAWAI_NAV : USER_NAV);
+
+  if (currentMode === "pegawai") {
+    const PEJABAT_NIPS = [
+      "197809042007101005", // Sony
+      "198110082005011002", // Handayani
+      "197101231998031004", // Bakti
+      "197304062005011008", // Supian
+      "198002022005011008", // Almubasir
+      "197011032003121002", // Hasan
+      "198210022009011011", // Wandi
+      "197311212001121001"  // Arbaja
+    ];
+    const isPejabat = PEJABAT_NIPS.includes(userNip);
+    navItems = navItems.filter((item: any) => !item.restrictedToPejabat || isPejabat);
+  }
+
+  const toggleGroup = (group: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [group]: !prev[group]
+    }));
+  };
 
   // Close when clicking outside
   useEffect(() => {
@@ -101,16 +126,24 @@ export function DashboardSidebar({ mode = "user" }: { mode?: SidebarMode; isAdmi
                   return (
                     <div key={group} className={gi > 0 ? "pt-1" : ""}>
                       {group && (
-                        <div className="mb-1 mt-2 first:mt-0 flex items-center gap-1.5 px-3">
-                          {GroupIcon && (
-                            <GroupIcon className="h-3 w-3 text-slate-400" />
-                          )}
-                          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">
-                            {group}
-                          </p>
-                        </div>
+                        <button 
+                          onClick={() => toggleGroup(group)}
+                          className="mb-1 mt-2 first:mt-0 flex w-full items-center justify-between px-3 py-1.5 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group/header"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            {GroupIcon && (
+                              <GroupIcon className="h-4 w-4 text-slate-500 group-hover/header:text-emerald-600 transition-colors" />
+                            )}
+                            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-600 group-hover/header:text-slate-900 transition-colors">
+                              {group}
+                            </p>
+                          </div>
+                          <ChevronDown 
+                            className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${expandedGroups[group] ? 'rotate-180' : ''}`} 
+                          />
+                        </button>
                       )}
-                      <div className="space-y-0.5">
+                      <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ${(!group || expandedGroups[group]) ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
                         {groupItems.map((item: any) => {
                           const isActive =
                             (item.href === "/admin" || item.href === "/pegawai")

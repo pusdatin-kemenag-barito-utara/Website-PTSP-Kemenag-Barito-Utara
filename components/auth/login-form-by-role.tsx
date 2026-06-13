@@ -33,10 +33,12 @@ export function LoginFormByRole({
   mode,
   callbackUrl,
   initialError = "",
+  nip = "",
 }: {
   mode: LoginRoleMode;
   callbackUrl?: string;
   initialError?: string;
+  nip?: string;
 }) {
   const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
@@ -235,6 +237,7 @@ export function LoginFormByRole({
               type="text" 
               name="nip" 
               required 
+              defaultValue={nip}
               placeholder="Masukkan NIP Anda" 
               onInput={(e) => {
                 e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");

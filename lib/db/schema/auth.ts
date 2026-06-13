@@ -71,7 +71,7 @@ export const users = authSchema.table("users", {
   isSsoUser: boolean("is_sso_user").notNull().default(false),
   deletedAt: timestamp("deleted_at", { withTimezone: true, precision: 6 }),
   isAnonymous: boolean("is_anonymous").notNull().default(false),
-});
+}).enableRLS();
 
 export const profiles = pgTable("ptsp_profiles", {
   id: uuid("id")
@@ -97,7 +97,7 @@ export const profiles = pgTable("ptsp_profiles", {
     "dokumen_hasil",
   ]),
   avatarUrl: text("avatar_url"),
-});
+}).enableRLS();
 
 import { pgTable } from "drizzle-orm/pg-core";
 export const rolePermissions = pgTable("ptsp_role_permissions", {
@@ -107,4 +107,4 @@ export const rolePermissions = pgTable("ptsp_role_permissions", {
     withTimezone: true,
     precision: 6,
   }).defaultNow(),
-});
+}).enableRLS();

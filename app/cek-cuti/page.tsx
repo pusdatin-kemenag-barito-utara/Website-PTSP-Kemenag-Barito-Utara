@@ -11,6 +11,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { checkLeaveAction } from "@/lib/actions/public/check-leave";
+import Link from "next/link";
 
 export default function CekCutiPage() {
   const [nip, setNip] = useState("");
@@ -47,12 +48,12 @@ export default function CekCutiPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <PageBanner
-        title="Cek Sisa Cuti"
-        description="Layanan pengecekan sisa kuota cuti tahunan pegawai Kementerian Agama Kabupaten Barito Utara"
+        title="Ajukan Cuti Pegawai"
+        description="Layanan Pengecekan Sisa Jumlah Cuti dan Pengajuan Cuti Tahunan, Cuti Sakit, Cuti Alasan Penting, Cuti Bersalin dan Cuti Besar untuk Pegawai Kementerian Agama Kabupaten Barito Utara"
         breadcrumb={[
           { label: "Beranda", href: "/" },
           { label: "Layanan", href: "#" },
-          { label: "Cek Sisa Cuti" },
+          { label: "Ajukan Cuti Pegawai" },
         ]}
         eyebrow="LAYANAN KEPEGAWAIAN"
       />
@@ -117,7 +118,7 @@ export default function CekCutiPage() {
                   ) : (
                     <>
                       <Search className="h-5 w-5" />
-                      Cek Sisa Cuti
+                      Cari Data Pegawai
                     </>
                   )}
                 </button>
@@ -173,7 +174,12 @@ export default function CekCutiPage() {
                           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                         </span>
                         <span className="text-xs font-bold text-emerald-700">
-                          Update per {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          Update per{" "}
+                          {new Date().toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
                         </span>
                       </div>
                     </div>
@@ -250,42 +256,92 @@ export default function CekCutiPage() {
                     <div className="lg:hidden flex flex-col gap-4">
                       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-3">
                         <div className="flex justify-between items-start border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider pt-0.5">Nama Pegawai</span>
-                          <span className="text-slate-800 font-bold text-sm text-right leading-tight max-w-[60%]">{result.name}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider pt-0.5">
+                            Nama Pegawai
+                          </span>
+                          <span className="text-slate-800 font-bold text-sm text-right leading-tight max-w-[60%]">
+                            {result.name}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">NIP</span>
-                          <span className="text-slate-600 font-medium text-sm">{result.nip}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            NIP
+                          </span>
+                          <span className="text-slate-600 font-medium text-sm">
+                            {result.nip}
+                          </span>
                         </div>
                         <div className="flex flex-col gap-1 border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Jabatan</span>
-                          <span className="text-slate-600 text-sm font-medium leading-relaxed">{result.jabatan}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Jabatan
+                          </span>
+                          <span className="text-slate-600 text-sm font-medium leading-relaxed">
+                            {result.jabatan}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Cuti Tahunan</span>
-                          <span className="text-slate-800 font-black text-sm">{result.totalCuti}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Total Cuti Tahunan
+                          </span>
+                          <span className="text-slate-800 font-black text-sm">
+                            {result.totalCuti}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Tahunan</span>
-                          <span className="text-slate-600 font-medium text-sm">{result.cutiTahunan || "-"}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Cuti Tahunan
+                          </span>
+                          <span className="text-slate-600 font-medium text-sm">
+                            {result.cutiTahunan || "-"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Alasan Penting</span>
-                          <span className="text-slate-600 font-medium text-sm">{result.cutiPenting || "-"}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Cuti Alasan Penting
+                          </span>
+                          <span className="text-slate-600 font-medium text-sm">
+                            {result.cutiPenting || "-"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Bersalin</span>
-                          <span className="text-slate-600 font-medium text-sm">{result.cutiBersalin || "-"}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Cuti Bersalin
+                          </span>
+                          <span className="text-slate-600 font-medium text-sm">
+                            {result.cutiBersalin || "-"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Cuti Sakit</span>
-                          <span className="text-slate-600 font-medium text-sm">{result.cutiSakit || "-"}</span>
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Cuti Sakit
+                          </span>
+                          <span className="text-slate-600 font-medium text-sm">
+                            {result.cutiSakit || "-"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center bg-emerald-50 p-4 rounded-xl border border-emerald-100 mt-4 shadow-sm shadow-emerald-900/5">
-                          <span className="text-emerald-700 text-sm font-black uppercase tracking-wider">Sisa Cuti</span>
-                          <span className="text-emerald-600 font-black text-2xl">{result.sisaCuti}</span>
+                          <span className="text-emerald-700 text-sm font-black uppercase tracking-wider">
+                            Sisa Cuti
+                          </span>
+                          <span className="text-emerald-600 font-black text-2xl">
+                            {result.sisaCuti}
+                          </span>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Action Button: Proceed to Leave Application */}
+                    <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-6">
+                      <p className="text-sm text-slate-500 font-medium text-center lg:text-left leading-relaxed">
+                        Jika sisa cuti mencukupi dan data telah sesuai, silakan tekan tombol di samping untuk melanjutkan proses pengisian formulir permohonan cuti Anda.
+                      </p>
+                      <Link
+                        href={`/login/pegawai?nip=${result?.nip}&callbackUrl=/pegawai/cuti/tambah`}
+                        className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold transition-all hover:shadow-xl hover:shadow-emerald-600/20 active:scale-95 whitespace-nowrap flex-shrink-0"
+                      >
+                        <FileText className="h-5 w-5" />
+                        Lanjutkan Pengajuan Cuti
+                      </Link>
                     </div>
                   </div>
                 ) : errorMsg ? (

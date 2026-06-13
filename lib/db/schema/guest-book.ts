@@ -17,4 +17,4 @@ export const guestBook = pgTable("ptsp_guest_book", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();

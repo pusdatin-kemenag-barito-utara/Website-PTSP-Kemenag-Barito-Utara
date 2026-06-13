@@ -24,7 +24,7 @@ export const services = pgTable("ptsp_services", {
     .defaultNow(),
   roleOwner: text("role_owner"),
   sortOrder: integer("sort_order").default(0),
-});
+}).enableRLS();
 
 export const serviceItems = pgTable("ptsp_service_items", {
   id: bigint("id", { mode: "bigint" })
@@ -45,7 +45,7 @@ export const serviceItems = pgTable("ptsp_service_items", {
     .defaultNow(),
   sortOrder: integer("sort_order").default(0),
   estimatedTime: text("estimated_time").default("1-3 Hari Kerja"),
-});
+}).enableRLS();
 
 export const serviceRequirements = pgTable("ptsp_service_requirements", {
   id: bigint("id", { mode: "bigint" })
@@ -66,7 +66,7 @@ export const serviceRequirements = pgTable("ptsp_service_requirements", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const serviceFormFields = pgTable("ptsp_service_form_fields", {
   id: bigint("id", { mode: "bigint" })
@@ -88,4 +88,4 @@ export const serviceFormFields = pgTable("ptsp_service_form_fields", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();

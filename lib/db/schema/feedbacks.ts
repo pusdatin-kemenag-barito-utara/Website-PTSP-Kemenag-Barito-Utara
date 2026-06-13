@@ -17,4 +17,4 @@ export const feedbacks = pgTable("ptsp_feedbacks", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();

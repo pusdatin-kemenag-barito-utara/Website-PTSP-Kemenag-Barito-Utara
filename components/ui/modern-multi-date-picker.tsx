@@ -10,7 +10,6 @@ import {
   startOfWeek,
   endOfWeek,
   isSameMonth,
-  isSameDay,
   addDays,
   getDay,
 } from "date-fns";
@@ -23,24 +22,24 @@ import {
 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 
-interface ModernDatePickerProps {
-  value: string; // YYYY-MM-DD
-  onChange: (value: string) => void;
+interface ModernMultiDatePickerProps {
+  value: string[]; // Array of YYYY-MM-DD
+  onChange: (value: string[]) => void;
   label?: string;
   required?: boolean;
   name?: string;
 }
 
-export function ModernDatePicker({
-  value,
+export function ModernMultiDatePicker({
+  value = [],
   onChange,
   label,
   required,
   name,
-}: ModernDatePickerProps) {
+}: ModernMultiDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(
-    value ? new Date(value) : new Date(),
+    value && value.length > 0 ? new Date(value[0]) : new Date(),
   );
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -58,12 +57,16 @@ export function ModernDatePicker({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedDate = value ? new Date(value) : null;
-
   const handleDateClick = (date: Date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
-    onChange(formattedDate);
-    setIsOpen(false);
+    if (value.includes(formattedDate)) {
+      // Remove date if already selected
+      onChange(value.filter((d) => d !== formattedDate));
+    } else {
+      // Add date and sort chronologically
+      const newDates = [...value, formattedDate].sort();
+      onChange(newDates);
+    }
   };
 
   const renderHeader = () => {
@@ -119,7 +122,8 @@ export function ModernDatePicker({
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const currentDay = day;
-        const isSelected = selectedDate && isSameDay(currentDay, selectedDate);
+        const formattedCurrentDay = format(currentDay, "yyyy-MM-dd");
+        const isSelected = value.includes(formattedCurrentDay);
         const isCurrentMonth = isSameMonth(currentDay, monthStart);
         const isSunday = getDay(currentDay) === 0;
 
@@ -161,7 +165,7 @@ export function ModernDatePicker({
       )}
 
       {/* Hidden input for form submission */}
-      <input type="hidden" name={name} value={value} required={required} />
+      <input type="hidden" name={name} value={value.join(",")} required={required} />
 
       <button
         type="button"
@@ -176,19 +180,19 @@ export function ModernDatePicker({
           className={`h-4 w-4 transition-colors ${isOpen ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-500"}`}
         />
         <span
-          className={`flex-1 font-semibold text-left ${value ? "text-slate-900" : "text-slate-400"}`}
+          className={`flex-1 font-semibold text-left truncate ${value.length > 0 ? "text-slate-900" : "text-slate-400"}`}
         >
-          {value
-            ? format(new Date(value), "dd MMMM yyyy", { locale: id })
+          {value.length > 0
+            ? `${value.length} Tanggal Dipilih`
             : "Pilih Tanggal"}
         </span>
-        {value && (
+        {value.length > 0 && (
           <div
             onClick={(e) => {
               e.stopPropagation();
-              onChange("");
+              onChange([]);
             }}
-            className="p-1 hover:bg-slate-200 rounded-full transition-colors"
+            className="p-1 hover:bg-slate-200 rounded-full transition-colors shrink-0"
           >
             <X className="h-3 w-3 text-slate-400" />
           </div>
@@ -210,13 +214,9 @@ export function ModernDatePicker({
               {renderCells()}
 
               <div className="mt-2 p-2 border-t border-slate-50 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => handleDateClick(new Date())}
-                  className="px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                >
-                  Hari Ini
-                </button>
+                <div className="text-[10px] text-slate-500 font-medium px-2">
+                  {value.length} tanggal
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}

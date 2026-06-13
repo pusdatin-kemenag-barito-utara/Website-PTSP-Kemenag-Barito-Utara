@@ -17,4 +17,4 @@ export const notifications = pgTable("ptsp_notifications", {
   isRead: boolean("is_read").default(false).notNull(),
   link: text("link"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}).enableRLS();

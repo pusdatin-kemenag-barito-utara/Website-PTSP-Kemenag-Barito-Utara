@@ -40,7 +40,7 @@ const navItems = [
     children: [
       { label: "Katalog Layanan", href: "/layanan", icon: LayoutGrid },
       { label: "Lacak Layanan", href: "/track", icon: Search },
-      { label: "Cek Sisa Cuti", href: "/cek-cuti", icon: FilePlus },
+      { label: "Ajukan Cuti Pegawai", href: "/cek-cuti", icon: FilePlus },
     ]
   },
   { 

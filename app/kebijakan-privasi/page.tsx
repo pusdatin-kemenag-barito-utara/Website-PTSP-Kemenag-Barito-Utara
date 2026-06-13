@@ -14,7 +14,7 @@ export default function KebijakanPrivasiPage() {
         description="Komitmen kami dalam melindungi data pribadi Anda"
       />
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 md:p-12 prose prose-emerald max-w-none">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 md:p-12 prose prose-emerald max-w-none text-justify [&>h2]:mt-12 first:[&>h2]:mt-0 [&>h2]:mb-4 [&>h2]:text-2xl [&>p]:leading-relaxed [&>ul]:leading-relaxed [&>ul>li]:my-2 [&>p]:mb-6 [&>ul]:mb-6">
           <h2>1. Pendahuluan</h2>
           <p>
             Kantor Kementerian Agama Kabupaten Barito Utara berkomitmen untuk melindungi privasi dan keamanan data pribadi pengguna layanan Pelayanan Terpadu Satu Pintu (PTSP) Online. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi informasi Anda saat menggunakan situs web kami (ptsp.kemenag-baritoutara.com).

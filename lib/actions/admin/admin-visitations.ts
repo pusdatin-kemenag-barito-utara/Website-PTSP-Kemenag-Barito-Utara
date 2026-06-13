@@ -190,11 +190,13 @@ export async function updateAppointmentStatusAction(
         `Permintaan janji temu Anda telah *${isApproved ? "DISETUJUI ✅" : "DITOLAK ❌"}* oleh Admin.\n\n` +
         `📅 *Detail Janji Temu:*\n` +
         `• Tanggal  : ${appointmentDateFormatted}\n` +
-        `• Jam      : ${entry.appointmentTime} WITA\n` +
+        `• Jam      : ${entry.appointmentTime} WIB\n` +
         `• Bertemu  : ${entry.intendedOfficer}\n` +
         `• Keperluan: ${entry.purpose}\n` +
-        (entry.institutionName ? `• Instansi : ${entry.institutionName}\n` : "") +
-        (isApproved 
+        (entry.institutionName
+          ? `• Instansi : ${entry.institutionName}\n`
+          : "") +
+        (isApproved
           ? `\nMohon hadir tepat waktu sesuai dengan jadwal yang telah disetujui. Tunjukkan pesan ini kepada petugas saat Anda tiba di lokasi.\n\n`
           : `\nMohon maaf, janji temu Anda belum dapat dipenuhi saat ini. Silakan hubungi kami untuk informasi lebih lanjut.\n\n`) +
         `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +

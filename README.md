@@ -114,6 +114,7 @@ Langkah memberikan akses admin:
 - Validasi rute (admin vs pemohon) dilakukan melalui role pada tabel `profiles` dan diproses menggunakan middleware di sisi server.
 - Semua kueri dan pembaruan database kritikal direkomendasikan berjalan di server-side untuk memastikan keamanan.
 - Integrasi *Service Role Key* diperlukan pada kondisi backend khusus (misalnya server actions tertentu) jika dibutuhkan operasi tanpa RLS (Row Level Security).
+- **ATURAN UNTUK AGEN AI (CRITICAL)**: Jangan pernah menjalankan perintah terminal apa pun secara langsung (termasuk `npm run dev`, `npm run build`, `npm run typecheck`, `npm run db:push`, `npm run db:generate`, atau instalasi library via `npm`). Anda hanya boleh meminta atau menginstruksikan pengguna untuk menjalankannya di terminal mereka sendiri.
 
 ## Panduan Deployment
 

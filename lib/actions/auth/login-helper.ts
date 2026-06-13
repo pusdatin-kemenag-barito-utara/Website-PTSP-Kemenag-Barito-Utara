@@ -41,7 +41,7 @@ export async function verifyTurnstileAction(token: string) {
 export async function handlePegawaiLoginAction(nip: string, password?: string) {
   if (!nip) return { error: "NIP wajib diisi." };
   
-  const pseudoEmail = `${nip}@pegawai.barut.kemenag.go.id`;
+  const pseudoEmail = `${nip}@kemenag.go.id`;
   const defaultPassword = `${nip}barut`;
 
   // Cek apakah akun sudah pernah dibuat

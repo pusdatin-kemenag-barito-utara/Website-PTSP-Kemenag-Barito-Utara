@@ -15,7 +15,7 @@ export const authOtps = pgTable("ptsp_auth_otps", {
   expiresAt: timestamp("expires_at", { withTimezone: true, precision: 6 }).notNull(),
   isUsed: boolean("is_used").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 }).notNull().defaultNow(),
-});
+}).enableRLS();
 
 // Tabel untuk antrean pesan WhatsApp
 export const whatsappOutbox = pgTable("ptsp_whatsapp_outbox", {
@@ -25,4 +25,4 @@ export const whatsappOutbox = pgTable("ptsp_whatsapp_outbox", {
   status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'sent', 'failed'
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 }).notNull().defaultNow(),
   sentAt: timestamp("sent_at", { withTimezone: true, precision: 6 }),
-});
+}).enableRLS();

@@ -40,7 +40,7 @@ export const auditLogs = pgTable("ptsp_audit_logs", {
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const systemStatus = pgTable("ptsp_system_status", {
   id: text("id").primaryKey().default("heartbeat"),
@@ -60,4 +60,4 @@ export const systemStatus = pgTable("ptsp_system_status", {
     () => profiles.id,
   ),
   aiChatEnabled: boolean("ai_chat_enabled").default(true).notNull(),
-});
+}).enableRLS();

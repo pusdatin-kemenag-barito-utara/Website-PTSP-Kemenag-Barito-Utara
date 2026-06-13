@@ -39,7 +39,7 @@ export const serviceRequests = pgTable("ptsp_service_requests", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const serviceRequestAnswers = pgTable("ptsp_service_request_answers", {
   id: bigint("id", { mode: "bigint" })
@@ -59,7 +59,7 @@ export const serviceRequestAnswers = pgTable("ptsp_service_request_answers", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const serviceRequestDocuments = pgTable(
   "ptsp_service_request_documents",
@@ -91,7 +91,7 @@ export const serviceRequestDocuments = pgTable(
       "ptsp_service_request_documents_request_id_requirement_id_key",
     ).on(table.requestId, table.requirementId),
   }),
-);
+).enableRLS();
 
 export const serviceRequestReviews = pgTable("ptsp_service_request_reviews", {
   id: bigint("id", { mode: "bigint" })
@@ -108,7 +108,7 @@ export const serviceRequestReviews = pgTable("ptsp_service_request_reviews", {
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const generatedDocuments = pgTable("ptsp_generated_documents", {
   id: bigint("id", { mode: "bigint" })
@@ -130,4 +130,4 @@ export const generatedDocuments = pgTable("ptsp_generated_documents", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();

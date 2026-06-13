@@ -1,12 +1,13 @@
 # PTSP Kemenag Barito Utara — Agent Guide
 
 ## Commands
-| Command | What |
-|---------|------|
-| `npm run dev` | next dev (turbopack) |
-| `npm run build` | next build |
-| `npm run typecheck` | tsc --noEmit (run before completing any task) |
-| `npm run db:push` | drizzle-kit push (apply schema to Supabase) |
+
+| Command               | What                                          |
+| --------------------- | --------------------------------------------- |
+| `npm run dev`         | next dev (turbopack)                          |
+| `npm run build`       | next build                                    |
+| `npm run typecheck`   | tsc --noEmit (run before completing any task) |
+| `npm run db:push`     | drizzle-kit push (apply schema to Supabase)   |
 | `npm run db:generate` | drizzle-kit generate (create migration files) |
 
 ## Architecture
@@ -36,8 +37,8 @@
 
 ## Rules for Agents
 
-1. **NEVER** run `npm run typecheck` automatically on your own. You must ask for user confirmation first and let the user run it. 0 errors required.
-2. Schema changes → run `npm run db:push`. Use SQL migrations for columns outside Drizzle schema (e.g., `ALTER TABLE profiles ADD COLUMN ...`).
+1. **CRITICAL: NEVER** execute any terminal commands yourself. This includes, but is not limited to, `npm run dev`, `npm run build`, `npm run typecheck`, `npm run db:push`, `npm run db:generate`, or any `npm install` commands. You must always ask the user to run these commands in the terminal.
+2. Schema changes → ask the user to run `npm run db:push`. Use SQL migrations for columns outside Drizzle schema (e.g., `ALTER TABLE profiles ADD COLUMN ...`).
 3. Never write to DB from client code. Use server actions or API routes.
 4. For Supabase Storage operations that hit RLS, use `createAdminClient()` (service_role key) on the server.
 5. `proxy.ts` is the edge middleware — named export `proxy` + `config` matcher. Don't rename to `middleware.ts` unless user confirms.

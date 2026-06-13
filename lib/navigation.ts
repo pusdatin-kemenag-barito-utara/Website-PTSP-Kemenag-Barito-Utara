@@ -25,6 +25,7 @@ export interface NavItem {
   href: string;
   icon: React.ElementType;
   group?: string;
+  restrictedToPejabat?: boolean;
 }
 
 export const ADMIN_NAV: NavItem[] = [
@@ -87,6 +88,19 @@ export const PEGAWAI_NAV: NavItem[] = [
     href: "/pegawai/layanan/ajukan",
     icon: PlusCircle,
     group: "Layanan ASN",
+  },
+  {
+    label: "Pengajuan Cuti",
+    href: "/pegawai/cuti",
+    icon: CalendarDays,
+    group: "Layanan ASN",
+  },
+  {
+    label: "Persetujuan Cuti",
+    href: "/pegawai/cuti/persetujuan",
+    icon: ListChecks,
+    group: "Layanan ASN",
+    restrictedToPejabat: true,
   },
   {
     label: "Riwayat Pengajuan",

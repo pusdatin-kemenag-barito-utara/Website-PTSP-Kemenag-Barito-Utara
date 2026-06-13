@@ -14,7 +14,7 @@ export default function SyaratKetentuanPage() {
         description="Aturan penggunaan layanan PTSP Online"
       />
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 md:p-12 prose prose-emerald max-w-none">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 md:p-12 prose prose-emerald max-w-none text-justify [&>h2]:mt-12 first:[&>h2]:mt-0 [&>h2]:mb-4 [&>h2]:text-2xl [&>p]:leading-relaxed [&>ul]:leading-relaxed [&>ul>li]:my-2 [&>p]:mb-6 [&>ul]:mb-6">
           <h2>1. Penerimaan Syarat</h2>
           <p>
             Dengan mengakses dan menggunakan portal Pelayanan Terpadu Satu Pintu (PTSP) Kementerian Agama Kabupaten Barito Utara, Anda menyatakan setuju untuk mematuhi semua syarat dan ketentuan yang tertulis di halaman ini. Jika Anda tidak setuju dengan ketentuan ini, mohon untuk tidak menggunakan layanan ini.
