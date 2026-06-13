@@ -11,7 +11,7 @@ import { sendWhatsAppNotification } from "@/lib/whatsapp";
 export async function approveByAtasanAction(
   id: string,
   signature: string,
-  catatan?: string
+  catatan?: string,
 ) {
   try {
     const user = await getCurrentUser();
@@ -44,7 +44,7 @@ export async function approveByAtasanAction(
 export async function approveByKepalaAction(
   id: string,
   signature: string,
-  catatan?: string
+  catatan?: string,
 ) {
   try {
     const user = await getCurrentUser();
@@ -70,14 +70,14 @@ export async function approveByKepalaAction(
     return { success: true };
   } catch (error: any) {
     console.error("Gagal menyetujui cuti oleh Kepala Kantor:", error);
-    return { error: error.message || "Terjadi kesalahan sistem." };
+    return { error: error.message || "Telah Terjadi kesalahan sistem." };
   }
 }
 
 export async function rejectPengajuanCutiAction(
   id: string,
   catatan: string,
-  roleLevel: "atasan" | "kepala"
+  roleLevel: "atasan" | "kepala",
 ) {
   try {
     const user = await getCurrentUser();
@@ -99,10 +99,7 @@ export async function rejectPengajuanCutiAction(
       updates.catatanKepala = catatan;
     }
 
-    await db
-      .update(pengajuanCuti)
-      .set(updates)
-      .where(eq(pengajuanCuti.id, id));
+    await db.update(pengajuanCuti).set(updates).where(eq(pengajuanCuti.id, id));
 
     revalidatePath("/pegawai/cuti/persetujuan");
     return { success: true };
@@ -117,7 +114,7 @@ export async function processCutiAction(
   roleLevel: "atasan" | "kepala",
   status: "approved" | "changes" | "delayed" | "rejected",
   signature: string | null,
-  catatan?: string
+  catatan?: string,
 ) {
   try {
     const user = await getCurrentUser();
@@ -129,7 +126,10 @@ export async function processCutiAction(
       return { error: "Tanda tangan wajib dilampirkan jika disetujui." };
     }
     if (status !== "approved" && !catatan) {
-      return { error: "Catatan wajib diisi jika memberikan keputusan perubahan, ditangguhkan, atau ditolak." };
+      return {
+        error:
+          "Catatan wajib diisi jika memberikan keputusan perubahan, ditangguhkan, atau ditolak.",
+      };
     }
 
     // Ambil data pengajuan untuk notifikasi WA
@@ -167,10 +167,7 @@ export async function processCutiAction(
       }
     }
 
-    await db
-      .update(pengajuanCuti)
-      .set(updates)
-      .where(eq(pengajuanCuti.id, id));
+    await db.update(pengajuanCuti).set(updates).where(eq(pengajuanCuti.id, id));
 
     // Kirim notifikasi WA setelah Kepala Kantor memproses
     if (roleLevel === "kepala" && cutiData?.noHp) {
