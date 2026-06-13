@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { GuestEntry } from "./types";
 import { formatDate, maskPhoneNumber, formatDateHeading } from "./utils";
@@ -15,6 +15,7 @@ interface GuestBookListProps {
 export default function GuestBookList({ entries, statsDate, onSwitchTab }: GuestBookListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const itemsPerPage = 5;
 
   const filteredEntries = entries.filter((entry) => {
@@ -180,55 +181,97 @@ export default function GuestBookList({ entries, statsDate, onSwitchTab }: Guest
 
           {/* MOBILE VIEW: Simplified List */}
           <motion.div variants={itemVariants} className="grid gap-3 md:hidden">
-            {currentEntries.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between overflow-hidden rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm transition-all hover:shadow-md">
-                <div className="flex-1 min-w-0 pr-4">
-                  <h4 className="font-bold text-slate-900 text-sm truncate">{entry.guestName}</h4>
-                  <div className="mt-1 text-[11px] text-slate-500 flex items-center gap-1.5">
-                    <span className="font-medium">Tujuan:</span>
-                    <span className="font-semibold text-slate-700 truncate">{entry.intendedOfficer}</span>
+            {currentEntries.map((entry) => {
+              const isExpanded = expandedId === entry.id;
+              return (
+                <div 
+                  key={entry.id} 
+                  onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white/80 shadow-sm transition-all hover:shadow-md cursor-pointer active:scale-[0.99]"
+                >
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex-1 min-w-0 pr-4">
+                      <h4 className="font-bold text-slate-900 text-sm truncate">{entry.guestName}</h4>
+                      <div className="mt-1 text-[11px] text-slate-500 flex items-center gap-1.5">
+                        <span className="font-medium">Tujuan:</span>
+                        <span className="font-semibold text-slate-700 truncate">{entry.intendedOfficer}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-500/20">
+                        {entry.institutionType}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                          {formatDate(entry.visitDate).includes(",") 
+                            ? formatDate(entry.visitDate).split(",")[0] 
+                            : formatDate(entry.visitDate)}
+                        </span>
+                        <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* Expanded Content */}
+                  <motion.div 
+                    initial={false}
+                    animate={{ height: isExpanded ? "auto" : 0, opacity: isExpanded ? 1 : 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 pt-1 border-t border-slate-100/60 mt-1 space-y-3 bg-slate-50/50">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Instansi</p>
+                          <p className="text-xs font-semibold text-slate-800 mt-0.5">{entry.institutionName || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">WhatsApp</p>
+                          <p className="text-xs font-semibold text-emerald-600 mt-0.5">
+                            <a href={`https://wa.me/${entry.whatsapp}`} target="_blank" rel="noreferrer" className="hover:underline" onClick={(e) => e.stopPropagation()}>
+                              {maskPhoneNumber(entry.whatsapp)}
+                            </a>
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Keperluan</p>
+                        <p className="text-[11.5px] font-medium text-slate-600 mt-0.5 leading-relaxed">{entry.purpose}</p>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
-                <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-emerald-500/20">
-                    {entry.institutionType}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-                    {formatDate(entry.visitDate).includes(",") 
-                      ? formatDate(entry.visitDate).split(",")[0] 
-                      : formatDate(entry.visitDate)}
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </motion.div>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <motion.div variants={itemVariants} className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Sebelumnya</span>
-              </button>
+            <motion.div variants={itemVariants} className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 border-t border-slate-100 pt-5">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-2 order-2 sm:order-1">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Sebelumnya</span>
+                </button>
+                
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <span>Selanjutnya</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
               
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 order-1 sm:order-2">
                 <span className="text-xs font-semibold text-slate-500">
                   Halaman <span className="text-slate-900">{currentPage}</span> dari <span className="text-slate-900">{totalPages}</span>
                 </span>
               </div>
-              
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                <span>Selanjutnya</span>
-                <ChevronRight className="h-4 w-4" />
-              </button>
             </motion.div>
           )}
         </>

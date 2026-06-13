@@ -36,6 +36,7 @@ export default async function MaintenancePage() {
               className="object-contain w-16 h-16 sm:w-20 sm:h-20"
               style={{ width: "auto", height: "auto" }}
               priority
+              loading="eager"
             />
           </div>
           <h2 className="text-[12px] sm:text-[15px] font-black tracking-[0.15em] text-emerald-800 uppercase">

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { appointments } from "@/lib/db/schema";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -67,6 +68,33 @@ export async function POST(request: Request) {
       })
       .returning();
 
+    // Format tanggal dan jam untuk pesan WA
+    const [year, month, day] = appointmentDate.split("-");
+    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+    const appointmentDateFormatted = dateObj.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const waMessage =
+      `Halo *${guestName}* 👋\n\n` +
+      `Permintaan janji temu Anda telah *berhasil dicatat* dan sedang menunggu konfirmasi dari petugas.\n\n` +
+      `📅 *Detail Janji Temu:*\n` +
+      `• Tanggal  : ${appointmentDateFormatted}\n` +
+      `• Jam      : ${appointmentTime} WITA\n` +
+      `• Bertemu  : ${intendedOfficer}\n` +
+      `• Keperluan: ${purpose}\n` +
+      (institutionName ? `• Instansi : ${institutionName}\n` : "") +
+      `\n⏳ *Status: Menunggu Konfirmasi*\n` +
+      `Anda akan dihubungi kembali jika janji temu telah dikonfirmasi.\n\n` +
+      `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
+      `_Kemenag Kabupaten Barito Utara_`;
+
+    // Jalankan tanpa await agar tidak memperlambat response ke user
+    sendWhatsAppNotification(whatsapp, waMessage).catch(() => {});
+
     return NextResponse.json({
       success: true,
       message: "Berhasil membuat janji temu.",
@@ -85,3 +113,4 @@ export async function POST(request: Request) {
     ) as any;
   }
 }
+

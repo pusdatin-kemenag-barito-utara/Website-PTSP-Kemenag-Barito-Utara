@@ -54,6 +54,8 @@ export function SiteFooter() {
                   height={32}
                   className="h-7 w-7 object-contain"
                   style={{ width: "auto", height: "auto" }}
+                  priority
+                  loading="eager"
                 />
               </div>
               <div className="flex flex-col min-w-0">

@@ -12,12 +12,12 @@ interface BarChartProps {
 }
 
 export function BarChart({ data }: BarChartProps) {
-  const svgWidth = 600;
-  const svgHeight = 350;
-  const paddingLeft = 60;
-  const paddingRight = 40;
-  const paddingTop = 40;
-  const paddingBottom = 60;
+  const svgWidth = 500;
+  const svgHeight = 300;
+  const paddingLeft = 40;
+  const paddingRight = 20;
+  const paddingTop = 30;
+  const paddingBottom = 50;
 
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
@@ -29,15 +29,15 @@ export function BarChart({ data }: BarChartProps) {
   const uniqueTicks = Array.from(new Set(ticks)).sort((a, b) => a - b);
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="min-w-[600px] h-[350px]">
+    <div className="w-full flex justify-center">
+      <div className="w-full max-w-[600px]">
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes growUp {
             from { transform: scaleY(0); }
             to { transform: scaleY(1); }
           }
         `}} />
-        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full">
+        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto drop-shadow-sm">
           <defs>
             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#10b981" />
@@ -63,10 +63,10 @@ export function BarChart({ data }: BarChartProps) {
                   strokeDasharray={tick === 0 ? "0" : "4 4"}
                 />
                 <text
-                  x={paddingLeft - 12}
-                  y={y + 4}
+                  x={paddingLeft - 8}
+                  y={y + 3}
                   textAnchor="end"
-                  className="text-xs font-bold fill-slate-400"
+                  className="text-[10px] font-bold fill-slate-400"
                 >
                   {tick}
                 </text>
@@ -106,7 +106,7 @@ export function BarChart({ data }: BarChartProps) {
                     x={x + barWidth / 2}
                     y={y - 8}
                     textAnchor="middle"
-                    className="text-xs font-extrabold fill-emerald-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 md:opacity-100"
+                    className="text-[10px] font-extrabold fill-emerald-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300 md:opacity-100"
                   >
                     {val}
                   </text>
@@ -116,9 +116,9 @@ export function BarChart({ data }: BarChartProps) {
                   x={x + barWidth / 2}
                   y={paddingTop + chartHeight + 20}
                   textAnchor="middle"
-                  className="text-[11px] font-bold fill-slate-500 select-none"
+                  className="text-[9px] sm:text-[10px] font-bold fill-slate-500 select-none"
                 >
-                  {item.label.length > 12 ? item.label.slice(0, 10) + "..." : item.label}
+                  {item.label.length > 10 ? item.label.slice(0, 8) + "..." : item.label}
                 </text>
                 {item.label.length > 12 && (
                   <title>{item.label}</title>
@@ -152,9 +152,9 @@ export function DonutChart({ data, totalValue }: DonutChartProps) {
   let cumulativePercent = 0;
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 md:flex-row md:gap-12 py-4">
+    <div className="flex flex-col items-center justify-center gap-6 md:flex-row md:gap-12 py-2">
       {/* SVG Donut */}
-      <div className="relative w-[220px] h-[220px]">
+      <div className="relative w-[180px] h-[180px] sm:w-[220px] sm:h-[220px]">
         <svg viewBox="0 0 220 220" className="w-full h-full transform -rotate-90">
           <circle
             cx={cx}
@@ -195,8 +195,8 @@ export function DonutChart({ data, totalValue }: DonutChartProps) {
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-3xl font-black text-slate-800">{totalValue}</span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Tamu</span>
+          <span className="text-2xl sm:text-3xl font-black text-slate-800">{totalValue}</span>
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Tamu</span>
         </div>
       </div>
 
@@ -210,11 +210,11 @@ export function DonutChart({ data, totalValue }: DonutChartProps) {
               className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 p-3 hover:bg-slate-50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="h-3.5 w-3.5 rounded-full shadow-inner" style={{ backgroundColor: item.color }} />
-                <span className="text-sm font-semibold text-slate-700">{item.label}</span>
+                <div className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full shadow-inner" style={{ backgroundColor: item.color }} />
+                <span className="text-xs sm:text-sm font-semibold text-slate-700">{item.label}</span>
               </div>
-              <div className="flex items-center gap-3 font-bold text-sm">
-                <span className="text-slate-400 text-xs font-semibold">({Math.round(percent * 100)}%)</span>
+              <div className="flex items-center gap-2 sm:gap-3 font-bold text-xs sm:text-sm">
+                <span className="text-slate-400 text-[10px] sm:text-xs font-semibold">({Math.round(percent * 100)}%)</span>
                 <span className="text-slate-800">{item.value} Tamu</span>
               </div>
             </div>

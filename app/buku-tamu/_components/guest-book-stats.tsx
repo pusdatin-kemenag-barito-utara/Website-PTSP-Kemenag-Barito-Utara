@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { TrendingUp, UserCheck, Building2, Users, BarChart3, PieChartIcon, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
+import { ModernMonthPicker } from "@/components/ui/modern-month-picker";
 import { BarChart, DonutChart } from "./guest-book-charts";
 import { GuestEntry } from "./types";
 import { formatDateHeading, formatMonthHeading, isSameDay, isSameMonth } from "./utils";
@@ -141,8 +142,8 @@ export default function GuestBookStats({ entries, onSwitchTab }: GuestBookStatsP
             </div>
           ) : (
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="statsMonth" className="text-sm font-semibold text-slate-700">Pilih Bulan Kunjungan <span className="text-red-500">*</span></label>
-              <input id="statsMonth" type="month" required value={statsMonth} onChange={(e) => setStatsMonth(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+              <label className="text-sm font-semibold text-slate-700">Pilih Bulan Kunjungan <span className="text-red-500">*</span></label>
+              <ModernMonthPicker value={statsMonth} onChange={setStatsMonth} required />
             </div>
           )}
 
@@ -178,28 +179,12 @@ export default function GuestBookStats({ entries, onSwitchTab }: GuestBookStatsP
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-md flex items-center gap-4">
+              <div className="flex justify-center md:justify-start">
+                <div className="rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-md flex items-center gap-4 w-full max-w-sm">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><Users className="h-6 w-6" /></div>
                   <div>
                     <div className="text-2xl font-extrabold text-emerald-800">{totalStatsTamu}</div>
                     <div className="text-xs font-semibold text-slate-500">Total Pengunjung</div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-md flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600"><UserCheck className="h-6 w-6" /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-base font-extrabold text-blue-900 truncate" title={topOfficer}>{topOfficer}</div>
-                    <div className="text-xs font-semibold text-slate-500">Pejabat Utama Ditemui</div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-md flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600"><Building2 className="h-6 w-6" /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-base font-extrabold text-amber-900 truncate" title={topInstName !== "-" ? topInstName : topInstType}>{topInstName !== "-" ? topInstName : topInstType}</div>
-                    <div className="text-xs font-semibold text-slate-500">Instansi / Kategori Teraktif</div>
                   </div>
                 </div>
               </div>

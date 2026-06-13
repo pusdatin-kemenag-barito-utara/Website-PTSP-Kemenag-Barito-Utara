@@ -256,20 +256,20 @@ export function MobileNav({
                     <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Pemohon</span>
                   </Link>
                   <Link
-                    href="/login/petugas"
-                    onClick={() => setMobileOpen(false)}
-                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-3 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-600/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95 text-center"
-                  >
-                    <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Petugas</span>
-                  </Link>
-                  <Link
                     href="/login/pegawai"
                     onClick={() => setMobileOpen(false)}
                     className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-3 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-600/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95 text-center"
                   >
                     <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
                     <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Pegawai</span>
+                  </Link>
+                  <Link
+                    href="/login/petugas"
+                    onClick={() => setMobileOpen(false)}
+                    className="group flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/[0.03] p-3 transition-all duration-300 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-600/10 hover:shadow-lg hover:shadow-emerald-950/30 active:scale-95 text-center"
+                  >
+                    <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 group-hover:text-emerald-300 transition-all duration-300 group-hover:scale-110" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-white">Petugas</span>
                   </Link>
                 </div>
               )}

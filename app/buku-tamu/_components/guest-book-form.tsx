@@ -27,6 +27,13 @@ const OFFICER_OPTIONS = [
   "Unit Lainnya (Bisa Tulis Manual)",
 ];
 
+const formatTitleCase = (text: string) => {
+  return text
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 interface GuestBookFormProps {
   onSuccess: (newEntry: GuestEntry) => void;
   isManualMode?: boolean;
@@ -249,7 +256,7 @@ export default function GuestBookForm({
               type="text"
               required
               value={guestName}
-              onChange={(e) => setGuestName(e.target.value.replace(/[0-9]/g, ""))}
+              onChange={(e) => setGuestName(formatTitleCase(e.target.value.replace(/[0-9]/g, "")))}
               placeholder="Contoh: Muhammad Nazilah"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -308,7 +315,7 @@ export default function GuestBookForm({
               id="institutionName"
               type="text"
               value={institutionName}
-              onChange={(e) => setInstitutionName(e.target.value)}
+              onChange={(e) => setInstitutionName(formatTitleCase(e.target.value))}
               placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -351,7 +358,7 @@ export default function GuestBookForm({
               type="text"
               required
               value={customOfficer}
-              onChange={(e) => setCustomOfficer(e.target.value)}
+              onChange={(e) => setCustomOfficer(formatTitleCase(e.target.value))}
               placeholder="Tulis nama unit / pegawai lainnya..."
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -370,7 +377,7 @@ export default function GuestBookForm({
             required
             rows={4}
             value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
+            onChange={(e) => setPurpose(formatTitleCase(e.target.value))}
             placeholder="Jelaskan secara singkat keperluan kedatangan Anda..."
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
