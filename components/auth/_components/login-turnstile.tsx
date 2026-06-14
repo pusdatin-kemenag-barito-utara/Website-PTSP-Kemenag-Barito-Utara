@@ -51,6 +51,11 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
       },
     }));
 
+    const onTokenChangeRef = useRef(onTokenChange);
+    useEffect(() => {
+      onTokenChangeRef.current = onTokenChange;
+    }, [onTokenChange]);
+
     useEffect(() => {
       if (!mounted) return;
 
@@ -69,15 +74,15 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
               theme: "light",
               callback: (token: string) => {
                 setVerified(true);
-                onTokenChange(token);
+                onTokenChangeRef.current(token);
               },
               "expired-callback": () => {
                 setVerified(false);
-                onTokenChange(null);
+                onTokenChangeRef.current(null);
               },
               "error-callback": () => {
                 setVerified(false);
-                onTokenChange(null);
+                onTokenChangeRef.current(null);
               },
             });
             widgetIdRef.current = widgetId;
@@ -121,7 +126,7 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
           }
         }
       };
-    }, [mounted, onTokenChange]);
+    }, [mounted]);
 
     return (
       <div className="mx-auto w-full max-w-md">

@@ -7,6 +7,7 @@ import { AuthService } from "@/lib/services/auth-service";
 import { AdminService } from "@/lib/services/admin-service";
 import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 import { UserService } from "@/lib/services/user-service";
+import { createAuditLog } from "@/lib/audit";
 
 export type ActionResult = {
   success: boolean;
@@ -17,9 +18,23 @@ export type ActionResult = {
 const RegisterPetugasSchema = z.object({
   fullName: z.string().min(3, "Nama minimal 3 karakter"),
   phone: z.string().min(10, "Nomor WhatsApp tidak valid"),
-  address: z.string().min(5, "Alamat minimal 5 karakter"),
+  unit_kerja: z.string().min(3, "Unit Kerja wajib dipilih"),
+  address: z.string().optional(), // using unit_kerja for address in logic
   password: z.string().min(8, "Password minimal 8 karakter"),
-  role: z.enum(["admin_ptsp", "kepala_kantor", "kasubag_tu", "super_admin"]),
+  role: z.enum([
+    "admin_ptsp",
+    "admin_sub_bagian_tata_usaha",
+    "admin_pendidikan_madrasah",
+    "admin_pendidikan_agama_islam",
+    "admin_pendidikan_diniyah_pondok_pesantren",
+    "admin_bimbingan_masyarakat_islam",
+    "admin_bimbingan_masyarakat_kristen_katolik",
+    "admin_penyelenggara_zakat_wakaf",
+    "admin_penyelenggara_hindu",
+    "kepala_kantor",
+    "kasubag_tu",
+    "super_admin"
+  ]),
   permissions: z.array(z.string()).optional(),
 });
 
@@ -34,7 +49,7 @@ export async function registerPetugasAction(formData: FormData): Promise<ActionR
     const validated = RegisterPetugasSchema.safeParse({
       fullName: formData.get("full_name"),
       phone: formData.get("phone"),
-      address: formData.get("unit_kerja") || formData.get("address"), // Using unit_kerja as address for staff
+      unit_kerja: formData.get("unit_kerja"),
       password: formData.get("password"),
       role: formData.get("role"),
       permissions: [],
@@ -44,7 +59,10 @@ export async function registerPetugasAction(formData: FormData): Promise<ActionR
       return { success: false, error: validated.error.issues[0].message };
     }
 
-    await AuthService.registerPetugas(validated.data);
+    // Set address from unit_kerja
+    const staffData = { ...validated.data, address: validated.data.unit_kerja };
+
+    await AuthService.registerPetugas(staffData);
 
     return { success: true, message: "Pendaftaran petugas berhasil. Menunggu verifikasi admin." };
   } catch (error: any) {
@@ -54,9 +72,16 @@ export async function registerPetugasAction(formData: FormData): Promise<ActionR
 }
 
 export async function verifyPetugasAction(userId: string): Promise<ActionResult> {
+  const profile = await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
     await AdminService.verifyStaff(userId);
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "VERIFIKASI_PETUGAS",
+      entityType: "user",
+      entityId: userId,
+    });
 
     revalidatePath("/admin/pengguna");
     return { success: true, message: "Akun petugas berhasil diverifikasi" };
@@ -66,9 +91,16 @@ export async function verifyPetugasAction(userId: string): Promise<ActionResult>
 }
 
 export async function rejectPetugasAction(userId: string): Promise<ActionResult> {
+  const profile = await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
     await AdminService.rejectStaff(userId);
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "TOLAK_PETUGAS",
+      entityType: "user",
+      entityId: userId,
+    });
 
     revalidatePath("/admin/pengguna");
     return { success: true, message: "Pendaftaran petugas ditolak dan akun dihapus" };
@@ -78,8 +110,8 @@ export async function rejectPetugasAction(userId: string): Promise<ActionResult>
 }
 
 export async function updatePetugasAction(data: any): Promise<ActionResult> {
+  const profile = await requirePermission("super_admin");
   try {
-    await requirePermission("super_admin");
     
     const { userId, role, phone, unitKerja, newPassword } = data;
     
@@ -88,6 +120,14 @@ export async function updatePetugasAction(data: any): Promise<ActionResult> {
       phone,
       address: unitKerja,
       password: newPassword || undefined
+    });
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_DATA_PETUGAS",
+      entityType: "user",
+      entityId: userId,
+      details: { role, phone, unitKerja },
     });
 
     revalidatePath("/admin/pengguna");

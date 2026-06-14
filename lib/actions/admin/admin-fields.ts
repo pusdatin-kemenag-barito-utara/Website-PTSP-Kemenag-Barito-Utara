@@ -8,6 +8,7 @@ import { serviceFormFields as fieldsTable } from "@/lib/db/schema";
 import { eq, inArray, and, ne } from "drizzle-orm";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 import { stripHtml } from "@/lib/utils";
+import { createAuditLog } from "@/lib/audit";
 
 async function checkDuplicateFieldName(name: string, serviceItemId: string, excludeId?: bigint): Promise<boolean> {
   const conditions: any[] = [
@@ -42,7 +43,7 @@ export type ActionResult = {
 };
 
 export async function createFieldAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const validated = fieldSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
@@ -69,6 +70,14 @@ export async function createFieldAction(formData: FormData): Promise<ActionResul
       sortOrder: 0,
     });
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "BUAT_FIELD_LAYANAN",
+      entityType: "field",
+      entityId: validated.data.name,
+      details: { label: validated.data.label, type: validated.data.type },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 
@@ -80,7 +89,7 @@ export async function createFieldAction(formData: FormData): Promise<ActionResul
 }
 
 export async function updateFieldAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const id = BigInt(formData.get("id") as string);
     const validated = fieldSchema.safeParse({
@@ -111,6 +120,14 @@ export async function updateFieldAction(formData: FormData): Promise<ActionResul
       })
       .where(eq(fieldsTable.id, id));
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_FIELD_LAYANAN",
+      entityType: "field",
+      entityId: id.toString(),
+      details: { name: validated.data.name, label: validated.data.label },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 
@@ -122,10 +139,20 @@ export async function updateFieldAction(formData: FormData): Promise<ActionResul
 }
 
 export async function deleteFieldAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const id = BigInt(formData.get("id") as string);
+    const field = await db.query.serviceFormFields.findFirst({ where: eq(fieldsTable.id, id), columns: { name: true, label: true } });
     await db.delete(fieldsTable).where(eq(fieldsTable.id, id));
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "HAPUS_FIELD_LAYANAN",
+      entityType: "field",
+      entityId: id.toString(),
+      details: { name: field?.name, label: field?.label },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 

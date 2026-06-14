@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
-import { registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
+import { requestRegistrationOtpAction, registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
 import { isSafeRedirect } from "@/lib/utils";
 
 function normalizeWhatsappNumber(value: string) {
@@ -31,6 +31,9 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
   const turnstileRef = useRef<TurnstileRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [passwordVal, setPasswordVal] = useState("");
+  const [step, setStep] = useState<1 | 2>(1);
+  const [otp, setOtp] = useState("");
+  const [formDataCache, setFormDataCache] = useState<FormData | null>(null);
 
   const getPasswordStrength = (pass: string) => {
     if (!pass) return 0;
@@ -69,14 +72,20 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
     setMounted(true);
   }, []);
 
+  const isSubmittingRef = useRef(false);
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmittingRef.current) return;
+    
     setError("");
     setMessage("");
     setLoading(true);
+    isSubmittingRef.current = true;
 
     if (!turnstileToken) {
       setLoading(false);
+      isSubmittingRef.current = false;
       setError("Silakan selesaikan verifikasi keamanan.");
       return;
     }
@@ -92,36 +101,73 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
 
     if (!normalizedPhone || normalizedPhone.length < 10) {
       setLoading(false);
+      isSubmittingRef.current = false;
       setError("Nomor Telepon / WhatsApp tidak valid.");
       return;
     }
 
     try {
-      const result = await registerPemohonAction(formData);
-      if (result.success) {
-        setMessage(
-          "Registrasi berhasil! Mengalihkan Anda ke halaman login dalam 2 detik...",
-        );
-
-        // Automatic redirect after 2 seconds
-        const safeCallback = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : "";
-        const loginUrl = safeCallback 
-          ? `/login/pemohon?callbackUrl=${encodeURIComponent(safeCallback)}`
-          : "/login/pemohon";
-          
-        setTimeout(() => {
-          window.location.href = loginUrl;
-        }, 2000);
-        // We keep loading as true to prevent double clicks during the 2-second wait
+      if (step === 1) {
+        const result = await requestRegistrationOtpAction(normalizedPhone, turnstileToken);
+        if (result.success) {
+          setFormDataCache(formData);
+          setStep(2);
+          setMessage("Kode OTP telah dikirim ke WhatsApp Anda.");
+          setLoading(false);
+          isSubmittingRef.current = false;
+          turnstileRef.current?.reset();
+          setTurnstileToken(null);
+        } else {
+          setError(result.error || "Gagal mengirim OTP.");
+          setLoading(false);
+          isSubmittingRef.current = false;
+          turnstileRef.current?.reset();
+          setTurnstileToken(null);
+        }
       } else {
-        setError(result.error || "Gagal membuat akun.");
-        setLoading(false);
-        turnstileRef.current?.reset();
-        setTurnstileToken(null);
+        if (!formDataCache) {
+          setError("Sesi kedaluwarsa. Silakan ulangi.");
+          setStep(1);
+          setLoading(false);
+          isSubmittingRef.current = false;
+          return;
+        }
+        
+        // Use cached form data and append new turnstile token
+        const finalFormData = new FormData();
+        formDataCache.forEach((value, key) => {
+          if (key !== "turnstile_token") finalFormData.append(key, value);
+        });
+        finalFormData.append("turnstile_token", turnstileToken);
+        
+        const result = await registerPemohonAction(finalFormData, otp);
+        if (result.success) {
+          setMessage("Registrasi berhasil! Mengalihkan Anda ke halaman login dalam 2 detik...");
+
+          // Automatic redirect after 2 seconds
+          const safeCallback = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : "";
+          const loginUrl = safeCallback 
+            ? `/login/pemohon?callbackUrl=${encodeURIComponent(safeCallback)}`
+            : "/login/pemohon";
+            
+          setTimeout(() => {
+            router.push(loginUrl);
+            router.refresh();
+          }, 2000);
+          // We keep loading as true to prevent double clicks during the 2-second wait
+          // And we keep isSubmittingRef.current = true
+        } else {
+          setError(result.error || "Gagal membuat akun.");
+          setLoading(false);
+          isSubmittingRef.current = false;
+          turnstileRef.current?.reset();
+          setTurnstileToken(null);
+        }
       }
     } catch (err: any) {
-      setError(err.message || "Gagal membuat akun.");
+      setError(err.message || "Gagal memproses permintaan.");
       setLoading(false);
+      isSubmittingRef.current = false;
       turnstileRef.current?.reset();
       setTurnstileToken(null);
     }
@@ -153,11 +199,11 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
       initial="hidden"
       animate="show"
     >
-      <m.div variants={itemVariants}>
+      <m.div variants={itemVariants} className={step === 2 ? "hidden" : ""}>
         <Field label="Nama Lengkap" required>
           <Input
             name="full_name"
-            required
+            required={step === 1}
             placeholder="Masukkan nama lengkap"
             autoComplete="off"
             onInput={(e) => {
@@ -167,7 +213,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         </Field>
       </m.div>
 
-      <m.div variants={itemVariants}>
+      <m.div variants={itemVariants} className={step === 2 ? "hidden" : ""}>
         <Field
           label="Nomor Telepon / WhatsApp"
           required
@@ -175,7 +221,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         >
           <Input
             name="phone"
-            required
+            required={step === 1}
             placeholder="Masukkan nomor WhatsApp aktif"
             autoComplete="off"
             type="tel"
@@ -187,11 +233,11 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         </Field>
       </m.div>
 
-      <m.div variants={itemVariants}>
+      <m.div variants={itemVariants} className={step === 2 ? "hidden" : ""}>
         <Field label="Alamat" required>
           <Textarea
             name="address"
-            required
+            required={step === 1}
             placeholder="Masukkan alamat lengkap"
             className="min-h-24"
             autoComplete="off"
@@ -199,14 +245,14 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         </Field>
       </m.div>
 
-      <m.div variants={itemVariants}>
-        <Field label="Password" required hint="Minimal 6 karakter">
+      <m.div variants={itemVariants} className={step === 2 ? "hidden" : ""}>
+        <Field label="Password" required hint="Minimal 8 karakter">
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
-              minLength={6}
-              required
+              minLength={8}
+              required={step === 1}
               placeholder="Masukkan password"
               className="pr-11"
               autoComplete="new-password"
@@ -250,6 +296,42 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         </Field>
       </m.div>
 
+      {step === 2 && (
+        <m.div variants={itemVariants}>
+          <Field
+            label="Kode OTP WhatsApp"
+            required
+            hint="Masukkan 6 digit kode yang dikirim ke WhatsApp Anda"
+          >
+            <Input
+              type="text"
+              name="otp"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
+              required={step === 2}
+              placeholder="• • • • • •"
+              style={{ fontSize: "32px", letterSpacing: "0.3em" }}
+              className="text-center font-extrabold h-16 rounded-2xl border-slate-200 focus-visible:ring-emerald-500 focus-visible:border-emerald-500 bg-slate-50/50 hover:bg-slate-50 focus:bg-white shadow-sm transition-all"
+              autoComplete="one-time-code"
+              inputMode="numeric"
+            />
+          </Field>
+          <button
+            type="button"
+            onClick={() => {
+              setStep(1);
+              setError("");
+              setMessage("");
+              setOtp("");
+            }}
+            className="text-sm text-[#059669] hover:underline mt-2 font-medium inline-block"
+          >
+            &laquo; Kembali ke formulir
+          </button>
+        </m.div>
+      )}
+
       <AnimatePresence mode="wait">
         {error && (
           <m.div
@@ -291,7 +373,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
             className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"
             disabled={loading || !turnstileToken}
           >
-            {loading ? "Memproses..." : "Buat Akun"}
+            {loading ? "Memproses..." : step === 1 ? "Kirim Kode OTP" : "Verifikasi & Buat Akun"}
           </Button>
         </m.div>
       </m.div>

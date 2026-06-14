@@ -27,11 +27,8 @@ const OFFICER_OPTIONS = [
   "Unit Lainnya (Bisa Tulis Manual)",
 ];
 
-const formatTitleCase = (text: string) => {
-  return text
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+const capitalizeEachWord = (text: string) => {
+  return text.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 interface GuestBookFormProps {
@@ -134,7 +131,7 @@ export default function GuestBookForm({
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.data?.id) {
         throw new Error(result.error || "Gagal menyimpan data.");
       }
 
@@ -143,7 +140,7 @@ export default function GuestBookForm({
       });
 
       const newEntry: GuestEntry = {
-        id: result.data?.id || String(Date.now()),
+        id: result.data.id,
         guestName,
         whatsapp: cleanWhatsapp,
         institutionType,
@@ -170,9 +167,9 @@ export default function GuestBookForm({
       setManualDate(`${year}-${month}-${day}`);
 
       onSuccess(newEntry);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Gagal Mengirim", {
-        description: err.message || "Terjadi kesalahan saat menyimpan data.",
+        description: err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan data.",
       });
     } finally {
       setSubmitting(false);
@@ -256,7 +253,7 @@ export default function GuestBookForm({
               type="text"
               required
               value={guestName}
-              onChange={(e) => setGuestName(formatTitleCase(e.target.value.replace(/[0-9]/g, "")))}
+              onChange={(e) => setGuestName(capitalizeEachWord(e.target.value))}
               placeholder="Contoh: Muhammad Nazilah"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -315,7 +312,7 @@ export default function GuestBookForm({
               id="institutionName"
               type="text"
               value={institutionName}
-              onChange={(e) => setInstitutionName(formatTitleCase(e.target.value))}
+              onChange={(e) => setInstitutionName(capitalizeEachWord(e.target.value))}
               placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -358,7 +355,7 @@ export default function GuestBookForm({
               type="text"
               required
               value={customOfficer}
-              onChange={(e) => setCustomOfficer(formatTitleCase(e.target.value))}
+              onChange={(e) => setCustomOfficer(capitalizeEachWord(e.target.value))}
               placeholder="Tulis nama unit / pegawai lainnya..."
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
@@ -377,7 +374,7 @@ export default function GuestBookForm({
             required
             rows={4}
             value={purpose}
-            onChange={(e) => setPurpose(formatTitleCase(e.target.value))}
+            onChange={(e) => setPurpose(capitalizeEachWord(e.target.value))}
             placeholder="Jelaskan secara singkat keperluan kedatangan Anda..."
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />

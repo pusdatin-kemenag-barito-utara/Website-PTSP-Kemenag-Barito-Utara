@@ -31,12 +31,12 @@ export function BarChart({ data }: BarChartProps) {
   return (
     <div className="w-full flex justify-center">
       <div className="w-full max-w-[600px]">
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style>{`
           @keyframes growUp {
             from { transform: scaleY(0); }
             to { transform: scaleY(1); }
           }
-        `}} />
+        `}</style>
         <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto drop-shadow-sm">
           <defs>
             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">

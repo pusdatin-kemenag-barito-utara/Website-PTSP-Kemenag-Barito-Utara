@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { guestBook, appointments } from "@/lib/db/schema";
+import { systemStatus } from "@/lib/db/schema/logs";
 import { eq } from "drizzle-orm";
 import { createAuditLog } from "@/lib/audit";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 
 export type ActionResult = {
   success: boolean;
@@ -44,6 +46,7 @@ export async function deleteGuestBookAction(
     });
 
     revalidatePath("/admin/buku-tamu");
+    revalidatePath("/buku-tamu");
     return { success: true, message: "Catatan buku tamu berhasil dihapus" };
   } catch (error: any) {
     return {
@@ -53,54 +56,7 @@ export async function deleteGuestBookAction(
   }
 }
 
-export async function addManualGuestBookAction(data: {
-  guestName: string;
-  whatsapp: string;
-  institutionType: string;
-  institutionName?: string | null;
-  intendedOfficer: string;
-  purpose: string;
-  visitDate: string;
-}): Promise<ActionResult & { data?: any }> {
-  const profile = await requirePermission("buku_tamu");
-  try {
-    const inserted = await db
-      .insert(guestBook)
-      .values({
-        guestName: data.guestName,
-        whatsapp: data.whatsapp,
-        institutionType: data.institutionType,
-        institutionName: data.institutionName || null,
-        intendedOfficer: data.intendedOfficer,
-        purpose: data.purpose,
-        visitDate: new Date(data.visitDate),
-      })
-      .returning();
 
-    await createAuditLog({
-      adminId: profile.id,
-      action: "TAMBAH_MANUAL_BUKU_TAMU",
-      entityType: "guest_book",
-      entityId: inserted[0].id.toString(),
-      details: {
-        guestName: data.guestName,
-        visitDate: data.visitDate,
-      },
-    });
-
-    revalidatePath("/admin/buku-tamu");
-    return {
-      success: true,
-      message: "Kunjungan berhasil ditambahkan secara manual",
-      data: inserted[0],
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      error: error.message || "Gagal menyimpan data kunjungan",
-    };
-  }
-}
 
 export async function deleteAppointmentAction(
   idStr: string,
@@ -175,8 +131,7 @@ export async function updateAppointmentStatusAction(
     });
 
     if (status === "approved" || status === "rejected") {
-      const [year, month, day] = entry.appointmentDate.split("-");
-      const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+      const dateObj = new Date(entry.appointmentDate);
       const appointmentDateFormatted = dateObj.toLocaleDateString("id-ID", {
         weekday: "long",
         day: "numeric",
@@ -202,8 +157,12 @@ export async function updateAppointmentStatusAction(
         `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
         `_Kemenag Kabupaten Barito Utara_`;
 
-      // Jalankan tanpa await agar tidak memblokir respon
-      sendWhatsAppNotification(entry.whatsapp, waMessage).catch(() => {});
+      // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
+      try {
+        await sendWhatsAppNotification(entry.whatsapp, waMessage);
+      } catch (waErr) {
+        console.error("WhatsApp notification failed:", waErr);
+      }
     }
 
     revalidatePath("/admin/janji-temu");
@@ -224,8 +183,7 @@ export async function toggleGuestBookModeAction(
 ): Promise<ActionResult> {
   const profile = await requirePermission("buku_tamu");
   try {
-    // Import systemStatus schema
-    const { systemStatus } = await import("@/lib/db/schema/logs");
+    // Update system status
 
     await db
       .update(systemStatus)
@@ -248,17 +206,7 @@ export async function toggleGuestBookModeAction(
     revalidatePath("/buku-tamu");
 
     // Broadcast refresh signal to all connected clients
-    try {
-      const { createClient } = await import("@/lib/supabase/server");
-      const supabase = await createClient();
-      // @ts-ignore
-      await supabase
-        .channel("app-sync")
-        .httpSend("refresh", { action: "toggle_guest_book_mode", allowManual });
-    } catch (broadcastErr) {
-      console.error("Failed to broadcast refresh:", broadcastErr);
-    }
-
+    await emitRefreshSignal();
     return {
       success: true,
       message: `Mode Buku Tamu berhasil diubah menjadi ${allowManual ? "Manual" : "Otomatis"}`,

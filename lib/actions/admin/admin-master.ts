@@ -10,6 +10,7 @@ import { slugify } from "@/lib/utils";
 import { isSuperAdmin as isEmailSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 import { LayananService } from "@/lib/services/layanan-service";
+import { createAuditLog } from "@/lib/audit";
 
 const serviceSchema = z.object({
   name: z.string().min(3),
@@ -28,7 +29,7 @@ export type ActionResult = {
 
 // --- SERVICES ---
 export async function createServiceAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("super_admin");
+  const profile = await requirePermission("super_admin");
   try {
     const validated = serviceSchema.safeParse({
       name: formData.get("name"),
@@ -43,6 +44,14 @@ export async function createServiceAction(formData: FormData): Promise<ActionRes
     }
 
     await LayananService.createService(validated.data);
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "BUAT_LAYANAN",
+      entityType: "service",
+      entityId: validated.data.name,
+      details: { nama: validated.data.name, slug: validated.data.slug, roleOwner: validated.data.roleOwner },
+    });
 
     revalidatePath("/admin/layanan");
     revalidatePath("/layanan");
@@ -88,6 +97,14 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
 
     await LayananService.updateService(id, validated.data);
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_LAYANAN",
+      entityType: "service",
+      entityId: id.toString(),
+      details: { nama: validated.data.name },
+    });
+
     revalidatePath("/admin/layanan");
     revalidatePath("/layanan");
     await emitRefreshSignal();
@@ -119,6 +136,14 @@ export async function deleteServiceAction(formData: FormData): Promise<ActionRes
     }
 
     await LayananService.deleteService(id);
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "HAPUS_LAYANAN",
+      entityType: "service",
+      entityId: id.toString(),
+      details: { serviceId: id.toString() },
+    });
 
     revalidatePath("/admin/layanan");
     revalidatePath("/layanan");

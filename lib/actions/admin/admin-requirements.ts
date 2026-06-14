@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { serviceRequirements as requirementsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
+import { createAuditLog } from "@/lib/audit";
 
 const reqSchema = z.object({
   serviceItemId: z.coerce.string(),
@@ -24,7 +25,7 @@ export type ActionResult = {
 };
 
 export async function createRequirementAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const validated = reqSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
@@ -44,6 +45,14 @@ export async function createRequirementAction(formData: FormData): Promise<Actio
       sortOrder: 0,
     });
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "BUAT_PERSYARATAN",
+      entityType: "requirement",
+      entityId: validated.data.documentName,
+      details: { nama: validated.data.documentName },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 
@@ -55,7 +64,7 @@ export async function createRequirementAction(formData: FormData): Promise<Actio
 }
 
 export async function updateRequirementAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const id = BigInt(formData.get("id") as string);
     const validated = reqSchema.safeParse({
@@ -79,6 +88,14 @@ export async function updateRequirementAction(formData: FormData): Promise<Actio
       })
       .where(eq(requirementsTable.id, id));
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_PERSYARATAN",
+      entityType: "requirement",
+      entityId: id.toString(),
+      details: { nama: validated.data.documentName },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 
@@ -90,10 +107,20 @@ export async function updateRequirementAction(formData: FormData): Promise<Actio
 }
 
 export async function deleteRequirementAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const id = BigInt(formData.get("id") as string);
+    const req = await db.query.serviceRequirements.findFirst({ where: eq(requirementsTable.id, id), columns: { documentName: true } });
     await db.delete(requirementsTable).where(eq(requirementsTable.id, id));
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "HAPUS_PERSYARATAN",
+      entityType: "requirement",
+      entityId: id.toString(),
+      details: { nama: req?.documentName },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 

@@ -12,3 +12,4 @@ tsconfig.tsbuildinfo
 # AI & Temporary files
 scratch/
 .gemini/
+scripts/

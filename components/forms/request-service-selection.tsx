@@ -1,6 +1,6 @@
 import { Field } from "@/components/ui/field";
-import { Select } from "@/components/ui/select";
-import { Layers } from "lucide-react";
+import { ModernSelect } from "@/components/ui/modern-select";
+import { Layers, FileText } from "lucide-react";
 
 export function RequestServiceSelection({
   catalog,
@@ -17,9 +17,19 @@ export function RequestServiceSelection({
 }) {
   const selectedService = catalog.find((s: any) => String(s.id) === serviceId);
 
+  const serviceOptions = catalog.map((service: any) => ({
+    value: String(service.id),
+    label: service.name,
+  }));
+
+  const itemOptions = (selectedService?.serviceItems ?? []).map((item: any) => ({
+    value: String(item.id),
+    label: item.name,
+  }));
+
   return (
-    <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
-      <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#059669] to-[#0f8a54]" />
+    <section className="relative rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-8 shadow-sm transition-all duration-300 hover:shadow-md">
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#059669] to-[#0f8a54] rounded-t-2xl sm:rounded-t-3xl" />
 
       <div className="mb-6 flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] ring-1 ring-emerald-100/50">
@@ -40,39 +50,31 @@ export function RequestServiceSelection({
 
       <div className="grid gap-5 md:grid-cols-2">
         <Field label="Pilih Unit Layanan" required>
-          <Select
+          <ModernSelect
+            name="service_id_select"
+            options={serviceOptions}
             value={serviceId}
-            onChange={(e) => onServiceChange(e.target.value)}
-            className="h-12 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
-          >
-            <option value="" disabled>
-              -- Pilih Layanan --
-            </option>
-            {catalog.map((service: any) => (
-              <option key={service.id} value={service.id}>
-                {service.name}
-              </option>
-            ))}
-          </Select>
+            onChange={onServiceChange}
+            placeholder="Pilih Unit Layanan..."
+            searchPlaceholder="Cari layanan..."
+            icon={Layers}
+            enableSearch={serviceOptions.length > 5}
+          />
         </Field>
 
         <Field label="Pilih Item Layanan" required>
-          <Select
-            name="service_item_select"
-            value={serviceItemId}
-            onChange={(e) => onItemChange(e.target.value)}
-            disabled={!serviceId}
-            className={`h-12 transition-colors ${!serviceId ? "bg-slate-100 opacity-60 cursor-not-allowed" : "bg-slate-50 border-slate-200 focus:bg-white"}`}
-          >
-            <option value="" disabled>
-              -- Pilih Item Layanan --
-            </option>
-            {(selectedService?.serviceItems ?? []).map((item: any) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
+          <div className={!serviceId ? "opacity-50 pointer-events-none" : ""}>
+            <ModernSelect
+              name="service_item_select"
+              options={itemOptions}
+              value={serviceItemId}
+              onChange={onItemChange}
+              placeholder={serviceId ? "Pilih Item Layanan..." : "Pilih unit layanan dulu"}
+              searchPlaceholder="Cari item layanan..."
+              icon={FileText}
+              enableSearch={itemOptions.length > 5}
+            />
+          </div>
         </Field>
       </div>
     </section>

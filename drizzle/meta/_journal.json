@@ -15,6 +15,13 @@
       "when": 1781332607336,
       "tag": "0001_overconfident_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781446303079,
+      "tag": "0002_light_mauler",
+      "breakpoints": true
     }
   ]
 }

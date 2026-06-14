@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { ExternalLink } from "lucide-react";
 
 interface LogDetailsModalProps {
   log: any;
@@ -15,8 +16,26 @@ interface LogDetailsModalProps {
   onClose: () => void;
 }
 
+function getEntityLink(entityType?: string | null, entityId?: string | null): string | null {
+  if (!entityType || !entityId) return null;
+  const map: Record<string, string> = {
+    service_request: `/admin/pengajuan/${entityId}`,
+    guest_book: "/admin/buku-tamu",
+    appointments: "/admin/janji-temu",
+    feedbacks: "/admin/e-pengaduan",
+    surat_masuk: "/admin/persuratan/surat-masuk",
+    surat_keluar: "/admin/persuratan/surat-keluar",
+    pengajuan_cuti: "/pegawai/cuti",
+  };
+  const base = map[entityType];
+  if (!base) return null;
+  return base;
+}
+
 export function LogDetailsModal({ log, isOpen, onClose }: LogDetailsModalProps) {
   if (!log) return null;
+
+  const entityLink = getEntityLink(log.entityType, log.entityId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -49,8 +68,16 @@ export function LogDetailsModal({ log, isOpen, onClose }: LogDetailsModalProps) 
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Objek Target</p>
-              <p className="text-sm font-bold text-slate-700">
-                {log.entityType} ({log.entityId?.slice(0, 8)})
+              <p className="text-sm font-bold text-slate-700 flex items-center gap-1">
+                {log.entityType}
+                {entityLink ? (
+                  <a href={entityLink} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-800 inline-flex items-center gap-0.5 ml-1">
+                    ({log.entityId?.slice(0, 8)})
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <span>({log.entityId?.slice(0, 8)})</span>
+                )}
               </p>
             </div>
           </div>

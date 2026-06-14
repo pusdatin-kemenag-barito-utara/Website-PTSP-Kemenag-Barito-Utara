@@ -3,6 +3,7 @@ import { users, profiles, rolePermissions } from "./auth";
 import { services, serviceItems, serviceRequirements, serviceFormFields } from "./services";
 import { serviceRequests, serviceRequestAnswers, serviceRequestDocuments, serviceRequestReviews, generatedDocuments } from "./requests";
 import { activityLogs, auditLogs } from "./logs";
+import { dataCutiPegawai, rekapCutiTahunan } from "./kepegawaian";
 
 export const profilesRelations = relations(profiles, ({ one, many }) => ({
   user: one(users, {
@@ -149,5 +150,16 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   profiles: one(profiles, {
     fields: [activityLogs.actorId],
     references: [profiles.id],
+  }),
+}));
+
+export const dataCutiPegawaiRelations = relations(dataCutiPegawai, ({ many }) => ({
+  rekapCutiTahunan: many(rekapCutiTahunan),
+}));
+
+export const rekapCutiTahunanRelations = relations(rekapCutiTahunan, ({ one }) => ({
+  pegawai: one(dataCutiPegawai, {
+    fields: [rekapCutiTahunan.pegawaiId],
+    references: [dataCutiPegawai.id],
   }),
 }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Search,
   Plus,
@@ -12,6 +12,8 @@ import {
   ArrowDownLeft,
   X,
   Loader2,
+  Eye,
+  Download,
 } from "lucide-react";
 import {
   getSuratMasukAction,
@@ -21,6 +23,8 @@ import {
 } from "@/lib/actions/admin/admin-persuratan";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { m, AnimatePresence } from "framer-motion";
+import { ModernSelect } from "@/components/ui/modern-select";
+import { toTitleCase } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface SuratMasuk {
@@ -30,24 +34,41 @@ interface SuratMasuk {
   tanggal_terima: string;
   asal_surat: string;
   perihal: string;
+  agenda?: string;
+  status?: string;
+  lampiran?: string;
 }
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return "";
   const parts = dateStr.split("-");
   if (parts.length === 3) {
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
   return dateStr;
 };
 
-export function SuratMasukManager() {
-  const [items, setItems] = useState<SuratMasuk[]>([]);
-  const [loading, setLoading] = useState(true);
+export function SuratMasukManager({
+  initialData = [],
+  initialTotal = 0,
+}: {
+  initialData?: any[];
+  initialTotal?: number;
+}) {
+  const [items, setItems] = useState<SuratMasuk[]>(initialData);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Filter States
   const [filterDateSurat, setFilterDateSurat] = useState("");
@@ -64,6 +85,9 @@ export function SuratMasukManager() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // Detail View State
+  const [detailItem, setDetailItem] = useState<SuratMasuk | null>(null);
+
   // Form State
   const [formData, setFormData] = useState({
     nomor_surat: "",
@@ -71,30 +95,50 @@ export function SuratMasukManager() {
     tanggal_terima: "",
     asal_surat: "",
     perihal: "",
+    agenda: "",
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const formInitialRef = useRef<string>("");
+  const isFormDirty = useMemo(() => {
+    if (!showForm) return false;
+    return JSON.stringify(formData) !== formInitialRef.current;
+  }, [formData, showForm]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (showForm) {
+      formInitialRef.current = JSON.stringify(formData);
+    }
+  }, [showForm]);
+
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [showForm, isFormDirty]);
+
+  const fetchData = async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     setFetchError(null);
     const result = await getSuratMasukAction();
     if (result.success) {
       setItems(result.data || []);
     } else {
-      setFetchError(result.error || "Gagal mengambil data dari Google Sheets.");
+      setFetchError(result.error || "Gagal mengambil data surat masuk.");
     }
-    setLoading(false);
+    if (showLoading) setLoading(false);
   };
 
   const filteredItems = useMemo(() => {
     return items.filter((item: any) => {
       const matchesSearch =
-        item.nomor_surat.toLowerCase().includes(search.toLowerCase()) ||
-        item.asal_surat.toLowerCase().includes(search.toLowerCase()) ||
-        item.perihal.toLowerCase().includes(search.toLowerCase());
+        item.nomor_surat
+          .toLowerCase()
+          .includes(debouncedSearch.toLowerCase()) ||
+        item.asal_surat.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        item.perihal.toLowerCase().includes(debouncedSearch.toLowerCase());
 
       const matchesDateSurat = (() => {
         if (!filterDateSurat) return true;
@@ -126,12 +170,12 @@ export function SuratMasukManager() {
 
       return matchesSearch && matchesDateSurat && matchesDateTerima;
     });
-  }, [items, search, filterDateSurat, filterDateTerima]);
+  }, [items, debouncedSearch, filterDateSurat, filterDateTerima]);
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterDateSurat, filterDateTerima]);
+  }, [debouncedSearch, filterDateSurat, filterDateTerima]);
 
   const totalPages = Math.ceil(filteredItems.length / rowsPerPage);
   const paginatedItems = useMemo(() => {
@@ -147,6 +191,7 @@ export function SuratMasukManager() {
         tanggal_terima: item.tanggal_terima,
         asal_surat: item.asal_surat,
         perihal: item.perihal,
+        agenda: item.agenda || "",
       });
       setEditingId(item.id);
       setShowForm(true);
@@ -158,6 +203,7 @@ export function SuratMasukManager() {
         tanggal_terima: today,
         asal_surat: "",
         perihal: "",
+        agenda: "",
       });
       setEditingId(null);
       setShowForm(true);
@@ -183,9 +229,9 @@ export function SuratMasukManager() {
       const result = await deleteSuratMasukAction(deletingId);
       if (result.success) {
         toast.success(result.message || "Data surat berhasil dihapus");
-        await fetchData();
         setShowDeleteConfirm(false);
         setDeletingId(null);
+        fetchData(false);
       } else {
         toast.error(result.error || "Gagal menghapus data");
       }
@@ -208,8 +254,8 @@ export function SuratMasukManager() {
 
       if (result.success) {
         toast.success(result.message || "Data berhasil disimpan");
-        await fetchData();
         setShowForm(false);
+        fetchData();
       } else {
         toast.error(result.error || "Gagal menyimpan data");
       }
@@ -218,6 +264,53 @@ export function SuratMasukManager() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredItems.length === 0) {
+      toast.warning("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Nomor Surat",
+      "Tanggal Surat",
+      "Tanggal Terima",
+      "Asal Surat",
+      "Perihal",
+    ];
+    const csvContent = [
+      headers.join(","),
+      ...filteredItems.map((e) =>
+        [
+          e.id,
+          `"${e.nomor_surat.replace(/"/g, '""')}"`,
+          `"${e.tanggal_surat}"`,
+          `"${e.tanggal_terima}"`,
+          `"${e.asal_surat.replace(/"/g, '""')}"`,
+          `"${e.perihal.replace(/"/g, '""')}"`,
+        ].join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `Surat_Masuk_Export_${new Date().toISOString().slice(0, 10)}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("Ekspor Berhasil", {
+      description: `${filteredItems.length} data surat masuk berhasil diunduh sebagai file CSV.`,
+    });
   };
 
   return (
@@ -249,7 +342,15 @@ export function SuratMasukManager() {
           </button>
           <button
             disabled={loading}
-            onClick={fetchData}
+            onClick={handleExportCSV}
+            className="flex items-center justify-center p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+            title="Ekspor CSV"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => fetchData(true)}
             className="flex items-center justify-center p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
             title="Refresh Data"
           >
@@ -336,6 +437,9 @@ export function SuratMasukManager() {
                 <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Asal & Perihal
                 </th>
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center">
+                  Status
+                </th>
                 <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-right">
                   Aksi
                 </th>
@@ -359,7 +463,7 @@ export function SuratMasukManager() {
                           <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
                             <ArrowDownLeft className="h-3.5 w-3.5" />
                           </div>
-                          <span className="text-sm font-bold text-slate-900">
+                          <span className="text-xs font-bold text-slate-900">
                             {item.nomor_surat}
                           </span>
                         </div>
@@ -382,16 +486,46 @@ export function SuratMasukManager() {
                     </td>
                     <td className="px-6 py-2.5">
                       <div className="flex flex-col gap-0.5 max-w-xs">
-                        <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+                        <p
+                          className="text-xs font-semibold text-slate-800 line-clamp-1"
+                          title={item.asal_surat}
+                        >
                           {item.asal_surat}
                         </p>
-                        <p className="text-xs text-slate-500 line-clamp-1 italic">
+                        <p
+                          className="text-xs text-slate-500 line-clamp-1 italic"
+                          title={item.perihal}
+                        >
                           "{item.perihal}"
                         </p>
                       </div>
                     </td>
+                    <td className="px-6 py-2.5">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${
+                          item.status === "archived"
+                            ? "bg-slate-50 text-slate-500 border-slate-200"
+                            : item.status === "draft"
+                              ? "bg-amber-50 text-amber-600 border-amber-200"
+                              : "bg-emerald-50 text-emerald-600 border-emerald-200"
+                        }`}
+                      >
+                        {item.status === "archived"
+                          ? "Arsip"
+                          : item.status === "draft"
+                            ? "Draf"
+                            : "Terbit"}
+                      </span>
+                    </td>
                     <td className="px-6 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setDetailItem(item)}
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                          title="Lihat Detail"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => handleOpenForm(item)}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
@@ -410,17 +544,19 @@ export function SuratMasukManager() {
                 ))
               ) : !loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-20 text-center">
+                  <td colSpan={7} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div
-                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${fetchError ? "bg-red-50 text-red-400" : "bg-slate-50 text-slate-300"}`}
+                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${fetchError ? "bg-red-50 text-red-400" : debouncedSearch ? "bg-amber-50 text-amber-400" : "bg-slate-50 text-slate-300"}`}
                       >
                         <FileText className="h-6 w-6" />
                       </div>
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
                         {fetchError
                           ? "Gagal memuat data surat"
-                          : "Belum ada data surat"}
+                          : debouncedSearch
+                            ? "Pencarian tidak ditemukan"
+                            : "Belum ada data surat"}
                       </p>
                       {fetchError && (
                         <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
@@ -428,9 +564,15 @@ export function SuratMasukManager() {
                           refresh halaman.
                         </p>
                       )}
+                      {debouncedSearch && !fetchError && (
+                        <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
+                          Tidak ada surat masuk yang cocok dengan kata kunci "
+                          {debouncedSearch}".
+                        </p>
+                      )}
                       {fetchError && (
                         <button
-                          onClick={fetchData}
+                          onClick={() => fetchData(true)}
                           className="mt-4 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
                         >
                           Coba Lagi
@@ -449,11 +591,18 @@ export function SuratMasukManager() {
           <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <select
-                value={rowsPerPage === filteredItems.length && filteredItems.length > 0 ? "all" : rowsPerPage}
+                value={
+                  rowsPerPage === filteredItems.length &&
+                  filteredItems.length > 0
+                    ? "all"
+                    : rowsPerPage
+                }
                 onChange={(e) => {
                   const val = e.target.value;
                   if (val === "all") {
-                    setRowsPerPage(filteredItems.length > 0 ? filteredItems.length : 10);
+                    setRowsPerPage(
+                      filteredItems.length > 0 ? filteredItems.length : 10,
+                    );
                   } else {
                     setRowsPerPage(Number(val));
                   }
@@ -469,8 +618,11 @@ export function SuratMasukManager() {
                 <option value="all">Semua Baris</option>
               </select>
               <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                Menampilkan {filteredItems.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} -{" "}
-                {Math.min(currentPage * rowsPerPage, filteredItems.length)}{" "}
+                Menampilkan{" "}
+                {filteredItems.length === 0
+                  ? 0
+                  : (currentPage - 1) * rowsPerPage + 1}{" "}
+                - {Math.min(currentPage * rowsPerPage, filteredItems.length)}{" "}
                 dari {filteredItems.length} Surat Masuk
               </div>
             </div>
@@ -517,8 +669,8 @@ export function SuratMasukManager() {
                 </h3>
                 <p className="text-xs font-semibold text-slate-500">
                   {editingId
-                    ? "Perbarui data surat di Google Sheets"
-                    : "Input data surat baru ke Google Sheets"}
+                    ? "Perbarui data surat di sistem"
+                    : "Input data surat baru ke sistem"}
                 </p>
               </div>
               <button
@@ -575,6 +727,32 @@ export function SuratMasukManager() {
                 />
               </div>
 
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Jenis Agenda
+                </label>
+                <ModernSelect
+                  name="agenda"
+                  options={[
+                    "Surat Dinas",
+                    "Surat Keputusan",
+                    "Surat Tugas",
+                    "Surat Undangan",
+                    "Surat Pengantar",
+                    "Surat Keterangan",
+                    "Surat Pernyataan",
+                    "Surat Cuti",
+                    "Berita Acara",
+                    "Nota Dinas",
+                  ]}
+                  value={formData.agenda}
+                  onChange={(val) => setFormData({ ...formData, agenda: val })}
+                  enableSearch
+                  searchPlaceholder="Cari agenda..."
+                  placeholder="Pilih agenda"
+                />
+              </div>
+
               <div className="space-y-1.5 md:col-span-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Asal Surat
@@ -588,9 +766,14 @@ export function SuratMasukManager() {
                   value={formData.asal_surat}
                   onChange={(e) => {
                     const val = e.target.value;
-                    const capitalized = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
-                    setFormData({ ...formData, asal_surat: capitalized });
+                    setFormData({ ...formData, asal_surat: val });
                   }}
+                  onBlur={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      asal_surat: toTitleCase(prev.asal_surat),
+                    }))
+                  }
                 />
               </div>
 
@@ -607,9 +790,14 @@ export function SuratMasukManager() {
                   value={formData.perihal}
                   onChange={(e) => {
                     const val = e.target.value;
-                    const capitalized = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
-                    setFormData({ ...formData, perihal: capitalized });
+                    setFormData({ ...formData, perihal: val });
                   }}
+                  onBlur={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      perihal: toTitleCase(prev.perihal),
+                    }))
+                  }
                 />
               </div>
 
@@ -628,7 +816,7 @@ export function SuratMasukManager() {
                   className="flex-[2] px-6 py-3 bg-[#059669] text-white rounded-xl text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {editingId ? "Simpan Perubahan" : "Simpan Data ke Sheets"}
+                  {editingId ? "Simpan Perubahan" : "Simpan Data"}
                 </button>
               </div>
             </form>
@@ -636,7 +824,134 @@ export function SuratMasukManager() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Detail View Modal */}
+      {detailItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            onClick={() => setDetailItem(null)}
+          />
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in slide-in-from-bottom-4 duration-300">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">
+                  Detail Surat Masuk
+                </h3>
+                <p className="text-xs font-semibold text-slate-500">
+                  Informasi lengkap surat masuk
+                </p>
+              </div>
+              <button
+                onClick={() => setDetailItem(null)}
+                className="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Nomor Surat
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {detailItem.nomor_surat}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Status
+                  </p>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${
+                      detailItem.status === "archived"
+                        ? "bg-slate-50 text-slate-500 border-slate-200"
+                        : detailItem.status === "draft"
+                          ? "bg-amber-50 text-amber-600 border-amber-200"
+                          : "bg-emerald-50 text-emerald-600 border-emerald-200"
+                    }`}
+                  >
+                    {detailItem.status === "archived"
+                      ? "Arsip"
+                      : detailItem.status === "draft"
+                        ? "Draf"
+                        : "Terbit"}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Tanggal Surat
+                  </p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {formatDate(detailItem.tanggal_surat)}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Tanggal Terima
+                  </p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {formatDate(detailItem.tanggal_terima)}
+                  </p>
+                </div>
+                {detailItem.agenda && (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                      Jenis Agenda
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {detailItem.agenda}
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Referensi
+                  </p>
+                  <p className="text-sm font-semibold text-slate-700 font-mono text-xs">
+                    {detailItem.id}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  Asal Surat
+                </p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {detailItem.asal_surat}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  Perihal
+                </p>
+                <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  {detailItem.perihal}
+                </p>
+              </div>
+              {detailItem.lampiran && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Lampiran
+                  </p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    {detailItem.lampiran}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex justify-end">
+              <button
+                onClick={() => setDetailItem(null)}
+                className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div
@@ -653,7 +968,7 @@ export function SuratMasukManager() {
               </h3>
               <p className="text-sm font-medium text-slate-500 mb-8 px-4">
                 Tindakan ini tidak dapat dibatalkan. Data akan dihapus secara
-                permanen dari Google Sheets.
+                permanen dari database.
               </p>
 
               <div className="flex gap-3">
@@ -680,7 +995,6 @@ export function SuratMasukManager() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -8,30 +8,12 @@ import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 import crypto from "crypto";
 import { headers } from "next/headers";
 
-const RATE_LIMIT_WINDOW = 60 * 1000;
-const RATE_LIMIT_MAX = 10;
-const rateLimitStore = new Map<string, { count: number; lastReset: number }>();
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limiter";
 
-async function checkRateLimit(): Promise<boolean> {
-  const headersList = await headers();
-  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || headersList.get("x-real-ip")
-    || "unknown";
-  const now = Date.now();
-  const data = rateLimitStore.get(ip) || { count: 0, lastReset: now };
-  if (now - data.lastReset > RATE_LIMIT_WINDOW) {
-    data.count = 0;
-    data.lastReset = now;
-  }
-  data.count++;
-  rateLimitStore.set(ip, data);
-  return data.count <= RATE_LIMIT_MAX;
-}
-
-const JWT_SECRET = process.env.PASSWORD_RESET_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const JWT_SECRET = process.env.PASSWORD_RESET_SECRET;
 
 if (!JWT_SECRET) {
-  throw new Error("PASSWORD_RESET_SECRET or SUPABASE_SERVICE_ROLE_KEY environment variable is required");
+  throw new Error("PASSWORD_RESET_SECRET environment variable is required");
 }
 
 const JWT_SECRET_BUF: crypto.BinaryLike = JWT_SECRET;
@@ -66,8 +48,14 @@ function generateOtp(): string {
 export async function checkPhoneExistsAction(phone: string, token: string) {
   if (!phone) return { error: "Nomor HP wajib diisi." };
 
-  const allowed = await checkRateLimit();
-  if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  const { allowed: ipAllowed } = checkRateLimit(ip, "otp_ip", RATE_LIMITS.FORGOT_PASSWORD);
+  if (!ipAllowed) return { error: "Terlalu banyak permintaan dari IP Anda. Silakan coba lagi nanti." };
+
+  const { allowed: phoneAllowed } = checkRateLimit(phone, "otp_phone", { window: 3600 * 1000, max: 3 }); // 3 OTP per hour
+  if (!phoneAllowed) return { error: "Batas permintaan OTP harian tercapai untuk nomor ini." };
 
   const verifyRes = await verifyTurnstileAction(token);
   if (!verifyRes.success) {
@@ -116,7 +104,10 @@ export async function verifyOtpAction(phone: string, otp: string) {
     return { error: "Data tidak valid atau OTP kurang dari 6 digit." };
   }
 
-  const allowed = await checkRateLimit();
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  const { allowed } = checkRateLimit(ip, "otp_verify", RATE_LIMITS.FORGOT_PASSWORD);
   if (!allowed) return { error: "Terlalu banyak percobaan. Coba lagi nanti." };
 
   try {
@@ -137,8 +128,15 @@ export async function verifyOtpAction(phone: string, otp: string) {
       return { error: "Kode OTP salah." };
     }
 
-    // Mark as used
-    await db.update(authOtps).set({ isUsed: true }).where(eq(authOtps.id, latestOtp.id));
+    // Mark as used safely with condition
+    const updateRes = await db.update(authOtps)
+      .set({ isUsed: true })
+      .where(and(eq(authOtps.id, latestOtp.id), eq(authOtps.isUsed, false)))
+      .returning({ id: authOtps.id });
+
+    if (updateRes.length === 0) {
+       return { error: "Kode OTP sudah digunakan oleh permintaan lain." };
+    }
 
     const resetToken = generateResetToken(phone);
     return { success: true, resetToken };
@@ -151,7 +149,10 @@ export async function verifyOtpAction(phone: string, otp: string) {
 export async function checkEmailExistsAction(email: string, token: string) {
   if (!email) return { error: "Email wajib diisi." };
 
-  const allowed = await checkRateLimit();
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  const { allowed } = checkRateLimit(ip, "otp_email_check", RATE_LIMITS.FORGOT_PASSWORD);
   if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
 
   const verifyRes = await verifyTurnstileAction(token);
@@ -188,7 +189,10 @@ export async function resetPasswordByPhoneAction(
     return { error: "Password minimal 6 karakter." };
   }
 
-  const allowed = await checkRateLimit();
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  const { allowed } = checkRateLimit(ip, "reset_pwd", RATE_LIMITS.FORGOT_PASSWORD);
   if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
 
   // Verify cryptographic reset token

@@ -4,7 +4,11 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID;
 const SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const PRIVATE_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
 
+let sheetsClient: ReturnType<typeof google.sheets> | null = null;
+
 export async function getSheetsClient() {
+  if (sheetsClient) return sheetsClient;
+
   if (!SERVICE_ACCOUNT_EMAIL || !PRIVATE_KEY) {
     throw new Error("Google Service Account credentials are missing");
   }
@@ -38,7 +42,8 @@ export async function getSheetsClient() {
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
-  return google.sheets({ version: "v4", auth });
+  sheetsClient = google.sheets({ version: "v4", auth });
+  return sheetsClient;
 }
 
 export async function getSheetData(range: string) {

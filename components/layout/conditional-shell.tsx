@@ -15,8 +15,10 @@ export function ConditionalShell({
   const pathname = usePathname();
   const isAdmin = pathname.startsWith("/admin");
 
-  if (isAdmin) {
-    // For admin routes: no header, no footer, no ptsp-shell padding — just raw full-screen
+  const isLengkapiProfil = pathname.startsWith("/lengkapi-profil");
+
+  if (isAdmin || isLengkapiProfil) {
+    // For admin routes & lengkapi-profil: no header, no footer, no ptsp-shell padding
     return <>{children}</>;
   }
 

@@ -50,10 +50,11 @@ export function DialogContent({
 }: DialogContentProps) {
   if (!open) return null;
 
+  const hasMaxWidth = className?.includes("max-w-");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-200 p-4">
       <div
-        className={`relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200 ${className}`}
+        className={`relative w-full ${hasMaxWidth ? "" : "max-w-lg"} rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200 ${className}`}
       >
         <button
           type="button"

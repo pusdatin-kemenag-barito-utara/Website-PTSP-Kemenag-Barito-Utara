@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { createAuditLog } from "@/lib/audit";
 
 export async function approveByAtasanAction(
   id: string,
@@ -32,6 +33,14 @@ export async function approveByAtasanAction(
         atasanNip: user.email?.split("@")[0],
       })
       .where(eq(pengajuanCuti.id, id));
+
+    await createAuditLog({
+      adminId: user.id,
+      action: "SETUJUI_CUTI_ATASAN",
+      entityType: "pengajuan_cuti",
+      entityId: id,
+      details: { role: "atasan", catatan },
+    });
 
     revalidatePath("/pegawai/cuti/persetujuan");
     return { success: true };
@@ -65,6 +74,14 @@ export async function approveByKepalaAction(
         status: "approved",
       })
       .where(eq(pengajuanCuti.id, id));
+
+    await createAuditLog({
+      adminId: user.id,
+      action: "SETUJUI_CUTI_KEPALA",
+      entityType: "pengajuan_cuti",
+      entityId: id,
+      details: { role: "kepala", catatan },
+    });
 
     revalidatePath("/pegawai/cuti/persetujuan");
     return { success: true };
@@ -100,6 +117,14 @@ export async function rejectPengajuanCutiAction(
     }
 
     await db.update(pengajuanCuti).set(updates).where(eq(pengajuanCuti.id, id));
+
+    await createAuditLog({
+      adminId: user.id,
+      action: roleLevel === "atasan" ? "TOLAK_CUTI_ATASAN" : "TOLAK_CUTI_KEPALA",
+      entityType: "pengajuan_cuti",
+      entityId: id,
+      details: { role: roleLevel, catatan },
+    });
 
     revalidatePath("/pegawai/cuti/persetujuan");
     return { success: true };
@@ -168,6 +193,14 @@ export async function processCutiAction(
     }
 
     await db.update(pengajuanCuti).set(updates).where(eq(pengajuanCuti.id, id));
+
+    await createAuditLog({
+      adminId: user.id,
+      action: `PROSES_CUTI_${roleLevel.toUpperCase()}_${status.toUpperCase()}`,
+      entityType: "pengajuan_cuti",
+      entityId: id,
+      details: { role: roleLevel, status, catatan },
+    });
 
     // Kirim notifikasi WA setelah Kepala Kantor memproses
     if (roleLevel === "kepala" && cutiData?.noHp) {

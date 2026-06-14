@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ChevronDown, Search, X, LucideIcon } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 
@@ -37,6 +37,14 @@ export function ModernSelect({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Detect mobile device to prevent auto-focus keyboard popup
+  const isMobile = useCallback(() => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      typeof navigator !== "undefined" ? navigator.userAgent : ""
+    ) || (typeof window !== "undefined" && window.innerWidth < 768);
+  }, []);
 
   // Normalize options to { value, label } format
   const normalizedOptions = options.map((opt) => {
@@ -73,13 +81,22 @@ export function ModernSelect({
     setSearchQuery("");
   };
 
+  const handleOpen = () => {
+    const nextOpen = !isOpen;
+    setIsOpen(nextOpen);
+    // Only focus search on desktop — skip on mobile to avoid keyboard popup
+    if (nextOpen && enableSearch && !isMobile()) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    }
+  };
+
   return (
     <div className="relative w-full" ref={containerRef} id={id}>
       <input type="hidden" name={name} value={value} required={required} />
 
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleOpen}
         className={`group flex items-center gap-3 w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm transition-all cursor-pointer ${
           isOpen
             ? "border-emerald-500 ring-2 ring-emerald-500/10"
@@ -120,9 +137,12 @@ export function ModernSelect({
               <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
                 <Search className="h-4 w-4 text-slate-400 ml-2" />
                 <input
+                  ref={searchInputRef}
                   type="text"
+                  inputMode={isMobile() ? "none" : "text"}
+                  readOnly={isMobile()}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => !isMobile() && setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
                   className="w-full bg-transparent border-0 px-2 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0"
                 />

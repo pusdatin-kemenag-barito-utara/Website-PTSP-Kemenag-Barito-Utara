@@ -134,12 +134,12 @@ export function RegisterPetugasForm() {
           </Select>
         </Field>
 
-        <Field label="Password" required hint="Minimal 6 karakter">
+        <Field label="Password" required hint="Minimal 8 karakter">
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
-              minLength={6}
+              minLength={8}
               required
               placeholder="Masukkan password"
               autoComplete="new-password"

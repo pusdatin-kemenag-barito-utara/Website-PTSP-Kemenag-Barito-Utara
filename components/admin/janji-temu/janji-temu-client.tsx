@@ -53,6 +53,7 @@ export function JanjiTemuClient({
   // Modals
   const [deletingEntry, setDeletingEntry] = useState<AppointmentEntry | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   // Filter logic
   const filteredEntries = entries.filter((entry) => {
@@ -71,12 +72,12 @@ export function JanjiTemuClient({
     // 3. Date Filter
     let matchesDate = true;
     if (dateFilter !== "all") {
-      const appDateObj = new Date(entry.appointmentDate);
+      const [y, m, d] = entry.appointmentDate.split("-").map(Number);
+      const entryDay = new Date(y, m - 1, d);
+      entryDay.setHours(0, 0, 0, 0);
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const entryDay = new Date(appDateObj);
-      entryDay.setHours(0, 0, 0, 0);
 
       if (dateFilter === "today") {
         matchesDate = entryDay.getTime() === today.getTime();
@@ -90,21 +91,25 @@ export function JanjiTemuClient({
     return matchesSearch && matchesStatus && matchesDate;
   });
 
-  const handleUpdateStatus = (id: string, newStatus: "approved" | "rejected") => {
-    startTransition(async () => {
-      const res = await updateAppointmentStatusAction(id, newStatus);
-      if (res.success) {
-        toast.success(newStatus === "approved" ? "Janji Temu Disetujui" : "Janji Temu Ditolak", {
-          description: `Status janji temu berhasil diperbarui.`,
-        });
-        setEntries((prev) => 
-          prev.map((e) => e.id === id ? { ...e, status: newStatus } : e)
-        );
-      } else {
-        toast.error("Gagal memperbarui status", {
-          description: res.error || "Terjadi kesalahan sistem.",
-        });
-      }
+  const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
+    setPendingIds((prev) => new Set(prev).add(id));
+    const res = await updateAppointmentStatusAction(id, newStatus);
+    if (res.success) {
+      toast.success(newStatus === "approved" ? "Janji Temu Disetujui" : "Janji Temu Ditolak", {
+        description: `Status janji temu berhasil diperbarui.`,
+      });
+      setEntries((prev) => 
+        prev.map((e) => e.id === id ? { ...e, status: newStatus } : e)
+      );
+    } else {
+      toast.error("Gagal memperbarui status", {
+        description: res.error || "Terjadi kesalahan sistem.",
+      });
+    }
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
     });
   };
 
@@ -358,26 +363,26 @@ export function JanjiTemuClient({
                             <>
                               <button
                                 onClick={() => handleUpdateStatus(entry.id, "approved")}
-                                disabled={isPending}
-                                className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:text-emerald-700 shadow-sm transition-all cursor-pointer active:scale-90"
+                                disabled={pendingIds.has(entry.id)}
+                                className={`p-2 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-100 hover:text-emerald-700"}`}
                                 title="Setujui Janji Temu"
                               >
-                                <CheckCircle className="h-4 w-4" />
+                                {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
                               </button>
                               <button
                                 onClick={() => handleUpdateStatus(entry.id, "rejected")}
-                                disabled={isPending}
-                                className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 shadow-sm transition-all cursor-pointer active:scale-90"
+                                disabled={pendingIds.has(entry.id)}
+                                className={`p-2 rounded-xl bg-rose-50 text-rose-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100 hover:text-rose-700"}`}
                                 title="Tolak Janji Temu"
                               >
-                                <XCircle className="h-4 w-4" />
+                                {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                               </button>
                             </>
                           )}
                           <button
                             onClick={() => setDeletingEntry(entry)}
-                            disabled={isPending}
-                            className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all cursor-pointer active:scale-90"
+                            disabled={pendingIds.has(entry.id)}
+                            className={`p-2 rounded-xl text-slate-400 transition-all active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 hover:text-red-600 cursor-pointer"}`}
                             title="Hapus Janji Temu"
                           >
                             <Trash2 className="h-4.5 w-4.5" />

@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import { slugify, stripHtml } from "@/lib/utils";
 import { isSuperAdmin } from "@/lib/constants";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
+import { createAuditLog } from "@/lib/audit";
 
 const itemSchema = z.object({
   serviceId: z.coerce.string(),
@@ -29,7 +30,7 @@ export type ActionResult = {
 export async function createServiceItemAction(
   formData: FormData,
 ): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const validated = itemSchema.safeParse({
       serviceId: formData.get("serviceId"),
@@ -50,6 +51,14 @@ export async function createServiceItemAction(
       sortOrder: 0,
     });
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "BUAT_ITEM_LAYANAN",
+      entityType: "service_item",
+      entityId: validated.data.name,
+      details: { nama: validated.data.name, layananId: validated.data.serviceId },
+    });
+
     revalidatePath("/admin/layanan");
     await emitRefreshSignal();
 
@@ -66,7 +75,7 @@ export async function createServiceItemAction(
 export async function updateServiceItemAction(
   formData: FormData,
 ): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const id = BigInt(formData.get("id") as string);
 
@@ -96,6 +105,14 @@ export async function updateServiceItemAction(
       })
       .where(eq(serviceItemsTable.id, id));
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_ITEM_LAYANAN",
+      entityType: "service_item",
+      entityId: id.toString(),
+      details: { nama: validated.data.name },
+    });
+
     revalidatePath("/admin/layanan/[id]", "page");
     await emitRefreshSignal();
 
@@ -112,11 +129,19 @@ export async function updateServiceItemAction(
 export async function deleteServiceItemAction(
   formData: FormData,
 ): Promise<ActionResult> {
-  await requirePermission("layanan");
+  const profile = await requirePermission("layanan");
   try {
     const id = BigInt(formData.get("id") as string);
-
+    const item = await db.query.serviceItems.findFirst({ where: eq(serviceItemsTable.id, id), columns: { name: true } });
     await db.delete(serviceItemsTable).where(eq(serviceItemsTable.id, id));
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "HAPUS_ITEM_LAYANAN",
+      entityType: "service_item",
+      entityId: id.toString(),
+      details: { nama: item?.name },
+    });
 
     revalidatePath("/admin/layanan");
     await emitRefreshSignal();

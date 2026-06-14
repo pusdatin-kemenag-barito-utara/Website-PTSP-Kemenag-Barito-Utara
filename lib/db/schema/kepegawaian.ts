@@ -5,7 +5,10 @@ import {
   timestamp,
   date,
   varchar,
+  integer,
+  jsonb,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { users } from "./auth";
 
 export const laporanKinerja = pgTable("ptsp_laporan_kinerja", {
@@ -61,6 +64,44 @@ export const pengajuanCuti = pgTable("ptsp_pengajuan_cuti", {
 
   status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected (Status Akhir)
   komentarPimpinan: text("komentar_pimpinan"), // Legacy/General comment
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+}).enableRLS();
+
+export const dataCutiPegawai = pgTable("ptsp_data_cuti_pegawai", {
+  id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
+  no: integer("no"),
+  nama: text("nama").notNull(),
+  nip: text("nip"),
+  jabatan: text("jabatan"),
+  unitKerja: text("unit_kerja"),
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+}).enableRLS();
+
+export const rekapCutiTahunan = pgTable("ptsp_rekap_cuti_tahunan", {
+  id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
+  pegawaiId: uuid("pegawai_id")
+    .notNull()
+    .references(() => dataCutiPegawai.id, { onDelete: "cascade" }),
+  tahunTarget: integer("tahun_target").notNull(),
+  cutiTahun1: integer("cuti_tahun_1"),
+  cutiTahun2: integer("cuti_tahun_2"),
+  jumlahCuti: integer("jumlah_cuti"),
+  cutiTahunan: jsonb("cuti_tahunan").$type<number[]>(),
+  cutiAlasanPenting: integer("cuti_alasan_penting"),
+  cutiBesar: integer("cuti_besar"),
+  cutiBersalin: integer("cuti_bersalin"),
+  cutiSakit: integer("cuti_sakit"),
+  sisaCuti: integer("sisa_cuti"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),

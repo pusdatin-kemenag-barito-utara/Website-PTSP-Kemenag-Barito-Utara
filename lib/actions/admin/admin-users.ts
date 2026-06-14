@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth";
 import { z } from "zod";
 import { AdminService } from "@/lib/services/admin-service";
+import { createAuditLog } from "@/lib/audit";
 
 export type ActionResult = {
   success: boolean;
@@ -32,7 +33,7 @@ const DeleteUserSchema = z.object({
 });
 
 export async function updateUserRoleAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("super_admin");
+  const profile = await requirePermission("super_admin");
   try {
     const validated = UpdateUserRoleSchema.safeParse({
       id: formData.get("id"),
@@ -46,6 +47,14 @@ export async function updateUserRoleAction(formData: FormData): Promise<ActionRe
     const { id, role } = validated.data;
     await AdminService.updateRole(id, role);
 
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_ROLE_USER",
+      entityType: "user",
+      entityId: id,
+      details: { role },
+    });
+
     revalidatePath("/admin/pengguna");
     return { success: true, message: "Role pengguna berhasil diperbarui" };
   } catch (error: any) {
@@ -57,7 +66,7 @@ export async function updateUserPermissionsAction(
   userId: string,
   permissions: string[],
 ): Promise<ActionResult> {
-  await requirePermission("super_admin");
+  const profile = await requirePermission("super_admin");
   try {
     const validated = UpdateUserPermissionsSchema.safeParse({ userId, permissions });
     if (!validated.success) {
@@ -65,6 +74,14 @@ export async function updateUserPermissionsAction(
     }
 
     await AdminService.updatePermissions(userId, permissions);
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "UBAH_PERMISSIONS_USER",
+      entityType: "user",
+      entityId: userId,
+      details: { permissions },
+    });
 
     revalidatePath("/admin/pengguna");
     return { success: true, message: "Izin akses berhasil diperbarui" };
@@ -74,7 +91,7 @@ export async function updateUserPermissionsAction(
 }
 
 export async function deleteUserPermanentlyAction(formData: FormData): Promise<ActionResult> {
-  await requirePermission("super_admin");
+  const profile = await requirePermission("super_admin");
   try {
     const validated = DeleteUserSchema.safeParse({
       userId: formData.get("userId"),
@@ -86,6 +103,13 @@ export async function deleteUserPermanentlyAction(formData: FormData): Promise<A
 
     const { userId } = validated.data;
     await AdminService.deleteUserPermanently(userId);
+
+    await createAuditLog({
+      adminId: profile.id,
+      action: "HAPUS_USER_PERMANEN",
+      entityType: "user",
+      entityId: userId,
+    });
 
     revalidatePath("/admin/pengguna");
     return { success: true, message: "Pengguna berhasil dihapus secara permanen" };

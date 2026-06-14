@@ -38,8 +38,12 @@ export async function verifyTurnstileAction(token: string) {
   }
 }
 
-export async function handlePegawaiLoginAction(nip: string, password?: string) {
+export async function handlePegawaiLoginAction(nip: string, password?: string, token?: string) {
   if (!nip) return { error: "NIP wajib diisi." };
+  
+  if (!token) return { error: "Verifikasi keamanan (Turnstile) wajib diisi." };
+  const verifyRes = await verifyTurnstileToken(token);
+  if (!verifyRes) return { error: "Gagal memverifikasi keamanan. Silakan coba lagi." };
   
   const pseudoEmail = `${nip}@kemenag.go.id`;
   const defaultPassword = `${nip}barut`;

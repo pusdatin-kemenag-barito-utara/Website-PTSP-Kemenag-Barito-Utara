@@ -31,7 +31,8 @@ export function AdminPagination({
   return (
     <div className="flex flex-col items-center justify-between gap-4 px-2 py-4 sm:flex-row">
       <p className="text-sm font-medium text-slate-500">
-        Menampilkan halaman <span className="font-bold text-slate-900">{currentPage}</span> dari{" "}
+        <span className="font-bold text-slate-900">{totalCount}</span> catatan &mdash; halaman{" "}
+        <span className="font-bold text-slate-900">{currentPage}</span> dari{" "}
         <span className="font-bold text-slate-900">{totalPages}</span>
       </p>
       

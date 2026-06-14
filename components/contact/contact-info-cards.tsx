@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Building2, MapPin, MessageCircle, Mail, Clock, CalendarDays } from "lucide-react";
 
 function getOfficeScheduleByDay(weekday: string) {
   if (["Mon", "Tue", "Wed", "Thu"].includes(weekday)) {
@@ -157,21 +158,31 @@ export function ContactInfoCards() {
           {mounted ? officeStatus.detail : "Menghitung status jam kerja..."}
         </p>
 
-        <div className="mt-auto grid gap-4 rounded-2xl bg-slate-50 p-5 border border-slate-100 relative z-10">
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-0.5">
-              Waktu kantor saat ini
-            </p>
-            <p className="font-bold text-slate-900 text-[13px]">
-              {mounted ? officeStatus.nowText : "-"}
-            </p>
+        <div className="mt-auto grid gap-5 rounded-2xl bg-slate-50 p-5 border border-slate-100 relative z-10">
+          <div className="flex gap-3">
+            <div className="mt-0.5 shrink-0 h-8 w-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400">
+              <Clock className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 mb-0.5">
+                Waktu kantor saat ini
+              </p>
+              <p className="font-bold text-slate-900 text-[13px]">
+                {mounted ? officeStatus.nowText : "-"}
+              </p>
+            </div>
           </div>
 
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-1">Jam layanan</p>
-            <div className="space-y-1 font-medium text-slate-700 text-[13px]">
-              <p>Senin - Kamis, 07.30 - 16.00 WIB</p>
-              <p>Jum'at, 07.30 - 16.30 WIB</p>
+          <div className="flex gap-3">
+            <div className="mt-0.5 shrink-0 h-8 w-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400">
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 mb-1">Jam layanan</p>
+              <div className="space-y-1 font-medium text-slate-700 text-[13px]">
+                <p>Senin - Kamis, 07.30 - 16.00 WIB</p>
+                <p>Jum'at, 07.30 - 16.30 WIB</p>
+              </div>
             </div>
           </div>
         </div>
@@ -183,53 +194,72 @@ export function ContactInfoCards() {
           Kontak Utama
         </p>
 
-        <div className="grid gap-3.5">
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-0.5">
-              Nama Instansi
-            </p>
-            <p className="font-bold text-slate-900 text-[13px]">
-              PTSP Kementerian Agama Kabupaten Barito Utara
-            </p>
+        <div className="grid gap-4 mt-2">
+          {/* Instansi */}
+          <div className="flex gap-3">
+            <div className="mt-0.5 shrink-0 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+              <Building2 className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 mb-0.5">
+                Nama Instansi
+              </p>
+              <p className="font-bold text-slate-900 text-[13px]">
+                PTSP Kementerian Agama Kabupaten Barito Utara
+              </p>
+            </div>
           </div>
 
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-0.5">Alamat</p>
-            <p className="font-bold text-slate-900 text-[13px] leading-snug">
-              Jl. Ahmad Yani No.126 Muara Teweh 73811
-            </p>
+          {/* Alamat */}
+          <div className="flex gap-3">
+            <div className="mt-0.5 shrink-0 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+              <MapPin className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 mb-0.5">Alamat</p>
+              <a 
+                href="https://www.google.com/maps/search/Kementerian+Agama+Kabupaten+Barito+Utara"
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-slate-900 hover:text-[#059669] transition-colors text-[13px] leading-snug"
+              >
+                Jl. Ahmad Yani No.126 Muara Teweh 73811
+              </a>
+            </div>
           </div>
 
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-0.5">WhatsApp</p>
-            <a
-              href="https://wa.me/6251921269"
-              target="_blank"
-              rel="noreferrer"
-              className="font-bold text-[#059669] hover:text-[#047857] transition-colors text-[13px] inline-block"
-            >
-              +62 519-21269
-            </a>
+          {/* WhatsApp */}
+          <div className="flex gap-3">
+            <div className="mt-0.5 shrink-0 h-8 w-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669]">
+              <MessageCircle className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 mb-0.5">WhatsApp Admin PTSP</p>
+              <a
+                href="https://wa.me/6285117491212?text=Halo%20Admin%20PTSP%2C%20saya%20butuh%20bantuan%2Finformasi%20terkait%20layanan%20di%20Kemenag%20Barito%20Utara."
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-[#059669] hover:text-[#047857] transition-colors text-[13px] inline-block"
+              >
+                +62 851-1749-1212
+              </a>
+            </div>
           </div>
 
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-0.5">Telepon</p>
-            <a
-              href="tel:051921269"
-              className="font-bold text-[#059669] hover:text-[#047857] transition-colors text-[13px] inline-block"
-            >
-              (0519) 21269
-            </a>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-bold text-slate-500 mb-0.5">Email</p>
-            <a
-              href="mailto:ptspkemenagbaritoutara@gmail.com"
-              className="font-bold text-[#059669] hover:text-[#047857] transition-colors text-[13px] inline-block break-all"
-            >
-              ptspkemenagbaritoutara@gmail.com
-            </a>
+          {/* Email */}
+          <div className="flex gap-3">
+            <div className="mt-0.5 shrink-0 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+              <Mail className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-500 mb-0.5">Email</p>
+              <a
+                href="mailto:ptspkemenagbaritoutara@gmail.com"
+                className="font-bold text-[#059669] hover:text-[#047857] transition-colors text-[13px] inline-block break-all"
+              >
+                ptspkemenagbaritoutara@gmail.com
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -17,7 +17,6 @@ import {
   LoginTurnstile,
   TurnstileRef,
 } from "@/components/auth/_components/login-turnstile";
-import { submitFeedbackAction } from "@/lib/actions/public/feedback";
 import { motion } from "framer-motion";
 
 export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolean } = {}) {
@@ -46,6 +45,21 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
       return;
     }
 
+    if (name.length < 2) {
+      toast.error("Nama Terlalu Pendek", { description: "Nama harus berisi minimal 2 karakter." });
+      return;
+    }
+
+    if (phone.length < 9 || phone.length > 20) {
+      toast.error("Nomor HP Tidak Valid", { description: "Masukkan nomor HP yang valid (9-20 digit)." });
+      return;
+    }
+
+    if (content.length < 10) {
+      toast.error("Isi Pesan Terlalu Pendek", { description: "Harap jelaskan saran/pengaduan Anda lebih rinci (minimal 10 karakter)." });
+      return;
+    }
+
     if (!turnstileToken) {
       toast.error("Verifikasi Keamanan Diperlukan", {
         description:
@@ -57,18 +71,24 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
     setSubmitting(true);
 
     try {
-      const result = await submitFeedbackAction({
-        name,
-        phone,
-        category,
-        serviceType,
-        isAnonymous,
-        content,
-        turnstileToken,
+      const res = await fetch("/api/e-pengaduan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          category,
+          serviceType,
+          isAnonymous,
+          content,
+          turnstileToken,
+        }),
       });
 
-      if (result.error) {
-        throw new Error(result.error);
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "Gagal mengirim pengaduan");
       }
 
       toast.success("Terima Kasih!", {
@@ -281,7 +301,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Tuliskan saran, kritik, masukan, atau pengaduan secara terperinci..."
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-y min-h-[120px]"
                 />
               </div>
 

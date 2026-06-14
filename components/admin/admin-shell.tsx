@@ -19,6 +19,7 @@ import {
   Database,
   BookOpen,
   Calendar,
+  CalendarCheck,
   Construction,
 } from "lucide-react";
 import { isSuperAdmin as checkSuperAdmin } from "@/lib/constants";
@@ -81,7 +82,7 @@ const ADMIN_NAV: NavItem[] = [
   },
   {
     label: "Saran & Pengaduan",
-    href: "/admin/saran-pengaduan",
+    href: "/admin/e-pengaduan",
     icon: Mail,
     group: "Layanan Publik",
     id: "saran_pengaduan",
@@ -101,7 +102,7 @@ const ADMIN_NAV: NavItem[] = [
     id: "surat_keluar",
   },
   {
-    label: "Manajemen Pegawai",
+    label: "Manajemen Kepegawaian",
     href: "/admin/kepegawaian/pegawai",
     icon: Users,
     group: "Kepegawaian",
@@ -176,7 +177,7 @@ export function AdminShell({
   return (
     <div className="flex w-full overflow-hidden bg-slate-50 fixed inset-0">
       {/* ── Desktop Sidebar ─────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[280px] shrink-0 flex-col bg-white border-r border-slate-200 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20">
+      <aside className="hidden lg:flex w-[280px] shrink-0 flex-col bg-[#0f1117] border-r border-white/5 shadow-[2px_0_20px_rgba(0,0,0,0.3)] z-20">
         <AdminSidebar
           groups={groups}
           authorizedNav={authorizedNav}
@@ -194,7 +195,7 @@ export function AdminShell({
             onClick={() => setMobileOpen(false)}
           />
           {/* Drawer */}
-          <aside className="relative z-10 flex w-[280px] flex-col bg-white border-r border-slate-200 shadow-2xl">
+          <aside className="relative z-10 flex w-[280px] flex-col bg-[#0f1117] border-r border-white/5 shadow-2xl">
             <AdminSidebar
               groups={groups}
               authorizedNav={authorizedNav}

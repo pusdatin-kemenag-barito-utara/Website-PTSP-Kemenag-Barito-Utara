@@ -41,7 +41,7 @@ async function checkMaintenanceStatus(): Promise<boolean> {
           apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
         },
-        cache: "no-store", // Jangan di-cache agar perubahan instan
+        next: { revalidate: 5 }, // Cache selama 5 detik untuk performa, tetap terasa instan
       }
     );
     const data = await response.json();
@@ -87,7 +87,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if ((path.startsWith("/api/feedback") || path.startsWith("/buku-tamu") || path.startsWith("/janji-temu")) && method === "POST") {
+  if ((path.startsWith("/api/feedback") || path.startsWith("/api/buku-tamu") || path.startsWith("/api/janji-temu") || path.startsWith("/buku-tamu") || path.startsWith("/janji-temu")) && method === "POST") {
     const { allowed } = checkRateLimit(ip, "feedback", RATE_LIMITS.FEEDBACK);
     if (!allowed) {
       return NextResponse.json(
@@ -108,6 +108,15 @@ export async function proxy(request: NextRequest) {
     (p) => path === p || path.startsWith(p + "/"),
   );
   
+  let response: NextResponse;
+  if (isPublicPage) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-url", path + request.nextUrl.search);
+    response = NextResponse.next({ request: { headers: requestHeaders } });
+  } else {
+    response = await updateSession(request);
+  }
+
   // Check maintenance mode
   const isMaintenanceMode = await checkMaintenanceStatus();
   const isExemptFromMaintenance = 
@@ -117,21 +126,16 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/api");
 
   if (isMaintenanceMode && !isExemptFromMaintenance) {
-    let response = NextResponse.redirect(new URL("/maintenance", request.url), 302);
-    response.headers.set("X-RateLimit-Limit", "60");
-    response.headers.set("X-Frame-Options", "DENY");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-    return response;
-  }
-
-  let response: NextResponse;
-  if (isPublicPage) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-url", path + request.nextUrl.search);
-    response = NextResponse.next({ request: { headers: requestHeaders } });
-  } else {
-    response = await updateSession(request);
+    const redirectRes = NextResponse.redirect(new URL("/maintenance", request.url), 302);
+    
+    // Copy cookies from updateSession to ensure session doesn't die during maintenance
+    const setCookies = response.headers.getSetCookie();
+    if (setCookies) {
+      for (const cookie of setCookies) {
+        redirectRes.headers.append("Set-Cookie", cookie);
+      }
+    }
+    response = redirectRes;
   }
 
   response.headers.set("X-RateLimit-Limit", "60");

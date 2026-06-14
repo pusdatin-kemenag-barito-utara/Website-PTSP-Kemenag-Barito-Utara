@@ -1,19 +1,35 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { pengajuanCuti } from "@/lib/db/schema/kepegawaian";
+import { pengajuanCuti, dataCutiPegawai } from "@/lib/db/schema/kepegawaian";
 import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { eq, and } from "drizzle-orm";
+import { isSuperAdmin } from "@/lib/constants";
 
 export async function getPegawaiProfileAction() {
   const profile = await getCurrentProfile();
   if (!profile) return null;
+
+  const superAdmin = isSuperAdmin(profile.email);
+  const nip = profile.nip || (profile.email ? profile.email.split("@")[0] : "");
+
+  let dataPegawai = null;
+  
+  // Jika dia BUKAN super admin, barulah sinkron dengan data pegawai
+  if (!superAdmin) {
+    dataPegawai = await db.query.dataCutiPegawai.findFirst({
+      where: eq(dataCutiPegawai.nip, nip),
+    });
+  }
+
   return {
-    nama: profile.fullName || "",
-    nip: profile.email ? profile.email.split("@")[0] : "",
-    unitKerja: "", // Akan diisi manual oleh user
-    jabatan: profile.unitKerja || "", // Data dari DB sebenarnya adalah Jabatan
+    nama: superAdmin ? (profile.fullName || "Super Admin") : (dataPegawai?.nama || profile.fullName || ""),
+    nip: superAdmin ? "" : nip,
+    unitKerja: superAdmin ? "Kantor Kementerian Agama" : (dataPegawai?.unitKerja || profile.unitKerja || ""),
+    jabatan: superAdmin ? "Super Administrator" : (dataPegawai?.jabatan || profile.jabatan || ""),
+    isSuperAdmin: superAdmin,
   };
 }
 
@@ -60,8 +76,8 @@ export async function createPengajuanCutiAction(formData: FormData) {
     }
 
     const cleanPhone = noHp.replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      return { error: "Nomor WhatsApp tidak valid (minimal 10 angka)." };
+    if (cleanPhone.length < 9) {
+      return { error: "Nomor WhatsApp tidak valid (minimal 9 angka)." };
     }
 
     // Logika bypass Atasan Langsung untuk Pejabat Eselon IV
@@ -72,6 +88,14 @@ export async function createPengajuanCutiAction(formData: FormData) {
     let dokumenUrl = null;
 
     if (dokumen && dokumen.size > 0) {
+      if (dokumen.size > 5 * 1024 * 1024) {
+        return { error: "Ukuran dokumen maksimal 5MB." };
+      }
+      const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+      if (!allowedTypes.includes(dokumen.type)) {
+        return { error: "Format dokumen harus PDF, JPG, atau PNG." };
+      }
+
       const { createAdminClient } = await import("@/lib/supabase/admin");
       const admin = createAdminClient();
       const ext = dokumen.name.split(".").pop();
@@ -160,7 +184,6 @@ _Pesan otomatis, mohon tidak dibalas._`;
   }
 }
 
-import { eq, and } from "drizzle-orm";
 
 export async function deletePengajuanCutiAction(id: string) {
   try {
@@ -240,8 +263,8 @@ export async function updatePengajuanCutiAction(
     }
 
     const cleanPhone = noHp.replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      return { error: "Nomor WhatsApp tidak valid (minimal 10 angka)." };
+    if (cleanPhone.length < 9) {
+      return { error: "Nomor WhatsApp tidak valid (minimal 9 angka)." };
     }
 
     const isEselonIV = unitKerja === "Pejabat Eselon IV";
@@ -251,6 +274,14 @@ export async function updatePengajuanCutiAction(
     let dokumenUrl = cuti.dokumenUrl;
 
     if (dokumen && dokumen.size > 0) {
+      if (dokumen.size > 5 * 1024 * 1024) {
+        return { error: "Ukuran dokumen maksimal 5MB." };
+      }
+      const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+      if (!allowedTypes.includes(dokumen.type)) {
+        return { error: "Format dokumen harus PDF, JPG, atau PNG." };
+      }
+
       const { createAdminClient } = await import("@/lib/supabase/admin");
       const admin = createAdminClient();
       const ext = dokumen.name.split(".").pop();

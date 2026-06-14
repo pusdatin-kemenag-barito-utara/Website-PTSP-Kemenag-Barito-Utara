@@ -6,9 +6,12 @@ import {
   handlePegawaiLoginAction,
 } from "@/lib/actions/auth/login-helper";
 import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
+import { logLoginAction } from "@/lib/actions/auth/login-audit";
+import { checkLoginLockoutAction, recordFailedLoginAction } from "@/lib/actions/auth/login-lockout";
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -40,16 +43,29 @@ export function LoginFormByRole({
   initialError?: string;
   nip?: string;
 }) {
+  const router = useRouter();
   const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [savedIdentifier, setSavedIdentifier] = useState("");
   const turnstileRef = useRef<TurnstileRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
+  const storageKey =
+    mode === "pemohon" ? "ptsp_remember_phone" :
+    mode === "petugas" ? "ptsp_remember_email" :
+    "ptsp_remember_nip";
+
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      setSavedIdentifier(stored);
+      setRememberMe(true);
+    }
+  }, [storageKey]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,6 +75,19 @@ export function LoginFormByRole({
     const formData = new FormData(event.currentTarget);
     const password = String(formData.get("password") || "");
     const supabase = createClient();
+
+    // Handle remember me for all modes
+    if (mode === "pemohon") {
+      const phoneRaw = String(formData.get("phone") || "");
+      const val = normalizeWhatsappNumber(phoneRaw);
+      rememberMe && val ? localStorage.setItem(storageKey, val) : localStorage.removeItem(storageKey);
+    } else if (mode === "petugas") {
+      const emailVal = String(formData.get("email") || "");
+      rememberMe && emailVal ? localStorage.setItem(storageKey, emailVal) : localStorage.removeItem(storageKey);
+    } else if (mode === "pegawai") {
+      const nipVal = String(formData.get("nip") || "");
+      rememberMe && nipVal ? localStorage.setItem(storageKey, nipVal) : localStorage.removeItem(storageKey);
+    }
     let email = String(formData.get("email") || "");
 
     if (mode === "pemohon") {
@@ -86,10 +115,12 @@ export function LoginFormByRole({
         return;
       }
       
-      const result = await handlePegawaiLoginAction(nip, password);
+      const result = await handlePegawaiLoginAction(nip, password, turnstileToken || undefined);
       if (result.error || !result.email) {
         setLoading(false);
         setError(result.error || "Gagal memverifikasi NIP.");
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
         return;
       }
       email = result.email;
@@ -107,12 +138,21 @@ export function LoginFormByRole({
       return;
     }
 
-    const verifyResult = await verifyTurnstileAction(turnstileToken);
-    if (!verifyResult.success) {
+    if (mode !== "pegawai") {
+      const verifyResult = await verifyTurnstileAction(turnstileToken);
+      if (!verifyResult.success) {
+        setLoading(false);
+        setError(verifyResult.error || "Verifikasi keamanan gagal. Silakan coba lagi.");
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
+        return;
+      }
+    }
+
+    const lockoutCheck = await checkLoginLockoutAction(email);
+    if (lockoutCheck.error) {
       setLoading(false);
-      setError(verifyResult.error || "Verifikasi keamanan gagal. Silakan coba lagi.");
-      turnstileRef.current?.reset();
-      setTurnstileToken(null);
+      setError(lockoutCheck.error);
       return;
     }
 
@@ -124,9 +164,14 @@ export function LoginFormByRole({
 
       if (signInError) {
         setLoading(false);
-        setError(signInError.message === "Invalid login credentials" 
-          ? "Email atau password salah. Pastikan akun Anda sudah terdaftar." 
-          : signInError.message);
+        if (signInError.message === "Invalid login credentials") {
+          await recordFailedLoginAction(email);
+          setError("Email atau password salah. Pastikan akun Anda sudah terdaftar.");
+        } else {
+          setError(signInError.message);
+        }
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
         return;
       }
 
@@ -160,6 +205,8 @@ export function LoginFormByRole({
         setError("Akun ini bukan akun petugas/admin.");
         return;
       }
+
+      await logLoginAction();
 
       const safeRedirect = callbackUrl && isSafeRedirect(callbackUrl) 
         ? callbackUrl 
@@ -209,7 +256,7 @@ export function LoginFormByRole({
 
   return (
     <m.form 
-      className="space-y-3" 
+      className="space-y-2" 
       onSubmit={onSubmit}
       variants={containerVariants}
       initial="hidden"
@@ -224,6 +271,7 @@ export function LoginFormByRole({
               placeholder="Masukkan nomor WhatsApp" 
               type="tel"
               inputMode="numeric"
+              defaultValue={savedIdentifier}
               onInput={(e) => {
                 e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
               }}
@@ -237,7 +285,7 @@ export function LoginFormByRole({
               type="text" 
               name="nip" 
               required 
-              defaultValue={nip}
+              defaultValue={mode === "pegawai" ? savedIdentifier : nip}
               placeholder="Masukkan NIP Anda" 
               onInput={(e) => {
                 e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
@@ -248,7 +296,7 @@ export function LoginFormByRole({
       ) : (
         <m.div variants={itemVariants}>
           <Field label="Email" required>
-            <Input type="email" name="email" required placeholder="nama@gmail.com" />
+            <Input type="email" name="email" required placeholder="nama@gmail.com" defaultValue={savedIdentifier} />
           </Field>
         </m.div>
       )}
@@ -287,6 +335,28 @@ export function LoginFormByRole({
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
+      </m.div>
+
+      <m.div variants={itemVariants}>
+        <label className="flex items-center gap-2.5 cursor-pointer group select-none w-fit">
+          <div
+            onClick={() => setRememberMe(!rememberMe)}
+            className={`relative w-10 h-5 rounded-full transition-all duration-300 cursor-pointer flex-shrink-0 ${
+              rememberMe
+                ? mode === "petugas" ? "bg-[#0f8a54]" : mode === "pegawai" ? "bg-[#047857]" : "bg-emerald-500"
+                : "bg-slate-200 group-hover:bg-slate-300"
+            }`}
+          >
+            <div
+              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${
+                rememberMe ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </div>
+          <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
+            Ingat Saya
+          </span>
+        </label>
       </m.div>
 
       <m.div variants={itemVariants}>

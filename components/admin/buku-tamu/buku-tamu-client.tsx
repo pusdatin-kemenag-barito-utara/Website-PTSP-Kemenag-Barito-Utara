@@ -147,21 +147,23 @@ export function BukuTamuClient({
     });
   };
 
-  const handleToggleMode = async () => {
+  const handleToggleMode = () => {
     setIsToggling(true);
-    const newMode = !isManualMode;
-    const res = await toggleGuestBookModeAction(newMode);
-    if (res.success) {
-      setIsManualMode(newMode);
-      toast.success("Mode Berhasil Diubah", {
-        description: res.message,
-      });
-    } else {
-      toast.error("Gagal Mengubah Mode", {
-        description: res.error,
-      });
-    }
-    setIsToggling(false);
+    startTransition(async () => {
+      const newMode = !isManualMode;
+      const res = await toggleGuestBookModeAction(newMode);
+      if (res.success) {
+        setIsManualMode(newMode);
+        toast.success("Mode Berhasil Diubah", {
+          description: res.message,
+        });
+      } else {
+        toast.error("Gagal Mengubah Mode", {
+          description: res.error,
+        });
+      }
+      setIsToggling(false);
+    });
   };
 
   return (

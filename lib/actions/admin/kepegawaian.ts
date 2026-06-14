@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { laporanKinerja } from "@/lib/db/schema";
-import { profiles } from "@/lib/db/schema";
+import { profiles, dataCutiPegawai } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -134,6 +134,7 @@ export async function getPegawaiListAction() {
 export async function createPegawaiAction(data: {
   fullName: string;
   nip: string;
+  jabatan: string;
   unitKerja: string;
 }) {
   try {
@@ -144,7 +145,7 @@ export async function createPegawaiAction(data: {
     const adminClient = createAdminClient();
 
     const pseudoEmail = `${data.nip}@pegawai.barut.kemenag.go.id`;
-    const defaultPassword = `${data.nip}barut`;
+    const defaultPassword = `12345barut`;
 
     const { data: authData, error: createError } = await adminClient.auth.admin.createUser({
       email: pseudoEmail,
@@ -164,6 +165,7 @@ export async function createPegawaiAction(data: {
       await db.update(profiles).set({
         fullName: data.fullName,
         role: "pegawai",
+        jabatan: data.jabatan,
         unitKerja: data.unitKerja,
         permissions: ["e_laporan_kinerja"],
       }).where(eq(profiles.id, authData.user.id));
@@ -180,6 +182,7 @@ export async function updatePegawaiAction(
   id: string,
   data: {
     fullName: string;
+    jabatan: string;
     unitKerja: string;
   }
 ) {
@@ -187,11 +190,28 @@ export async function updatePegawaiAction(
     const user = await getCurrentUser();
     if (!user) return { error: "Belum login." };
 
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, id),
+    });
+
     await db.update(profiles).set({
       fullName: data.fullName,
+      jabatan: data.jabatan,
       unitKerja: data.unitKerja,
       updatedAt: new Date(),
     }).where(eq(profiles.id, id));
+
+    if (profile && profile.email) {
+      const nip = profile.email.split('@')[0];
+      if (nip) {
+        await db.update(dataCutiPegawai).set({
+          nama: data.fullName,
+          jabatan: data.jabatan,
+          unitKerja: data.unitKerja,
+          updatedAt: new Date(),
+        }).where(eq(dataCutiPegawai.nip, nip));
+      }
+    }
 
     revalidatePath("/admin/kepegawaian/pegawai");
     return { success: true };
@@ -220,145 +240,4 @@ export async function deletePegawaiAction(id: string) {
   }
 }
 
-export async function uploadPegawaiCsvAction(formData: FormData) {
-  try {
-    const user = await getCurrentUser();
-    if (!user) return { error: "Belum login." };
 
-    const file = formData.get("file") as File;
-    if (!file) return { error: "File tidak ditemukan." };
-
-    const text = await file.text();
-    const lines = text.split("\n");
-    const { createAdminClient } = await import("@/lib/supabase/admin");
-    const adminClient = createAdminClient();
-
-    let successCount = 0;
-    let errorCount = 0;
-    const errors: string[] = [];
-
-    const delimiter = text.indexOf(';') > -1 && text.split(';').length > text.split(',').length ? ';' : ',';
-
-    const usersToProcess = [];
-    for (let i = 2; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      const cols = [];
-      let current = "";
-      let inQuotes = false;
-      for (let char of line) {
-        if (char === '"') inQuotes = !inQuotes;
-        else if (char === delimiter && !inQuotes) {
-          cols.push(current);
-          current = "";
-        } else {
-          current += char;
-        }
-      }
-      cols.push(current);
-
-      if (cols.length < 4) continue;
-
-      const nama = cols[1]?.trim();
-      const nip = cols[2]?.trim();
-      const jabatan = cols[3]?.trim();
-
-      if (!nip || nip.length < 10) continue;
-      usersToProcess.push({ nama, nip, jabatan });
-    }
-    console.log(`CSV parsed: ${lines.length} lines. Detected delimiter: ${delimiter}. Users to process: ${usersToProcess.length}`);
-
-    // Process in chunks to avoid overwhelming the database pool
-    const chunkSize = 15;
-    for (let i = 0; i < usersToProcess.length; i += chunkSize) {
-      const chunk = usersToProcess.slice(i, i + chunkSize);
-      
-      await Promise.all(chunk.map(async ({ nama, nip, jabatan }) => {
-        const pseudoEmail = `${nip}@pegawai.barut.kemenag.go.id`;
-        const defaultPassword = `${nip}barut`;
-
-        try {
-          const { users } = await import("@/lib/db/schema/auth");
-          let targetUserId: string | undefined;
-          let hasProfile = false;
-
-          const existingProfile = await db.query.profiles.findFirst({
-            where: eq(profiles.email, pseudoEmail)
-          });
-
-          if (existingProfile) {
-            targetUserId = existingProfile.id;
-            hasProfile = true;
-          } else {
-            const existingAuth = await db.select({ id: users.id }).from(users).where(eq(users.email, pseudoEmail)).limit(1);
-            if (existingAuth.length > 0) {
-              targetUserId = existingAuth[0].id;
-            }
-          }
-
-          if (targetUserId) {
-            if (hasProfile) {
-              await db.update(profiles).set({
-                fullName: nama,
-                role: "pegawai",
-                unitKerja: jabatan,
-                permissions: ["e_laporan_kinerja"],
-              }).where(eq(profiles.id, targetUserId));
-            } else {
-              await db.insert(profiles).values({
-                id: targetUserId,
-                email: pseudoEmail,
-                fullName: nama,
-                role: "pegawai",
-                unitKerja: jabatan,
-                permissions: ["e_laporan_kinerja"],
-              });
-            }
-            successCount++;
-            return;
-          }
-
-          const { data: authData, error: createError } = await adminClient.auth.admin.createUser({
-            email: pseudoEmail,
-            password: defaultPassword,
-            email_confirm: true,
-            user_metadata: {
-              full_name: nama,
-              nip: nip,
-            },
-          });
-
-          if (createError) {
-            errorCount++;
-            errors.push(`NIP ${nip}: ${createError.message}`);
-            return;
-          }
-
-          if (authData.user) {
-            await db.insert(profiles).values({
-              id: authData.user.id,
-              email: pseudoEmail,
-              fullName: nama,
-              role: "pegawai",
-              unitKerja: jabatan,
-              permissions: ["e_laporan_kinerja"],
-            });
-            successCount++;
-          }
-        } catch (dbErr: any) {
-          console.error("DB Error:", dbErr.message || dbErr);
-          errorCount++;
-        }
-      }));
-    }
-
-    revalidatePath("/admin/kepegawaian/pegawai");
-    return { 
-      success: true, 
-      message: `Berhasil import ${successCount} pegawai, Gagal: ${errorCount}` 
-    };
-  } catch (err: any) {
-    return { error: err.message };
-  }
-}

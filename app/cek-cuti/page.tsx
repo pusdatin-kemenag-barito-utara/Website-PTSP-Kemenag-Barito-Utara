@@ -211,6 +211,9 @@ export default function CekCutiPage() {
                               Cuti Bersalin
                             </th>
                             <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
+                              Cuti Besar
+                            </th>
+                            <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
                               Cuti Sakit
                             </th>
                             <th className="py-4 px-4 font-bold text-emerald-700 whitespace-nowrap text-sm text-center bg-emerald-50/50 border-l border-emerald-100">
@@ -240,6 +243,9 @@ export default function CekCutiPage() {
                             </td>
                             <td className="py-4 px-4 text-slate-600 font-medium text-center">
                               {result.cutiBersalin || "-"}
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium text-center">
+                              {result.cutiBesar || "-"}
                             </td>
                             <td className="py-4 px-4 text-slate-600 font-medium text-center">
                               {result.cutiSakit || "-"}
@@ -309,6 +315,14 @@ export default function CekCutiPage() {
                           </span>
                           <span className="text-slate-600 font-medium text-sm">
                             {result.cutiBersalin || "-"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+                          <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            Cuti Besar
+                          </span>
+                          <span className="text-slate-600 font-medium text-sm">
+                            {result.cutiBesar || "-"}
                           </span>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">

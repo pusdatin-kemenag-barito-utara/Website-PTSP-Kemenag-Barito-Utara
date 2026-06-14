@@ -45,13 +45,13 @@ const UNIT_KERJA_OPTIONS = [
 ];
 
 const TAHUN_OPTIONS = Array.from({ length: 41 }, (_, i) => ({
-  value: String(i).padStart(2, "0"),
-  label: `${String(i).padStart(2, "0")} Tahun`,
+  value: String(i),
+  label: `${i} Tahun`,
 }));
 
 const BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
-  value: String(i + 1).padStart(2, "0"),
-  label: `${String(i + 1).padStart(2, "0")} Bulan`,
+  value: String(i + 1),
+  label: `${i + 1} Bulan`,
 }));
 
 const JENIS_PEGAWAI_OPTIONS = [
@@ -77,9 +77,8 @@ export default function PengajuanCutiPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    setFile(null);
-  }, [jenisCuti]);
+  // File tidak akan di-reset otomatis saat jenis cuti berubah
+  // agar user tidak perlu mengunggah ulang jika tidak sengaja mengganti dropdown
 
   const showDocumentUpload =
     jenisCuti !== "" &&
@@ -103,16 +102,16 @@ export default function PengajuanCutiPage() {
   }
 
   const toTitleCase = (str: string) => {
-    return str.replace(/\w\S*/g, function (txt) {
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
+    return str; // Tidak lagi mengubah format kapitalisasi secara paksa (Bug Fix)
   };
 
   const [profile, setProfile] = useState({
     nama: "",
     nip: "",
     jabatan: "",
+    isSuperAdmin: false,
   });
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     async function loadProfile() {
@@ -122,9 +121,11 @@ export default function PengajuanCutiPage() {
           nama: data.nama,
           nip: data.nip,
           jabatan: data.jabatan,
+          isSuperAdmin: data.isSuperAdmin,
         });
         setUnitKerja(data.unitKerja);
       }
+      setProfileLoading(false);
     }
     loadProfile();
   }, []);
@@ -133,6 +134,11 @@ export default function PengajuanCutiPage() {
     e.preventDefault();
     if (!signature) {
       toast.error("Silakan berikan tanda tangan Anda terlebih dahulu.");
+      return;
+    }
+
+    if (tanggalPilihan.length === 0) {
+      toast.error("Silakan pilih tanggal cuti terlebih dahulu.");
       return;
     }
 
@@ -145,6 +151,7 @@ export default function PengajuanCutiPage() {
   };
 
   const handleConfirmSubmit = async () => {
+    if (loading) return;
     if (!formRef.current) return;
     setLoading(true);
     setIsConfirmOpen(false);
@@ -170,6 +177,7 @@ export default function PengajuanCutiPage() {
       toast.error(result.error);
     } else {
       toast.success("Pengajuan cuti berhasil dikirim!");
+      router.refresh();
       router.push("/pegawai/cuti");
     }
   };
@@ -216,28 +224,43 @@ export default function PengajuanCutiPage() {
                 </Field>
                 <div className="hidden sm:block"></div>
                 <Field label="Nama Lengkap">
-                  <Input
-                    name="nama"
-                    value={profile.nama}
-                    readOnly
-                    className="bg-slate-100 font-medium text-slate-500 cursor-not-allowed"
-                  />
+                  {profileLoading ? (
+                    <div className="h-10 w-full bg-slate-200 animate-pulse rounded-md border border-slate-100"></div>
+                  ) : (
+                    <Input
+                      name="nama"
+                      value={profile.nama}
+                      onChange={(e) => profile.isSuperAdmin && setProfile({ ...profile, nama: e.target.value })}
+                      readOnly={!profile.isSuperAdmin}
+                      className={!profile.isSuperAdmin ? "bg-slate-100 font-medium text-slate-500 cursor-not-allowed" : "bg-slate-50 font-medium"}
+                    />
+                  )}
                 </Field>
                 <Field label="NIP">
-                  <Input
-                    name="nip"
-                    value={profile.nip}
-                    readOnly
-                    className="bg-slate-100 font-medium text-slate-500 cursor-not-allowed"
-                  />
+                  {profileLoading ? (
+                    <div className="h-10 w-full bg-slate-200 animate-pulse rounded-md border border-slate-100"></div>
+                  ) : (
+                    <Input
+                      name="nip"
+                      value={profile.nip}
+                      onChange={(e) => profile.isSuperAdmin && setProfile({ ...profile, nip: e.target.value })}
+                      readOnly={!profile.isSuperAdmin}
+                      className={!profile.isSuperAdmin ? "bg-slate-100 font-medium text-slate-500 cursor-not-allowed" : "bg-slate-50 font-medium"}
+                    />
+                  )}
                 </Field>
                 <Field label="Jabatan">
-                  <Input
-                    name="jabatan"
-                    defaultValue={profile.jabatan}
-                    placeholder="Masukkan jabatan Anda"
-                    className="bg-slate-50 font-medium"
-                  />
+                  {profileLoading ? (
+                    <div className="h-10 w-full bg-slate-200 animate-pulse rounded-md border border-slate-100"></div>
+                  ) : (
+                    <Input
+                      name="jabatan"
+                      value={profile.jabatan}
+                      onChange={(e) => setProfile({ ...profile, jabatan: e.target.value })}
+                      placeholder="Masukkan jabatan Anda"
+                      className="bg-slate-50 font-medium"
+                    />
+                  )}
                 </Field>
                 <Field label="Unit Kerja">
                   <ModernSelect

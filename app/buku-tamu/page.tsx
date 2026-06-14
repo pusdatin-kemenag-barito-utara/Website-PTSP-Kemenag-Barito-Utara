@@ -1,13 +1,13 @@
 import { db, serializeBigInt } from "@/lib/db";
 import { guestBook } from "@/lib/db/schema";
 import { systemStatus } from "@/lib/db/schema/logs";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import PageBanner from "@/components/common/PageBanner";
 import GuestBookClient from "./_components/guest-book-client";
 import { RealtimeSync } from "@/components/ui/realtime-sync";
 import type { Metadata } from "next";
 
-export const revalidate = 0; // Real-time data loading without caching
+export const dynamic = "force-dynamic"; // Real-time data loading without caching
 
 export const metadata: Metadata = {
   title: "Buku Tamu Elektronik",
@@ -15,13 +15,16 @@ export const metadata: Metadata = {
 };
 
 export default async function GuestBookPage() {
-  const { desc } = await import("drizzle-orm");
-  const rawEntries = await db
-    .select()
-    .from(guestBook)
-    .orderBy(desc(guestBook.visitDate));
-
-  const entries = serializeBigInt(rawEntries) || [];
+  let entries: any[] = [];
+  try {
+    const rawEntries = await db
+      .select()
+      .from(guestBook)
+      .orderBy(desc(guestBook.visitDate));
+    entries = serializeBigInt(rawEntries) || [];
+  } catch (err) {
+    console.error("Failed to query guestBook:", err);
+  }
   
   let allowManualGuestBookDate = false;
   try {

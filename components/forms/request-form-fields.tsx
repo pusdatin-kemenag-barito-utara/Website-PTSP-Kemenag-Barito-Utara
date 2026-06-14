@@ -1,8 +1,47 @@
+"use client";
+
+import { useState } from "react";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ModernSelect } from "@/components/ui/modern-select";
+import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { parseJsonArray } from "@/lib/utils";
+import { ListOrdered, Type, AlignLeft, Calendar, Hash } from "lucide-react";
+
+// Wrapper for date field to manage controlled state
+function DateFieldWrapper({ field }: { field: any }) {
+  const [dateValue, setDateValue] = useState("");
+  return (
+    <ModernDatePicker
+      name={`answer_${field.id}`}
+      value={dateValue}
+      onChange={setDateValue}
+      required={field.isRequired}
+    />
+  );
+}
+
+// Wrapper for select field to manage controlled state
+function SelectFieldWrapper({ field }: { field: any }) {
+  const [selectValue, setSelectValue] = useState("");
+  const options = parseJsonArray(field.options).map((opt) => ({
+    value: opt,
+    label: opt,
+  }));
+  return (
+    <ModernSelect
+      name={`answer_${field.id}`}
+      options={options}
+      value={selectValue}
+      onChange={setSelectValue}
+      placeholder={field.placeholder || "Pilih salah satu"}
+      icon={ListOrdered}
+      required={field.isRequired}
+      enableSearch={options.length > 5}
+    />
+  );
+}
 
 export function RequestFormFields({ fields }: { fields: any[] }) {
   return (
@@ -23,21 +62,17 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
         {[...fields]
           .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
           .map((field: any) => {
-            const handleInvalid = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-              const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-              if (field.type === "select") {
-                target.setCustomValidity("Silakan pilih salah satu opsi dari daftar.");
-              } else {
-                target.setCustomValidity(`Harap isi kolom ${field.label} terlebih dahulu.`);
-              }
+            const handleInvalid = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+              const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+              target.setCustomValidity(`Harap isi kolom ${field.label} terlebih dahulu.`);
             };
 
-            const handleInput = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-              const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+            const handleInput = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+              const target = e.target as HTMLInputElement | HTMLTextAreaElement;
               target.setCustomValidity("");
             };
 
-            const common = {
+            const commonInput = {
               name: `answer_${field.id}`,
               required: field.isRequired,
               placeholder: field.placeholder || "",
@@ -45,7 +80,14 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
               onInput: handleInput,
               onChange: handleInput,
             };
- 
+
+            const icon =
+              field.type === "select" ? ListOrdered :
+              field.type === "date" ? Calendar :
+              field.type === "number" ? Hash :
+              field.type === "textarea" ? AlignLeft :
+              Type;
+
             return (
               <div
                 key={field.id}
@@ -53,22 +95,29 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
               >
                 <Field label={field.label} required={field.isRequired}>
                   {field.type === "textarea" ? (
-                    <Textarea {...common} />
+                    <Textarea {...commonInput} className="min-h-[96px] resize-none" />
                   ) : field.type === "select" ? (
-                    <Select {...common}>
-                      <option value="">Pilih salah satu</option>
-                      {parseJsonArray(field.options).map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </Select>
+                    <SelectFieldWrapper field={field} />
                   ) : field.type === "date" ? (
-                    <Input type="date" {...common} />
+                    <DateFieldWrapper field={field} />
                   ) : field.type === "number" ? (
-                    <Input type="number" {...common} />
+                    <div className="relative">
+                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        type="number"
+                        {...commonInput}
+                        className="pl-9"
+                      />
+                    </div>
                   ) : (
-                    <Input type="text" {...common} />
+                    <div className="relative">
+                      <Type className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                      <Input
+                        type="text"
+                        {...commonInput}
+                        className="pl-9"
+                      />
+                    </div>
                   )}
                 </Field>
               </div>
@@ -78,3 +127,4 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
     </section>
   );
 }
+

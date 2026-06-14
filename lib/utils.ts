@@ -79,8 +79,14 @@ export function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, "").trim();
 }
 
+export function toTitleCase(str: string): string {
+  return str.replace(/\w\S*/g, (word) =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+  );
+}
+
 export function isSafeRedirect(url: string, origin?: string): boolean {
-  if (url.startsWith("/")) return true;
+  if (url.startsWith("/") && !url.startsWith("//")) return true;
   try {
     const parsed = new URL(url);
     const allowedOrigin = origin || (typeof window !== "undefined" ? window.location.origin : "");

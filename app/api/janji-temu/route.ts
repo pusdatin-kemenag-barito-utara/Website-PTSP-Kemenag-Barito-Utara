@@ -4,9 +4,22 @@ import { verifyTurnstileToken } from "@/lib/turnstile";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { NextResponse } from "next/server";
 
+import { appointmentSchema } from "@/lib/validations/appointment";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    
+    // Validasi input dengan Zod
+    const validationResult = appointmentSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.issues[0].message;
+      return NextResponse.json(
+        { success: false, error: errorMessage },
+        { status: 400 }
+      );
+    }
+
     const {
       guestName,
       whatsapp,
@@ -17,7 +30,7 @@ export async function POST(request: Request) {
       appointmentDate,
       appointmentTime,
       turnstileToken,
-    } = body;
+    } = validationResult.data;
 
     // Get client IP address if available
     const clientIp =
@@ -26,7 +39,7 @@ export async function POST(request: Request) {
       undefined;
 
     // Verify Turnstile token
-    const isHuman = await verifyTurnstileToken(turnstileToken, clientIp);
+    const isHuman = await verifyTurnstileToken(turnstileToken || "", clientIp);
     if (!isHuman) {
       return NextResponse.json(
         {
@@ -34,30 +47,11 @@ export async function POST(request: Request) {
           error:
             "Verifikasi keamanan (Turnstile) gagal. Silakan coba lagi atau segarkan halaman.",
         },
-        { status: 400 },
-      ) as any;
+        { status: 400 }
+      );
     }
 
-    // Simple validation
-    if (
-      !guestName ||
-      !whatsapp ||
-      !institutionType ||
-      !intendedOfficer ||
-      !purpose ||
-      !appointmentDate ||
-      !appointmentTime
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Semua kolom wajib diisi termasuk Tanggal Rencana dan Jam Bertamu.",
-        },
-        { status: 400 },
-      ) as any;
-    }
-
+    const appointmentDateObj = new Date(appointmentDate);
     // Insert to DB using Drizzle
     const [newEntry] = await db
       .insert(appointments)
@@ -68,16 +62,14 @@ export async function POST(request: Request) {
         institutionName: institutionName || null,
         intendedOfficer,
         purpose,
-        appointmentDate,
+        appointmentDate: appointmentDateObj,
         appointmentTime,
         status: "pending",
       })
       .returning();
 
     // Format tanggal dan jam untuk pesan WA
-    const [year, month, day] = appointmentDate.split("-");
-    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-    const appointmentDateFormatted = dateObj.toLocaleDateString("id-ID", {
+    const appointmentDateFormatted = appointmentDateObj.toLocaleDateString("id-ID", {
       weekday: "long",
       day: "numeric",
       month: "long",
@@ -98,8 +90,12 @@ export async function POST(request: Request) {
       `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
       `_Kemenag Kabupaten Barito Utara_`;
 
-    // Jalankan tanpa await agar tidak memperlambat response ke user
-    sendWhatsAppNotification(whatsapp, waMessage).catch(() => {});
+    // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
+    try {
+      await sendWhatsAppNotification(whatsapp, waMessage);
+    } catch (waErr) {
+      console.error("WhatsApp notification failed:", waErr);
+    }
 
     return NextResponse.json({
       success: true,
@@ -110,12 +106,13 @@ export async function POST(request: Request) {
         appointmentDate: newEntry.appointmentDate,
         appointmentTime: newEntry.appointmentTime,
       },
-    }) as any;
-  } catch (error: any) {
+    });
+  } catch (error: unknown) {
     console.error("Failed to insert appointment entry:", error);
+    const errorMessage = error instanceof Error ? error.message : "Gagal membuat janji temu.";
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal membuat janji temu." },
+      { success: false, error: errorMessage },
       { status: 500 },
-    ) as any;
+    );
   }
 }

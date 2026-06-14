@@ -4,9 +4,21 @@ import { verifyTurnstileToken } from "@/lib/turnstile";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { NextResponse } from "next/server";
 
+import { guestBookSchema } from "@/lib/validations/guestbook";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    // Validasi input dengan Zod
+    const validationResult = guestBookSchema.safeParse(body);
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.issues[0].message;
+      return NextResponse.json(
+        { success: false, error: errorMessage },
+        { status: 400 }
+      );
+    }
+
     const {
       guestName,
       whatsapp,
@@ -16,7 +28,7 @@ export async function POST(request: Request) {
       purpose,
       visitDate,
       turnstileToken,
-    } = body;
+    } = validationResult.data;
 
     // Get client IP address if available
     const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0] || 
@@ -24,20 +36,12 @@ export async function POST(request: Request) {
                      undefined;
 
     // Verify Turnstile token
-    const isHuman = await verifyTurnstileToken(turnstileToken, clientIp);
+    const isHuman = await verifyTurnstileToken(turnstileToken || "", clientIp);
     if (!isHuman) {
       return NextResponse.json(
         { success: false, error: "Verifikasi keamanan (Turnstile) gagal. Silakan coba lagi atau segarkan halaman." },
         { status: 400 }
-      ) as any;
-    }
-
-    // Simple validation
-    if (!guestName || !whatsapp || !institutionType || !intendedOfficer || !purpose) {
-      return NextResponse.json(
-        { success: false, error: "Semua kolom wajib diisi kecuali nama instansi." },
-        { status: 400 }
-      ) as any;
+      );
     }
 
     // Insert to DB using Drizzle
@@ -75,8 +79,12 @@ export async function POST(request: Request) {
       `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
       `_Kemenag Kabupaten Barito Utara_`;
 
-    // Jalankan tanpa await agar tidak memperlambat response ke user
-    sendWhatsAppNotification(whatsapp, waMessage).catch(() => {});
+    // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
+    try {
+      await sendWhatsAppNotification(whatsapp, waMessage);
+    } catch (waErr) {
+      console.error("WhatsApp notification failed:", waErr);
+    }
 
     return NextResponse.json({
       success: true,
@@ -86,13 +94,14 @@ export async function POST(request: Request) {
         guestName: newEntry.guestName,
         visitDate: newEntry.visitDate.toISOString(),
       },
-    }) as any;
-  } catch (error: any) {
+    });
+  } catch (error: unknown) {
     console.error("Failed to insert guest book entry:", error);
+    const errorMessage = error instanceof Error ? error.message : "Gagal menyimpan buku tamu.";
     return NextResponse.json(
-      { success: false, error: error.message || "Gagal menyimpan buku tamu." },
+      { success: false, error: errorMessage },
       { status: 500 }
-    ) as any;
+    );
   }
 }
 

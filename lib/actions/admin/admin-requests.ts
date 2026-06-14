@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { activityLogs, serviceRequests } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
+import { createAuditLog } from "@/lib/audit";
 
 async function verifyRequestOwnership(requestId: string, email: string, role: string) {
   const isSuper = isSuperAdmin(email);
@@ -149,6 +150,13 @@ export async function deleteRequestAction(
 
     await RequestService.deleteRequest(requestId, adminProfile.id);
 
+    await createAuditLog({
+      adminId: adminProfile.id,
+      action: "HAPUS_PENGAJUAN",
+      entityType: "service_request",
+      entityId: requestId,
+    });
+
     revalidatePath("/admin/pengajuan");
     revalidatePath("/admin/dokumen-hasil");
     revalidatePath("/track");
@@ -193,6 +201,14 @@ export async function deleteActivityLogAction(
         )
       );
 
+    await createAuditLog({
+      adminId: adminProfile.id,
+      action: "HAPUS_AKTIVITAS_LOG",
+      entityType: "activity_log",
+      entityId: logId,
+      details: { requestId },
+    });
+
     revalidatePath(`/admin/pengajuan/${requestId}`);
 
     return { success: true, message: "Log aktivitas berhasil dihapus" };
@@ -233,6 +249,14 @@ export async function updateActivityLogAction(
           eq(activityLogs.requestId, requestId)
         )
       );
+
+    await createAuditLog({
+      adminId: adminProfile.id,
+      action: "UBAH_AKTIVITAS_LOG",
+      entityType: "activity_log",
+      entityId: logId,
+      details: { requestId, notes },
+    });
 
     revalidatePath(`/admin/pengajuan/${requestId}`);
 

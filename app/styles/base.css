@@ -36,10 +36,6 @@ h2 { font-size: var(--fluid-h2); line-height: 1.2; font-weight: 700; }
   border-radius: 9999px;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
 
 input,
 textarea,

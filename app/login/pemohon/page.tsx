@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
-import { UserCircle2, ArrowLeft } from "lucide-react";
+import { UserCircle2 } from "lucide-react";
 import Image from "next/image";
 import { AuthCardMotion, AuthBgMotionPemohon } from "@/components/auth/auth-motion-wrapper";
 
@@ -19,7 +19,7 @@ export default async function LoginPemohonPage({
   const { callbackUrl, error } = await searchParams;
 
   return (
-    <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-84px)] items-center justify-center py-10 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-84px)] items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
       {/* Background with pattern/image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -46,34 +46,34 @@ export default async function LoginPemohonPage({
         <div className="overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-slate-200/50">
           
           {/* Header area */}
-          <div className="relative bg-slate-50 px-8 pt-6 pb-4 text-center">
+          <div className="relative bg-slate-50 px-6 pt-5 pb-3 text-center">
             {/* Decoration */}
             <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-[#059669] to-[#10b981]" />
             
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100/50 text-[#059669] ring-8 ring-white">
-              <UserCircle2 className="h-8 w-8" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100/50 text-[#059669] ring-4 ring-white">
+              <UserCircle2 className="h-6 w-6" />
             </div>
             
-            <p className="mb-2 text-[10.5px] font-black uppercase tracking-[0.2em] text-[#059669]">
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#059669]">
               Layanan Masyarakat
             </p>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
               Masuk Pemohon
             </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Silakan masuk menggunakan nomor WhatsApp Anda yang telah terdaftar.
+            <p className="mt-1 text-xs text-slate-500">
+              Masuk menggunakan nomor WhatsApp yang terdaftar.
             </p>
           </div>
 
           {/* Form area */}
-          <div className="px-8 py-4">
+          <div className="px-6 py-3">
             <LoginFormByRole
               mode="pemohon"
               callbackUrl={callbackUrl as string}
               initialError={error as string}
             />
             
-            <div className="mt-8 flex flex-col gap-3">
+            <div className="mt-4 flex flex-col gap-2">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-slate-200" />
@@ -85,24 +85,13 @@ export default async function LoginPemohonPage({
               
               <Link
                 href="/register"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:border-[#059669] hover:text-[#059669] hover:bg-emerald-50/50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 transition-colors hover:border-[#059669] hover:text-[#059669] hover:bg-emerald-50/50"
               >
                 Buat Akun Pemohon Baru
               </Link>
             </div>
           </div>
           
-          {/* Footer links */}
-          <div className="bg-slate-50 px-8 py-3 text-center text-sm border-t border-slate-100">
-            <div className="flex items-center justify-center text-sm font-medium text-slate-500">
-              <Link
-                href={`/login/petugas${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
-                className="flex items-center gap-1.5 hover:text-[#0f8a54] transition-colors"
-              >
-                Masuk sebagai Petugas <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
-              </Link>
-            </div>
-          </div>
         </div>
       </AuthCardMotion>
     </div>

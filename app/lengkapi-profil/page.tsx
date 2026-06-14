@@ -8,35 +8,36 @@ export const metadata = {
 };
 
 export default async function LengkapiProfilPage() {
-  // Panggil requireAuth dengan parameter allowIncomplete = true
   const profile = await requireAuth(true);
 
   if (!profile) {
     redirect("/login/pemohon");
   }
 
-  // Jika profil sudah lengkap (bukan null), langsung lempar ke dashboard
   if (profile.fullName && profile.phone && profile.address) {
     redirect("/dashboard");
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 bg-slate-50 overflow-hidden font-sans">
-      {/* Background Decor - Kemenag Theme (Emerald & Gold) */}
-      <div className="absolute top-0 left-0 w-full h-[40vh] bg-gradient-to-b from-emerald-800 to-emerald-600 opacity-95">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-300 via-transparent to-transparent"></div>
+    <div className="min-h-screen relative flex items-center justify-center p-4 bg-slate-50 dark:bg-[#020817] overflow-hidden font-sans transition-colors duration-500">
+      
+      {/* Modern Animated Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/20 dark:bg-emerald-600/20 blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-blob"></div>
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-yellow-300/20 dark:bg-yellow-500/10 blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[60%] rounded-full bg-teal-400/20 dark:bg-teal-700/20 blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-4000"></div>
+        {/* Subtle Grid Pattern overlay */}
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] dark:opacity-10 opacity-40"></div>
       </div>
-      <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-emerald-500/30 blur-[80px]"></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-yellow-400/10 blur-[80px]"></div>
 
-      <div className="w-full max-w-[440px] relative z-10">
-        <div className="text-center mb-8">
+      <div className="w-full max-w-[480px] relative z-10">
+        <div className="text-center mb-6">
           <Link
             href="/"
-            className="inline-block hover:scale-105 transition-transform duration-300"
+            className="inline-block hover:scale-105 transition-transform duration-500"
           >
-            <div className="flex justify-center items-center h-24 w-24 bg-white rounded-2xl shadow-xl shadow-emerald-900/20 p-4 mx-auto mb-5 border-2 border-emerald-100 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-50 to-white opacity-50"></div>
+            <div className="flex justify-center items-center h-20 w-20 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-emerald-900/10 dark:shadow-emerald-900/30 p-3 mx-auto mb-4 border border-white/50 dark:border-white/10 relative overflow-hidden backdrop-blur-sm group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100/50 to-white/10 dark:from-emerald-900/20 dark:to-slate-800/10 opacity-50 group-hover:opacity-100 transition-opacity duration-500"></div>
               <img
                 src="/kemenag-192.png"
                 alt="Logo Kemenag"
@@ -44,22 +45,22 @@ export default async function LengkapiProfilPage() {
               />
             </div>
           </Link>
-          <h1 className="text-3xl font-black text-white tracking-tight drop-shadow-sm">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight drop-shadow-sm font-sans mb-2">
             Satu Langkah Lagi
           </h1>
-          <p className="text-emerald-50 text-sm mt-3 font-medium px-4 leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm md:text-sm font-medium px-4 leading-relaxed max-w-[400px] mx-auto">
             Halo{" "}
-            <span className="font-bold text-yellow-300 drop-shadow-sm">
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md mx-1">
               {profile.email}
             </span>
-            ,<br />
-            Silakan lengkapi profil Anda sebelum mengakses layanan PTSP.
+            <span className="mt-1 inline-block">Silakan lengkapi profil Anda.</span>
           </p>
         </div>
 
-        <div className="bg-white/95 backdrop-blur-xl shadow-2xl shadow-emerald-900/10 rounded-[2rem] p-8 pt-9 relative overflow-hidden ring-1 ring-black/5">
-          {/* Subtle top border glow */}
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-yellow-400 to-emerald-500 opacity-90"></div>
+        {/* Premium Glassmorphic Card */}
+        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] rounded-3xl p-6 relative overflow-hidden border border-white/60 dark:border-white/10">
+          {/* Subtle top border glow inside card */}
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50"></div>
 
           <CompleteProfileForm
             initialName={profile.fullName || ""}
@@ -67,7 +68,7 @@ export default async function LengkapiProfilPage() {
           />
         </div>
 
-        <p className="text-center text-xs font-semibold text-emerald-800/60 mt-8 tracking-wide">
+        <p className="text-center text-xs font-semibold text-slate-400 dark:text-slate-600 mt-10 tracking-widest uppercase">
           &copy; {new Date().getFullYear()} PTSP Kemenag Barito Utara
         </p>
       </div>

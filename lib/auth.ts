@@ -9,10 +9,10 @@ import { isSuperAdmin, isAdminRole } from "@/lib/constants";
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  return user;
+  return session?.user ?? null;
 });
 
 export const getCurrentProfile = cache(async () => {
@@ -68,13 +68,37 @@ export async function requireAuth(allowIncomplete = false) {
       });
       profile = newProfile ?? null;
     } catch (e) {
-      console.error("Gagal auto-create profil:", e);
+      // Jika error karena profile sudah dibuat oleh trigger (duplicate key),
+      // kita fetch langsung dari database untuk mendapatkan profilnya.
+      const existingProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.id, user.id),
+      });
+      if (existingProfile) {
+        profile = existingProfile;
+      } else {
+        console.error("Gagal auto-create profil dan fetch ulang:", e);
+      }
     }
   }
 
   // Fallback if profile creation completely failed but we must return something
   if (!profile) {
-    profile = { id: user.id, email: user.email, role: "user" } as any;
+    profile = { 
+      id: user.id, 
+      email: user.email ?? null, 
+      role: "user",
+      fullName: user.user_metadata?.full_name ?? "",
+      phone: null,
+      address: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      nip: null,
+      jabatan: null,
+      unitKerja: null,
+      isVerified: true,
+      permissions: ["ringkasan", "pengajuan", "dokumen_hasil"],
+      avatarUrl: null,
+    };
   }
 
   if (!allowIncomplete) {

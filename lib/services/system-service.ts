@@ -171,8 +171,8 @@ export class SystemService {
   /**
    * Get paginated audit logs for Admin view
    */
-  static async getPaginatedAuditLogs(params: { page: number; pageSize: number; q?: string; action?: string }) {
-    const { page, pageSize, q, action } = params;
+  static async getPaginatedAuditLogs(params: { page: number; pageSize: number; q?: string; action?: string; from?: string; to?: string; entityType?: string }) {
+    const { page, pageSize, q, action, from, to, entityType } = params;
     const offset = (page - 1) * pageSize;
 
     const filters = [];
@@ -187,6 +187,15 @@ export class SystemService {
     }
     if (action && action !== "all") {
       filters.push(ilike(auditLogsTable.action, `%${action}%`));
+    }
+    if (from) {
+      filters.push(sql`${auditLogsTable.createdAt} >= ${from}::timestamp`);
+    }
+    if (to) {
+      filters.push(sql`${auditLogsTable.createdAt} <= ${to}::timestamp + interval '1 day'`);
+    }
+    if (entityType && entityType !== "all") {
+      filters.push(eq(auditLogsTable.entityType, entityType));
     }
 
     const whereClause = filters.length > 0 ? and(...filters) : undefined;
@@ -209,6 +218,57 @@ export class SystemService {
       totalCount: Number(count),
       totalPages: Math.ceil(Number(count) / pageSize),
     };
+  }
+
+  /**
+   * Export all audit logs matching filters (no pagination)
+   */
+  static async exportAuditLogs(params: { q?: string; action?: string; from?: string; to?: string; entityType?: string }) {
+    const { q, action, from, to, entityType } = params;
+
+    const filters = [];
+    if (q) {
+      filters.push(
+        or(
+          ilike(auditLogsTable.entityType, `%${q}%`),
+          ilike(auditLogsTable.action, `%${q}%`),
+          sql`EXISTS (SELECT 1 FROM ${profilesTable} WHERE ${profilesTable.id} = ${auditLogsTable.adminId} AND (${ilike(profilesTable.fullName, `%${q}%`)} OR ${ilike(profilesTable.email, `%${q}%`)}))`
+        )
+      );
+    }
+    if (action && action !== "all") {
+      filters.push(ilike(auditLogsTable.action, `%${action}%`));
+    }
+    if (from) {
+      filters.push(sql`${auditLogsTable.createdAt} >= ${from}::timestamp`);
+    }
+    if (to) {
+      filters.push(sql`${auditLogsTable.createdAt} <= ${to}::timestamp + interval '1 day'`);
+    }
+    if (entityType && entityType !== "all") {
+      filters.push(eq(auditLogsTable.entityType, entityType));
+    }
+
+    const whereClause = filters.length > 0 ? and(...filters) : undefined;
+
+    const data = await db.query.auditLogs.findMany({
+      where: whereClause,
+      with: {
+        profile: { columns: { fullName: true, email: true, role: true } },
+      },
+      orderBy: [desc(auditLogsTable.createdAt)],
+    });
+
+    return data.map((log: any) => ({
+      Waktu: format(new Date(log.createdAt), "dd MMM yyyy HH:mm:ss", { locale: idLocale }),
+      Petugas: log.profile?.fullName || "-",
+      Email: log.profile?.email || "-",
+      Aksi: log.action,
+      TipeObjek: log.entityType || "-",
+      IDObjek: log.entityId || "-",
+      IPAddress: log.ipAddress || "-",
+      Detail: JSON.stringify(log.details || {}),
+    }));
   }
 
   /**

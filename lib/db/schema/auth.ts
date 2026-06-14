@@ -89,6 +89,8 @@ export const profiles = pgTable("ptsp_profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
+  nip: varchar("nip", { length: 50 }).unique(),
+  jabatan: text("jabatan"),
   unitKerja: text("unit_kerja"),
   isVerified: boolean("is_verified").default(true),
   permissions: jsonb("permissions").default([

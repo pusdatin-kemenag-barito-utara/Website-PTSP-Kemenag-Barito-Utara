@@ -10,15 +10,15 @@ export default async function AdminJanjiTemuPage() {
   await requirePermission("janji_temu");
 
   const data = await db.query.appointments.findMany({
-    orderBy: [desc(appointments.appointmentDate)],
+    orderBy: [desc(appointments.appointmentDate), desc(appointments.appointmentTime)],
   });
 
-  const serialized = serializeBigInt(data) || [];
+  const serialized = serializeBigInt(data);
   const entries = serialized.map((entry: any) => ({
     ...entry,
-    id: entry.id.toString(), // ensure string representation for React keys
-    createdAt: entry.createdAt ? new Date(entry.createdAt).toISOString() : null,
-    updatedAt: entry.updatedAt ? new Date(entry.updatedAt).toISOString() : null,
+    appointmentDate: entry.appointmentDate ? new Date(entry.appointmentDate).toISOString().split('T')[0] : "",
+    createdAt: new Date(entry.createdAt).toISOString(),
+    updatedAt: new Date(entry.updatedAt).toISOString(),
   }));
 
   return (

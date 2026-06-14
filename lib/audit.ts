@@ -17,7 +17,8 @@ export async function createAuditLog({
 }) {
   try {
     const headerList = await headers();
-    const ip = headerList.get("x-forwarded-for") || "unknown";
+    const rawIp = headerList.get("x-forwarded-for") || "";
+    const ip = rawIp.split(",")[0]?.trim() || "unknown";
 
     await db.insert(auditLogs).values({
       adminId,

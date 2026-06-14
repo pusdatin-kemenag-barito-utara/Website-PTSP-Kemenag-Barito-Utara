@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Search,
   Plus,
@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
   X,
   Loader2,
+  Download,
 } from "lucide-react";
 import {
   getSuratKeluarAction,
@@ -25,6 +26,7 @@ import {
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { ModernSelect } from "@/components/ui/modern-select";
 import { m, AnimatePresence } from "framer-motion";
+import { toTitleCase } from "@/lib/utils";
 import { toast } from "sonner";
 
 const UNIT_COLORS: Record<string, string> = {
@@ -59,24 +61,34 @@ interface SuratKeluar {
   perihal: string;
   unit_kerja: string;
   agenda: string;
+  status?: string;
+  lampiran?: string;
 }
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return "";
   const parts = dateStr.split("-");
   if (parts.length === 3) {
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
   return dateStr;
 };
 
-export function SuratKeluarManager() {
-  const [items, setItems] = useState<SuratKeluar[]>([]);
-  const [loading, setLoading] = useState(true);
+export function SuratKeluarManager({ initialData = [], initialTotal = 0 }: { initialData?: any[], initialTotal?: number }) {
+  const [items, setItems] = useState<SuratKeluar[]>(initialData);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Filter States
   const [filterDate, setFilterDate] = useState("");
@@ -91,6 +103,9 @@ export function SuratKeluarManager() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Detail View State
+  const [detailItem, setDetailItem] = useState<SuratKeluar | null>(null);
+
   // Form State
   const [formData, setFormData] = useState({
     nomor_surat: "",
@@ -101,28 +116,45 @@ export function SuratKeluarManager() {
     agenda: "Surat Dinas",
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const formInitialRef = useRef<string>("");
+  const isFormDirty = useMemo(() => {
+    if (!showForm) return false;
+    return JSON.stringify(formData) !== formInitialRef.current;
+  }, [formData, showForm]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (showForm) {
+      formInitialRef.current = JSON.stringify(formData);
+    }
+  }, [showForm]);
+
+  useEffect(() => {
+    if (!showForm || !isFormDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [showForm, isFormDirty]);
+
+  const fetchData = async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     setFetchError(null);
     const result = await getSuratKeluarAction();
     if (result.success) {
       setItems(result.data || []);
     } else {
-      setFetchError(result.error || "Gagal mengambil data dari Google Sheets.");
+      setFetchError(result.error || "Gagal mengambil data surat keluar.");
     }
-    setLoading(false);
+    if (showLoading) setLoading(false);
   };
 
   const filteredItems = useMemo(() => {
     return items.filter((item: any) => {
       const matchesSearch =
-        item.nomor_surat.toLowerCase().includes(search.toLowerCase()) ||
-        item.tujuan_surat.toLowerCase().includes(search.toLowerCase()) ||
-        item.perihal.toLowerCase().includes(search.toLowerCase());
+        item.nomor_surat.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        item.tujuan_surat.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        item.perihal.toLowerCase().includes(debouncedSearch.toLowerCase());
 
       const matchesDate = (() => {
         if (!filterDate) return true;
@@ -144,12 +176,12 @@ export function SuratKeluarManager() {
 
       return matchesSearch && matchesDate;
     });
-  }, [items, search, filterDate]);
+  }, [items, debouncedSearch, filterDate]);
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterDate]);
+  }, [debouncedSearch, filterDate]);
 
   const totalPages = Math.ceil(filteredItems.length / rowsPerPage);
   const paginatedItems = useMemo(() => {
@@ -202,9 +234,9 @@ export function SuratKeluarManager() {
       const result = await deleteSuratKeluarAction(deletingId);
       if (result.success) {
         toast.success(result.message || "Data surat keluar berhasil dihapus");
-        await fetchData();
         setShowDeleteConfirm(false);
         setDeletingId(null);
+        fetchData(false);
       } else {
         toast.error(result.error || "Gagal menghapus data");
       }
@@ -227,8 +259,8 @@ export function SuratKeluarManager() {
 
       if (result.success) {
         toast.success(result.message || "Data berhasil disimpan");
-        await fetchData();
         setShowForm(false);
+        fetchData();
       } else {
         toast.error(result.error || "Gagal menyimpan data");
       }
@@ -237,6 +269,40 @@ export function SuratKeluarManager() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredItems.length === 0) {
+      toast.warning("Tidak ada data untuk diekspor");
+      return;
+    }
+
+    const headers = ["ID", "Nomor Surat", "Tanggal Surat", "Agenda", "Tujuan", "Perihal", "Unit Kerja"];
+    const csvContent = [
+      headers.join(","),
+      ...filteredItems.map((e) => [
+        e.id,
+        `"${e.nomor_surat.replace(/"/g, '""')}"`,
+        `"${e.tanggal_surat}"`,
+        `"${e.agenda.replace(/"/g, '""')}"`,
+        `"${e.tujuan_surat.replace(/"/g, '""')}"`,
+        `"${e.perihal.replace(/"/g, '""')}"`,
+        `"${e.unit_kerja.replace(/"/g, '""')}"`,
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Surat_Keluar_Export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("Ekspor Berhasil", {
+      description: `${filteredItems.length} data surat keluar berhasil diunduh sebagai file CSV.`,
+    });
   };
 
   return (
@@ -268,7 +334,15 @@ export function SuratKeluarManager() {
           </button>
           <button
             disabled={loading}
-            onClick={fetchData}
+            onClick={handleExportCSV}
+            className="flex items-center justify-center p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+            title="Ekspor CSV"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => fetchData(true)}
             className="flex items-center justify-center p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
             title="Refresh Data"
           >
@@ -345,6 +419,9 @@ export function SuratKeluarManager() {
                 <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Unit Kerja
                 </th>
+                <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center">
+                  Status
+                </th>
                 <th className="px-6 py-2.5 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   Tujuan & Perihal
                 </th>
@@ -371,7 +448,7 @@ export function SuratKeluarManager() {
                           <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
                             <ArrowUpRight className="h-3.5 w-3.5" />
                           </div>
-                          <span className="text-sm font-bold text-slate-900">
+                          <span className="text-xs font-bold text-slate-900">
                             {item.nomor_surat}
                           </span>
                         </div>
@@ -407,17 +484,35 @@ export function SuratKeluarManager() {
                       </span>
                     </td>
                     <td className="px-6 py-2.5">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${
+                        item.status === "archived"
+                          ? "bg-slate-50 text-slate-500 border-slate-200"
+                          : item.status === "draft"
+                            ? "bg-amber-50 text-amber-600 border-amber-200"
+                            : "bg-emerald-50 text-emerald-600 border-emerald-200"
+                      }`}>
+                        {item.status === "archived" ? "Arsip" : item.status === "draft" ? "Draf" : "Terbit"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-2.5">
                       <div className="flex flex-col gap-0.5 max-w-xs">
-                        <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+                        <p className="text-xs font-semibold text-slate-800 line-clamp-1" title={item.tujuan_surat}>
                           {item.tujuan_surat}
                         </p>
-                        <p className="text-xs text-slate-500 line-clamp-1 italic">
+                        <p className="text-xs text-slate-500 line-clamp-1 italic" title={item.perihal}>
                           "{item.perihal}"
                         </p>
                       </div>
                     </td>
                     <td className="px-6 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setDetailItem(item)}
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                          title="Lihat Detail"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => handleOpenForm(item)}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
@@ -436,17 +531,19 @@ export function SuratKeluarManager() {
                 ))
               ) : !loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center">
+                  <td colSpan={8} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div
-                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${fetchError ? "bg-red-50 text-red-400" : "bg-slate-50 text-slate-300"}`}
+                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${fetchError ? "bg-red-50 text-red-400" : debouncedSearch ? "bg-amber-50 text-amber-400" : "bg-slate-50 text-slate-300"}`}
                       >
                         <FileText className="h-6 w-6" />
                       </div>
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
                         {fetchError
                           ? "Gagal memuat data surat"
-                          : "Belum ada data surat"}
+                          : debouncedSearch
+                            ? "Pencarian tidak ditemukan"
+                            : "Belum ada data surat"}
                       </p>
                       {fetchError && (
                         <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
@@ -454,9 +551,14 @@ export function SuratKeluarManager() {
                           refresh halaman.
                         </p>
                       )}
+                      {debouncedSearch && !fetchError && (
+                        <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
+                          Tidak ada surat keluar yang cocok dengan kata kunci "{debouncedSearch}".
+                        </p>
+                      )}
                       {fetchError && (
                         <button
-                          onClick={fetchData}
+                          onClick={() => fetchData(true)}
                           className="mt-4 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
                         >
                           Coba Lagi
@@ -542,9 +644,9 @@ export function SuratKeluarManager() {
                   {editingId ? "Edit Surat Keluar" : "Registrasi Surat Keluar"}
                 </h3>
                 <p className="text-xs font-semibold text-slate-500">
-                  {editingId
-                    ? "Perbarui data surat di Google Sheets"
-                    : "Input data surat baru ke Google Sheets"}
+                    {editingId
+                      ? "Perbarui data surat di sistem"
+                      : "Input data surat baru ke sistem"}
                 </p>
               </div>
               <button
@@ -651,10 +753,11 @@ export function SuratKeluarManager() {
                   placeholder="Instansi atau perorangan penerima..."
                   value={formData.tujuan_surat}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    const capitalized = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
-                    setFormData({ ...formData, tujuan_surat: capitalized });
+                    setFormData({ ...formData, tujuan_surat: e.target.value });
                   }}
+                  onBlur={() =>
+                    setFormData((prev) => ({ ...prev, tujuan_surat: toTitleCase(prev.tujuan_surat) }))
+                  }
                 />
               </div>
 
@@ -670,10 +773,11 @@ export function SuratKeluarManager() {
                   placeholder="Isi ringkas perihal surat..."
                   value={formData.perihal}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    const capitalized = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
-                    setFormData({ ...formData, perihal: capitalized });
+                    setFormData({ ...formData, perihal: e.target.value });
                   }}
+                  onBlur={() =>
+                    setFormData((prev) => ({ ...prev, perihal: toTitleCase(prev.perihal) }))
+                  }
                 />
               </div>
 
@@ -700,6 +804,96 @@ export function SuratKeluarManager() {
         </div>
       )}
 
+      {/* Detail View Modal */}
+      {detailItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            onClick={() => setDetailItem(null)}
+          />
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in slide-in-from-bottom-4 duration-300">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">
+                  Detail Surat Keluar
+                </h3>
+                <p className="text-xs font-semibold text-slate-500">
+                  Informasi lengkap surat keluar
+                </p>
+              </div>
+              <button
+                onClick={() => setDetailItem(null)}
+                className="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Nomor Surat</p>
+                  <p className="text-sm font-bold text-slate-900">{detailItem.nomor_surat}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${
+                    detailItem.status === "archived"
+                      ? "bg-slate-50 text-slate-500 border-slate-200"
+                      : detailItem.status === "draft"
+                        ? "bg-amber-50 text-amber-600 border-amber-200"
+                        : "bg-emerald-50 text-emerald-600 border-emerald-200"
+                  }`}>
+                    {detailItem.status === "archived" ? "Arsip" : detailItem.status === "draft" ? "Draf" : "Terbit"}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Tanggal Surat</p>
+                  <p className="text-sm font-semibold text-slate-700">{formatDate(detailItem.tanggal_surat)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Agenda</p>
+                  <p className="text-sm font-semibold text-slate-700">{detailItem.agenda || "-"}</p>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Unit Kerja</p>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${
+                    UNIT_COLORS[detailItem.unit_kerja] || "bg-slate-50 text-slate-600 border-slate-100"
+                  }`}>
+                    {detailItem.unit_kerja}
+                  </span>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Referensi</p>
+                  <p className="text-sm font-semibold text-slate-700 font-mono text-xs">{detailItem.id}</p>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Tujuan Surat</p>
+                <p className="text-sm font-semibold text-slate-900">{detailItem.tujuan_surat}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Perihal</p>
+                <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200">{detailItem.perihal}</p>
+              </div>
+              {detailItem.lampiran && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Lampiran</p>
+                  <p className="text-sm font-semibold text-slate-700">{detailItem.lampiran}</p>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30 flex justify-end">
+              <button
+                onClick={() => setDetailItem(null)}
+                className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -717,7 +911,7 @@ export function SuratKeluarManager() {
               </h3>
               <p className="text-sm font-medium text-slate-500 mb-8 px-4">
                 Tindakan ini tidak dapat dibatalkan. Data akan dihapus secara
-                permanen dari Google Sheets.
+                permanen dari database.
               </p>
 
               <div className="flex gap-3">

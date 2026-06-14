@@ -4,7 +4,7 @@ export const guestBook = pgTable("ptsp_guest_book", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "guest_book_id_seq" }),
-  visitDate: date("visit_date", { mode: "date" }).notNull(),
+  visitDate: timestamp("visit_date", { mode: "date" }).notNull(),
   guestName: text("guest_name").notNull(),
   whatsapp: text("whatsapp").notNull(),
   institutionType: text("institution_type").notNull(),
