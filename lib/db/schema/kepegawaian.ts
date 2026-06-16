@@ -64,6 +64,7 @@ export const pengajuanCuti = pgTable("ptsp_pengajuan_cuti", {
 
   status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected (Status Akhir)
   komentarPimpinan: text("komentar_pimpinan"), // Legacy/General comment
+  editCount: integer("edit_count").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),

@@ -11,3 +11,5 @@ export * from "./relations";
 export * from "./communications";
 export * from "./kepegawaian";
 export * from "./persuratan";
+export * from "./pejabat";
+export * from "./master-options";

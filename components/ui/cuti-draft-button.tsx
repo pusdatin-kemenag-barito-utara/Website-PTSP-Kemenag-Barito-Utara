@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Eye } from "lucide-react";
+import { FileText } from "lucide-react";
 import { DraftCutiModal } from "@/components/ui/draft-cuti-modal";
 
 interface CutiDraftButtonProps {
@@ -31,18 +31,31 @@ interface CutiDraftButtonProps {
     fullName: string | null;
     email: string | null;
     unitKerja: string | null;
+    nip: string | null;
+    jabatan: string | null;
+    sisaCuti?: number | null;
+    cutiTahun2?: number | null;
+    cutiTahun1?: number | null;
+    hakBerjalan?: number | null;
+    jumlahCuti?: number | null;
+    totalDiambil?: number;
+    cutiAlasanPenting?: number | null;
+    cutiBesar?: number | null;
+    cutiBersalin?: number | null;
+    cutiSakit?: number | null;
   } | null;
+  pejabatList: any[];
 }
 
-export function CutiDraftButton({ cuti, profile }: CutiDraftButtonProps) {
+export function CutiDraftButton({ cuti, profile, pejabatList }: CutiDraftButtonProps) {
   const [open, setOpen] = useState(false);
 
-  const nip = profile?.email?.split("@")[0] || "";
+  const nip = (profile?.nip || profile?.email?.split("@")[0]) ?? "";
 
   const modalData = {
     nama: profile?.fullName || "",
     nip,
-    jabatan: cuti.unitKerja || profile?.unitKerja || "",
+    jabatan: profile?.jabatan || "",
     unitKerja: cuti.unitKerja || profile?.unitKerja || "",
     masaKerjaTahun: cuti.masaKerjaTahun || "",
     masaKerjaBulan: cuti.masaKerjaBulan || "",
@@ -61,15 +74,25 @@ export function CutiDraftButton({ cuti, profile }: CutiDraftButtonProps) {
     keputusanKepala: cuti.statusKepala !== "pending" ? cuti.statusKepala : undefined,
     catatanAtasan: cuti.catatanAtasan || undefined,
     catatanKepala: cuti.catatanKepala || undefined,
+    sisaCuti: profile?.sisaCuti ?? undefined,
+    cutiTahun2: profile?.cutiTahun2 ?? undefined,
+    cutiTahun1: profile?.cutiTahun1 ?? undefined,
+    hakBerjalan: profile?.hakBerjalan ?? undefined,
+    jumlahCuti: profile?.jumlahCuti ?? undefined,
+    totalDiambil: profile?.totalDiambil ?? 0,
+    cutiAlasanPenting: profile?.cutiAlasanPenting ?? undefined,
+    cutiBesar: profile?.cutiBesar ?? undefined,
+    cutiBersalin: profile?.cutiBersalin ?? undefined,
+    cutiSakit: profile?.cutiSakit ?? undefined,
   };
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition-all hover:border-emerald-300 hover:text-emerald-700"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-semibold shadow-sm hover:shadow-md hover:shadow-emerald-500/15 hover:border-emerald-400 transition-all active:scale-95"
       >
-        <Eye className="h-4 w-4" />
+        <FileText className="h-4 w-4" />
         Lihat Dokumen
       </button>
 
@@ -78,6 +101,7 @@ export function CutiDraftButton({ cuti, profile }: CutiDraftButtonProps) {
           isOpen={open}
           onClose={() => setOpen(false)}
           data={modalData}
+          pejabatList={pejabatList}
         />
       )}
     </>

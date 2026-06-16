@@ -3,6 +3,8 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { ModernSelect } from "@/components/ui/modern-select";
+import { UNIT_KERJA_OPTIONS } from "@/lib/constants";
 
 export function EditUserModal({
   editingUser,
@@ -77,12 +79,14 @@ export function EditUserModal({
           </div>
 
           <Field label="Unit Kerja / Jabatan">
-            <Input
-              value={editForm.unitKerja}
-              onChange={(e) =>
-                onFormChange({ ...editForm, unitKerja: e.target.value })
+            <ModernSelect
+              options={UNIT_KERJA_OPTIONS}
+              value={editForm.unitKerja || ""}
+              onChange={(val) =>
+                onFormChange({ ...editForm, unitKerja: val })
               }
-              placeholder="Contoh: Seksi Pendidikan Madrasah"
+              placeholder="Pilih Unit Kerja"
+              enableSearch
             />
           </Field>
 

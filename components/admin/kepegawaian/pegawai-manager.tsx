@@ -4,10 +4,11 @@ import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus, Trash2, Edit, Save, X, RefreshCw, User, FileText, Briefcase, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ModernSelect } from "@/components/ui/modern-select";
 import { toast } from "sonner";
 import { createPegawaiAction, updatePegawaiAction, deletePegawaiAction } from "@/lib/actions/admin/kepegawaian";
 
-export function PegawaiManager({ initialData }: { initialData: any[] }) {
+export function PegawaiManager({ initialData, pejabatList = [] }: { initialData: any[], pejabatList?: any[] }) {
   const router = useRouter();
   const [data, setData] = useState(initialData);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +31,8 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
   const [formNip, setFormNip] = useState("");
   const [formJabatan, setFormJabatan] = useState("");
   const [formUnitKerja, setFormUnitKerja] = useState("");
+  const [formIsPejabat, setFormIsPejabat] = useState(false);
+  const [formTipePejabat, setFormTipePejabat] = useState("Atasan Langsung");
   const [editId, setEditId] = useState("");
 
   const filteredData = data.filter((p) => {
@@ -69,6 +72,8 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
     setFormNip("");
     setFormJabatan("");
     setFormUnitKerja("");
+    setFormIsPejabat(false);
+    setFormTipePejabat("Atasan Langsung");
     setEditId("");
     setIsAddModalOpen(false);
     setIsEditModalOpen(false);
@@ -96,11 +101,23 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
   };
 
   const handleEdit = (p: any) => {
+    const nip = extractNipFromEmail(p.email);
+    const existingPejabat = pejabatList.find(pej => pej.nip === nip);
+    
     setEditId(p.id);
     setFormName(p.fullName || "");
-    setFormNip(extractNipFromEmail(p.email));
+    setFormNip(nip);
     setFormJabatan(p.jabatan || "");
     setFormUnitKerja(p.unitKerja || "");
+    
+    if (existingPejabat) {
+      setFormIsPejabat(true);
+      setFormTipePejabat(existingPejabat.tipePejabat);
+    } else {
+      setFormIsPejabat(false);
+      setFormTipePejabat("Atasan Langsung");
+    }
+    
     setIsEditModalOpen(true);
   };
 
@@ -112,7 +129,9 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
     const res = await updatePegawaiAction(editId, {
       fullName: formName,
       jabatan: formJabatan,
-      unitKerja: formUnitKerja
+      unitKerja: formUnitKerja,
+      isPejabat: formIsPejabat,
+      tipePejabat: formIsPejabat ? formTipePejabat : undefined,
     });
 
     if (res.error) toast.error(res.error);
@@ -163,33 +182,37 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
             />
           </div>
           
-          <select
-            value={filterJabatan}
-            onChange={(e) => {
-              setFilterJabatan(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full md:w-64 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-700"
-          >
-            <option value="all">Semua Jabatan</option>
-            {uniqueJabatan.map((jabatan: any) => (
-              <option key={jabatan} value={jabatan}>{jabatan}</option>
-            ))}
-          </select>
+          <div className="w-full md:w-64 shrink-0">
+            <ModernSelect
+              value={filterJabatan}
+              onChange={(val) => {
+                setFilterJabatan(val);
+                setCurrentPage(1);
+              }}
+              options={[
+                { value: "all", label: "Semua Jabatan" },
+                ...uniqueJabatan.map((jabatan: any) => ({ value: jabatan, label: jabatan }))
+              ]}
+              enableSearch={true}
+              searchPlaceholder="Cari jabatan..."
+            />
+          </div>
 
-          <select
-            value={filterUnitKerja}
-            onChange={(e) => {
-              setFilterUnitKerja(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full md:w-64 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-700"
-          >
-            <option value="all">Semua Unit Kerja</option>
-            {uniqueUnitKerja.map((unit: any) => (
-              <option key={unit} value={unit}>{unit}</option>
-            ))}
-          </select>
+          <div className="w-full md:w-64 shrink-0 z-50">
+            <ModernSelect
+              value={filterUnitKerja}
+              onChange={(val) => {
+                setFilterUnitKerja(val);
+                setCurrentPage(1);
+              }}
+              options={[
+                { value: "all", label: "Semua Unit Kerja" },
+                ...uniqueUnitKerja.map((unit: any) => ({ value: unit, label: unit }))
+              ]}
+              enableSearch={true}
+              searchPlaceholder="Cari unit kerja..."
+            />
+          </div>
         </div>
         
         <div className="flex gap-2 w-full xl:w-auto shrink-0 mt-2 xl:mt-0">
@@ -413,6 +436,31 @@ export function PegawaiManager({ initialData }: { initialData: any[] }) {
                   <input required type="text" value={formUnitKerja} onChange={e => setFormUnitKerja(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none" />
                 </div>
               </div>
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex flex-row items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-semibold text-slate-700">Jadikan Pejabat</label>
+                    <p className="text-xs text-slate-500">Tandai jika pegawai ini adalah Pejabat Berwenang atau Atasan Langsung</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={formIsPejabat} onChange={(e) => setFormIsPejabat(e.target.checked)} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                
+                {formIsPejabat && (
+                  <div className="space-y-1.5 pt-2">
+                    <label className="block text-sm font-semibold text-slate-700">Tipe Pejabat <span className="text-red-500">*</span></label>
+                    <ModernSelect
+                      options={["Atasan Langsung", "Pejabat Berwenang"]}
+                      value={formTipePejabat}
+                      onChange={setFormTipePejabat}
+                      name="tipePejabat"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-slate-100">
                 <Button type="button" variant="ghost" onClick={resetForm} className="hover:bg-slate-100">Batal</Button>
                 <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 px-6">

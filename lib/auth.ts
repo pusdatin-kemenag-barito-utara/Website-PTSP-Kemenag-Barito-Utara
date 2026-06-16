@@ -117,6 +117,9 @@ export async function requireAdmin() {
   const profile = await requireAuth();
   // Super admin ditentukan oleh email (hardcoded), bukan role di database
   if (!isAdminRole(profile.role) && !isSuperAdmin(profile.email)) {
+    if (profile.role === "pegawai") {
+      redirect("/pegawai");
+    }
     redirect("/dashboard");
   }
   if (!profile.isVerified && !isSuperAdmin(profile.email)) {

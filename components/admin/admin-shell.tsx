@@ -21,6 +21,15 @@ import {
   Calendar,
   CalendarCheck,
   Construction,
+  UserCog,
+  Settings,
+  Shield,
+  ChevronDown,
+  Menu,
+  Bell,
+  LogOut,
+  X,
+  Settings2,
 } from "lucide-react";
 import { isSuperAdmin as checkSuperAdmin } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
@@ -60,11 +69,18 @@ const ADMIN_NAV: NavItem[] = [
     id: "dokumen_hasil",
   },
   {
-    label: "Layanan",
+    label: "Layanan PTSP",
     href: "/admin/layanan",
     icon: FileText,
     group: "Master Data",
     id: "layanan",
+  },
+  {
+    label: "Layanan Cuti",
+    href: "/admin/master-cuti",
+    icon: Settings2,
+    group: "Master Data",
+    id: "layanan_cuti",
   },
   {
     label: "Buku Tamu",

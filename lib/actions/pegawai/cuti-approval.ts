@@ -1,10 +1,14 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { pengajuanCuti } from "@/lib/db/schema/kepegawaian";
-import { getCurrentUser } from "@/lib/auth";
-import { requireAdmin } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import {
+  pengajuanCuti,
+  dataCutiPegawai,
+  rekapCutiTahunan,
+} from "@/lib/db/schema/kepegawaian";
+import { profiles } from "@/lib/db/schema/auth";
+import { getCurrentUser, requireAuth } from "@/lib/auth";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { createAuditLog } from "@/lib/audit";
@@ -18,7 +22,7 @@ export async function approveByAtasanAction(
     const user = await getCurrentUser();
     if (!user) return { error: "Anda belum login." };
 
-    await requireAdmin();
+    await requireAuth();
 
     if (!signature) {
       return { error: "Tanda tangan wajib dilampirkan." };
@@ -59,7 +63,7 @@ export async function approveByKepalaAction(
     const user = await getCurrentUser();
     if (!user) return { error: "Anda belum login." };
 
-    await requireAdmin();
+    await requireAuth();
 
     if (!signature) {
       return { error: "Tanda tangan wajib dilampirkan." };
@@ -83,6 +87,9 @@ export async function approveByKepalaAction(
       details: { role: "kepala", catatan },
     });
 
+    // Auto-update rekap cuti tahunan
+    await updateRekapAfterApproval(id);
+
     revalidatePath("/pegawai/cuti/persetujuan");
     return { success: true };
   } catch (error: any) {
@@ -100,7 +107,7 @@ export async function rejectPengajuanCutiAction(
     const user = await getCurrentUser();
     if (!user) return { error: "Anda belum login." };
 
-    await requireAdmin();
+    await requireAuth();
 
     if (!catatan) {
       return { error: "Catatan wajib diisi jika menolak." };
@@ -120,7 +127,8 @@ export async function rejectPengajuanCutiAction(
 
     await createAuditLog({
       adminId: user.id,
-      action: roleLevel === "atasan" ? "TOLAK_CUTI_ATASAN" : "TOLAK_CUTI_KEPALA",
+      action:
+        roleLevel === "atasan" ? "TOLAK_CUTI_ATASAN" : "TOLAK_CUTI_KEPALA",
       entityType: "pengajuan_cuti",
       entityId: id,
       details: { role: roleLevel, catatan },
@@ -129,8 +137,119 @@ export async function rejectPengajuanCutiAction(
     revalidatePath("/pegawai/cuti/persetujuan");
     return { success: true };
   } catch (error: any) {
-    console.error("Gagal menolak cuti:", error);
+    console.error("Gagal memproses cuti:", error);
     return { error: error.message || "Terjadi kesalahan sistem." };
+  }
+}
+
+// ─── Helper: Update rekapCutiTahunan setelah cuti disetujui ──────
+
+async function updateRekapAfterApproval(pengajuanCutiId: string) {
+  try {
+    const [cuti] = await db
+      .select({
+        userId: pengajuanCuti.userId,
+        jenisCuti: pengajuanCuti.jenisCuti,
+        tanggalMulai: pengajuanCuti.tanggalMulai,
+        tanggalSelesai: pengajuanCuti.tanggalSelesai,
+        tanggalPilihan: pengajuanCuti.tanggalPilihan,
+      })
+      .from(pengajuanCuti)
+      .where(eq(pengajuanCuti.id, pengajuanCutiId));
+
+    if (!cuti) return;
+
+    // Cari profile pegawai yang mengajukan
+    const [profile] = await db
+      .select({ nip: profiles.nip })
+      .from(profiles)
+      .where(eq(profiles.id, cuti.userId));
+
+    if (!profile?.nip) return;
+
+    // Cari dataCutiPegawai via NIP
+    const pegawai = await db.query.dataCutiPegawai.findFirst({
+      where: eq(dataCutiPegawai.nip, profile.nip),
+    });
+    if (!pegawai) return;
+
+    // Cari rekap tahun berjalan
+    const currentYear = new Date().getFullYear();
+    const rekap = await db.query.rekapCutiTahunan.findFirst({
+      where: and(
+        eq(rekapCutiTahunan.pegawaiId, pegawai.id),
+        eq(rekapCutiTahunan.tahunTarget, currentYear),
+      ),
+    });
+    if (!rekap) return;
+
+    // Hitung total hari dari tanggalPilihan (array of selected dates)
+    const parseDates = (): string[] => {
+      if (cuti.tanggalPilihan) {
+        return cuti.tanggalPilihan.split(",").filter(Boolean);
+      }
+      // Fallback: generate range dari tanggalMulai ke tanggalSelesai
+      const start = new Date(cuti.tanggalMulai);
+      const end = new Date(cuti.tanggalSelesai);
+      const dates: string[] = [];
+      const current = new Date(start);
+      while (current <= end) {
+        dates.push(current.toISOString().split("T")[0]);
+        current.setDate(current.getDate() + 1);
+      }
+      return dates;
+    };
+
+    const dates = parseDates();
+    const totalDays = dates.length;
+    if (totalDays === 0) return;
+
+    const updateData: Record<string, unknown> = {};
+    updateData.updatedAt = new Date();
+
+    if (cuti.jenisCuti === "Cuti Tahunan") {
+      // Hitung hari per bulan (0-11)
+      const daysPerMonth = Array(12).fill(0);
+      for (const dateStr of dates) {
+        const month = new Date(dateStr).getMonth();
+        daysPerMonth[month]++;
+      }
+
+      const existingMonths: number[] = Array.isArray(rekap.cutiTahunan)
+        ? rekap.cutiTahunan
+        : Array(12).fill(0);
+      for (let i = 0; i < 12; i++) {
+        existingMonths[i] = (existingMonths[i] || 0) + daysPerMonth[i];
+      }
+      updateData.cutiTahunan = existingMonths;
+
+      // Hitung ulang sisaCuti
+      const totalDiambil = existingMonths.reduce(
+        (a: number, b: number) => a + b,
+        0,
+      );
+      const jumlahCuti = rekap.jumlahCuti ?? 0;
+      updateData.sisaCuti = Math.max(0, jumlahCuti - totalDiambil);
+    } else if (cuti.jenisCuti === "Cuti Alasan Penting") {
+      updateData.cutiAlasanPenting = (rekap.cutiAlasanPenting ?? 0) + totalDays;
+    } else if (cuti.jenisCuti === "Cuti Besar") {
+      updateData.cutiBesar = (rekap.cutiBesar ?? 0) + totalDays;
+    } else if (cuti.jenisCuti === "Cuti Bersalin") {
+      updateData.cutiBersalin = (rekap.cutiBersalin ?? 0) + totalDays;
+    } else if (cuti.jenisCuti === "Cuti Sakit") {
+      updateData.cutiSakit = (rekap.cutiSakit ?? 0) + totalDays;
+    }
+
+    if (Object.keys(updateData).length > 1) {
+      await db
+        .update(rekapCutiTahunan)
+        .set(updateData)
+        .where(eq(rekapCutiTahunan.id, rekap.id));
+
+      revalidatePath("/admin/kepegawaian/pegawai");
+    }
+  } catch (err) {
+    console.error("Gagal update rekap cuti:", err);
   }
 }
 
@@ -145,7 +264,7 @@ export async function processCutiAction(
     const user = await getCurrentUser();
     if (!user) return { error: "Anda belum login." };
 
-    await requireAdmin();
+    await requireAuth();
 
     if (status === "approved" && !signature) {
       return { error: "Tanda tangan wajib dilampirkan jika disetujui." };
@@ -201,6 +320,11 @@ export async function processCutiAction(
       entityId: id,
       details: { role: roleLevel, status, catatan },
     });
+
+    // Auto-update rekap cuti tahunan jika Kepala menyetujui
+    if (roleLevel === "kepala" && status === "approved") {
+      await updateRekapAfterApproval(id);
+    }
 
     // Kirim notifikasi WA setelah Kepala Kantor memproses
     if (roleLevel === "kepala" && cutiData?.noHp) {

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { laporanKinerja } from "@/lib/db/schema";
-import { profiles, dataCutiPegawai } from "@/lib/db/schema";
+import { profiles, dataCutiPegawai, dataPejabat } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -184,6 +184,8 @@ export async function updatePegawaiAction(
     fullName: string;
     jabatan: string;
     unitKerja: string;
+    isPejabat?: boolean;
+    tipePejabat?: string;
   }
 ) {
   try {
@@ -210,6 +212,33 @@ export async function updatePegawaiAction(
           unitKerja: data.unitKerja,
           updatedAt: new Date(),
         }).where(eq(dataCutiPegawai.nip, nip));
+
+        // Sync data pejabat
+        if (data.isPejabat && data.tipePejabat) {
+          const existingPejabat = await db.query.dataPejabat.findFirst({
+            where: eq(dataPejabat.nip, nip),
+          });
+
+          if (existingPejabat) {
+            await db.update(dataPejabat).set({
+              nama: data.fullName,
+              jabatan: data.jabatan,
+              unitKerja: data.unitKerja,
+              tipePejabat: data.tipePejabat,
+              updatedAt: new Date(),
+            }).where(eq(dataPejabat.nip, nip));
+          } else {
+            await db.insert(dataPejabat).values({
+              nip: nip,
+              nama: data.fullName,
+              jabatan: data.jabatan,
+              unitKerja: data.unitKerja,
+              tipePejabat: data.tipePejabat,
+            });
+          }
+        } else if (data.isPejabat === false) {
+          await db.delete(dataPejabat).where(eq(dataPejabat.nip, nip));
+        }
       }
     }
 

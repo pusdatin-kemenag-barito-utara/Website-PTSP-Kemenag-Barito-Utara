@@ -1,9 +1,12 @@
 "use client";
 
-import { X, ZoomIn, ZoomOut, Maximize } from "lucide-react";
+import { X, ZoomIn, ZoomOut, Maximize, Printer, Download } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { m, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import QRCode from "react-qr-code";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas-pro";
 
 interface DraftCutiModalProps {
   isOpen: boolean;
@@ -30,11 +33,23 @@ interface DraftCutiModalProps {
     keputusanKepala?: string;
     catatanAtasan?: string;
     catatanKepala?: string;
+    sisaCuti?: number;
+    cutiTahun2?: number;
+    cutiTahun1?: number;
+    hakBerjalan?: number;
+    jumlahCuti?: number;
+    totalDiambil?: number;
+    cutiAlasanPenting?: number;
+    cutiBesar?: number;
+    cutiBersalin?: number;
+    cutiSakit?: number;
   };
+  pejabatList?: any[];
 }
 
-export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
+export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [] }: DraftCutiModalProps) {
   const [zoom, setZoom] = useState(1);
+  const [isDownloading, setIsDownloading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleFit = () => {
@@ -45,6 +60,124 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
       } else {
         setZoom(1);
       }
+    }
+  };
+
+  const formatNamaCapital = (fullName: string | null | undefined) => {
+    if (!fullName) return "...............................";
+    if (fullName.includes(",")) {
+      const parts = fullName.split(",");
+      const name = parts[0].toUpperCase();
+      const title = parts.slice(1).join(",");
+      return `${name},${title}`;
+    }
+    const words = fullName.split(" ");
+    const formattedWords = words.map((word, index) => {
+      if (
+        word.includes(".") &&
+        index > 0 &&
+        !["H.", "Hj.", "Dr.", "Drs.", "Prof."].includes(word)
+      ) {
+        return word;
+      }
+      return word.toUpperCase();
+    });
+    return formattedWords.join(" ");
+  };
+
+  const executePrint = () => {
+    const originalTitle = document.title;
+    const safeName = data.nama || "Tanpa_Nama";
+    const safeNip = data.nip || "Tanpa_NIP";
+    const safeJenis = data.jenisCuti || "Draft_Cuti";
+    document.title = `${safeJenis}_${safeName}_${safeNip}`;
+    
+    window.print();
+    
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById("printable-draft");
+    if (!element) {
+      toast.error("Gagal menemukan dokumen untuk diunduh.");
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      toast.loading("Mempersiapkan dokumen PDF...", { id: "pdf-download" });
+
+      const scrollHeight = element.scrollHeight;
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width: 800,
+        height: scrollHeight,
+        windowWidth: 800,
+        windowHeight: scrollHeight,
+        scrollY: -window.scrollY,
+        onclone: (clonedDoc) => {
+          const scrollArea = clonedDoc.getElementById("modal-scroll-area");
+          if (scrollArea) {
+            scrollArea.style.overflow = "visible";
+            scrollArea.style.maxHeight = "none";
+            scrollArea.style.height = "auto";
+          }
+          const scaleWrapper = clonedDoc.querySelector(".print-no-scale") as HTMLElement | null;
+          if (scaleWrapper) {
+            scaleWrapper.style.transform = "none";
+            if (scaleWrapper.parentElement) {
+              scaleWrapper.parentElement.style.height = "auto";
+            }
+          }
+          const printable = clonedDoc.getElementById("printable-draft");
+          if (printable) {
+            printable.style.boxShadow = "none";
+            printable.style.border = "none";
+            printable.style.margin = "0";
+          }
+        }
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [215.9, 330.2], // F4/Folio
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfPageHeight = pdf.internal.pageSize.getHeight();
+      
+      let finalWidth = pdfWidth;
+      let finalHeight = (canvas.height * finalWidth) / canvas.width;
+
+      if (finalHeight > pdfPageHeight) {
+        finalHeight = pdfPageHeight;
+        finalWidth = (canvas.width * finalHeight) / canvas.height;
+      }
+      
+      const xOffset = (pdfWidth - finalWidth) / 2;
+
+      pdf.addImage(imgData, "PNG", xOffset, 0, finalWidth, finalHeight);
+      
+      const safeName = data.nama || "Tanpa_Nama";
+      const safeJenis = data.jenisCuti || "Draft_Cuti";
+      const safeNip = data.nip || "Tanpa_NIP";
+      
+      pdf.save(`${safeJenis}_${safeName}_${safeNip}.pdf`);
+
+      toast.success("Berhasil mengunduh dokumen PDF!", { id: "pdf-download" });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Gagal membuat dokumen PDF.", { id: "pdf-download" });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -70,6 +203,30 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
   // Helpers
   const renderCheck = (jenis: string) => {
     return data.jenisCuti === jenis ? "✓" : "";
+  };
+
+  const getAtasanInfo = (unitKerja: string) => {
+    const atasan = pejabatList.find(
+      (p: any) => p.tipePejabat === "Atasan Langsung" && p.unitKerja === unitKerja?.trim()
+    );
+    return atasan
+      ? { nama: atasan.nama, nip: atasan.nip }
+      : {
+          nama: ".....................................................",
+          nip: "...............................................",
+        };
+  };
+
+  const getPejabatBerwenang = () => {
+    const pejabat = pejabatList.find(
+      (p: any) => p.tipePejabat === "Pejabat Berwenang"
+    );
+    return pejabat
+      ? { nama: pejabat.nama, nip: pejabat.nip }
+      : {
+          nama: ".....................................................",
+          nip: "...............................................",
+        };
   };
 
   const formatDate = (dateStr: string) => {
@@ -140,8 +297,12 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
             onClick={onClose}
             className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm"
           />
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none">
+          <div
+            id="modal-overlay"
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none"
+          >
             <m.div
+              id="modal-content-wrapper"
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -153,7 +314,25 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                   Draft Permohonan Cuti
                 </h2>
                 <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center bg-slate-100 rounded-lg p-1 mr-2">
+                  <div className="hidden sm:flex items-center gap-2 bg-slate-100 rounded-lg p-1 mr-2">
+                    <button
+                      onClick={executePrint}
+                      className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-emerald-600 text-white rounded shadow-sm transition-all hover:bg-emerald-700 font-medium text-xs"
+                      title="Cetak Dokumen"
+                    >
+                      <Printer className="w-4 h-4" />
+                      <span className="hidden md:inline">Cetak</span>
+                    </button>
+                    <button
+                      onClick={handleDownloadPDF}
+                      disabled={isDownloading}
+                      className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-blue-600 text-white rounded shadow-sm transition-all hover:bg-blue-700 font-medium text-xs disabled:opacity-50"
+                      title="Unduh sebagai PDF"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span className="hidden md:inline">{isDownloading ? "Mengunduh..." : "Unduh PDF"}</span>
+                    </button>
+                    <div className="w-px h-5 bg-slate-300 mx-1"></div>
                     <button
                       onClick={handleZoomOut}
                       className="p-1.5 hover:bg-white rounded shadow-sm transition-all text-slate-600 hover:text-slate-900"
@@ -211,9 +390,26 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                 >
                   <Maximize className="w-4 h-4" />
                 </button>
+                <div className="w-px h-6 bg-slate-300 mx-1"></div>
+                <button
+                  onClick={executePrint}
+                  className="p-2 bg-emerald-600 rounded-lg shadow-sm text-white active:scale-95 ml-2"
+                  title="Cetak"
+                >
+                  <Printer className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="p-2 bg-blue-600 rounded-lg shadow-sm text-white active:scale-95 ml-2 disabled:opacity-50"
+                  title="Unduh PDF"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
               </div>
 
               <div
+                id="modal-scroll-area"
                 ref={containerRef}
                 className="p-4 sm:p-6 overflow-auto custom-scrollbar flex-1 bg-slate-100/50"
               >
@@ -227,11 +423,14 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                   }}
                 >
                   <div
-                    className="origin-top-left transition-transform duration-200"
+                    className="origin-top-left transition-transform duration-200 print-no-scale"
                     style={{ transform: `scale(${zoom})` }}
                   >
                     {/* Kertas F4/A4 */}
-                    <div className="w-[800px] min-h-[1131px] bg-white p-8 sm:p-12 text-black text-sm font-serif leading-snug shadow-md border border-slate-200">
+                    <div
+                      id="printable-draft"
+                      className="w-[800px] min-h-[1131px] bg-white p-8 sm:p-12 text-black text-sm font-['Arial'] leading-snug shadow-md border border-slate-200"
+                    >
                       <div className="flex justify-end mb-8">
                         <div className="w-1/2 text-xs leading-tight">
                           {data.jenisPegawai === "PPPK" ? (
@@ -285,7 +484,7 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                       </div>
 
                       <div className="flex justify-end mb-6">
-                        <div className="w-[45%]">
+                        <div className="w-[45%] text-xs">
                           <p>
                             Muara Teweh, {formatDate(new Date().toISOString())}
                           </p>
@@ -318,13 +517,13 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                             <td className="border border-black p-1 w-[15%]">
                               Nama
                             </td>
-                            <td className="border border-black p-1 w-[35%]">
-                              {data.nama}
+                            <td className="border border-black p-1 w-[45%]">
+                              {formatNamaCapital(data.nama)}
                             </td>
                             <td className="border border-black p-1 w-[15%]">
                               NIP
                             </td>
-                            <td className="border border-black p-1 w-[35%]">
+                            <td className="border border-black p-1 w-[25%]">
                               {data.nip}
                             </td>
                           </tr>
@@ -447,22 +646,22 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                             </td>
                           </tr>
                           <tr>
-                            <td className="border border-black p-1 w-[10%]">
+                            <td className="border border-black p-1 w-[10%] text-center">
                               Selama
                             </td>
-                            <td className="border border-black p-1 w-[20%] text-center">
+                            <td className="border border-black p-1 w-[15%] text-center">
                               {hitungLama()}
                             </td>
-                            <td className="border border-black p-1 w-[10%]">
+                            <td className="border border-black p-1 w-[15%] text-center">
                               Mulai Tanggal
                             </td>
                             <td className="border border-black p-1 w-[25%] text-center">
                               {formatDate(data.tanggalMulai)}
                             </td>
-                            <td className="border border-black p-1 w-[10%] text-center">
+                            <td className="border border-black p-1 w-[5%] text-center">
                               s/d
                             </td>
-                            <td className="border border-black p-1 w-[25%] text-center">
+                            <td className="border border-black p-1 w-[30%] text-center">
                               {formatDate(data.tanggalSelesai)}
                             </td>
                           </tr>
@@ -487,10 +686,12 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                             >
                               1. CUTI TAHUNAN
                             </td>
-                            <td className="border border-black p-1 w-[40%]">
+                            <td className="border border-black p-1 w-[40%] text-[13px]">
                               2. CUTI BESAR
                             </td>
-                            <td className="border border-black p-1 w-[10%]"></td>
+                            <td className="border border-black p-1 text-center">
+                              {data.cutiBesar ? `${data.cutiBesar} Hari` : "-"}
+                            </td>
                           </tr>
                           <tr>
                             <td className="border border-black p-1 w-[15%] text-center">
@@ -502,43 +703,67 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                             <td className="border border-black p-1 w-[20%] text-center">
                               Keterangan
                             </td>
-                            <td className="border border-black p-1">
+                            <td className="border border-black p-1 text-[13px]">
                               3. CUTI SAKIT
                             </td>
-                            <td className="border border-black p-1"></td>
+                            <td className="border border-black p-1 text-center">
+                              {data.cutiSakit ? `${data.cutiSakit} Hari` : "-"}
+                            </td>
                           </tr>
                           <tr>
                             <td className="border border-black p-1 text-center">
                               N-2
                             </td>
-                            <td className="border border-black p-1"></td>
-                            <td className="border border-black p-1"></td>
-                            <td className="border border-black p-1">
+                            <td className="border border-black p-1 text-center">
+                              {data.cutiTahun2 ?? ""}
+                            </td>
+                            <td className="border border-black p-1 text-xs text-center">
+                              Sisa Cuti {new Date().getFullYear() - 2}
+                            </td>
+                            <td className="border border-black p-1 text-[13px]">
                               4. CUTI MELAHIRKAN
                             </td>
-                            <td className="border border-black p-1"></td>
+                            <td className="border border-black p-1 text-center">
+                              {data.cutiBersalin
+                                ? `${data.cutiBersalin} Hari`
+                                : "-"}
+                            </td>
                           </tr>
                           <tr>
                             <td className="border border-black p-1 text-center">
                               N-1
                             </td>
-                            <td className="border border-black p-1"></td>
-                            <td className="border border-black p-1"></td>
-                            <td className="border border-black p-1">
+                            <td className="border border-black p-1 text-center">
+                              {data.cutiTahun1 ?? ""}
+                            </td>
+                            <td className="border border-black p-1 text-xs text-center">
+                              Sisa Cuti {new Date().getFullYear() - 1}
+                            </td>
+                            <td className="border border-black p-1 text-[13px]">
                               5. CUTI KARENA ALASAN PENTING
                             </td>
-                            <td className="border border-black p-1"></td>
+                            <td className="border border-black p-1 text-center">
+                              {data.cutiAlasanPenting
+                                ? `${data.cutiAlasanPenting} Hari`
+                                : "-"}
+                            </td>
                           </tr>
                           <tr>
                             <td className="border border-black p-1 text-center">
                               N
                             </td>
-                            <td className="border border-black p-1"></td>
-                            <td className="border border-black p-1"></td>
-                            <td className="border border-black p-1 text-xs leading-tight">
+                            <td className="border border-black p-1 text-center">
+                              {data.hakBerjalan ?? ""}
+                            </td>
+                            <td className="border border-black p-1 text-xs text-center">
+                              Sisa Cuti {new Date().getFullYear()}
+                            </td>
+                            <td className="border border-black p-1 text-[13px]">
                               6. CUTI DI LUAR TANGGUNGAN NEGARA
                             </td>
-                            <td className="border border-black p-1"></td>
+                            <td className="border border-black p-1 text-center">
+                              -
+                            </td>
                           </tr>
                         </tbody>
                       </table>
@@ -577,7 +802,7 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                               {data.signature?.startsWith("TTE_VERIFIED") ? (
                                 <div className="flex justify-center my-2 relative w-16 h-16 mx-auto">
                                   <QRCode
-                                    value={`TTE-KEMENAG-BARUT-${data.nip}-${data.nama}`}
+                                    value={`TTE-KEMENAG-BARUT-${data.nama}-${data.nip}-${data.jenisCuti}-${formatDate(data.tanggalMulai)}`}
                                     size={64}
                                     level="H"
                                     className="w-16 h-16"
@@ -603,7 +828,7 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                               )}
                               <p className="mt-1">
                                 ({" "}
-                                {data.nama || "..............................."}{" "}
+                                {formatNamaCapital(data.nama)}{" "}
                                 )
                               </p>
                               <p>
@@ -642,86 +867,87 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                               </td>
                             </tr>
                             <tr>
-                              <td className="border border-black p-1 h-8"></td>
-                              <td className="border border-black p-1 h-8"></td>
-                              <td className="border border-black p-1 h-8"></td>
-                              <td className="border border-black p-1 h-8"></td>
+                              <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                                {data.keputusanAtasan === "approved" ? "✓" : ""}
+                              </td>
+                              <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                                {data.keputusanAtasan === "changes" ? "✓" : ""}
+                              </td>
+                              <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                                {data.keputusanAtasan === "delayed" ? "✓" : ""}
+                              </td>
+                              <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                                {data.keputusanAtasan === "rejected" ? "✓" : ""}
+                              </td>
                             </tr>
                             <tr>
                               <td
                                 colSpan={2}
-                                className="border border-black p-1 border-r-0"
-                              ></td>
+                                className="border border-black p-2 align-middle text-center"
+                              >
+                                {data.catatanAtasan && (
+                                  <div className="text-xs">
+                                    <span className="font-bold underline">
+                                      Catatan:
+                                    </span>
+                                    <p className="mt-1 whitespace-pre-wrap">
+                                      {data.catatanAtasan}
+                                    </p>
+                                  </div>
+                                )}
+                              </td>
                               <td
                                 colSpan={2}
-                                className="border border-black p-2 text-center border-l-0"
+                                className="border border-black p-2 text-center relative"
                               >
-                                <div className="h-16"></div>
+                                {data.atasanSignature?.startsWith(
+                                  "TTE_VERIFIED",
+                                ) ? (
+                                  <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                                    <div className="flex justify-center relative w-20 h-20 mx-auto">
+                                      <QRCode
+                                        value={`TTE-KEMENAG-BARUT-${getAtasanInfo(data.unitKerja).nama}-${getAtasanInfo(data.unitKerja).nip}-${formatDate(new Date().toISOString())}`}
+                                        size={80}
+                                        level="H"
+                                        className="w-20 h-20"
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div className="bg-white p-0.5 rounded-full">
+                                          <img
+                                            src="/kemenag.svg"
+                                            alt="Kemenag"
+                                            className="w-3.5 h-3.5 object-contain"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : data.atasanSignature ? (
+                                  <img
+                                    src={data.atasanSignature}
+                                    alt="Tanda Tangan Atasan"
+                                    className="h-16 mx-auto object-contain my-2"
+                                  />
+                                ) : null}
+                                <div className="h-22"></div>
                                 {(() => {
-                                  let atasan = {
-                                    nama: ".....................................................",
-                                    nip: "...............................................",
-                                  };
-
-                                  switch (data.unitKerja) {
-                                    case "Kasubag Tata Usaha":
-                                      atasan = {
-                                        nama: "Sony Anwari Husni, S.Pd.I",
-                                        nip: "197809042007101005",
-                                      };
-                                      break;
-                                    case "Kasi Pendidikan Madrasah (Penmad)":
-                                      atasan = {
-                                        nama: "Handayani, S.Pd.I",
-                                        nip: "198110082005011002",
-                                      };
-                                      break;
-                                    case "Kasi Pendidikan Agama Islam (PAI)":
-                                      atasan = {
-                                        nama: "H. Bakti Tawaddin, S.Ag",
-                                        nip: "197101231998031004",
-                                      };
-                                      break;
-                                    case "Kasi Pendidikan Diniyah & Pondok Pesantren (PD Pontren)":
-                                      atasan = {
-                                        nama: "Supian, SE",
-                                        nip: "197304062005011008",
-                                      };
-                                      break;
-                                    case "Kasi Bimbingan Masyarakat Islam":
-                                      atasan = {
-                                        nama: "Almubasir, S.Pd.I",
-                                        nip: "198002022005011008",
-                                      };
-                                      break;
-                                    case "Penyelenggara Zakat dan Wakaf":
-                                      atasan = {
-                                        nama: "Hasan Fauzi, S.Ag",
-                                        nip: "197011032003121002",
-                                      };
-                                      break;
-                                    case "Penyelenggara Hindu":
-                                      atasan = {
-                                        nama: "Wandi, SH.AH",
-                                        nip: "198210022009011011",
-                                      };
-                                      break;
-                                  }
-
+                                  const atasan = getAtasanInfo(data.unitKerja);
                                   return (
                                     <>
                                       <p
                                         className={
                                           atasan.nama.includes("...")
                                             ? ""
-                                            : "font-bold underline"
+                                            : "relative z-10"
                                         }
                                       >
                                         {atasan.nama.includes("...")
                                           ? `( ${atasan.nama} )`
                                           : atasan.nama}
                                       </p>
-                                      <p>NIP. {atasan.nip}</p>
+                                      <p className="relative z-10">
+                                        NIP. {atasan.nip}
+                                      </p>
                                     </>
                                   );
                                 })()}
@@ -758,25 +984,75 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
                             </td>
                           </tr>
                           <tr>
-                            <td className="border border-black p-1 h-8"></td>
-                            <td className="border border-black p-1 h-8"></td>
-                            <td className="border border-black p-1 h-8"></td>
-                            <td className="border border-black p-1 h-8"></td>
+                            <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                              {data.keputusanKepala === "approved" ? "✓" : ""}
+                            </td>
+                            <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                              {data.keputusanKepala === "changes" ? "✓" : ""}
+                            </td>
+                            <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                              {data.keputusanKepala === "delayed" ? "✓" : ""}
+                            </td>
+                            <td className="border border-black p-1 h-8 text-center text-lg font-bold">
+                              {data.keputusanKepala === "rejected" ? "✓" : ""}
+                            </td>
                           </tr>
                           <tr>
                             <td
                               colSpan={2}
-                              className="border border-black p-1 border-r-0"
-                            ></td>
+                              className="border border-black p-2 align-middle text-center"
+                            >
+                              {data.catatanKepala && (
+                                <div className="text-xs">
+                                  <span className="font-bold underline">
+                                    Catatan:
+                                  </span>
+                                  <p className="mt-1 whitespace-pre-wrap">
+                                    {data.catatanKepala}
+                                  </p>
+                                </div>
+                              )}
+                            </td>
                             <td
                               colSpan={2}
-                              className="border border-black p-2 text-center border-l-0"
+                              className="border border-black p-2 text-center relative"
                             >
-                              <div className="h-16"></div>
-                              <p className="font-bold underline">
-                                H. Arbaja, S.Ag., M.A.P.
+                              {data.kepalaSignature?.startsWith(
+                                "TTE_VERIFIED",
+                              ) ? (
+                                <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                                  <div className="flex justify-center relative w-20 h-20 mx-auto">
+                                    <QRCode
+                                      value={`TTE-KEMENAG-BARUT-${getPejabatBerwenang().nama}-${getPejabatBerwenang().nip}-KEPALA KANTOR-${formatDate(new Date().toISOString())}`}
+                                      size={80}
+                                      level="H"
+                                      className="w-20 h-20"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                      <div className="bg-white p-0.5 rounded-full">
+                                        <img
+                                          src="/kemenag.svg"
+                                          alt="Kemenag"
+                                          className="w-3.5 h-3.5 object-contain"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : data.kepalaSignature ? (
+                                <img
+                                  src={data.kepalaSignature}
+                                  alt="Tanda Tangan Kepala Kantor"
+                                  className="h-16 mx-auto object-contain my-2"
+                                />
+                              ) : null}
+                              <div className="h-22"></div>
+                              <p className="relative z-10">
+                                {getPejabatBerwenang().nama}
                               </p>
-                              <p>NIP. 197311212001121001</p>
+                              <p className="relative z-10">
+                                NIP. {getPejabatBerwenang().nip}
+                              </p>
                             </td>
                           </tr>
                         </tbody>
@@ -832,6 +1108,80 @@ export function DraftCutiModal({ isOpen, onClose, data }: DraftCutiModalProps) {
               </div>
             </m.div>
           </div>
+          <style jsx global>{`
+            @media print {
+              /* HIDE EVERYTHING EXCEPT THE DRAFT AND ITS ANCESTORS/DESCENDANTS */
+              body *:not(:has(#printable-draft)):not(#printable-draft):not(#printable-draft *) {
+                display: none !important;
+              }
+              
+              /* RESET ANCESTORS TO PURE STATIC WRAPPERS */
+              body, html,
+              #modal-overlay,
+              #modal-content-wrapper,
+              #modal-scroll-area {
+                position: static !important;
+                display: block !important;
+                transform: none !important;
+                max-height: none !important;
+                overflow: visible !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                border: none !important;
+                max-width: none !important;
+                width: auto !important;
+              }
+
+              /* FORMAT THE DRAFT ITSELF */
+              #printable-draft {
+                position: relative !important;
+                width: 215.9mm !important;
+                min-height: 0 !important; /* VERY IMPORTANT: Override Tailwind min-h-[1131px] */
+                margin: 0 auto !important;
+                padding: 2mm 15mm !important; /* Ditarik ke atas */
+                box-sizing: border-box !important;
+                box-shadow: none !important;
+                border: none !important;
+                transform: none !important;
+                font-family: Arial, Helvetica, sans-serif !important;
+              }
+              /* Squeeze all elements to perfectly fit 1 page F4 */
+              #printable-draft .text-sm { font-size: 11px !important; line-height: 1.2 !important; }
+              #printable-draft .text-xs { font-size: 9.5px !important; line-height: 1.15 !important; }
+              #printable-draft .text-\\[10px\\] { font-size: 8px !important; line-height: 1.0 !important; }
+              #printable-draft .text-lg { font-size: 12px !important; }
+              #printable-draft .p-1 { padding: 1px !important; }
+              #printable-draft .p-2 { padding: 2px !important; }
+              #printable-draft .p-8 { padding: 0 !important; }
+              #printable-draft .sm\\:p-12 { padding: 0 !important; }
+              #printable-draft .mb-8 { margin-bottom: 6px !important; }
+              #printable-draft .mb-6 { margin-bottom: 4px !important; }
+              #printable-draft .mb-4 { margin-bottom: 2px !important; }
+              #printable-draft .mt-4 { margin-top: 2px !important; }
+              #printable-draft .mt-2 { margin-top: 1px !important; }
+              #printable-draft .mt-1 { margin-top: 0px !important; }
+              #printable-draft .h-22 { height: 35px !important; }
+              #printable-draft .h-16 { height: 50px !important; }
+              #printable-draft img.h-16 { height: 50px !important; }
+              #printable-draft .w-20 { width: 65px !important; height: 65px !important; }
+              #printable-draft .h-20 { height: 65px !important; }
+              
+              @page {
+                size: 215.9mm 330.2mm; /* F4 / Folio Size */
+                margin: 0;
+              }
+              .print-no-scale {
+                transform: none !important;
+              }
+              ::-webkit-scrollbar {
+                display: none;
+              }
+            }
+          `}</style>
         </>
       )}
     </AnimatePresence>

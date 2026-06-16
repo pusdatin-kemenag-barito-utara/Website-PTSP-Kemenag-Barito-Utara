@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { pengajuanCuti, dataCutiPegawai } from "@/lib/db/schema/kepegawaian";
+import { pengajuanCuti, dataCutiPegawai, rekapCutiTahunan } from "@/lib/db/schema/kepegawaian";
 import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
@@ -16,13 +16,40 @@ export async function getPegawaiProfileAction() {
   const nip = profile.nip || (profile.email ? profile.email.split("@")[0] : "");
 
   let dataPegawai = null;
-  
+  let rekapTahunan = null;
+  const currentYear = new Date().getFullYear();
+
   // Jika dia BUKAN super admin, barulah sinkron dengan data pegawai
   if (!superAdmin) {
     dataPegawai = await db.query.dataCutiPegawai.findFirst({
       where: eq(dataCutiPegawai.nip, nip),
     });
+
+    if (dataPegawai) {
+      rekapTahunan = await db.query.rekapCutiTahunan.findFirst({
+        where: and(
+          eq(rekapCutiTahunan.pegawaiId, dataPegawai.id),
+          eq(rekapCutiTahunan.tahunTarget, currentYear),
+        ),
+      });
+    }
   }
+
+  const cutiTahun2 = rekapTahunan?.cutiTahun2 ?? null;
+  const cutiTahun1 = rekapTahunan?.cutiTahun1 ?? null;
+  const jumlahCuti = rekapTahunan?.jumlahCuti ?? null;
+  const hakBerjalan = jumlahCuti !== null && cutiTahun1 !== null && cutiTahun2 !== null
+    ? jumlahCuti - cutiTahun1 - cutiTahun2
+    : (rekapTahunan?.sisaCuti !== undefined && rekapTahunan?.sisaCuti !== null && cutiTahun1 !== null && cutiTahun2 !== null)
+      ? rekapTahunan.sisaCuti - cutiTahun1 - cutiTahun2
+      : null;
+  const cutiTahunan: number[] = Array.isArray(rekapTahunan?.cutiTahunan) ? rekapTahunan.cutiTahunan : [];
+  const totalDiambil = cutiTahunan.length === 12 ? cutiTahunan.reduce((a: number, b: number) => a + b, 0) : 0;
+  const sisaCuti = rekapTahunan?.sisaCuti ?? null;
+  const cutiAlasanPenting = rekapTahunan?.cutiAlasanPenting ?? null;
+  const cutiBesar = rekapTahunan?.cutiBesar ?? null;
+  const cutiBersalin = rekapTahunan?.cutiBersalin ?? null;
+  const cutiSakit = rekapTahunan?.cutiSakit ?? null;
 
   return {
     nama: superAdmin ? (profile.fullName || "Super Admin") : (dataPegawai?.nama || profile.fullName || ""),
@@ -30,6 +57,17 @@ export async function getPegawaiProfileAction() {
     unitKerja: superAdmin ? "Kantor Kementerian Agama" : (dataPegawai?.unitKerja || profile.unitKerja || ""),
     jabatan: superAdmin ? "Super Administrator" : (dataPegawai?.jabatan || profile.jabatan || ""),
     isSuperAdmin: superAdmin,
+    sisaCuti,
+    cutiTahun2,
+    cutiTahun1,
+    hakBerjalan,
+    jumlahCuti,
+    cutiTahunan,
+    totalDiambil,
+    cutiAlasanPenting,
+    cutiBesar,
+    cutiBersalin,
+    cutiSakit,
   };
 }
 
@@ -195,10 +233,6 @@ export async function deletePengajuanCutiAction(id: string) {
     });
 
     if (!cuti) return { error: "Data pengajuan tidak ditemukan." };
-    if (cuti.status !== "pending")
-      return {
-        error: "Hanya pengajuan dengan status pending yang dapat dihapus.",
-      };
 
     await db.delete(pengajuanCuti).where(eq(pengajuanCuti.id, id));
     revalidatePath("/pegawai/cuti");
@@ -327,6 +361,7 @@ export async function updatePengajuanCutiAction(
           : null,
         statusKepala: "pending",
         dokumenUrl,
+        editCount: cuti.editCount + 1,
         updatedAt: new Date(),
       })
       .where(eq(pengajuanCuti.id, id));

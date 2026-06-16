@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ChevronRight, Shield } from "lucide-react";
-import { useState, useCallback } from "react";
+import { ChevronRight, Shield } from "lucide-react";
 import { SystemHealthBadge } from "./system-health-badge";
 
 function NavLink({
@@ -42,18 +41,6 @@ function NavLink({
   );
 }
 
-function findActiveGroup(
-  authorizedNav: any[],
-  pathname: string,
-): string | null {
-  const activeItem = authorizedNav.find((item: any) =>
-    item.href === "/admin"
-      ? pathname === item.href
-      : pathname.startsWith(item.href),
-  );
-  return activeItem?.group ?? null;
-}
-
 export function AdminSidebar({
   groups,
   authorizedNav,
@@ -65,19 +52,6 @@ export function AdminSidebar({
   pathname: string;
   onNavClick?: () => void;
 }) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
-    () => {
-      const activeGroup = findActiveGroup(authorizedNav, pathname);
-      return activeGroup ? { [activeGroup]: true } : {};
-    },
-  );
-
-  const setActiveGroup = useCallback((group: string) => {
-    setOpenGroups((prev) => {
-      if (prev[group]) return {};
-      return { [group]: true };
-    });
-  }, []);
 
   return (
     <div className="flex h-full flex-col">
@@ -102,51 +76,30 @@ export function AdminSidebar({
           const groupItems = authorizedNav.filter(
             (item: any) => (item.group || "") === group,
           );
-          const isOpen = openGroups[group] ?? false;
-          const hasActiveItem = groupItems.some((item: any) =>
-            item.href === "/admin"
-              ? pathname === item.href
-              : pathname.startsWith(item.href),
-          );
 
           return (
             <div key={group}>
               {group && (
-                <button
-                  type="button"
-                  onClick={() => setActiveGroup(group)}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] font-extrabold uppercase tracking-[0.2em] transition-colors duration-200 ${
-                    hasActiveItem
-                      ? "text-emerald-400"
-                      : "text-[#6b7280] hover:text-[#d1d5db] hover:bg-white/5"
-                  }`}
-                >
+                <div className="flex w-full items-center gap-2 px-2 py-2 text-left text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#6b7280]">
                   <span className="flex-1">{group}</span>
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                      isOpen ? "rotate-0" : "-rotate-90"
-                    }`}
-                  />
-                </button>
-              )}
-              {isOpen && (
-                <div className="space-y-1 pb-2 mt-2">
-                  {groupItems.map((item: any) => {
-                    const isActive =
-                      item.href === "/admin"
-                        ? pathname === item.href
-                        : pathname.startsWith(item.href);
-                    return (
-                      <NavLink
-                        key={item.href}
-                        item={item}
-                        isActive={isActive}
-                        onClick={onNavClick}
-                      />
-                    );
-                  })}
                 </div>
               )}
+              <div className="space-y-1 pb-4">
+                {groupItems.map((item: any) => {
+                  const isActive =
+                    item.href === "/admin"
+                      ? pathname === item.href
+                      : pathname.startsWith(item.href);
+                  return (
+                    <NavLink
+                      key={item.href}
+                      item={item}
+                      isActive={isActive}
+                      onClick={onNavClick}
+                    />
+                  );
+                })}
+              </div>
             </div>
           );
         })}

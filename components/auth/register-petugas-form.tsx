@@ -10,18 +10,8 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 import { registerPetugasAction } from "@/lib/actions/auth/register-petugas";
-
-const UNIT_KERJA_OPTIONS = [
-  "Kepala Kantor",
-  "Sub Bagian Tata Usaha",
-  "Seksi Pendidikan Madrasah",
-  "Seksi Pendidikan Agama Islam",
-  "Seksi Pendidikan Diniyah & Pondok Pesantren",
-  "Seksi Bimbingan Masyarakat Islam",
-  "Seksi Bimbingan Masyarakat Kristen & Katolik",
-  "Penyelenggara Zakat dan Wakaf",
-  "Penyelenggara Hindu",
-];
+import { UNIT_KERJA_OPTIONS } from "@/lib/constants";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 const PETUGAS_ROLES = [
   { value: "admin_ptsp", label: "Admin PTSP (Umum)" },
@@ -45,6 +35,7 @@ export function RegisterPetugasForm() {
   const [mounted, setMounted] = useState(false);
   const turnstileRef = useRef<TurnstileRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [unitKerja, setUnitKerja] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -112,16 +103,15 @@ export function RegisterPetugasForm() {
         </Field>
 
         <Field label="Unit Kerja" required>
-          <Select name="unit_kerja" required defaultValue="">
-            <option value="" disabled>
-              - Pilih Unit Kerja -
-            </option>
-            {UNIT_KERJA_OPTIONS.map((unit) => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-          </Select>
+          <ModernSelect
+            name="unit_kerja"
+            options={UNIT_KERJA_OPTIONS}
+            value={unitKerja}
+            onChange={setUnitKerja}
+            placeholder="- Pilih Unit Kerja -"
+            required
+            enableSearch
+          />
         </Field>
 
         <Field label="Role Petugas" required>

@@ -62,6 +62,12 @@ export const ADMIN_NAV: NavItem[] = [
   },
   { label: "Pengguna", href: "/admin/pengguna", icon: Users, group: "Sistem" },
   {
+    label: "Data Pejabat",
+    href: "/admin/manajemen-pegawai/pejabat",
+    icon: UserCog,
+    group: "Sistem",
+  },
+  {
     label: "Dokumen Hasil",
     href: "/admin/dokumen-hasil",
     icon: FileOutput,

@@ -9,12 +9,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
-export function CutiActions({ id, status }: { id: string; status: string }) {
+export function CutiActions({ id, status, editCount = 0 }: { id: string; status: string; editCount?: number }) {
   const [loading, setLoading] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const router = useRouter();
-
-  if (status !== "pending") return null; // Hanya pending yang bisa diedit/dihapus
 
   const handleDelete = async () => {
     setLoading(true);
@@ -31,18 +29,32 @@ export function CutiActions({ id, status }: { id: string; status: string }) {
     }
   };
 
+  const canEdit = status === "pending" && editCount < 1;
+
   return (
     <>
-    <div className="flex sm:flex-col flex-row items-center gap-3">
-      <Link href={`/pegawai/cuti/edit/${id}`} title="Edit Pengajuan">
+    <div className="flex flex-row items-center gap-2 sm:gap-3">
+      {canEdit ? (
+        <Link href={`/pegawai/cuti/edit/${id}`} title="Edit Pengajuan">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-10 w-10 rounded-full text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 transition-all shadow-sm ring-1 ring-amber-600/10 p-0"
+          >
+            <PenLine className="w-4.5 h-4.5" />
+          </Button>
+        </Link>
+      ) : status === "pending" ? (
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-10 w-10 rounded-full text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 transition-all shadow-sm ring-1 ring-amber-600/10 p-0"
+          disabled
+          title="Batas edit maksimal 1 kali telah tercapai"
+          className="h-10 w-10 rounded-full text-slate-400 bg-slate-50 transition-all shadow-sm ring-1 ring-slate-200 p-0 cursor-not-allowed opacity-60"
         >
           <PenLine className="w-4.5 h-4.5" />
         </Button>
-      </Link>
+      ) : null}
       <Button 
         variant="ghost" 
         size="sm" 

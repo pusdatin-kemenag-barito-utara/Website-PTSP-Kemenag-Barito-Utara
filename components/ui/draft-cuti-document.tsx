@@ -23,10 +23,17 @@ interface DraftCutiDocumentProps {
     keputusanKepala?: string;
     catatanAtasan?: string;
     catatanKepala?: string;
+    sisaCuti?: number;
+    cutiTahun2?: number;
+    cutiTahun1?: number;
+    hakBerjalan?: number;
+    jumlahCuti?: number;
+    totalDiambil?: number;
   };
+  pejabatList?: { jabatan: string; nama: string; nip: string }[];
 }
 
-export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
+export function DraftCutiDocument({ data, pejabatList = [] }: DraftCutiDocumentProps) {
   const renderCheck = (jenis: string) => {
     return data.jenisCuti === jenis ? "✓" : "";
   };
@@ -75,13 +82,51 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
     return `${diffDays} Hari`;
   };
 
-  const formatNamaCapital = (nama: string) => {
-    if (nama.includes("...")) return `( ${nama} )`;
-    const parts = nama.split(",");
-    if (parts.length > 1) {
-      return parts[0].toUpperCase() + "," + parts.slice(1).join(",");
+  const formatNamaCapital = (fullName: string | null | undefined) => {
+    if (!fullName || fullName.includes("..."))
+      return fullName ?? "...............................";
+    if (fullName.includes(",")) {
+      const parts = fullName.split(",");
+      const name = parts[0].toUpperCase();
+      const title = parts.slice(1).join(",");
+      return `${name},${title}`;
     }
-    return nama.toUpperCase();
+    const words = fullName.split(" ");
+    const formattedWords = words.map((word, index) => {
+      if (
+        word.includes(".") &&
+        index > 0 &&
+        !["H.", "Hj.", "Dr.", "Drs.", "Prof."].includes(word)
+      ) {
+        return word;
+      }
+      return word.toUpperCase();
+    });
+    return formattedWords.join(" ");
+  };
+
+  const getAtasanInfo = (unitKerja: string) => {
+    const atasan = pejabatList?.find(
+      (p: any) => p.tipePejabat === "Atasan Langsung" && p.unitKerja === unitKerja?.trim()
+    );
+    return atasan
+      ? { nama: atasan.nama, nip: atasan.nip }
+      : {
+          nama: ".....................................................",
+          nip: "...............................................",
+        };
+  };
+
+  const getPejabatBerwenang = () => {
+    const pejabat = pejabatList?.find(
+      (p: any) => p.tipePejabat === "Pejabat Berwenang"
+    );
+    return pejabat
+      ? { nama: pejabat.nama, nip: pejabat.nip }
+      : {
+          nama: ".....................................................",
+          nip: "...............................................",
+        };
   };
 
   const getRincianTanggal = () => {
@@ -90,14 +135,14 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
     const formatted = dates
       .map((d) => {
         const dateObj = new Date(d);
-        return `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+        return `${dateObj.getDate()}`;
       })
       .join(", ");
     return ` (Rincian tanggal terpilih: ${formatted})`;
   };
 
   return (
-    <div className="w-full max-w-[800px] min-h-[1131px] bg-white p-4 sm:p-12 text-black text-sm font-serif leading-snug shadow-sm border border-slate-200 mx-auto">
+    <div className="bg-white mx-auto text-black p-8 sm:p-12 shadow-sm border border-slate-200" style={{ width: "800px", minHeight: "1131px", fontSize: "14px", fontFamily: "Arial, sans-serif" }}>
       {/* Header */}
       <div className="flex justify-end mb-8">
         <div className="w-1/2 text-xs leading-tight">
@@ -143,7 +188,7 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
       </div>
 
       <div className="flex justify-end mb-6">
-        <div className="w-[45%]">
+        <div className="w-[45%] text-xs">
           <p>Muara Teweh, {formatDate(new Date().toISOString())}</p>
           <p className="mt-2">Kepada</p>
           <p>Yth. Kepala Kantor Kementerian Agama</p>
@@ -169,11 +214,11 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
           </tr>
           <tr>
             <td className="border border-black p-1 w-[15%]">Nama</td>
-            <td className="border border-black p-1 w-[35%]">
-              {data.nama || "..............................."}
+            <td className="border border-black p-1 w-[45%]">
+              {formatNamaCapital(data.nama)}
             </td>
             <td className="border border-black p-1 w-[15%]">NIP</td>
-            <td className="border border-black p-1 w-[35%]">
+            <td className="border border-black p-1 w-[25%]">
               {data.nip || "..............................."}
             </td>
           </tr>
@@ -276,16 +321,20 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
             </td>
           </tr>
           <tr>
-            <td className="border border-black p-1 w-[10%]">Selama</td>
-            <td className="border border-black p-1 w-[20%] text-center">
+            <td className="border border-black p-1 w-[10%] text-center">
+              Selama
+            </td>
+            <td className="border border-black p-1 w-[15%] text-center">
               {hitungLama()}
             </td>
-            <td className="border border-black p-1 w-[10%]">Mulai Tanggal</td>
+            <td className="border border-black p-1 w-[15%] text-center">
+              Mulai Tanggal
+            </td>
             <td className="border border-black p-1 w-[25%] text-center">
               {formatDate(data.tanggalMulai)}
             </td>
-            <td className="border border-black p-1 w-[10%] text-center">s/d</td>
-            <td className="border border-black p-1 w-[25%] text-center">
+            <td className="border border-black p-1 w-[5%] text-center">s/d</td>
+            <td className="border border-black p-1 w-[30%] text-center">
               {formatDate(data.tanggalSelesai)}
             </td>
           </tr>
@@ -304,8 +353,8 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
             <td colSpan={3} className="border border-black p-1 w-[50%]">
               1. CUTI TAHUNAN
             </td>
-            <td className="border border-black p-1 w-[40%]">2. CUTI BESAR</td>
-            <td className="border border-black p-1 w-[10%]"></td>
+            <td className="border border-black p-1 w-[40%] text-[13px]">2. CUTI BESAR</td>
+            <td className="border border-black p-1 w-[10%] text-center">-</td>
           </tr>
           <tr>
             <td className="border border-black p-1 w-[15%] text-center">
@@ -317,33 +366,39 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
             <td className="border border-black p-1 w-[20%] text-center">
               Keterangan
             </td>
-            <td className="border border-black p-1">3. CUTI SAKIT</td>
-            <td className="border border-black p-1"></td>
+            <td className="border border-black p-1 text-[13px]">3. CUTI SAKIT</td>
+            <td className="border border-black p-1 text-center">-</td>
           </tr>
           <tr>
             <td className="border border-black p-1 text-center">N-2</td>
-            <td className="border border-black p-1"></td>
-            <td className="border border-black p-1"></td>
-            <td className="border border-black p-1">4. CUTI MELAHIRKAN</td>
-            <td className="border border-black p-1"></td>
+            <td className="border border-black p-1 text-center">{data.cutiTahun2 ?? ""}</td>
+            <td className="border border-black p-1 text-xs text-center">
+              {data.cutiTahun2 !== undefined && data.cutiTahun2 !== null ? `Sisa Cuti ${new Date().getFullYear() - 2}` : ""}
+            </td>
+            <td className="border border-black p-1 text-[13px]">4. CUTI MELAHIRKAN</td>
+            <td className="border border-black p-1 text-center">-</td>
           </tr>
           <tr>
             <td className="border border-black p-1 text-center">N-1</td>
-            <td className="border border-black p-1"></td>
-            <td className="border border-black p-1"></td>
-            <td className="border border-black p-1">
+            <td className="border border-black p-1 text-center">{data.cutiTahun1 ?? ""}</td>
+            <td className="border border-black p-1 text-xs text-center">
+              {data.cutiTahun1 !== undefined && data.cutiTahun1 !== null ? `Sisa Cuti ${new Date().getFullYear() - 1}` : ""}
+            </td>
+            <td className="border border-black p-1 text-[13px]">
               5. CUTI KARENA ALASAN PENTING
             </td>
-            <td className="border border-black p-1"></td>
+            <td className="border border-black p-1 text-center">-</td>
           </tr>
           <tr>
             <td className="border border-black p-1 text-center">N</td>
-            <td className="border border-black p-1"></td>
-            <td className="border border-black p-1"></td>
-            <td className="border border-black p-1 text-xs leading-tight">
+            <td className="border border-black p-1 text-center">{data.hakBerjalan ?? ""}</td>
+            <td className="border border-black p-1 text-xs text-center">
+              {data.hakBerjalan !== undefined && data.hakBerjalan !== null ? `Sisa Cuti ${new Date().getFullYear()}` : ""}
+            </td>
+            <td className="border border-black p-1 text-[13px]">
               6. CUTI DI LUAR TANGGUNGAN NEGARA
             </td>
-            <td className="border border-black p-1"></td>
+            <td className="border border-black p-1 text-center">-</td>
           </tr>
         </tbody>
       </table>
@@ -374,7 +429,7 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
               {data.signature?.startsWith("TTE_VERIFIED") ? (
                 <div className="flex justify-center my-2 relative w-16 h-16 mx-auto">
                   <QRCode
-                    value={`TTE-KEMENAG-BARUT-${data.nip}-${data.nama}`}
+                    value={`TTE-KEMENAG-BARUT-${data.nama}-${data.nip}-${data.jenisCuti}-${formatDate(data.tanggalMulai)}`}
                     size={64}
                     level="H"
                     className="w-16 h-16"
@@ -398,9 +453,7 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
               ) : (
                 <div className="h-16"></div>
               )}
-              <p className="mt-1">
-                ( {data.nama || "..............................."} )
-              </p>
+              <p className="mt-1">( {formatNamaCapital(data.nama)} )</p>
               <p>NIP. {data.nip || "..............................."}</p>
             </td>
           </tr>
@@ -465,12 +518,12 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
               >
                 {data.atasanSignature && (
                   <div className="absolute top-2 left-1/2 -translate-x-1/2">
-                    <div className="flex justify-center relative w-20 h-20 mx-auto">
+                    <div className="flex justify-center relative w-16 h-16 mx-auto">
                       <QRCode
-                        value={`TTE-KEMENAG-BARUT-${data.atasanSignature}`}
-                        size={80}
+                        value={`TTE-KEMENAG-BARUT-${getAtasanInfo(data.unitKerja ?? "").nama}-${getAtasanInfo(data.unitKerja ?? "").nip}-${formatDate(new Date().toISOString())}`}
+                        size={64}
                         level="H"
-                        className="w-20 h-20"
+                        className="w-16 h-16"
                       />
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="bg-white p-0.5 rounded-full">
@@ -484,65 +537,12 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
                     </div>
                   </div>
                 )}
-                <div className="h-22"></div>
+                <div className="h-16"></div>
                 {(() => {
-                  let atasan = {
-                    nama: ".....................................................",
-                    nip: "...............................................",
-                  };
-
-                  switch (data.unitKerja?.trim()) {
-                    case "Kasubag Tata Usaha":
-                      atasan = {
-                        nama: "Sony Anwari Husni, S.Pd.I",
-                        nip: "197809042007101005",
-                      };
-                      break;
-                    case "Kasi Pendidikan Madrasah (Penmad)":
-                      atasan = {
-                        nama: "Handayani, S.Pd.I",
-                        nip: "198110082005011002",
-                      };
-                      break;
-                    case "Kasi Pendidikan Agama Islam (PAI)":
-                      atasan = {
-                        nama: "H. Bakti Tawaddin, S.Ag",
-                        nip: "197101231998031004",
-                      };
-                      break;
-                    case "Kasi Pendidikan Diniyah & Pondok Pesantren (PD Pontren)":
-                      atasan = {
-                        nama: "Supian, SE",
-                        nip: "197304062005011008",
-                      };
-                      break;
-                    case "Kasi Bimbingan Masyarakat Islam":
-                      atasan = {
-                        nama: "Almubasir, S.Pd.I",
-                        nip: "198002022005011008",
-                      };
-                      break;
-                    case "Penyelenggara Zakat dan Wakaf":
-                      atasan = {
-                        nama: "Hasan Fauzi, S.Ag",
-                        nip: "197011032003121002",
-                      };
-                      break;
-                    case "Penyelenggara Hindu":
-                      atasan = {
-                        nama: "Wandi, SH.AH",
-                        nip: "198210022009011011",
-                      };
-                      break;
-                  }
-
+                  const atasan = getAtasanInfo(data.unitKerja ?? "");
                   return (
                     <>
-                      <p
-                        className={
-                          atasan.nama.includes("...") ? "" : "relative z-10"
-                        }
-                      >
+                      <p className="relative z-10">
                         {formatNamaCapital(atasan.nama)}
                       </p>
                       <p className="relative z-10">NIP. {atasan.nip}</p>
@@ -610,12 +610,12 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
             >
               {data.kepalaSignature && (
                 <div className="absolute top-2 left-1/2 -translate-x-1/2">
-                  <div className="flex justify-center relative w-20 h-20 mx-auto">
+                  <div className="flex justify-center relative w-16 h-16 mx-auto">
                     <QRCode
-                      value={`TTE-KEMENAG-BARUT-${data.kepalaSignature}`}
-                      size={80}
+                      value={`TTE-KEMENAG-BARUT-${getPejabatBerwenang().nama}-${getPejabatBerwenang().nip}-KEPALA KANTOR-${formatDate(new Date().toISOString())}`}
+                      size={64}
                       level="H"
-                      className="w-20 h-20"
+                      className="w-16 h-16"
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="bg-white p-0.5 rounded-full">
@@ -629,11 +629,11 @@ export function DraftCutiDocument({ data }: DraftCutiDocumentProps) {
                   </div>
                 </div>
               )}
-              <div className="h-22"></div>
+              <div className="h-16"></div>
               <p className="relative z-10">
-                {formatNamaCapital("H. Arbaja, S.Ag., M.A.P.")}
+                {getPejabatBerwenang().nama}
               </p>
-              <p className="relative z-10">NIP. 197311212001121001</p>
+              <p className="relative z-10">NIP. {getPejabatBerwenang().nip}</p>
             </td>
           </tr>
         </tbody>

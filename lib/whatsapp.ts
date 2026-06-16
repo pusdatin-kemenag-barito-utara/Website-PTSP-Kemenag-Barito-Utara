@@ -10,10 +10,13 @@ const WA_BOT_API_KEY = process.env.WA_BOT_API_KEY;
  * Mengirim pesan WhatsApp melalui bot PTSP
  * @param phone - Nomor telepon tujuan (format: 08xxx atau 62xxx atau 628xxx)
  * @param message - Isi pesan (mendukung format WhatsApp: *bold*, _italic_, dll)
+ * @param fileUrl - Opsional: URL file (PDF dll) yang akan disisipkan sebagai tautan di pesan
  */
 export async function sendWhatsAppNotification(
   phone: string,
-  message: string
+  message: string,
+  fileUrl?: string,
+  customFileName?: string
 ): Promise<void> {
   if (!WA_BOT_URL || !WA_BOT_API_KEY) {
     console.warn("[WA Bot] WA_BOT_URL atau WA_BOT_API_KEY belum diatur di .env. Notifikasi WA dilewati.");
@@ -28,13 +31,26 @@ export async function sendWhatsAppNotification(
   }
 
   try {
-    const response = await fetch(`${WA_BOT_URL}/api/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": WA_BOT_API_KEY,
-      },
-      body: JSON.stringify({ to: cleanPhone, text: message }),
+      let payload: any = { to: cleanPhone, text: message };
+
+      if (fileUrl) {
+        // Send as media document with caption
+        payload = {
+          to: cleanPhone,
+          text: message,
+          mediaUrl: fileUrl,
+          mediaType: "document",
+          fileName: customFileName || "Dokumen_PTSP.pdf"
+        };
+      }
+
+      const response = await fetch(`${WA_BOT_URL}/api/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": WA_BOT_API_KEY,
+        },
+        body: JSON.stringify(payload),
       // Timeout 10 detik agar tidak menghambat response utama
       signal: AbortSignal.timeout(10000),
     });

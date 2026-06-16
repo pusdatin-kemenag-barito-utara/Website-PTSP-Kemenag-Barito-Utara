@@ -22,8 +22,23 @@ export const ADMIN_ROLES = [
   "admin_bimbingan_masyarakat_kristen_katolik",
   "admin_penyelenggara_zakat_wakaf",
   "admin_penyelenggara_hindu",
-  "pegawai",
 ] as const;
+
+export const UNIT_KERJA_OPTIONS = [
+  "Pejabat Eselon IV",
+  "Sub Bagian Tata Usaha",
+  "Seksi Pendidikan Madrasah",
+  "Seksi Pendidikan Agama Islam",
+  "Seksi Pendidikan Diniyah & Pondok Pesantren",
+  "Seksi Bimbingan Masyarakat Islam",
+  "Penyelenggara Zakat dan Wakaf",
+  "Penyelenggara Hindu",
+  "KUA Kecamatan Teweh Tengah",
+  "KUA Kecamatan Lahei",
+  "KUA Kecamatan Gunung Purei",
+  "KUA Kecamatan Montallat",
+  "KUA Kecamatan Gunung Timang",
+];
 
 export type AppRole = (typeof ADMIN_ROLES)[number];
 

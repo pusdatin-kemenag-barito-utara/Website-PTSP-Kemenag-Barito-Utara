@@ -23,26 +23,11 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { UNIT_KERJA_OPTIONS as FALLBACK_UNIT_KERJA } from "@/lib/constants";
+import { getPejabatList } from "@/lib/actions/admin/pejabat-actions";
+import { getMasterOptionsAction } from "@/lib/actions/admin/master-options-actions";
 
-const JENIS_CUTI_OPTIONS = [
-  "Cuti Tahunan",
-  "Cuti Besar",
-  "Cuti Sakit",
-  "Cuti Bersalin",
-  "Cuti Alasan Penting",
-  "Cuti Di Luar Tanggungan Negara",
-];
 
-const UNIT_KERJA_OPTIONS = [
-  "Pejabat Eselon IV",
-  "Kasubag Tata Usaha",
-  "Kasi Pendidikan Madrasah (Penmad)",
-  "Kasi Pendidikan Agama Islam (PAI)",
-  "Kasi Pendidikan Diniyah & Pondok Pesantren (PD Pontren)",
-  "Kasi Bimbingan Masyarakat Islam",
-  "Penyelenggara Zakat dan Wakaf",
-  "Penyelenggara Hindu",
-];
 
 const TAHUN_OPTIONS = Array.from({ length: 41 }, (_, i) => ({
   value: String(i),
@@ -54,10 +39,7 @@ const BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({
   label: `${i + 1} Bulan`,
 }));
 
-const JENIS_PEGAWAI_OPTIONS = [
-  { value: "PNS", label: "PNS" },
-  { value: "PPPK", label: "PPPK" },
-];
+
 
 export default function PengajuanCutiPage() {
   const [loading, setLoading] = useState(false);
@@ -102,7 +84,7 @@ export default function PengajuanCutiPage() {
   }
 
   const toTitleCase = (str: string) => {
-    return str; // Tidak lagi mengubah format kapitalisasi secara paksa (Bug Fix)
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
   const [profile, setProfile] = useState({
@@ -110,8 +92,41 @@ export default function PengajuanCutiPage() {
     nip: "",
     jabatan: "",
     isSuperAdmin: false,
+    sisaCuti: null as number | null,
+    cutiTahun2: null as number | null,
+    cutiTahun1: null as number | null,
+    hakBerjalan: null as number | null,
+    jumlahCuti: null as number | null,
+    cutiTahunan: [] as number[],
+    totalDiambil: 0,
+    cutiAlasanPenting: null as number | null,
+    cutiBesar: null as number | null,
+    cutiBersalin: null as number | null,
+    cutiSakit: null as number | null,
   });
   const [profileLoading, setProfileLoading] = useState(true);
+  const [pejabatList, setPejabatList] = useState<any[]>([]);
+  const [masterOptions, setMasterOptions] = useState<{
+    jenisCuti: any[];
+    jenisPegawai: any[];
+  }>({ jenisCuti: [], jenisPegawai: [] });
+
+  const JENIS_CUTI_OPTIONS = masterOptions.jenisCuti.map(o => o.value);
+  const JENIS_PEGAWAI_OPTIONS = masterOptions.jenisPegawai.map(o => ({ value: o.value, label: o.label }));
+  const UNIT_KERJA_OPTIONS = Array.from(new Set(pejabatList.map(p => p.unitKerja).filter(Boolean))).map(val => ({ value: val, label: val }));
+
+  const isCutiTahunanDisabled =
+    profile.sisaCuti !== null && profile.sisaCuti <= 0;
+  const availableJenisCuti = isCutiTahunanDisabled
+    ? JENIS_CUTI_OPTIONS.filter((o) => o !== "Cuti Tahunan")
+    : JENIS_CUTI_OPTIONS;
+
+  useEffect(() => {
+    if (isCutiTahunanDisabled && jenisCuti === "Cuti Tahunan") {
+      setJenisCuti("");
+      toast.error("Sisa cuti tahunan Anda sudah habis.");
+    }
+  }, [isCutiTahunanDisabled]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -122,9 +137,44 @@ export default function PengajuanCutiPage() {
           nip: data.nip,
           jabatan: data.jabatan,
           isSuperAdmin: data.isSuperAdmin,
+          sisaCuti: data.sisaCuti ?? null,
+          cutiTahun2: data.cutiTahun2 ?? null,
+          cutiTahun1: data.cutiTahun1 ?? null,
+          hakBerjalan: data.hakBerjalan ?? null,
+          jumlahCuti: data.jumlahCuti ?? null,
+          cutiTahunan: data.cutiTahunan ?? [],
+          totalDiambil: data.totalDiambil ?? 0,
+          cutiAlasanPenting: data.cutiAlasanPenting ?? null,
+          cutiBesar: data.cutiBesar ?? null,
+          cutiBersalin: data.cutiBersalin ?? null,
+          cutiSakit: data.cutiSakit ?? null,
         });
         setUnitKerja(data.unitKerja);
+
+        // Autofill field based on profile
+        if (data.jabatan) {
+          if (data.jabatan.toLowerCase().includes("pppk")) {
+            setJenisPegawai("PPPK");
+          } else {
+            setJenisPegawai("PNS");
+          }
+        }
       }
+      
+      const pejabatRes = await getPejabatList();
+      if (pejabatRes.success) {
+        setPejabatList(pejabatRes.data || []);
+      }
+      
+      const optionsRes = await getMasterOptionsAction();
+      if (optionsRes.success) {
+        const allOps = optionsRes.data || [];
+        setMasterOptions({
+          jenisCuti: allOps.filter((o: any) => o.category === "jenis_cuti" && o.isActive),
+          jenisPegawai: allOps.filter((o: any) => o.category === "jenis_pegawai" && o.isActive),
+        });
+      }
+      
       setProfileLoading(false);
     }
     loadProfile();
@@ -205,7 +255,11 @@ export default function PengajuanCutiPage() {
         </div>
 
         <div className="p-4 sm:p-10">
-          <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-6 sm:space-y-8">
+          <form
+            ref={formRef}
+            onSubmit={handleFormSubmit}
+            className="space-y-6 sm:space-y-8"
+          >
             {/* Data Pegawai Section */}
             <div className="space-y-4 sm:space-y-6">
               <h3 className="text-lg font-bold text-slate-800 border-b pb-2 border-slate-100">
@@ -230,9 +284,16 @@ export default function PengajuanCutiPage() {
                     <Input
                       name="nama"
                       value={profile.nama}
-                      onChange={(e) => profile.isSuperAdmin && setProfile({ ...profile, nama: e.target.value })}
+                      onChange={(e) =>
+                        profile.isSuperAdmin &&
+                        setProfile({ ...profile, nama: e.target.value })
+                      }
                       readOnly={!profile.isSuperAdmin}
-                      className={!profile.isSuperAdmin ? "bg-slate-100 font-medium text-slate-500 cursor-not-allowed" : "bg-slate-50 font-medium"}
+                      className={
+                        !profile.isSuperAdmin
+                          ? "bg-slate-100 font-medium text-slate-500 cursor-not-allowed"
+                          : "bg-slate-50 font-medium"
+                      }
                     />
                   )}
                 </Field>
@@ -243,9 +304,16 @@ export default function PengajuanCutiPage() {
                     <Input
                       name="nip"
                       value={profile.nip}
-                      onChange={(e) => profile.isSuperAdmin && setProfile({ ...profile, nip: e.target.value })}
+                      onChange={(e) =>
+                        profile.isSuperAdmin &&
+                        setProfile({ ...profile, nip: e.target.value })
+                      }
                       readOnly={!profile.isSuperAdmin}
-                      className={!profile.isSuperAdmin ? "bg-slate-100 font-medium text-slate-500 cursor-not-allowed" : "bg-slate-50 font-medium"}
+                      className={
+                        !profile.isSuperAdmin
+                          ? "bg-slate-100 font-medium text-slate-500 cursor-not-allowed"
+                          : "bg-slate-50 font-medium"
+                      }
                     />
                   )}
                 </Field>
@@ -256,7 +324,9 @@ export default function PengajuanCutiPage() {
                     <Input
                       name="jabatan"
                       value={profile.jabatan}
-                      onChange={(e) => setProfile({ ...profile, jabatan: e.target.value })}
+                      onChange={(e) =>
+                        setProfile({ ...profile, jabatan: e.target.value })
+                      }
                       placeholder="Masukkan jabatan Anda"
                       className="bg-slate-50 font-medium"
                     />
@@ -312,7 +382,7 @@ export default function PengajuanCutiPage() {
                     Jenis Cuti <span className="text-red-500">*</span>
                   </label>
                   <ModernSelect
-                    options={JENIS_CUTI_OPTIONS}
+                    options={availableJenisCuti}
                     value={jenisCuti}
                     onChange={setJenisCuti}
                     placeholder="-- Pilih Jenis Cuti --"
@@ -410,26 +480,30 @@ export default function PengajuanCutiPage() {
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <button 
+                          <button
                             type="button"
                             className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition-colors flex items-center gap-1 z-20 relative"
                             onClick={(e) => {
-                               e.preventDefault();
-                               e.stopPropagation();
-                               const fileUrl = URL.createObjectURL(file);
-                               window.open(fileUrl, "_blank");
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const fileUrl = URL.createObjectURL(file);
+                              window.open(fileUrl, "_blank");
                             }}
                           >
                             <LinkIcon className="w-3 h-3" /> Lihat
                           </button>
-                          <button 
+                          <button
                             type="button"
                             className="text-xs font-semibold bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-300 transition-colors z-20 relative"
                             onClick={(e) => {
-                               e.preventDefault();
-                               e.stopPropagation();
-                               const input = e.currentTarget.closest('.group')?.querySelector('input[type="file"]') as HTMLInputElement;
-                               if (input) input.click();
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const input = e.currentTarget
+                                .closest(".group")
+                                ?.querySelector(
+                                  'input[type="file"]',
+                                ) as HTMLInputElement;
+                              if (input) input.click();
                             }}
                           >
                             Ubah
@@ -506,23 +580,34 @@ export default function PengajuanCutiPage() {
           nama: profile.nama,
           nip: profile.nip,
           jabatan: profile.jabatan,
-          unitKerja: unitKerja,
-          masaKerjaTahun: masaKerjaTahun,
-          masaKerjaBulan: masaKerjaBulan,
-          jenisPegawai: jenisPegawai,
-          jenisCuti: jenisCuti,
-          alasan: alasan,
+          jenisPegawai,
+          unitKerja,
+          masaKerjaTahun,
+          masaKerjaBulan,
+          jenisCuti,
+          alasan,
+          tanggalPilihan: tanggalPilihan.join(","),
           tanggalMulai:
             tanggalPilihan.length > 0 ? [...tanggalPilihan].sort()[0] : "",
           tanggalSelesai:
             tanggalPilihan.length > 0
               ? [...tanggalPilihan].sort()[tanggalPilihan.length - 1]
               : "",
-          tanggalPilihan: tanggalPilihan.join(","),
-          alamatCuti: alamatCuti,
-          noHp: noHp,
+          alamatCuti,
+          noHp,
           signature: signature,
+          sisaCuti: profile.sisaCuti ?? undefined,
+          cutiTahun2: profile.cutiTahun2 ?? undefined,
+          cutiTahun1: profile.cutiTahun1 ?? undefined,
+          hakBerjalan: profile.hakBerjalan ?? undefined,
+          jumlahCuti: profile.jumlahCuti ?? undefined,
+          totalDiambil: profile.totalDiambil,
+          cutiAlasanPenting: profile.cutiAlasanPenting ?? undefined,
+          cutiBesar: profile.cutiBesar ?? undefined,
+          cutiBersalin: profile.cutiBersalin ?? undefined,
+          cutiSakit: profile.cutiSakit ?? undefined,
         }}
+        pejabatList={pejabatList}
       />
 
       <AlertDialog

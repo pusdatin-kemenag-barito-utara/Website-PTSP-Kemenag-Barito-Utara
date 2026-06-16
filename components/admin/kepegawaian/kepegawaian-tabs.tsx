@@ -1,25 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { Users, CalendarCheck } from "lucide-react";
+import { Users, CalendarCheck, UserCog } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { PegawaiManager } from "@/components/admin/kepegawaian/pegawai-manager";
 import { DataCutiClient } from "@/components/admin/data-cuti/data-cuti-client";
+import PejabatPage from "@/app/admin/manajemen-pegawai/pejabat/page";
 
 interface Props {
   pegawaiData: any[];
   pegawaiError: string | null;
   dataCuti: any[];
+  pejabatList: any[];
 }
 
-export function KepegawaianTabs({ pegawaiData, pegawaiError, dataCuti }: Props) {
-  const [activeTab, setActiveTab] = useState<"pegawai" | "cuti">("pegawai");
+export function KepegawaianTabs({
+  pegawaiData,
+  pegawaiError,
+  dataCuti,
+  pejabatList,
+}: Props) {
+  const [activeTab, setActiveTab] = useState<"pegawai" | "cuti" | "pejabat">(
+    "pegawai",
+  );
 
   const tabs = [
     {
       id: "pegawai" as const,
       label: "Data Pegawai",
       icon: Users,
+    },
+    {
+      id: "pejabat" as const,
+      label: "Data Pejabat",
+      icon: UserCog,
     },
     {
       id: "cuti" as const,
@@ -60,14 +74,20 @@ export function KepegawaianTabs({ pegawaiData, pegawaiError, dataCuti }: Props) 
       <div>
         <div className={activeTab === "pegawai" ? "block" : "hidden"}>
           {pegawaiError ? (
-            <div className="bg-red-50 text-red-500 p-4 rounded-xl text-sm">{pegawaiError}</div>
+            <div className="bg-red-50 text-red-500 p-4 rounded-xl text-sm">
+              {pegawaiError}
+            </div>
           ) : (
-            <PegawaiManager initialData={pegawaiData} />
+            <PegawaiManager initialData={pegawaiData} pejabatList={pejabatList} />
           )}
         </div>
 
         <div className={activeTab === "cuti" ? "block" : "hidden"}>
           <DataCutiClient initialData={dataCuti} />
+        </div>
+
+        <div className={activeTab === "pejabat" ? "block" : "hidden"}>
+          <PejabatPage initialData={pejabatList} />
         </div>
       </div>
     </div>

@@ -18,11 +18,13 @@ export function CutiApprovalDashboard({
   pendingKepala,
   riwayat,
   currentProfile,
+  pejabatList = [],
 }: {
   pendingAtasan: any[];
   pendingKepala: any[];
   riwayat: any[];
   currentProfile: { nama: string; nip: string; role: string; isKepalaKantor?: boolean };
+  pejabatList?: any[];
 }) {
   const [activeTab, setActiveTab] = useState<"atasan" | "kepala" | "riwayat">("atasan");
   
@@ -278,7 +280,7 @@ export function CutiApprovalDashboard({
               {/* Kiri: Draft Cuti Document */}
               <div className="flex-1 p-4 lg:p-8 overflow-y-auto border-r border-slate-200 custom-scrollbar flex justify-center bg-slate-200/50">
                 <div className="scale-[0.85] sm:scale-[0.95] md:scale-100 origin-top">
-                  <DraftCutiDocument 
+                    <DraftCutiDocument 
                     data={{
                       nama: selectedRequest.namaPemohon,
                       nip: selectedRequest.nipPemohon,
@@ -301,7 +303,12 @@ export function CutiApprovalDashboard({
                       keputusanKepala: activeTab === "kepala" ? keputusan || undefined : undefined,
                       catatanAtasan: activeTab === "kepala" ? selectedRequest.catatanAtasan : (catatan || selectedRequest.catatanAtasan || undefined),
                       catatanKepala: activeTab === "kepala" ? catatan || undefined : undefined,
+                      sisaCuti: selectedRequest.sisaCuti,
+                      cutiTahun1: selectedRequest.cutiTahun1,
+                      cutiTahun2: selectedRequest.cutiTahun2,
+                      hakBerjalan: selectedRequest.hakBerjalan,
                     }}
+                    pejabatList={pejabatList}
                   />
                 </div>
               </div>
@@ -420,10 +427,36 @@ export function CutiApprovalDashboard({
                   <p className="font-bold text-slate-800">{selectedRequest.namaPemohon}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Status Akhir</p>
-                  <Badge variant={selectedRequest.statusAkhir === "approved" ? "success" : "danger"}>
-                    {selectedRequest.statusAkhir === "approved" ? "Disetujui" : "Ditolak"}
+                  <p className="text-slate-500">Status Atasan</p>
+                  <Badge variant={
+                    selectedRequest.statusAtasan === "approved" ? "success" :
+                    selectedRequest.statusAtasan === "rejected" ? "danger" :
+                    selectedRequest.statusAtasan === "changes" ? "warning" :
+                    selectedRequest.statusAtasan === "delayed" ? "warning" : "info"
+                  }>
+                    {selectedRequest.statusAtasan === "approved" ? "Disetujui Atasan" :
+                     selectedRequest.statusAtasan === "rejected" ? "Ditolak Atasan" :
+                     selectedRequest.statusAtasan === "changes" ? "Dikembalikan" :
+                     selectedRequest.statusAtasan === "delayed" ? "Ditangguhkan" : "Menunggu Atasan"}
                   </Badge>
+                </div>
+                <div>
+                  <p className="text-slate-500">Status Akhir</p>
+                  <Badge variant={
+                    selectedRequest.statusAkhir === "approved" ? "success" :
+                    selectedRequest.statusAkhir === "rejected" ? "danger" :
+                    "info"
+                  }>
+                    {selectedRequest.statusAkhir === "approved" ? "Disetujui Penuh" :
+                     selectedRequest.statusAkhir === "rejected" ? "Ditolak" :
+                     selectedRequest.statusKepala === "pending" && selectedRequest.statusAtasan === "approved"
+                       ? "Menunggu Kepala Kantor"
+                       : "Sedang Diproses"}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-slate-500">Jenis Cuti</p>
+                  <p className="font-semibold text-slate-700">{selectedRequest.jenisCuti}</p>
                 </div>
               </div>
             </div>

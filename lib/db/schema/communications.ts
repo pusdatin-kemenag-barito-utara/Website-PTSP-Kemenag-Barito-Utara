@@ -21,7 +21,10 @@ export const authOtps = pgTable("ptsp_auth_otps", {
 export const whatsappOutbox = pgTable("ptsp_whatsapp_outbox", {
   id: uuid("id").primaryKey().defaultRandom().notNull(),
   phone: text("phone").notNull(),
-  message: text("message").notNull(),
+  message: text("message"), // Dibuat opsional jika hanya ingin mengirim media
+  mediaUrl: text("media_url"), // URL atau path ke file (PDF, gambar, video, dll)
+  mediaType: varchar("media_type", { length: 50 }), // 'document', 'image', 'video', 'audio'
+  fileName: text("file_name"), // Nama file, contoh: 'SK_Cuti.pdf'
   status: varchar("status", { length: 20 }).notNull().default("pending"), // 'pending', 'sent', 'failed'
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 }).notNull().defaultNow(),
   sentAt: timestamp("sent_at", { withTimezone: true, precision: 6 }),
