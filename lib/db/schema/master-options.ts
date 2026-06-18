@@ -9,7 +9,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const masterOptions = pgTable("ptsp_master_options", {
+import { ptspSchema } from "./schema";
+export const masterOptions = ptspSchema.table("ptsp_master_options", {
   id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
   category: varchar("category", { length: 50 }).notNull(), // 'jenis_cuti', 'jenis_pegawai', 'unit_kerja'
   value: text("value").notNull(),

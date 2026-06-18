@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, date, bigint } from "drizzle-orm/pg-core";
 
-export const guestBook = pgTable("ptsp_guest_book", {
+import { ptspSchema } from "./schema";
+export const guestBook = ptspSchema.table("ptsp_guest_book", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "guest_book_id_seq" }),

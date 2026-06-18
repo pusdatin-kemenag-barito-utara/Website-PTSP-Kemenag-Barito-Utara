@@ -8,7 +8,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const dataPejabat = pgTable("ptsp_data_pejabat", {
+import { ptspSchema } from "./schema";
+export const dataPejabat = ptspSchema.table("ptsp_data_pejabat", {
   id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
   tipePejabat: varchar("tipe_pejabat", { length: 50 }).notNull(), // 'Atasan Langsung' | 'Pejabat Berwenang'
   unitKerja: varchar("unit_kerja", { length: 100 }), // e.g. 'Kepala Kantor' atau mapping dari UNIT_KERJA_OPTIONS

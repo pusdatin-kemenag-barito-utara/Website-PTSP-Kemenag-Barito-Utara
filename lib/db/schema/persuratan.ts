@@ -9,7 +9,9 @@ import {
 import { sql } from "drizzle-orm";
 import { users } from "./auth";
 
-export const suratMasuk = pgTable(
+import { ptspSchema } from "./schema";
+
+export const suratMasuk = ptspSchema.table(
   "ptsp_surat_masuk",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -46,7 +48,7 @@ export const suratMasuk = pgTable(
   ],
 );
 
-export const suratKeluar = pgTable(
+export const suratKeluar = ptspSchema.table(
   "ptsp_surat_keluar",
   {
     id: uuid("id").primaryKey().defaultRandom(),

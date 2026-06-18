@@ -1,7 +1,8 @@
 import { pgTable, text, timestamp, bigint, boolean } from "drizzle-orm/pg-core";
 import { feedbackStatusEnum } from "./enums";
 
-export const feedbacks = pgTable("ptsp_feedbacks", {
+import { ptspSchema } from "./schema";
+export const feedbacks = ptspSchema.table("ptsp_feedbacks", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "feedbacks_id_seq" }),

@@ -1,7 +1,8 @@
 import { pgTable, text, timestamp, date, bigint } from "drizzle-orm/pg-core";
 import { appointmentStatusEnum } from "./enums";
 
-export const appointments = pgTable("ptsp_appointments", {
+import { ptspSchema } from "./schema";
+export const appointments = ptspSchema.table("ptsp_appointments", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "appointments_id_seq" }),

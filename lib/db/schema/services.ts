@@ -8,7 +8,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-export const services = pgTable("ptsp_services", {
+import { ptspSchema } from "./schema";
+export const services = ptspSchema.table("ptsp_services", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "services_id_seq" }),
@@ -26,7 +27,7 @@ export const services = pgTable("ptsp_services", {
   sortOrder: integer("sort_order").default(0),
 }).enableRLS();
 
-export const serviceItems = pgTable("ptsp_service_items", {
+export const serviceItems = ptspSchema.table("ptsp_service_items", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_items_id_seq" }),
@@ -47,7 +48,7 @@ export const serviceItems = pgTable("ptsp_service_items", {
   estimatedTime: text("estimated_time").default("1-3 Hari Kerja"),
 }).enableRLS();
 
-export const serviceRequirements = pgTable("ptsp_service_requirements", {
+export const serviceRequirements = ptspSchema.table("ptsp_service_requirements", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_requirements_id_seq" }),
@@ -68,7 +69,7 @@ export const serviceRequirements = pgTable("ptsp_service_requirements", {
     .defaultNow(),
 }).enableRLS();
 
-export const serviceFormFields = pgTable("ptsp_service_form_fields", {
+export const serviceFormFields = ptspSchema.table("ptsp_service_form_fields", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_form_fields_id_seq" }),

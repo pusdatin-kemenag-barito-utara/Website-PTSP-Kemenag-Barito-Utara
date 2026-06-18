@@ -73,7 +73,8 @@ export const users = authSchema.table("users", {
   isAnonymous: boolean("is_anonymous").notNull().default(false),
 }).enableRLS();
 
-export const profiles = pgTable("ptsp_profiles", {
+import { ptspSchema } from "./schema";
+export const profiles = ptspSchema.table("ptsp_profiles", {
   id: uuid("id")
     .primaryKey()
     .notNull()
@@ -102,7 +103,7 @@ export const profiles = pgTable("ptsp_profiles", {
 }).enableRLS();
 
 import { pgTable } from "drizzle-orm/pg-core";
-export const rolePermissions = pgTable("ptsp_role_permissions", {
+export const rolePermissions = ptspSchema.table("ptsp_role_permissions", {
   role: varchar("role").primaryKey().notNull(),
   permissions: jsonb("permissions").notNull().default([]),
   updatedAt: timestamp("updated_at", {

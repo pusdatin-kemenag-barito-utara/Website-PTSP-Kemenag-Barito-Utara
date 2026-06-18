@@ -12,7 +12,8 @@ import { relations } from "drizzle-orm";
 import { profiles } from "./auth";
 import { serviceRequests } from "./requests";
 
-export const activityLogs = pgTable("ptsp_activity_logs", {
+import { ptspSchema } from "./schema";
+export const activityLogs = ptspSchema.table("ptsp_activity_logs", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "activity_logs_id_seq" }),
@@ -27,7 +28,7 @@ export const activityLogs = pgTable("ptsp_activity_logs", {
     .defaultNow(),
 }).enableRLS();
 
-export const auditLogs = pgTable("ptsp_audit_logs", {
+export const auditLogs = ptspSchema.table("ptsp_audit_logs", {
   id: bigserial("id", { mode: "bigint" }).primaryKey().notNull(),
   adminId: uuid("admin_id")
     .notNull()
@@ -42,7 +43,7 @@ export const auditLogs = pgTable("ptsp_audit_logs", {
     .defaultNow(),
 }).enableRLS();
 
-export const systemStatus = pgTable("ptsp_system_status", {
+export const systemStatus = ptspSchema.table("ptsp_system_status", {
   id: text("id").primaryKey().default("heartbeat"),
   lastPing: timestamp("last_ping", { withTimezone: true, precision: 6 })
     .notNull()

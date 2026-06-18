@@ -13,3 +13,4 @@ export * from "./kepegawaian";
 export * from "./persuratan";
 export * from "./pejabat";
 export * from "./master-options";
+export * from "./schema";

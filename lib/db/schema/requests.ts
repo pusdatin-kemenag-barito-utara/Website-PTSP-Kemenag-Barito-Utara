@@ -11,7 +11,8 @@ import { requestStatusEnum } from "./enums";
 import { profiles } from "./auth";
 import { services, serviceItems, serviceFormFields, serviceRequirements } from "./services";
 
-export const serviceRequests = pgTable("ptsp_service_requests", {
+import { ptspSchema } from "./schema";
+export const serviceRequests = ptspSchema.table("ptsp_service_requests", {
   id: uuid("id")
     .primaryKey()
     .notNull()
@@ -41,7 +42,7 @@ export const serviceRequests = pgTable("ptsp_service_requests", {
     .defaultNow(),
 }).enableRLS();
 
-export const serviceRequestAnswers = pgTable("ptsp_service_request_answers", {
+export const serviceRequestAnswers = ptspSchema.table("ptsp_service_request_answers", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_request_answers_id_seq" }),
@@ -61,7 +62,7 @@ export const serviceRequestAnswers = pgTable("ptsp_service_request_answers", {
     .defaultNow(),
 }).enableRLS();
 
-export const serviceRequestDocuments = pgTable(
+export const serviceRequestDocuments = ptspSchema.table(
   "ptsp_service_request_documents",
   {
     id: bigint("id", { mode: "bigint" })
@@ -93,7 +94,7 @@ export const serviceRequestDocuments = pgTable(
   }),
 ).enableRLS();
 
-export const serviceRequestReviews = pgTable("ptsp_service_request_reviews", {
+export const serviceRequestReviews = ptspSchema.table("ptsp_service_request_reviews", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "service_request_reviews_id_seq" }),
@@ -110,7 +111,7 @@ export const serviceRequestReviews = pgTable("ptsp_service_request_reviews", {
     .defaultNow(),
 }).enableRLS();
 
-export const generatedDocuments = pgTable("ptsp_generated_documents", {
+export const generatedDocuments = ptspSchema.table("ptsp_generated_documents", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "generated_documents_id_seq" }),

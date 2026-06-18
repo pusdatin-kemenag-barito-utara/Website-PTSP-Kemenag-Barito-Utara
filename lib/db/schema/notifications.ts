@@ -8,7 +8,8 @@ export const notificationTypeEnum = pgEnum("ptsp_notification_type", [
   "error"
 ]);
 
-export const notifications = pgTable("ptsp_notifications", {
+import { ptspSchema } from "./schema";
+export const notifications = ptspSchema.table("ptsp_notifications", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").references(() => profiles.id, { onDelete: "cascade" }),
   type: notificationTypeEnum("type").default("info").notNull(),

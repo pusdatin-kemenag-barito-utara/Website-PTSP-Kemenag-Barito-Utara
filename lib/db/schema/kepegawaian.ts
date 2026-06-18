@@ -11,7 +11,8 @@ import {
 import { sql } from "drizzle-orm";
 import { users } from "./auth";
 
-export const laporanKinerja = pgTable("ptsp_laporan_kinerja", {
+import { ptspSchema } from "./schema";
+export const laporanKinerja = ptspSchema.table("ptsp_laporan_kinerja", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
@@ -30,7 +31,7 @@ export const laporanKinerja = pgTable("ptsp_laporan_kinerja", {
     .defaultNow(),
 }).enableRLS();
 
-export const pengajuanCuti = pgTable("ptsp_pengajuan_cuti", {
+export const pengajuanCuti = ptspSchema.table("ptsp_pengajuan_cuti", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
@@ -73,7 +74,7 @@ export const pengajuanCuti = pgTable("ptsp_pengajuan_cuti", {
     .defaultNow(),
 }).enableRLS();
 
-export const dataCutiPegawai = pgTable("ptsp_data_cuti_pegawai", {
+export const dataCutiPegawai = ptspSchema.table("ptsp_data_cuti_pegawai", {
   id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
   no: integer("no"),
   nama: text("nama").notNull(),
@@ -88,7 +89,7 @@ export const dataCutiPegawai = pgTable("ptsp_data_cuti_pegawai", {
     .defaultNow(),
 }).enableRLS();
 
-export const rekapCutiTahunan = pgTable("ptsp_rekap_cuti_tahunan", {
+export const rekapCutiTahunan = ptspSchema.table("ptsp_rekap_cuti_tahunan", {
   id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
   pegawaiId: uuid("pegawai_id")
     .notNull()

@@ -8,7 +8,8 @@ import {
 import { pgTable } from "drizzle-orm/pg-core";
 
 // Tabel untuk menyimpan kode OTP
-export const authOtps = pgTable("ptsp_auth_otps", {
+import { ptspSchema } from "./schema";
+export const authOtps = ptspSchema.table("ptsp_auth_otps", {
   id: uuid("id").primaryKey().defaultRandom().notNull(),
   phone: text("phone").notNull(),
   otp: varchar("otp", { length: 6 }).notNull(),
@@ -18,7 +19,7 @@ export const authOtps = pgTable("ptsp_auth_otps", {
 }).enableRLS();
 
 // Tabel untuk antrean pesan WhatsApp
-export const whatsappOutbox = pgTable("ptsp_whatsapp_outbox", {
+export const whatsappOutbox = ptspSchema.table("ptsp_whatsapp_outbox", {
   id: uuid("id").primaryKey().defaultRandom().notNull(),
   phone: text("phone").notNull(),
   message: text("message"), // Dibuat opsional jika hanya ingin mengirim media
