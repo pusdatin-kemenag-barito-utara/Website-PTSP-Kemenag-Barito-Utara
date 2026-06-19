@@ -19,7 +19,7 @@ export default function GuestBookClient({ initialEntries, isManualMode = false }
   })();
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="w-full space-y-6">
       {/* Sleek Tab Navigation with Emerald Glow */}
       <div className="flex justify-center w-full px-2 sm:px-0">
         <div className="flex w-full max-w-full overflow-x-auto sm:overflow-visible sm:w-auto rounded-xl bg-slate-100 p-1 shadow-inner backdrop-blur-md hide-scrollbar">

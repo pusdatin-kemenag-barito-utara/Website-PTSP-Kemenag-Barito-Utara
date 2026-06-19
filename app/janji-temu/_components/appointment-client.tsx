@@ -6,7 +6,7 @@ import { m } from "framer-motion";
 
 export default function AppointmentClient() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="w-full space-y-6">
       {/* Main Glassmorphism Display Box */}
       <div className="relative isolate rounded-3xl border border-white/20 bg-white/60 p-6 shadow-2xl backdrop-blur-xl sm:p-8 md:p-10 overflow-hidden">
         {/* Glow accent wrapper to prevent overflow scrollbars while keeping dropdowns unclipped */}
@@ -16,10 +16,10 @@ export default function AppointmentClient() {
         </div>
 
         <m.div 
-          className="mx-auto max-w-3xl"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-bold tracking-tight text-slate-800 md:text-3xl">

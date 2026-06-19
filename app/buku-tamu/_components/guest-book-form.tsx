@@ -194,7 +194,7 @@ export default function GuestBookForm({
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="mx-auto max-w-3xl"
+      className="w-full"
     >
       <motion.div variants={itemVariants} className="mb-8 text-center">
         <h2 className="text-2xl font-bold tracking-tight text-slate-800 md:text-3xl">

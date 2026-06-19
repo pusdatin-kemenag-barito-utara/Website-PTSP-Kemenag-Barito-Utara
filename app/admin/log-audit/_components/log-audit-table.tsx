@@ -24,8 +24,6 @@ function getEntityLink(entityType?: string | null, entityId?: string | null): st
     guest_book: "/admin/buku-tamu",
     appointments: "/admin/janji-temu",
     feedbacks: "/admin/e-pengaduan",
-    surat_masuk: "/admin/persuratan/surat-masuk",
-    surat_keluar: "/admin/persuratan/surat-keluar",
     pengajuan_cuti: "/pegawai/cuti",
   };
   const base = map[entityType];

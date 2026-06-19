@@ -137,6 +137,7 @@ export async function updateAppointmentStatusAction(
         day: "numeric",
         month: "long",
         year: "numeric",
+        timeZone: "Asia/Jakarta",
       });
 
       const isApproved = status === "approved";

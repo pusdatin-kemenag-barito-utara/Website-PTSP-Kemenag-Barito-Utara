@@ -5,29 +5,16 @@ import { Search, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 import { GuestEntry } from "./types";
 import { formatDate, maskPhoneNumber, formatDateHeading } from "./utils";
+import { ModernSelect } from "@/components/ui/modern-select";
 
-const RevealPhone = ({ phone }: { phone: string }) => {
-  const [revealed, setRevealed] = useState(false);
-  
-  if (revealed) {
-    return (
-      <button 
-        onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${phone}`, "_blank"); }} 
-        className="hover:underline font-medium text-left text-emerald-700"
-        title="Klik untuk Chat"
-      >
-        {phone}
-      </button>
-    );
-  }
+const MaskedPhone = ({ phone }: { phone: string }) => {
   return (
-    <button 
-      onClick={(e) => { e.stopPropagation(); setRevealed(true); }} 
-      className="hover:underline font-medium text-left" 
-      title="Tampilkan Nomor"
+    <span 
+      className="font-medium text-left cursor-default select-none" 
+      title="Nomor disembunyikan untuk menjaga privasi"
     >
       {maskPhoneNumber(phone)}
-    </button>
+    </span>
   );
 };
 
@@ -86,7 +73,7 @@ export default function GuestBookList({ entries, statsDate, onSwitchTab }: Guest
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="mx-auto max-w-5xl"
+      className="w-full"
     >
       {/* Breadcrumb */}
       <motion.div variants={itemVariants} className="mb-6 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400">
@@ -131,16 +118,15 @@ export default function GuestBookList({ entries, statsDate, onSwitchTab }: Guest
         </div>
         
         {/* Sort Dropdown */}
-        <div className="relative">
-          <select
+        <div className="w-full sm:w-56">
+          <ModernSelect
+            options={[
+              { value: "desc", label: "Urutkan: Terbaru" },
+              { value: "asc", label: "Urutkan: Terlama" },
+            ]}
             value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
-            className="appearance-none w-full sm:w-auto rounded-xl border border-slate-200 bg-white/70 py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
-          >
-            <option value="desc">Urutkan: Terbaru</option>
-            <option value="asc">Urutkan: Terlama</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            onChange={(val) => setSortOrder(val as "desc" | "asc")}
+          />
         </div>
       </motion.div>
 
@@ -195,7 +181,7 @@ export default function GuestBookList({ entries, statsDate, onSwitchTab }: Guest
                           <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 0 0 1.333 4.978L2 22l5.19-1.354a9.92 9.92 0 0 0 4.82 1.354h.005c5.507 0 9.99-4.478 9.99-9.984A9.99 9.99 0 0 0 12.012 2Zm4.87 14.153c-.27.756-1.38 1.488-1.9 1.554-.51.066-1.02.324-3.23-.58-2.67-1.09-4.38-3.8-4.51-3.98a5.27 5.27 0 0 1-1.12-2.83 3.09 3.09 0 0 1 1-2.31c.14-.14.28-.21.41-.21h.33c.1 0 .23 0 .36.3.13.33.47 1.15.51 1.24a.32.32 0 0 1 .02.3c-.08.16-.18.26-.3.4l-.38.45c-.12.13-.25.27-.1.53.15.25.66 1.09 1.42 1.76.98.87 1.8 1.14 2.06 1.27.26.13.41.11.56-.06.15-.17.66-.76.84-.96.18-.2.36-.16.6-.08l1.52.75c.24.12.4.18.46.28.06.1.06.6-.21 1.35Z" />
                         </svg>
                         {entry.whatsapp && entry.whatsapp !== "-" ? (
-                          <RevealPhone phone={entry.whatsapp} />
+                          <MaskedPhone phone={entry.whatsapp} />
                         ) : (
                           <span className="font-medium text-slate-400">-</span>
                         )}
@@ -275,7 +261,7 @@ export default function GuestBookList({ entries, statsDate, onSwitchTab }: Guest
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">WhatsApp</p>
                           <p className="text-xs font-semibold text-emerald-600 mt-0.5">
                             {entry.whatsapp && entry.whatsapp !== "-" ? (
-                              <RevealPhone phone={entry.whatsapp} />
+                              <MaskedPhone phone={entry.whatsapp} />
                             ) : (
                               <span className="text-slate-400">-</span>
                             )}

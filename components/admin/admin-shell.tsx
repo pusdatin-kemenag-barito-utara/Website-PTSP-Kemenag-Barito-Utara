@@ -103,20 +103,7 @@ const ADMIN_NAV: NavItem[] = [
     group: "Layanan Publik",
     id: "saran_pengaduan",
   },
-  {
-    label: "Surat Masuk",
-    href: "/admin/persuratan/surat-masuk",
-    icon: Inbox,
-    group: "Tata Naskah",
-    id: "surat_masuk",
-  },
-  {
-    label: "Surat Keluar",
-    href: "/admin/persuratan/surat-keluar",
-    icon: Send,
-    group: "Tata Naskah",
-    id: "surat_keluar",
-  },
+
   {
     label: "Manajemen Kepegawaian",
     href: "/admin/kepegawaian/pegawai",

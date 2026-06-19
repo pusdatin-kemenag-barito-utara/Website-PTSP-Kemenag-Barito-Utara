@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { 
   Search, 
   Trash2, 
@@ -49,7 +49,11 @@ export function JanjiTemuClient({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all"); // all, today, upcoming, past
-  
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   // Modals
   const [deletingEntry, setDeletingEntry] = useState<AppointmentEntry | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -90,6 +94,18 @@ export function JanjiTemuClient({
 
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
+  const currentEntries = filteredEntries.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, dateFilter]);
 
   const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
     setPendingIds((prev) => new Set(prev).add(id));
@@ -257,7 +273,7 @@ export function JanjiTemuClient({
             </thead>
             <tbody className="divide-y divide-slate-100">
               <AnimatePresence mode="popLayout">
-                {filteredEntries.map((entry) => {
+                {currentEntries.map((entry) => {
                   let statusBadgeClass = "bg-amber-50 text-amber-700 border-amber-200/50";
                   let statusText = "Menunggu";
                   let StatusIcon = Clock3;
@@ -412,9 +428,38 @@ export function JanjiTemuClient({
 
         {/* Footer info */}
         <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
-          <span>Menampilkan {filteredEntries.length} dari {entries.length} data janji temu</span>
+          <span>
+            {filteredEntries.length > 0
+              ? `Menampilkan ${(currentPage - 1) * itemsPerPage + 1}–${Math.min(currentPage * itemsPerPage, filteredEntries.length)} dari ${filteredEntries.length} data janji temu`
+              : `0 dari ${entries.length} data janji temu`}
+          </span>
           <span>Sistem Penjadwalan Tamu</span>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">
+              Halaman {currentPage} dari {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors cursor-pointer"
+              >
+                Sebelumnya
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors cursor-pointer"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── DELETION MODAL ───────────────────────────────────────── */}

@@ -333,6 +333,7 @@ export async function processCutiAction(
             day: "2-digit",
             month: "long",
             year: "numeric",
+            timeZone: "Asia/Jakarta",
           })
         : "-";
       const tglSelesai = cutiData.tanggalSelesai
@@ -340,6 +341,7 @@ export async function processCutiAction(
             day: "2-digit",
             month: "long",
             year: "numeric",
+            timeZone: "Asia/Jakarta",
           })
         : "-";
 
