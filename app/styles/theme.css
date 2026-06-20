@@ -1,5 +1,5 @@
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --color-emerald-50: #ecfdf5;
   --color-emerald-100: #d1fae5;
   --color-emerald-200: #a7f3d0;
@@ -35,7 +35,7 @@
   --warning-foreground: #fef3c7;
   --success: #10b981;
   --success-foreground: #ecfdf5;
-  --font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-family: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, sans-serif;
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);

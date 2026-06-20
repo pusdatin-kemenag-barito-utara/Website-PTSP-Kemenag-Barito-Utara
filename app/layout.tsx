@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/header";
 import { SiteFooter } from "@/components/layout/footer";
@@ -11,11 +11,11 @@ import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
 import { ChatWidgetClient } from "@/components/features/chat/chat-widget-client";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-jakarta",
 });
 const appUrl = "https://ptsp.kemenag-baritoutara.com";
 
@@ -128,7 +128,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   };
 
   return (
-    <html lang="id" className={`${inter.variable}`}>
+    <html lang="id" className={`${jakarta.variable}`}>
       <head>
         <script
           type="application/ld+json"
