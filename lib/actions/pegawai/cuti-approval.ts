@@ -6,9 +6,10 @@ import {
   dataCutiPegawai,
   rekapCutiTahunan,
 } from "@/lib/db/schema/kepegawaian";
+import { dataPejabat } from "@/lib/db/schema/pejabat";
 import { profiles } from "@/lib/db/schema/auth";
 import { getCurrentUser, requireAuth } from "@/lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { createAuditLog } from "@/lib/audit";
@@ -46,7 +47,7 @@ export async function approveByAtasanAction(
       details: { role: "atasan", catatan },
     });
 
-    revalidatePath("/pegawai/cuti/persetujuan");
+    revalidatePath("/pegawai/layanan/verifikasi");
     return { success: true };
   } catch (error: any) {
     console.error("Gagal menyetujui cuti oleh atasan:", error);
@@ -90,7 +91,7 @@ export async function approveByKepalaAction(
     // Auto-update rekap cuti tahunan
     await updateRekapAfterApproval(id);
 
-    revalidatePath("/pegawai/cuti/persetujuan");
+    revalidatePath("/pegawai/layanan/verifikasi");
     return { success: true };
   } catch (error: any) {
     console.error("Gagal menyetujui cuti oleh Kepala Kantor:", error);
@@ -134,7 +135,7 @@ export async function rejectPengajuanCutiAction(
       details: { role: roleLevel, catatan },
     });
 
-    revalidatePath("/pegawai/cuti/persetujuan");
+    revalidatePath("/pegawai/layanan/verifikasi");
     return { success: true };
   } catch (error: any) {
     console.error("Gagal memproses cuti:", error);
@@ -362,11 +363,124 @@ export async function processCutiAction(
       }
     }
 
-    revalidatePath("/pegawai/cuti/persetujuan");
-    revalidatePath("/pegawai/cuti");
+    revalidatePath("/pegawai/layanan/verifikasi");
+    revalidatePath("/pegawai/layanan/riwayat");
     return { success: true };
   } catch (error: any) {
     console.error("Gagal memproses cuti:", error);
+    return { error: error.message || "Terjadi kesalahan sistem." };
+  }
+}
+
+export async function getVerifikasiCutiAtasan() {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !user.email) return { error: "Anda belum login." };
+    const nip = user.email.split("@")[0];
+
+    // Check if the user is Atasan Langsung
+    const [pejabat] = await db
+      .select()
+      .from(dataPejabat)
+      .where(and(eq(dataPejabat.nip, nip), eq(dataPejabat.tipePejabat, "Atasan Langsung")));
+
+    if (!pejabat) {
+      return { error: "Anda tidak memiliki akses sebagai Atasan Langsung." };
+    }
+
+    if (!pejabat.unitKerja) {
+      return { error: "Unit kerja Atasan Langsung belum diatur." };
+    }
+
+    // Fetch cuti requests from this unitKerja
+    const pengajuan = await db
+      .select({
+        id: pengajuanCuti.id,
+        userId: pengajuanCuti.userId,
+        jenisCuti: pengajuanCuti.jenisCuti,
+        tanggalMulai: pengajuanCuti.tanggalMulai,
+        tanggalSelesai: pengajuanCuti.tanggalSelesai,
+        tanggalPilihan: pengajuanCuti.tanggalPilihan,
+        alasan: pengajuanCuti.alasan,
+        unitKerja: pengajuanCuti.unitKerja,
+        statusAtasan: pengajuanCuti.statusAtasan,
+        masaKerjaTahun: pengajuanCuti.masaKerjaTahun,
+        masaKerjaBulan: pengajuanCuti.masaKerjaBulan,
+        noHp: pengajuanCuti.noHp,
+        alamatCuti: pengajuanCuti.alamatCuti,
+        jenisPegawai: pengajuanCuti.jenisPegawai,
+        ttdPemohon: pengajuanCuti.ttdPemohon,
+        createdAt: pengajuanCuti.createdAt,
+        user: {
+          fullName: profiles.fullName,
+          nip: profiles.nip,
+          jabatan: profiles.jabatan,
+        }
+      })
+      .from(pengajuanCuti)
+      .leftJoin(profiles, eq(pengajuanCuti.userId, profiles.id))
+      .where(
+        eq(pengajuanCuti.unitKerja, pejabat.unitKerja)
+      )
+      .orderBy(desc(pengajuanCuti.createdAt));
+
+    return { success: true, data: pengajuan };
+  } catch (error: any) {
+    console.error("Gagal mengambil data verifikasi cuti:", error);
+    return { error: error.message || "Terjadi kesalahan sistem." };
+  }
+}
+export async function verifikasiCutiAtasanAction(
+  id: string,
+  status: string,
+  catatan: string,
+  signature: string
+) {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !user.email) return { error: "Anda belum login." };
+
+    await requireAuth();
+
+    if (status === "approved" && !signature) {
+      return { error: "Tanda tangan wajib dilampirkan jika menyetujui." };
+    }
+    
+    if (status !== "approved" && !catatan) {
+      return { error: "Catatan wajib diisi jika tidak menyetujui." };
+    }
+
+    const updates: any = {
+      statusAtasan: status,
+      catatanAtasan: catatan || null,
+      atasanNip: user.email.split("@")[0],
+    };
+
+    if (status === "approved") {
+      updates.ttdAtasan = signature;
+    } else if (status === "rejected") {
+      updates.status = "rejected"; // If rejected by atasan, the whole cuti is rejected
+    }
+
+    await db
+      .update(pengajuanCuti)
+      .set(updates)
+      .where(eq(pengajuanCuti.id, id));
+
+    await createAuditLog({
+      adminId: user.id,
+      action: `VERIFIKASI_CUTI_ATASAN_${status.toUpperCase()}`,
+      entityType: "pengajuan_cuti",
+      entityId: id,
+      details: { role: "atasan", status, catatan },
+    });
+
+    revalidatePath("/pegawai/layanan/verifikasi");
+    revalidatePath("/pegawai/layanan/riwayat");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Gagal memproses verifikasi cuti oleh atasan:", error);
     return { error: error.message || "Terjadi kesalahan sistem." };
   }
 }

@@ -6,13 +6,14 @@ import { profiles, serviceRequests } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isSuperAdmin, isAdminRole } from "@/lib/constants";
 
+
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return session?.user ?? null;
+  return user ?? null;
 });
 
 export const getCurrentProfile = cache(async () => {
@@ -82,14 +83,19 @@ export async function requireAuth(allowIncomplete = false) {
   }
 
   // Fallback if profile creation completely failed but we must return something
+  // For super admin: use a complete fallback with super_admin role to prevent false redirects
+  const userEmail = user.email ?? "";
+  const isSuper = isSuperAdmin(userEmail);
+
   if (!profile) {
     profile = { 
       id: user.id, 
-      email: user.email ?? null, 
-      role: "user",
+      email: userEmail || null, 
+      // Super admin gets super_admin role fallback to bypass completeness checks
+      role: isSuper ? "super_admin" : "user",
       fullName: user.user_metadata?.full_name ?? "",
-      phone: null,
-      address: null,
+      phone: isSuper ? "000000000" : null,   // non-null to bypass completeness check for super admin
+      address: isSuper ? "-" : null,
       createdAt: new Date(),
       updatedAt: new Date(),
       nip: null,
@@ -102,10 +108,13 @@ export async function requireAuth(allowIncomplete = false) {
   }
 
   if (!allowIncomplete) {
-    // Jika role user (pemohon) dan profil belum lengkap, paksa lengkapi profil
-    if (profile!.role === "user") {
-      if (!profile!.phone || !profile!.fullName || !profile!.address) {
-        redirect("/lengkapi-profil");
+    // Super admin dapat mengakses semua halaman tanpa cek kelengkapan profil
+    if (!isSuper && !isSuperAdmin(profile!.email)) {
+      // Jika role user (pemohon) dan profil belum lengkap, paksa lengkapi profil
+      if (profile!.role === "user") {
+        if (!profile!.phone || !profile!.fullName || !profile!.address) {
+          redirect("/lengkapi-profil");
+        }
       }
     }
   }

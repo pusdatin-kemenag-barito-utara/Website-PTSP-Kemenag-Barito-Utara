@@ -24,7 +24,7 @@ export function SignaturePad({ onSave, className = "", nip = "", nama = "" }: Si
       <div className={`w-full h-48 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center ${className}`}>
         <div className="flex flex-col items-center gap-2">
           <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-sm font-medium">Memuat data identitas...</p>
+          <p className="text-slate-400 text-sm font-medium">Menunggu NIP diisi...</p>
         </div>
       </div>
     );

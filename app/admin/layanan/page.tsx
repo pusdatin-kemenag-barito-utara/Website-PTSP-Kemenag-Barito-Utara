@@ -2,7 +2,7 @@ import { FileText } from "lucide-react";
 import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import { services as servicesTable } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { PageHeader } from "@/components/admin/page-header";
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { LayananClient } from "@/components/admin/layanan/layanan-client";
@@ -22,9 +22,8 @@ export default async function AdminServicesPage() {
 
   const whereClause =
     isSuper || isGeneralAdmin
-      ? undefined
-      : eq(servicesTable.roleOwner, specificRole as any);
-
+      ? eq(servicesTable.category, "public")
+      : and(eq(servicesTable.roleOwner, specificRole as any), eq(servicesTable.category, "public"));
 
   const data = await db.query.services.findMany({
     where: whereClause,
@@ -53,6 +52,7 @@ export default async function AdminServicesPage() {
         initialServices={services}
         currentUserRole={specificRole ?? ""}
         isSuperAdmin={isSuper}
+        category="public"
       />
     </div>
   );

@@ -13,11 +13,13 @@ import { LayananService } from "@/lib/services/layanan-service";
 import { createAuditLog } from "@/lib/audit";
 
 const serviceSchema = z.object({
-  name: z.string().min(3),
+  name: z.string().min(3, "Nama layanan minimal 3 karakter"),
   slug: z.string().min(3),
   description: z.string().optional(),
-  isActive: z.boolean().optional(),
-  roleOwner: z.string().nullable().optional(),
+  isActive: z.boolean(),
+  roleOwner: z.string().optional().nullable(),
+  category: z.string().optional(),
+  requestCode: z.string().optional().nullable(),
 });
 
 export type ActionResult = {
@@ -37,6 +39,8 @@ export async function createServiceAction(formData: FormData): Promise<ActionRes
       description: formData.get("description") || "",
       isActive: formData.get("isActive") === "on",
       roleOwner: formData.get("roleOwner") ? String(formData.get("roleOwner")) : null,
+      category: formData.get("category") ? String(formData.get("category")) : "public",
+      requestCode: formData.get("requestCode") ? String(formData.get("requestCode")) : null,
     });
 
     if (!validated.success) {
@@ -89,6 +93,8 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
       description: formData.get("description") || "",
       isActive: formData.get("isActive") === "on",
       roleOwner: formData.get("roleOwner") ? String(formData.get("roleOwner")) : null,
+      category: formData.get("category") ? String(formData.get("category")) : "public",
+      requestCode: formData.get("requestCode") ? String(formData.get("requestCode")) : null,
     });
 
     if (!validated.success) {

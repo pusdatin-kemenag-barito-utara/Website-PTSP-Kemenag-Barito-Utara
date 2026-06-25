@@ -9,11 +9,11 @@ import { eq } from "drizzle-orm";
 
 export async function signOutAction(redirectToPath: string = "/") {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (session?.user) {
+  if (user) {
     const profile = await db.query.profiles.findFirst({
-      where: eq(profiles.id, session.user.id),
+      where: eq(profiles.id, user.id),
       columns: { id: true },
     });
     if (profile) {
@@ -21,7 +21,7 @@ export async function signOutAction(redirectToPath: string = "/") {
         adminId: profile.id,
         action: "LOGOUT",
         entityType: "auth",
-        entityId: session.user.id,
+        entityId: user.id,
       });
     }
   }

@@ -96,6 +96,7 @@ export function HomeVideoProfile() {
                   title={vid.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
+                  loading="lazy"
                   className="absolute top-0 left-0 w-full h-full border-0"
                 ></iframe>
               </div>

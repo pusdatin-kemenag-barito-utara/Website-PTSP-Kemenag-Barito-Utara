@@ -26,9 +26,11 @@ interface ServiceItem {
 export function ServiceItemsAccordion({
   items,
   initialOpenId,
+  basePath = "/dashboard/pengajuan/baru",
 }: {
   items: ServiceItem[];
   initialOpenId?: string;
+  basePath?: string;
 }) {
   const [openId, setOpenId] = useState<string | null>(
     initialOpenId ? String(initialOpenId) : items[0] ? String(items[0].id) : null,
@@ -85,11 +87,11 @@ export function ServiceItemsAccordion({
             {/* Header / Trigger */}
             <button
               onClick={() => toggleItem(item.id)}
-              className="flex w-full items-center justify-between gap-3 p-5 text-left sm:gap-4 sm:p-6 sm:px-8"
+              className="flex w-full items-center justify-between gap-3 p-4 sm:p-5 text-left sm:gap-4"
             >
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 <span
-                  className={`hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black transition-all duration-500 ${
+                  className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl text-xs sm:text-sm font-black transition-all duration-500 ${
                     isOpen
                       ? "bg-[#059669] text-white rotate-[360deg]"
                       : "bg-slate-100 text-slate-400"
@@ -97,21 +99,20 @@ export function ServiceItemsAccordion({
                 >
                   {String(idx + 1).padStart(2, "0")}
                 </span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3
-                    className={`text-base font-black leading-tight transition-colors duration-300 sm:text-lg flex gap-1.5 items-start ${
+                    className={`text-sm font-black leading-tight transition-colors duration-300 sm:text-lg flex items-center ${
                       isOpen ? "text-[#059669]" : "text-slate-900"
                     }`}
                   >
-                    <span className="sm:hidden shrink-0">{idx + 1}. </span>
-                    <span>{item.name}</span>
+                    <span className="truncate">{item.name}</span>
                   </h3>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     <span className="flex items-center gap-1 whitespace-nowrap">
                       <FolderCheck className="h-2.5 w-2.5" />
                       {item.serviceRequirements?.length ?? 0} Dokumen
                     </span>
-                    <span className="hidden h-1 w-1 rounded-full bg-slate-200 sm:block" />
+                    <span className="h-1 w-1 rounded-full bg-slate-200" />
                     <span className="flex items-center gap-1 whitespace-nowrap">
                       <FileText className="h-2.5 w-2.5" />
                       {item.serviceFormFields?.length ?? 0} Formulir
@@ -120,13 +121,13 @@ export function ServiceItemsAccordion({
                 </div>
               </div>
               <div
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-500 sm:h-8 sm:w-8 ${
+                className={`flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-500 ${
                   isOpen
                     ? "border-emerald-200 bg-emerald-50 text-[#059669] rotate-180"
                     : "border-slate-100 bg-slate-50 text-slate-400"
                 }`}
               >
-                <ChevronDown className="h-3.5 w-3.5" />
+                <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               </div>
             </button>
 
@@ -348,7 +349,7 @@ export function ServiceItemsAccordion({
                         Layanan tersedia secara online
                       </div>
                       <Link
-                        href={`/dashboard/pengajuan/baru?serviceId=${item.id}`}
+                        href={`${basePath}?serviceId=${item.id}`}
                         className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#059669] px-6 py-3.5 text-[13px] font-bold text-white shadow-lg shadow-emerald-900/20 transition-all hover:bg-[#047857] active:scale-95 sm:py-3 sm:text-sm"
                       >
                         Mulai Ajukan Sekarang <ArrowRight className="h-4 w-4" />

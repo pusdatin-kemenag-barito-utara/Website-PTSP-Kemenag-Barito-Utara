@@ -17,8 +17,9 @@ export class RequestQueryService {
     q?: string;
     serviceId?: string;
     roleOwner?: string;
+    category?: string;
   }) {
-    const { page, pageSize, status, q, serviceId, roleOwner } = params;
+    const { page, pageSize, status, q, serviceId, roleOwner, category } = params;
     const offset = (page - 1) * pageSize;
 
     const filters = [];
@@ -26,7 +27,12 @@ export class RequestQueryService {
     if (serviceId) filters.push(eq(serviceRequests.serviceId, BigInt(serviceId)));
     if (roleOwner) {
       filters.push(
-        sql`EXISTS (SELECT 1 FROM ${servicesTable} WHERE ${servicesTable.id} = ${serviceRequests.serviceId} AND ${servicesTable.roleOwner} = ${roleOwner})`
+        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services WHERE kemenag_ptsp.ptsp_services.id = ${serviceRequests.serviceId} AND kemenag_ptsp.ptsp_services.role_owner = ${roleOwner})`
+      );
+    }
+    if (category) {
+      filters.push(
+        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services WHERE kemenag_ptsp.ptsp_services.id = ${serviceRequests.serviceId} AND kemenag_ptsp.ptsp_services.category = ${category})`
       );
     }
     if (q) {

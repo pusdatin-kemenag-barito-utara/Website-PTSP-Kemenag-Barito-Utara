@@ -31,7 +31,11 @@ export function AdminTopbar({
           onClick={() => setMobileOpen(!mobileOpen)}
           className="flex lg:hidden h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
         >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {mobileOpen ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Menu className="h-4 w-4" />
+          )}
         </button>
 
         {/* Brand mark — mobile only */}
@@ -73,10 +77,7 @@ export function AdminTopbar({
         initials={initials}
       />
 
-      <ChangePasswordModal
-        open={passwordOpen}
-        onOpenChange={setPasswordOpen}
-      />
+      <ChangePasswordModal open={passwordOpen} onOpenChange={setPasswordOpen} />
     </>
   );
 }

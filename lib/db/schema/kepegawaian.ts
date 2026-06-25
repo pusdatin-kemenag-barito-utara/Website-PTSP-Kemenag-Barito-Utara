@@ -111,3 +111,21 @@ export const rekapCutiTahunan = ptspSchema.table("ptsp_rekap_cuti_tahunan", {
     .notNull()
     .defaultNow(),
 }).enableRLS();
+
+export const laporanKinerjaBulanan = ptspSchema.table("ptsp_laporan_kinerja_bulanan", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  bulan: integer("bulan").notNull(),
+  tahun: integer("tahun").notNull(),
+  dokumenUrl: text("dokumen_url").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected
+  catatan: text("catatan"),
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+}).enableRLS();

@@ -9,7 +9,7 @@ import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
 import { logLoginAction } from "@/lib/actions/auth/login-audit";
 import { checkLoginLockoutAction, recordFailedLoginAction } from "@/lib/actions/auth/login-lockout";
 import { useState, useEffect, useRef, type FormEvent } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
@@ -266,6 +266,7 @@ export function LoginFormByRole({
         <m.div variants={itemVariants}>
           <Field label="Nomor WhatsApp" required hint="Contoh: 08123456789">
             <Input 
+              key={savedIdentifier || 'phone'}
               name="phone" 
               required 
               placeholder="Masukkan nomor WhatsApp" 
@@ -282,10 +283,11 @@ export function LoginFormByRole({
         <m.div variants={itemVariants}>
           <Field label="NIP (Nomor Induk Pegawai)" required>
             <Input 
+              key={nip || savedIdentifier || 'nip'}
               type="text" 
               name="nip" 
               required 
-              defaultValue={mode === "pegawai" ? savedIdentifier : nip}
+              defaultValue={nip || savedIdentifier}
               placeholder="Masukkan NIP Anda" 
               onInput={(e) => {
                 e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
@@ -296,7 +298,7 @@ export function LoginFormByRole({
       ) : (
         <m.div variants={itemVariants}>
           <Field label="Email" required>
-            <Input type="email" name="email" required placeholder="nama@gmail.com" defaultValue={savedIdentifier} />
+            <Input key={savedIdentifier || 'email'} type="email" name="email" required placeholder="nama@gmail.com" defaultValue={savedIdentifier} />
           </Field>
         </m.div>
       )}
@@ -306,18 +308,6 @@ export function LoginFormByRole({
           <span className="block text-sm font-medium text-slate-700">
             Password <span className="text-red-500">*</span>
           </span>
-          <Link
-            href="/forgot-password"
-            className={`text-xs font-bold hover:underline transition-colors ${
-              mode === "petugas"
-                ? "text-[#0f8a54] hover:text-[#0b7446]"
-                : mode === "pegawai"
-                  ? "text-[#047857] hover:text-[#064e3b]"
-                  : "text-[#059669] hover:text-[#047857]"
-            }`}
-          >
-            Lupa password?
-          </Link>
         </div>
         <div className="relative">
           <Input
@@ -338,25 +328,39 @@ export function LoginFormByRole({
       </m.div>
 
       <m.div variants={itemVariants}>
-        <label className="flex items-center gap-2.5 cursor-pointer group select-none w-fit">
-          <div
-            onClick={() => setRememberMe(!rememberMe)}
-            className={`relative w-10 h-5 rounded-full transition-all duration-300 cursor-pointer flex-shrink-0 ${
-              rememberMe
-                ? mode === "petugas" ? "bg-[#0f8a54]" : mode === "pegawai" ? "bg-[#047857]" : "bg-emerald-500"
-                : "bg-slate-200 group-hover:bg-slate-300"
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2.5 cursor-pointer group select-none w-fit">
+            <div
+              onClick={() => setRememberMe(!rememberMe)}
+              className={`relative w-10 h-5 rounded-full transition-all duration-300 cursor-pointer flex-shrink-0 ${
+                rememberMe
+                  ? mode === "petugas" ? "bg-[#0f8a54]" : mode === "pegawai" ? "bg-[#047857]" : "bg-emerald-500"
+                  : "bg-slate-200 group-hover:bg-slate-300"
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${
+                  rememberMe ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </div>
+            <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
+              Ingat Saya
+            </span>
+          </label>
+          <Link
+            href="/forgot-password"
+            className={`text-xs font-bold hover:underline transition-colors ${
+              mode === "petugas"
+                ? "text-[#0f8a54] hover:text-[#0b7446]"
+                : mode === "pegawai"
+                  ? "text-[#047857] hover:text-[#064e3b]"
+                  : "text-[#059669] hover:text-[#047857]"
             }`}
           >
-            <div
-              className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${
-                rememberMe ? "translate-x-5" : "translate-x-0"
-              }`}
-            />
-          </div>
-          <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
-            Ingat Saya
-          </span>
-        </label>
+            Lupa password?
+          </Link>
+        </div>
       </m.div>
 
       <m.div variants={itemVariants}>
@@ -394,7 +398,12 @@ export function LoginFormByRole({
             }`}
             disabled={loading || !turnstileToken}
           >
-            {loading ? "Memproses..." : mode === "petugas" ? "Masuk Sebagai Petugas" : mode === "pegawai" ? "Masuk Sebagai Pegawai" : "Masuk Sebagai Pemohon"}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Memproses...
+              </span>
+            ) : mode === "petugas" ? "Masuk Sebagai Petugas" : mode === "pegawai" ? "Masuk Sebagai Pegawai" : "Masuk Sebagai Pemohon"}
           </Button>
         </m.div>
       </m.div>

@@ -92,7 +92,19 @@ export function ModernSelect({
 
   return (
     <div className="relative w-full" ref={containerRef} id={id}>
-      <input type="hidden" name={name} value={value} required={required} />
+      <input
+        type="text"
+        name={name}
+        value={value}
+        required={required}
+        readOnly
+        tabIndex={-1}
+        className="absolute w-px h-px opacity-0 -z-10 left-1/2 top-1/2 pointer-events-none"
+        onFocus={(e) => {
+          // Blur immediately if somehow focused, but allow reportValidity tooltip to show
+          e.target.blur();
+        }}
+      />
 
       <button
         type="button"

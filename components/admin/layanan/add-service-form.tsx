@@ -30,20 +30,26 @@ export function AddServiceForm() {
 
   return (
     <form action={handleSubmit} className="p-6 space-y-5">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Field label="Nama Layanan" required>
           <Input 
             name="name" 
             required 
-            placeholder="Contoh: Pelayanan Pendidik dan Tenaga Kependidikan"
+            placeholder="Contoh: Pelayanan Pendidik..."
             className="font-medium"
           />
         </Field>
         <Field
           label="Slug URL"
-          hint="Boleh dikosongkan. Sistem akan membuat slug dari nama."
+          hint="Otomatis jika dikosongkan."
         >
           <Input name="slug" placeholder="contoh: layanan-ptk" className="font-mono text-sm" />
+        </Field>
+        <Field
+          label="Kode Penomoran"
+          hint="3 huruf (misal: MDR, CUT)."
+        >
+          <Input name="requestCode" placeholder="MDR" className="font-mono text-sm uppercase" maxLength={4} />
         </Field>
       </div>
       <Field label="Deskripsi">

@@ -51,7 +51,7 @@ export function PegawaiApprovalAlert({
               </p>
             </div>
             <Link
-              href="/pegawai/cuti/persetujuan"
+              href="/pegawai/layanan/verifikasi"
               className="shrink-0 inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-white/20 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold backdrop-blur-md hover:bg-white/30 transition-all active:scale-95"
             >
               Tinjau
@@ -79,7 +79,7 @@ export function PegawaiApprovalAlert({
               </p>
             </div>
             <Link
-              href="/pegawai/cuti/persetujuan"
+              href="/pegawai/layanan/verifikasi"
               className="shrink-0 inline-flex items-center gap-1 rounded-lg sm:rounded-xl bg-white/20 px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold backdrop-blur-md hover:bg-white/30 transition-all active:scale-95"
             >
               Tinjau

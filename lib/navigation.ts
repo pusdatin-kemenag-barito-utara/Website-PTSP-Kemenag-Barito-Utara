@@ -96,23 +96,17 @@ export const PEGAWAI_NAV: NavItem[] = [
     group: "Layanan ASN",
   },
   {
-    label: "Pengajuan Cuti",
-    href: "/pegawai/cuti",
-    icon: CalendarDays,
-    group: "Layanan ASN",
-  },
-  {
-    label: "Persetujuan Cuti",
-    href: "/pegawai/cuti/persetujuan",
-    icon: ListChecks,
-    group: "Layanan ASN",
-    restrictedToPejabat: true,
-  },
-  {
     label: "Riwayat Pengajuan",
     href: "/pegawai/layanan/riwayat",
     icon: History,
     group: "Layanan ASN",
+  },
+  {
+    label: "Verifikasi Pengajuan Cuti",
+    href: "/pegawai/layanan/verifikasi",
+    icon: FileCheck2,
+    group: "Layanan ASN",
+    restrictedToPejabat: true,
   },
   {
     label: "E-LK Harian Saya",

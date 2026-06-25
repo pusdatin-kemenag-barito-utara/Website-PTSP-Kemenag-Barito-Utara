@@ -138,21 +138,21 @@ export default function PejabatPage({ initialData }: { initialData?: any[] }) {
                     <td className="px-6 py-4">{item.nama}</td>
                     <td className="px-6 py-4">{item.nip}</td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
+                      <div className="flex items-center gap-1.5">
+                        <button
                           onClick={() => handleEdit(item)}
+                          title="Edit pejabat"
+                          className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 border border-blue-100 hover:border-blue-200 transition-all"
                         >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                        <button
                           onClick={() => handleDelete(item.id)}
+                          title="Hapus pejabat"
+                          className="flex items-center justify-center h-7 w-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-100 hover:border-red-200 transition-all"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </td>
                   </Reorder.Item>

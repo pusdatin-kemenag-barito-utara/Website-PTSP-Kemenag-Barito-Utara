@@ -103,8 +103,16 @@ export function SiteHeaderClient({
     return () => document.removeEventListener("mousedown", handler);
   }, [openDropdown]);
 
-  const dashboardHref = isAdminRole(profile?.role) ? "/admin" : "/dashboard";
+  const dashboardHref = isAdminRole(profile?.role) ? "/admin" : profile?.role === "pegawai" ? "/pegawai" : "/dashboard";
 
+  let dashboardLabel = "Dashboard";
+  if (profile) {
+    if (isAdminRole(profile.role)) dashboardLabel = "Dashboard Admin";
+    else if (profile.role === "pegawai") dashboardLabel = "Dashboard Pegawai";
+    else if (profile.role === "user") dashboardLabel = "Dashboard Pemohon";
+    else if (profile.role) dashboardLabel = `Dashboard ${profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}`;
+  }
+  
   const isAdmin = isAdminRole(profile?.role);
   const isHome = pathname === "/";
 
@@ -308,14 +316,15 @@ export function SiteHeaderClient({
                   href={dashboardHref}
                   className={`group flex items-center gap-1.5 xl:gap-2 rounded-full px-3 py-2 xl:px-4 xl:py-2.5 text-[12px] xl:text-[13.5px] font-bold transition-all duration-300 ${
                     pathname.startsWith("/dashboard") ||
-                    pathname.startsWith("/admin")
+                    pathname.startsWith("/admin") ||
+                    pathname.startsWith("/pegawai")
                       ? "bg-white/20 !text-white shadow-inner"
                       : "!text-white/80 hover:bg-white/10 hover:!text-white"
                   }`}
                   style={{ color: "white" }}
                 >
                   <LayoutDashboard className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 opacity-70 group-hover:opacity-100" />
-                  <span style={{ color: "inherit" }} className="whitespace-nowrap">Dashboard</span>
+                  <span style={{ color: "inherit" }} className="whitespace-nowrap">{dashboardLabel}</span>
                 </Link>
               )}
             </nav>

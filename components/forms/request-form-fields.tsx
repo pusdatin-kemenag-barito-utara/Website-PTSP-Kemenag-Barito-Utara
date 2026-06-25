@@ -5,20 +5,23 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ModernSelect } from "@/components/ui/modern-select";
-import { ModernDatePicker } from "@/components/ui/modern-date-picker";
+import { ModernMultiDatePicker } from "@/components/ui/modern-multi-date-picker";
 import { parseJsonArray } from "@/lib/utils";
 import { ListOrdered, Type, AlignLeft, Calendar, Hash } from "lucide-react";
 
 // Wrapper for date field to manage controlled state
 function DateFieldWrapper({ field }: { field: any }) {
   const [dateValue, setDateValue] = useState("");
+
   return (
-    <ModernDatePicker
-      name={`answer_${field.id}`}
-      value={dateValue}
-      onChange={setDateValue}
-      required={field.isRequired}
-    />
+    <div className="space-y-2 relative">
+      <ModernMultiDatePicker
+        name={`answer_${field.id}`}
+        value={dateValue}
+        onChange={setDateValue}
+        required={field.isRequired}
+      />
+    </div>
   );
 }
 
@@ -59,17 +62,56 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {[...fields]
-          .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
-          .map((field: any) => {
-            const handleInvalid = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        {(() => {
+          let sortedFields = [...fields].sort(
+            (a: any, b: any) => a.sortOrder - b.sortOrder,
+          );
+
+          const tmIndex = sortedFields.findIndex((f) =>
+            f.label.toLowerCase().includes("tanggal mulai"),
+          );
+          let tsIndex = sortedFields.findIndex((f) =>
+            f.label.toLowerCase().includes("tanggal selesai"),
+          );
+          const waIndex = sortedFields.findIndex(
+            (f) =>
+              f.type === "tel" || f.label.toLowerCase().includes("whatsapp"),
+          );
+
+          if (tmIndex !== -1 && tsIndex !== -1 && waIndex !== -1) {
+            sortedFields[tmIndex] = {
+              ...sortedFields[tmIndex],
+              label: "Tanggal Mulai - Selesai Cuti",
+            };
+            const waField = sortedFields[waIndex];
+            sortedFields.splice(waIndex, 1);
+
+            tsIndex = sortedFields.findIndex((f) =>
+              f.label.toLowerCase().includes("tanggal selesai"),
+            );
+            if (tsIndex !== -1) {
+              sortedFields[tsIndex] = waField;
+            }
+          }
+
+          return sortedFields.map((field: any) => {
+            const handleInvalid = (
+              e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+            ) => {
               const target = e.target as HTMLInputElement | HTMLTextAreaElement;
-              target.setCustomValidity(`Harap isi kolom ${field.label} terlebih dahulu.`);
+              target.setCustomValidity(
+                `Harap isi kolom ${field.label} terlebih dahulu.`,
+              );
             };
 
-            const handleInput = (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const handleInput = (
+              e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+            ) => {
               const target = e.target as HTMLInputElement | HTMLTextAreaElement;
               target.setCustomValidity("");
+              if (field.type === "tel") {
+                target.value = target.value.replace(/\D/g, "");
+              }
             };
 
             const commonInput = {
@@ -82,49 +124,72 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
             };
 
             const icon =
-              field.type === "select" ? ListOrdered :
-              field.type === "date" ? Calendar :
-              field.type === "number" ? Hash :
-              field.type === "textarea" ? AlignLeft :
-              Type;
+              field.type === "select"
+                ? ListOrdered
+                : field.type === "date"
+                  ? Calendar
+                  : field.type === "number"
+                    ? Hash
+                    : field.type === "textarea"
+                      ? AlignLeft
+                      : field.type === "tel"
+                        ? null
+                        : Type;
+
+            const isHalfWidthTextarea =
+              field.type === "textarea" &&
+              (field.label.toLowerCase().includes("alasan") ||
+                field.label.toLowerCase().includes("alamat"));
 
             return (
               <div
                 key={field.id}
-                className={field.type === "textarea" ? "md:col-span-2" : ""}
+                className={
+                  field.type === "textarea" && !isHalfWidthTextarea
+                    ? "md:col-span-2"
+                    : ""
+                }
               >
                 <Field label={field.label} required={field.isRequired}>
                   {field.type === "textarea" ? (
-                    <Textarea {...commonInput} className="min-h-[96px] resize-none" />
+                    <Textarea
+                      {...commonInput}
+                      className="min-h-[96px] resize-none"
+                    />
                   ) : field.type === "select" ? (
                     <SelectFieldWrapper field={field} />
                   ) : field.type === "date" ? (
                     <DateFieldWrapper field={field} />
-                  ) : field.type === "number" ? (
-                    <div className="relative">
-                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                      <Input
-                        type="number"
-                        {...commonInput}
-                        className="pl-9"
-                      />
-                    </div>
                   ) : (
-                    <div className="relative">
-                      <Type className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                      <Input
-                        type="text"
-                        {...commonInput}
-                        className="pl-9"
-                      />
+                    <div className="space-y-1.5">
+                      <div className="relative">
+                        {icon &&
+                          (() => {
+                            const IconComponent = icon;
+                            return (
+                              <IconComponent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                            );
+                          })()}
+                        <Input
+                          type={field.type}
+                          {...commonInput}
+                          className={icon ? "pl-9" : ""}
+                        />
+                      </div>
+                      {field.type === "tel" && (
+                        <p className="text-[10px] text-slate-500">
+                          Notifikasi status permohonan akan dikirim ke nomor
+                          ini, pastikan nomor sudah benar dan aktif.
+                        </p>
+                      )}
                     </div>
                   )}
                 </Field>
               </div>
             );
-          })}
+          });
+        })()}
       </div>
     </section>
   );
 }
-

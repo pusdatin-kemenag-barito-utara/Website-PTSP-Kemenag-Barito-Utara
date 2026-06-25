@@ -9,7 +9,7 @@ export function SignOutButton() {
   };
 
   return (
-    <Button type="button" variant="outline" onClick={handleSignOut}>
+    <Button type="button" variant="danger" onClick={handleSignOut}>
       Logout
     </Button>
   );

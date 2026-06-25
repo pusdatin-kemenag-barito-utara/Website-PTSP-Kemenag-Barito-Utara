@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { services as servicesTable } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 
 export class LayananService {
   static async createService(data: any) {
@@ -35,8 +35,13 @@ export class LayananService {
   /**
    * Get all services with only id and name for dropdowns
    */
-  static async getAllServicesBrief(roleOwner?: string) {
-    const whereClause = roleOwner ? eq(servicesTable.roleOwner, roleOwner as any) : undefined;
+  static async getAllServicesBrief(roleOwner?: string, category?: string) {
+    const filters = [];
+    if (roleOwner) filters.push(eq(servicesTable.roleOwner, roleOwner as any));
+    if (category) filters.push(eq(servicesTable.category, category));
+    
+    const whereClause = filters.length > 0 ? and(...filters) : undefined;
+    
     return await db.query.services.findMany({
       columns: { id: true, name: true },
       where: whereClause,

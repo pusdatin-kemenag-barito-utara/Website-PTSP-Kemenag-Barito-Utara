@@ -13,7 +13,13 @@ import { RequestConfirmation } from "./_components/request-confirmation";
 
 type Catalog = any[];
 
-export function NewRequestForm({ catalog }: { catalog: Catalog }) {
+export function NewRequestForm({
+  catalog,
+  redirectPathPrefix = "/dashboard/pengajuan",
+}: {
+  catalog: Catalog;
+  redirectPathPrefix?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlServiceItemId = searchParams.get("serviceId");
@@ -93,7 +99,7 @@ export function NewRequestForm({ catalog }: { catalog: Catalog }) {
       }
 
       toast.success("Berhasil!", { description: "Pengajuan Anda telah berhasil dikirim." });
-      router.push(`/dashboard/pengajuan/${result.id}`);
+      router.push(`${redirectPathPrefix}/${result.id}`);
       router.refresh();
     } catch (err) {
       setLoading(false);

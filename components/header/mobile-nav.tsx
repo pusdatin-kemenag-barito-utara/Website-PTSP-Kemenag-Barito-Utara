@@ -217,7 +217,9 @@ export function MobileNav({
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-105 transition-all">
                   <LayoutDashboard className="h-4.5 w-4.5 flex-shrink-0" />
                 </div>
-                <span className="font-medium text-white/70 group-hover:text-white">Dashboard</span>
+                <span className="font-medium text-white/70 group-hover:text-white">
+                  {isAdmin ? "Dashboard Admin" : profile.role === "pegawai" ? "Dashboard Pegawai" : profile.role === "user" ? "Dashboard Pemohon" : `Dashboard ${profile.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ""}`}
+                </span>
               </Link>
             )}
           </nav>

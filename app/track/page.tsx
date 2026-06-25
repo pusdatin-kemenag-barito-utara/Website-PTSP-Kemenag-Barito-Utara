@@ -21,7 +21,8 @@ export default async function TrackPage({
   searchParams: Promise<{ q?: string; token?: string }>;
 }) {
   const { q = "", token = "" } = await searchParams;
-  const result = q ? await getPublicRequestStatus(q, token) : null;
+  // Hanya lakukan pencarian jika ada query (q) DAN token turnstile
+  const result = q && token ? await getPublicRequestStatus(q, token) : null;
 
   return (
     <main className="relative min-h-screen bg-slate-50/50 pb-20 overflow-hidden">
@@ -57,10 +58,10 @@ export default async function TrackPage({
             variants={fadeUpVariants}
             initial="hidden"
             animate="show"
-            key={q} // Remounts when query changes
+            key={`${q}-${token}`} // Remounts when query or token changes
             className="transition-all duration-300"
           >
-            {!q ? (
+            {!(q && token) ? (
               <TrackEmptyState />
             ) : result?.error ? (
               <TrackErrorState message={result.error} />

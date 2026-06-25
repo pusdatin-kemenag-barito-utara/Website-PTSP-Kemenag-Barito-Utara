@@ -15,8 +15,8 @@ export function RevisionSection({
   if (request.status !== "revision_required") return null;
 
   return (
-    <div className="rounded-2xl sm:rounded-[2.5rem] bg-rose-50 border-2 border-rose-100 p-5 sm:p-8 shadow-xl">
-      <div className="mb-6 flex items-center gap-3">
+    <div className="rounded-2xl bg-rose-50 border-2 border-rose-100 p-5 sm:p-6 shadow-sm">
+      <div className="mb-4 flex items-center gap-3">
         <AlertCircle className="h-6 w-6 text-rose-500" />
         <h3 className="text-lg font-black text-rose-900 tracking-tight">
           Upload Revisi

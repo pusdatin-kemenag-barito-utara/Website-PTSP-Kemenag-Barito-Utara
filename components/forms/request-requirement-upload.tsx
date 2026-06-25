@@ -201,6 +201,10 @@ export function RequestRequirementUpload({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
  
+  if (!requirements || requirements.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
@@ -305,7 +309,6 @@ export function RequestRequirementUpload({
                         <input
                           id={`file_input_${requirement.id}`}
                           type="file"
-                          required={requirement.isRequired}
                           accept={extensions.split(",").map((ext: string) => `.${ext.trim()}`).join(",")}
                           onChange={(e) => handleFileChange(requirement, e)}
                           className="hidden"

@@ -26,16 +26,25 @@ export async function getPublicRequestStatus(query: string, turnstileToken?: str
 
   const profile = await getCurrentProfile();
   const currentYear = new Date().getFullYear();
-  let requestNumber = query.trim();
+  let requestNumber = query.trim().toUpperCase();
 
-  // Jika user hanya memasukkan angka belakang (misal: 000123)
-  if (/^\d+$/.test(requestNumber)) {
-    requestNumber = `PTSP-${currentYear}-${requestNumber}`;
+  // Format baru: ASN-CUT-2026-000001 atau PUB-MDR-2026-000001 → sudah lengkap
+  if (/^(ASN|PUB)-[A-Z]{2,4}-\d{4}-\d+$/.test(requestNumber)) {
+    // Sudah format lengkap, tidak perlu normalisasi
   }
-  // Jika user memasukkan tahun dan angka saja (misal: 2026-000123)
-  else if (/^\d{4}-\d+$/.test(requestNumber)) {
-    requestNumber = `PTSP-${requestNumber}`;
+  // Format lama: PTSP-2026-000001 → biarkan apa adanya
+  else if (/^PTSP-\d{4}-\d+$/.test(requestNumber)) {
+    // Tidak perlu normalisasi
   }
+  // Input hanya angka urut (misal: 000123) → asumsikan layanan publik tahun ini
+  else if (/^\d+$/.test(requestNumber)) {
+    // Tidak bisa tahu kode layanannya — cukup beri saran
+    return {
+      error: "Masukkan nomor pengajuan lengkap. Contoh: PUB-MDR-2026-000001 atau ASN-CUT-2026-000001",
+    };
+  }
+  // Format lama TEMP- (data lama sebelum sistem baru)
+  // Biarkan apa adanya agar data lama tetap bisa dilacak
 
   try {
     const request = await db.query.serviceRequests.findFirst({
@@ -116,6 +125,7 @@ export async function getPublicRequestStatus(query: string, turnstileToken?: str
       data: {
         id: request.id,
         requestNumber: request.requestNumber,
+        requestType: request.requestNumber?.startsWith("ASN-") ? "asn" : "public",
         serviceName: request.services?.name || "-",
         itemName: request.serviceItems?.name || "-",
         applicantName: request.profiles?.fullName || "-",

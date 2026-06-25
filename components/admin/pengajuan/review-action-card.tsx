@@ -101,7 +101,10 @@ export function ReviewActionCard({
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
           Zona Bahaya
         </p>
-        <DeleteRequestButton requestId={request.id} />
+        <DeleteRequestButton 
+          requestId={request.id} 
+          redirectUrl={`/admin/pengajuan?type=${request.services?.category === "asn" ? "asn" : "public"}`}
+        />
       </div>
     </Card>
   );

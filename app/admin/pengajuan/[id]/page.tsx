@@ -46,7 +46,7 @@ export default async function AdminRequestDetailPage({
     where: eq(serviceRequestsTable.id, id),
     with: {
       profiles: true,
-      services: { columns: { name: true, roleOwner: true } },
+      services: { columns: { name: true, roleOwner: true, category: true } },
       serviceItems: { columns: { name: true } },
       serviceRequestAnswers: {
         orderBy: (answers, { asc }) => [asc(answers.createdAt)],

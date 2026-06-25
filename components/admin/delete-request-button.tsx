@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { deleteRequestAction } from "@/lib/actions/admin/admin-requests";
 import { toast } from "sonner";
 
-export function DeleteRequestButton({ requestId }: { requestId: string }) {
+export function DeleteRequestButton({ 
+  requestId, 
+  redirectUrl 
+}: { 
+  requestId: string;
+  redirectUrl?: string;
+}) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -25,7 +31,11 @@ export function DeleteRequestButton({ requestId }: { requestId: string }) {
       if (result?.success) {
         toast.success("Pengajuan berhasil dihapus!", { id: toastId });
         setIsOpen(false);
-        router.refresh();
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.refresh();
+        }
       } else {
         toast.error(`Gagal menghapus: ${result?.error || "Terjadi kesalahan"}`, { id: toastId });
       }

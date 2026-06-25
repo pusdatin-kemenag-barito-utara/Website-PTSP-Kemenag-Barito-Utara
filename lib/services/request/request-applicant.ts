@@ -12,11 +12,17 @@ import {
   profiles as profilesTable,
   serviceItems as serviceItemsTable,
 } from "@/lib/db/schema";
+import { pengajuanCuti } from "@/lib/db/schema/kepegawaian";
 import { sanitizeFilename } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteFromR2, uploadToR2 } from "@/lib/r2";
 import { NotificationService } from "../notification-service";
 import { uploadToGoogleDrive } from "@/lib/google-drive";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import {
+  generateRequestNumber,
+  recycleRequestNumber,
+} from "@/lib/request-number";
 
 export class RequestApplicantService {
   /**
@@ -41,9 +47,86 @@ export class RequestApplicantService {
       }),
       db.query.profiles.findFirst({
         where: eq(profilesTable.id, userId),
-        columns: { fullName: true, phone: true },
+        columns: { fullName: true, phone: true, unitKerja: true },
       }),
     ]);
+
+    // Dapatkan info service untuk penomoran
+    const serviceInfo = await db.query.serviceItems.findFirst({
+      where: eq(serviceItemsTable.id, serviceItemId),
+      with: { service: { columns: { name: true } } },
+    });
+    const serviceName = serviceInfo?.service?.name || "Layanan PTSP";
+
+    // Generate nomor pengajuan yang bermakna (ASN-CUT-2026-000001 dll)
+    const requestNumber = await generateRequestNumber(serviceName);
+
+    // Jika ini layanan cuti, siapkan data untuk tabel pengajuanCuti
+    const isCutiService = serviceName?.toLowerCase().includes("cuti") || false;
+    let cutiInsertData: any = null;
+
+    if (isCutiService) {
+      const unitKerjaForm = (formData.get("unitKerja") as string) || "";
+      const jenisPegawai = (formData.get("cuti_jenis_pegawai") as string) || "";
+
+      const findFieldValue = (keywords: string[], matchAll = false) => {
+        const field = fields.find((f) => {
+          const label = (f.label || "").toLowerCase();
+          return matchAll
+            ? keywords.every((k) => label.includes(k.toLowerCase()))
+            : keywords.some((k) => label.includes(k.toLowerCase()));
+        });
+        return field ? ((formData.get(`answer_${field.id}`) as string) || "") : "";
+      };
+
+      const jenisCuti = serviceInfo?.name || findFieldValue(["jenis cuti"]) || "";
+      const alasan = findFieldValue(["alasan"]) || "";
+
+      let tanggalMulai = "";
+      let tanggalSelesai = "";
+      let tanggalPilihan = "";
+
+      const dateField = fields.find(
+        (f) => f.type === "date" && f.label.toLowerCase().includes("tanggal"),
+      );
+      if (dateField) {
+        const rawDate = (formData.get(`answer_${dateField.id}`) as string) || "";
+        if (rawDate.includes(",")) {
+          const dates = rawDate.split(",").filter(Boolean);
+          tanggalMulai = dates[0] || "";
+          tanggalSelesai = dates[dates.length - 1] || "";
+          tanggalPilihan = rawDate;
+        } else {
+          tanggalMulai = rawDate;
+          tanggalSelesai = rawDate;
+        }
+      }
+
+      const alamatCuti = findFieldValue(["alamat"]) || "";
+      const noHp =
+        findFieldValue(["whatsapp", "hp"]) || userProfile?.phone || "";
+      const masaKerjaTahun = findFieldValue(["masa kerja", "tahun"], true);
+      const masaKerjaBulan = findFieldValue(["masa kerja", "bulan"], true);
+
+      cutiInsertData = {
+        userId,
+        unitKerja: unitKerjaForm || userProfile?.unitKerja || "",
+        jenisCuti,
+        tanggalMulai,
+        tanggalSelesai,
+        tanggalPilihan: tanggalPilihan || null,
+        alasan,
+        jenisPegawai: jenisPegawai || null,
+        masaKerjaTahun: masaKerjaTahun || null,
+        masaKerjaBulan: masaKerjaBulan || null,
+        noHp: noHp || null,
+        alamatCuti: alamatCuti || null,
+        ttdPemohon: "TTE_VERIFIED",
+        statusAtasan: "pending",
+        statusKepala: "pending",
+        status: "pending",
+      };
+    }
 
     // Create Request in Transaction
     const result = await db.transaction(async (tx) => {
@@ -53,7 +136,7 @@ export class RequestApplicantService {
           userId: userId,
           serviceId: serviceId,
           serviceItemId: serviceItemId,
-          requestNumber: `TEMP-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`, // Fallback for fresh DB
+          requestNumber,
           status: "submitted" as any,
           submittedAt: new Date(),
         } as any)
@@ -76,6 +159,10 @@ export class RequestApplicantService {
         action: "request_created",
         notes: "Pengajuan baru dibuat oleh pemohon.",
       });
+
+      if (cutiInsertData) {
+        await tx.insert(pengajuanCuti).values(cutiInsertData);
+      }
 
       return createdRequest;
     });
@@ -104,7 +191,7 @@ export class RequestApplicantService {
       if (webhookUrl && userProfile?.phone) {
         const itemInfo = await db.query.serviceItems.findFirst({
           where: eq(serviceItemsTable.id, serviceItemId),
-          with: { service: true }
+          with: { service: true },
         });
 
         fetch(webhookUrl, {
@@ -116,12 +203,78 @@ export class RequestApplicantService {
             userPhone: userProfile.phone,
             serviceName: itemInfo?.service?.name || "Layanan PTSP",
             serviceItemName: itemInfo?.name || "Item Layanan",
-            submittedAt: new Date().toISOString()
-          })
-        }).catch(err => console.error("Webhook n8n fetch error:", err)); // Fire and forget
+            submittedAt: new Date().toISOString(),
+          }),
+        }).catch((err) => console.error("Webhook n8n fetch error:", err)); // Fire and forget
       }
     } catch (e) {
       console.error("Failed to prepare webhook to n8n:", e);
+    }
+
+    // Notifikasi WA langsung ke pegawai setelah pengajuan berhasil
+    try {
+      // Coba ambil nomor WA dari jawaban form (field no_whatsapp / No. WhatsApp) — khusus form cuti
+      const waFromForm =
+        (formData.get("answer_no_whatsapp") as string) ||
+        (Array.from(formData.entries()).find(
+          ([k]) =>
+            k.startsWith("answer_") &&
+            formData.get(k)?.toString().startsWith("08"),
+        )?.[1] as string) ||
+        "";
+
+      const targetPhone =
+        waFromForm?.replace(/\D/g, "") ||
+        userProfile?.phone?.replace(/\D/g, "") ||
+        "";
+
+      const itemInfo = await db.query.serviceItems.findFirst({
+        where: eq(serviceItemsTable.id, serviceItemId),
+        with: { service: true },
+      });
+
+      const namaLayanan =
+        itemInfo?.name || itemInfo?.service?.name || "Layanan";
+
+      if (targetPhone && targetPhone.length >= 9) {
+        const tanggalKirim = new Intl.DateTimeFormat("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Asia/Jakarta",
+        }).format(new Date());
+
+        const pesanWA = [
+          `✅ *Pengajuan Berhasil Diterima*`,
+          ``,
+          `Halo *${userProfile?.fullName || "Pegawai"}*,`,
+          `Pengajuan Anda telah berhasil dikirimkan ke sistem PTSP Kemenag Barito Utara.`,
+          ``,
+          `📋 *Detail Pengajuan:*`,
+          `• Nomor Tiket : *${result.requestNumber}*`,
+          `• Layanan: *${namaLayanan}*`,
+          `• Waktu Kirim: ${tanggalKirim} WIB`,
+          ``,
+          `🔍 *Lacak Pengajuan Anda*`,
+          `Pantau status pengajuan Anda secara real-time dengan menekan tautan di bawah ini:`,
+          `https://ptsp.kemenag-baritoutara.com/track?q=${result.requestNumber}`,
+          ``,
+          `⏳ Pengajuan Anda sedang dalam proses peninjauan. Anda akan mendapat notifikasi kembali setelah ada pembaruan status.`,
+          ``,
+          `_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`,
+        ].join("\n");
+
+        sendWhatsAppNotification(targetPhone, pesanWA).catch((err) =>
+          console.error("[WA Bot] Gagal kirim notifikasi pengajuan cuti:", err),
+        );
+      }
+    } catch (e) {
+      console.error(
+        "[WA Bot] Error saat menyiapkan notifikasi WA pengajuan:",
+        e,
+      );
     }
 
     return result;
@@ -138,12 +291,19 @@ export class RequestApplicantService {
     const { requestId, userId, formData } = params;
 
     const request = await db.query.serviceRequests.findFirst({
-      where: and(eq(serviceRequests.id, requestId), eq(serviceRequests.userId, userId)),
+      where: and(
+        eq(serviceRequests.id, requestId),
+        eq(serviceRequests.userId, userId),
+      ),
     });
 
     if (!request) throw new Error("Pengajuan tidak ditemukan");
 
-    if (!["submitted", "under_review", "revision_required"].includes(request.status)) {
+    if (
+      !["submitted", "under_review", "revision_required"].includes(
+        request.status,
+      )
+    ) {
       throw new Error("Status pengajuan saat ini tidak dapat diubah.");
     }
 
@@ -152,7 +312,10 @@ export class RequestApplicantService {
 
     const [requirements, userProfile] = await Promise.all([
       db.query.serviceRequirements.findMany({
-        where: eq(serviceRequirementsTable.serviceItemId, request.serviceItemId),
+        where: eq(
+          serviceRequirementsTable.serviceItemId,
+          request.serviceItemId,
+        ),
       }),
       db.query.profiles.findFirst({
         where: eq(profilesTable.id, userId),
@@ -201,13 +364,20 @@ export class RequestApplicantService {
    */
   static async deleteByApplicant(requestId: string, userId: string) {
     const request = await db.query.serviceRequests.findFirst({
-      where: and(eq(serviceRequests.id, requestId), eq(serviceRequests.userId, userId)),
-      columns: { id: true, status: true },
+      where: and(
+        eq(serviceRequests.id, requestId),
+        eq(serviceRequests.userId, userId),
+      ),
+      columns: { id: true, status: true, requestNumber: true },
     });
 
     if (!request) throw new Error("Pengajuan tidak ditemukan");
 
-    if (!["submitted", "under_review", "revision_required"].includes(request.status)) {
+    if (
+      !["submitted", "under_review", "revision_required"].includes(
+        request.status,
+      )
+    ) {
       throw new Error("Pengajuan yang sudah diproses tidak dapat dihapus.");
     }
 
@@ -224,9 +394,15 @@ export class RequestApplicantService {
         await deleteFromR2(doc.filePath).catch(() => {});
       } else {
         const admin = createAdminClient();
-        await admin.storage.from("request-documents").remove([doc.filePath]).catch(() => {});
+        await admin.storage
+          .from("request-documents")
+          .remove([doc.filePath])
+          .catch(() => {});
       }
     }
+
+    // Kembalikan nomor pengajuan ke pool daur ulang sebelum dihapus
+    await recycleRequestNumber(request.requestNumber).catch(() => {});
 
     // Delete from DB
     await db.delete(serviceRequests).where(eq(serviceRequests.id, requestId));
@@ -250,7 +426,10 @@ export class RequestApplicantService {
     requestId: string;
     requestNumber: string;
   }) {
-    const safeUserName = sanitizeFilename(fullName || "User").replace(/\s+/g, "_");
+    const safeUserName = sanitizeFilename(fullName || "User").replace(
+      /\s+/g,
+      "_",
+    );
 
     function isAllowedExtension(fileName: string, allowedExtensions: string) {
       const extension = fileName.split(".").pop()?.toLowerCase() || "";
@@ -268,17 +447,24 @@ export class RequestApplicantService {
       // Validasi file extension berdasarkan konfigurasi requirement
       const allowedExts = requirement.allowedExtensions || "pdf,jpg,jpeg,png";
       if (!isAllowedExtension(file.name, allowedExts)) {
-        throw new Error(`Format file untuk "${requirement.documentName}" tidak diizinkan. Diperbolehkan: ${allowedExts}.`);
+        throw new Error(
+          `Format file untuk "${requirement.documentName}" tidak diizinkan. Diperbolehkan: ${allowedExts}.`,
+        );
       }
 
       // Validasi ukuran file
       const maxSize = (Number(requirement.maxFileSizeMb) || 5) * 1024 * 1024;
       if (file.size > maxSize) {
-        throw new Error(`Ukuran file untuk "${requirement.documentName}" melebihi batas ${requirement.maxFileSizeMb || 5} MB.`);
+        throw new Error(
+          `Ukuran file untuk "${requirement.documentName}" melebihi batas ${requirement.maxFileSizeMb || 5} MB.`,
+        );
       }
 
       const originalFileName = sanitizeFilename(file.name);
-      const safeReqName = sanitizeFilename(requirement.documentName).replace(/\s+/g, "_");
+      const safeReqName = sanitizeFilename(requirement.documentName).replace(
+        /\s+/g,
+        "_",
+      );
       const finalFileName = `${safeReqName}_${originalFileName}`;
 
       // Upload to Cloudflare R2
@@ -290,7 +476,10 @@ export class RequestApplicantService {
       try {
         await uploadToGoogleDrive(file, gdrivePath);
       } catch (gdriveError) {
-        console.error("Google Drive backup failed for request document:", gdriveError);
+        console.error(
+          "Google Drive backup failed for request document:",
+          gdriveError,
+        );
       }
 
       // DB Sync
@@ -305,7 +494,10 @@ export class RequestApplicantService {
           fileSize: BigInt(file.size),
         })
         .onConflictDoUpdate({
-          target: [serviceRequestDocuments.requestId, serviceRequestDocuments.requirementId],
+          target: [
+            serviceRequestDocuments.requestId,
+            serviceRequestDocuments.requirementId,
+          ],
           set: {
             fileName: finalFileName,
             filePath: storagePath || "",

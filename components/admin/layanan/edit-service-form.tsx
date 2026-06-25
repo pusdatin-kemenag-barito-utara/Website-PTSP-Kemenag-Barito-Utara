@@ -39,9 +39,23 @@ export function EditServiceForm({ service }: { service: any }) {
           placeholder="Contoh: Pelayanan Pendidik dan Tenaga Kependidikan"
         />
       </Field>
-      <Field label="Slug URL" hint="Slug di-generate otomatis jika dikosongkan.">
-        <Input name="slug" defaultValue={service.slug} placeholder="slug-layanan" />
-      </Field>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Field label="Slug URL" hint="Slug di-generate otomatis jika dikosongkan.">
+          <Input name="slug" defaultValue={service.slug} placeholder="slug-layanan" />
+        </Field>
+        <Field
+          label="Kode Penomoran"
+          hint="3 huruf (misal: MDR, CUT)."
+        >
+          <Input 
+            name="requestCode" 
+            defaultValue={service.requestCode || ""} 
+            placeholder="MDR" 
+            className="font-mono text-sm uppercase" 
+            maxLength={4} 
+          />
+        </Field>
+      </div>
       <Field label="Deskripsi">
         <Textarea
           name="description"

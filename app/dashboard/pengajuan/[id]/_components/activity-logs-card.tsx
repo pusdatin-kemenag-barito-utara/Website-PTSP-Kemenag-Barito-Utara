@@ -21,8 +21,8 @@ function formatAction(action: string): string {
 
 export function ActivityLogsCard({ activityLogs }: ActivityLogsCardProps) {
   return (
-    <div className="rounded-2xl sm:rounded-[2.5rem] bg-white p-5 sm:p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
-      <div className="mb-8 flex items-center gap-3">
+    <div className="rounded-2xl bg-white p-5 sm:p-6 shadow-sm border border-slate-200">
+      <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
           <HistoryIcon className="h-5 w-5" />
         </div>

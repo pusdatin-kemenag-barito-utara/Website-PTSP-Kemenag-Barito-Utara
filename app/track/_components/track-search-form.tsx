@@ -19,14 +19,14 @@ export function TrackSearchForm({ initialQuery }: TrackSearchFormProps) {
   }, []);
 
   const currentYear = new Date().getFullYear();
-  const displayValue = initialQuery.includes("-") ? initialQuery.split("-").pop() : initialQuery;
+  const displayValue = initialQuery;
 
   const handleSubmit = () => {
     setLoading(true);
   };
 
   return (
-    <div className="mb-12 space-y-6">
+    <div className="mb-8 sm:mb-12 space-y-4 sm:space-y-6">
       <form 
         onSubmit={handleSubmit}
         className="group relative flex flex-col gap-4 sm:flex-row sm:items-center"
@@ -40,12 +40,6 @@ export function TrackSearchForm({ initialQuery }: TrackSearchFormProps) {
           
           <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center gap-3">
             <Search className="h-4.5 w-4.5 text-slate-400 group-focus-within:text-[#059669] transition-colors duration-300 shrink-0" />
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs sm:text-sm font-extrabold text-[#059669] bg-emerald-50/80 border border-emerald-100/60 px-2.5 py-1 rounded-lg select-none tracking-tight">
-                PTSP-{currentYear}-
-              </span>
-              <div className="h-5 w-[1.5px] bg-slate-200/80 rounded-full" />
-            </div>
           </div>
           
           <input
@@ -54,7 +48,7 @@ export function TrackSearchForm({ initialQuery }: TrackSearchFormProps) {
             defaultValue={displayValue}
             autoComplete="off"
             required
-            placeholder="000123"
+            placeholder={`Contoh: PUB-MDR-${currentYear}-000001`}
             onChange={() => {
               // Reset token on query change to force a re-challenge for security
               if (turnstileToken) {
@@ -62,14 +56,14 @@ export function TrackSearchForm({ initialQuery }: TrackSearchFormProps) {
                 turnstileRef.current?.reset();
               }
             }}
-            className="w-full h-16 rounded-[1.25rem] border border-slate-200/80 bg-white pl-[10.5rem] pr-6 text-base font-bold text-slate-800 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] focus:border-[#059669] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all duration-300 placeholder:text-slate-300"
+            className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-[1.25rem] border border-slate-200/80 bg-white pl-11 pr-4 text-sm sm:text-base font-bold text-slate-800 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] focus:border-[#059669] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all duration-300 placeholder:text-slate-300 placeholder:text-xs sm:placeholder:text-sm"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading || !turnstileToken}
-          className="inline-flex h-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-r from-[#059669] to-[#047857] px-8 text-sm font-bold text-white shadow-[0_10px_20px_-5px_rgba(5,150,105,0.3)] hover:shadow-[0_12px_24px_-5px_rgba(5,150,105,0.4)] hover:-translate-y-0.5 hover:from-[#047857] hover:to-[#03543f] active:scale-95 disabled:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-300 shrink-0 gap-2"
+          className="inline-flex h-12 sm:h-16 items-center justify-center rounded-2xl sm:rounded-[1.25rem] bg-gradient-to-r from-[#059669] to-[#047857] px-6 sm:px-8 text-sm font-bold text-white shadow-[0_10px_20px_-5px_rgba(5,150,105,0.3)] hover:shadow-[0_12px_24px_-5px_rgba(5,150,105,0.4)] hover:-translate-y-0.5 hover:from-[#047857] hover:to-[#03543f] active:scale-95 disabled:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-300 shrink-0 gap-2"
         >
           {loading ? (
             <>

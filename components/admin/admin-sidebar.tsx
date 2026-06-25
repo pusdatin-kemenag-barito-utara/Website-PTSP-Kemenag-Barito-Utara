@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ChevronRight, Shield } from "lucide-react";
 import { SystemHealthBadge } from "./system-health-badge";
 
@@ -52,6 +53,7 @@ export function AdminSidebar({
   pathname: string;
   onNavClick?: () => void;
 }) {
+  const searchParams = useSearchParams();
 
   return (
     <div className="flex h-full flex-col">
@@ -86,10 +88,25 @@ export function AdminSidebar({
               )}
               <div className="space-y-1 pb-4">
                 {groupItems.map((item: any) => {
-                  const isActive =
-                    item.href === "/admin"
-                      ? pathname === item.href
-                      : pathname.startsWith(item.href);
+                  const hrefPath = item.href.split("?")[0];
+                  const hrefQuery = item.href.includes("?") ? new URLSearchParams(item.href.split("?")[1]) : null;
+                  
+                  let isActive = false;
+                  if (item.href === "/admin") {
+                    isActive = pathname === item.href;
+                  } else {
+                    isActive = pathname.startsWith(hrefPath);
+                    if (isActive && hrefQuery) {
+                      // Check if the required query params match
+                      for (const [key, value] of hrefQuery.entries()) {
+                        if (searchParams.get(key) !== value) {
+                          isActive = false;
+                          break;
+                        }
+                      }
+                    }
+                  }
+
                   return (
                     <NavLink
                       key={item.href}

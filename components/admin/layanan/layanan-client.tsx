@@ -23,10 +23,12 @@ export function LayananClient({
   initialServices,
   currentUserRole = "",
   isSuperAdmin = false,
+  category = "public",
 }: {
   initialServices: any[];
   currentUserRole?: string;
   isSuperAdmin?: boolean;
+  category?: string;
 }) {
   const [services, setServices] = useState(initialServices);
   const [isPending, startTransition] = useTransition();
@@ -74,6 +76,7 @@ export function LayananClient({
     data.append("slug", formData.slug);
     if (formData.isActive) data.append("isActive", "on");
     if (formData.roleOwner) data.append("roleOwner", formData.roleOwner);
+    if (category) data.append("category", category);
 
     startTransition(async () => {
       let result;

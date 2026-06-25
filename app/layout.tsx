@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/footer";
 import { ConditionalShell } from "@/components/layout/conditional-shell";
 import { Toaster } from "sonner";
 import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
+import { AuthRedirectListener } from "@/components/auth/auth-redirect-listener";
 
 import { ChatWidgetClient } from "@/components/features/chat/chat-widget-client";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
@@ -159,6 +160,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               }}
             />
             <ChatWidgetClient initialEnabled={maintenance.aiChatEnabled} />
+            <AuthRedirectListener />
           </div>
         </FramerWrapper>
       </body>

@@ -36,7 +36,7 @@ import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 export default async function AdminGeneratedDocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; serviceId?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; serviceId?: string; page?: string; type?: string }>;
 }) {
   const profile = await requirePermission("dokumen_hasil");
   const isSuper = isSuperAdmin(profile.email);
@@ -45,19 +45,25 @@ export default async function AdminGeneratedDocumentsPage({
 
   const roleOwnerFilter = isSuper || isGeneralAdmin ? undefined : specificRole;
 
-  const { q = "", serviceId = "", page = "1" } = await searchParams;
+  const { q = "", serviceId = "", page = "1", type = "public" } = await searchParams;
 
   const currentPage = Math.max(1, parseInt(page));
   const pageSize = 20;
   const offset = (currentPage - 1) * pageSize;
 
   const filters = [
-    sql`EXISTS (SELECT 1 FROM ptsp_generated_documents WHERE ptsp_generated_documents.request_id = ${serviceRequestsTable.id})`,
+    sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_generated_documents WHERE kemenag_ptsp.ptsp_generated_documents.request_id = ${serviceRequestsTable.id})`,
   ];
 
   if (roleOwnerFilter) {
     filters.push(
-      sql`EXISTS (SELECT 1 FROM ${servicesTable} WHERE ${servicesTable.id} = ${serviceRequestsTable.serviceId} AND ${servicesTable.roleOwner} = ${roleOwnerFilter})`
+      sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services WHERE kemenag_ptsp.ptsp_services.id = ${serviceRequestsTable.serviceId} AND kemenag_ptsp.ptsp_services.role_owner = ${roleOwnerFilter})`
+    );
+  }
+  
+  if (type) {
+    filters.push(
+      sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services WHERE kemenag_ptsp.ptsp_services.id = ${serviceRequestsTable.serviceId} AND kemenag_ptsp.ptsp_services.category = ${type})`
     );
   }
 
@@ -70,7 +76,7 @@ export default async function AdminGeneratedDocumentsPage({
     filters.push(
       or(
         ilike(serviceRequestsTable.requestNumber, qFilter),
-        sql`EXISTS (SELECT 1 FROM ptsp_profiles WHERE ptsp_profiles.id = ${serviceRequestsTable.userId} AND ptsp_profiles.full_name ILIKE ${qFilter})`,
+        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_profiles WHERE kemenag_ptsp.ptsp_profiles.id = ${serviceRequestsTable.userId} AND kemenag_ptsp.ptsp_profiles.full_name ILIKE ${qFilter})`,
       ) as any,
     );
   }
@@ -104,9 +110,13 @@ export default async function AdminGeneratedDocumentsPage({
   ]);
 
   // Fetch list of services for the filter dropdown
+  const serviceFilters = [];
+  if (roleOwnerFilter) serviceFilters.push(eq(servicesTable.roleOwner, roleOwnerFilter as any));
+  if (type) serviceFilters.push(eq(servicesTable.category, type));
+  
   const rawServices = await db.query.services.findMany({
     columns: { id: true, name: true },
-    where: roleOwnerFilter ? eq(servicesTable.roleOwner, roleOwnerFilter as any) : undefined,
+    where: serviceFilters.length > 0 ? and(...serviceFilters) : undefined,
     orderBy: [asc(servicesTable.name)],
   });
 
@@ -129,8 +139,8 @@ export default async function AdminGeneratedDocumentsPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dokumen Hasil"
-        description="Kelola dokumen PDF hasil layanan. Anda dapat mencari, melihat, dan mengunduh dokumen resmi yang telah diterbitkan untuk pemohon."
+        title={type === "public" ? "Dokumen Hasil Masyarakat" : "Dokumen Hasil Pegawai"}
+        description={`Kelola dokumen PDF hasil layanan. Anda dapat mencari, melihat, dan mengunduh dokumen resmi yang telah diterbitkan untuk ${type === "public" ? "pemohon" : "pegawai"}.`}
         icon={FileOutput}
         actions={
           <ReportExportButton

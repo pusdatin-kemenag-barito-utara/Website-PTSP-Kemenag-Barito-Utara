@@ -24,7 +24,9 @@ export const services = ptspSchema.table("ptsp_services", {
     .notNull()
     .defaultNow(),
   roleOwner: text("role_owner"),
+  category: text("category").notNull().default("public"),
   sortOrder: integer("sort_order").default(0),
+  requestCode: text("request_code"), // Kode 2-4 huruf untuk penomoran (MDR, CUT, dll). Prefix PUB/ASN dari category.
 }).enableRLS();
 
 export const serviceItems = ptspSchema.table("ptsp_service_items", {
