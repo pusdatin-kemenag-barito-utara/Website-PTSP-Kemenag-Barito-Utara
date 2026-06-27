@@ -11,6 +11,8 @@ import { isSuperAdmin as isEmailSuperAdmin, getAdminSpecificRole } from "@/lib/c
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 import { LayananService } from "@/lib/services/layanan-service";
 import { createAuditLog } from "@/lib/audit";
+import { promises as fs } from "fs";
+import path from "path";
 
 const serviceSchema = z.object({
   name: z.string().min(3, "Nama layanan minimal 3 karakter"),
@@ -28,6 +30,15 @@ export type ActionResult = {
   error?: string;
   data?: any;
 };
+
+async function handleBannerUpload(file: File | null, slug: string) {
+  if (!file || file.size === 0) return;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const bannerDir = path.join(process.cwd(), "public", "banners");
+  await fs.mkdir(bannerDir, { recursive: true });
+  const filePath = path.join(bannerDir, `${slug}.png`);
+  await fs.writeFile(filePath, buffer);
+}
 
 // --- SERVICES ---
 export async function createServiceAction(formData: FormData): Promise<ActionResult> {
@@ -48,6 +59,10 @@ export async function createServiceAction(formData: FormData): Promise<ActionRes
     }
 
     await LayananService.createService(validated.data);
+    
+    // Handle Banner Upload
+    const bannerFile = formData.get("banner") as File | null;
+    await handleBannerUpload(bannerFile, validated.data.slug);
 
     await createAuditLog({
       adminId: profile.id,
@@ -103,12 +118,16 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
 
     await LayananService.updateService(id, validated.data);
 
+    // Handle Banner Upload
+    const bannerFile = formData.get("banner") as File | null;
+    await handleBannerUpload(bannerFile, validated.data.slug);
+
     await createAuditLog({
       adminId: profile.id,
-      action: "UBAH_LAYANAN",
+      action: "UPDATE_LAYANAN",
       entityType: "service",
       entityId: id.toString(),
-      details: { nama: validated.data.name },
+      details: { nama: validated.data.name, slug: validated.data.slug, roleOwner: validated.data.roleOwner },
     });
 
     revalidatePath("/admin/layanan");

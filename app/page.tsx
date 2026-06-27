@@ -3,9 +3,11 @@ import { HomeSambutanKepala } from "@/components/home/sambutan";
 import { HomeAlurPengajuanMobile } from "@/components/home/alur-pengajuan-mobile";
 import { HomeServiceCatalogSection } from "@/components/home/service-catalog";
 import { HomeVideoProfile } from "@/components/home/video-profile";
-
+import { getPublicServices } from "@/lib/queries";
 
 export default async function HomePage() {
+  const services = await getPublicServices();
+
   return (
     <div className="w-full overflow-x-hidden">
       <HomeHero />
@@ -19,7 +21,7 @@ export default async function HomePage() {
         <div className="w-full h-8 bg-white" />
       </div>
 
-      <HomeServiceCatalogSection />
+      <HomeServiceCatalogSection services={services} />
 
       {/* Modern Flat Horizontal Layered Divider: Catalog to Video Profile */}
       <div className="w-full bg-white flex flex-col">

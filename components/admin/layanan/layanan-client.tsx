@@ -71,12 +71,16 @@ export function LayananClient({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const formElement = e.target as HTMLFormElement;
+    const bannerFile = (formElement.elements.namedItem("banner") as HTMLInputElement)?.files?.[0];
+
     const data = new FormData();
     data.append("name", formData.name);
     data.append("slug", formData.slug);
     if (formData.isActive) data.append("isActive", "on");
     if (formData.roleOwner) data.append("roleOwner", formData.roleOwner);
     if (category) data.append("category", category);
+    if (bannerFile) data.append("banner", bannerFile);
 
     startTransition(async () => {
       let result;

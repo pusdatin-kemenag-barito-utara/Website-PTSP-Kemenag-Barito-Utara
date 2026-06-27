@@ -17,9 +17,9 @@ import { motion, Variants } from "framer-motion";
 
 const popularCategories = [
   {
-    name: "Sub Bagian Tata Usaha",
-    icon: Building2,
-    query: "Tata Usaha",
+    name: "Penyelenggaraan Haji dan Umrah",
+    icon: BookOpen,
+    query: "Haji",
     color: "text-amber-500",
     bg: "bg-amber-50",
   },
@@ -59,14 +59,25 @@ const containerVariants: Variants = {
 
 const cardVariants: Variants = {
   hidden: { opacity: 0, scale: 0.8 },
-  show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: { type: "spring", stiffness: 100, damping: 15 },
+  },
 };
 
-export function HomeServiceCatalogSection() {
+export function HomeServiceCatalogSection({
+  services = [],
+}: {
+  services?: any[];
+}) {
   const [query, setQuery] = useState("");
+  // If services is passed, take the first 8, otherwise fallback to empty array
+  const displayServices = services.slice(0, 8);
+  const popularSuggestions = displayServices.slice(0, 3).map((s: any) => s.name);
 
   return (
-    <section className="py-24 md:py-36 relative overflow-hidden bg-white">
+    <section className="pt-12 pb-24 md:py-36 relative overflow-hidden bg-white">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] rounded-full bg-emerald-50/50 blur-[120px]" />
@@ -74,14 +85,14 @@ export function HomeServiceCatalogSection() {
       </div>
 
       <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 relative z-10">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
           {/* Left Side: Content */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex-1 text-center lg:text-left space-y-8"
+            className="w-full lg:w-[40%] text-center lg:text-left space-y-6 lg:space-y-8 relative lg:sticky lg:top-32 z-20"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <Sparkles className="h-4 w-4 text-emerald-600" />
@@ -90,12 +101,12 @@ export function HomeServiceCatalogSection() {
               </span>
             </div>
 
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
               Cari Tahu <span className="text-emerald-600">Syarat</span>{" "}
               <br className="hidden md:block" /> Layanan Anda
             </h2>
 
-            <p className="text-base md:text-lg text-slate-500 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base md:text-lg text-slate-500 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
               Persiapkan dokumen Anda lebih awal. Cari jenis layanan keagamaan
               yang Anda butuhkan dan lihat rincian persyaratannya secara
               transparan.
@@ -107,109 +118,137 @@ export function HomeServiceCatalogSection() {
               <form
                 action="/layanan"
                 method="get"
-                className="relative flex items-center bg-white border-2 border-slate-100 rounded-[2rem] p-2 shadow-2xl shadow-slate-200/50 group-focus-within:border-emerald-500/30 transition-all duration-500"
+                className="relative flex items-center bg-white border-2 border-slate-100 rounded-[2rem] p-1.5 sm:p-2 shadow-xl shadow-slate-200/50 group-focus-within:border-emerald-500/30 transition-all duration-500"
               >
-                <div className="flex items-center flex-1 px-4">
-                  <Search className="h-6 w-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                <div className="flex items-center flex-1 px-2 sm:px-4">
+                  <Search className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                   <input
                     type="text"
                     name="q"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Contoh: Syarat Izin Madrasah..."
-                    className="w-full bg-transparent border-none focus:ring-0 text-slate-800 font-bold placeholder:text-slate-300 placeholder:font-semibold py-4 px-3"
+                    placeholder="Contoh: Izin Madrasah..."
+                    className="w-full bg-transparent border-none focus:ring-0 text-slate-800 text-sm sm:text-base font-bold placeholder:text-slate-300 placeholder:font-semibold py-2.5 px-2 sm:py-3 sm:px-3"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-8 py-4 rounded-3xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center gap-2"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm sm:text-base px-5 py-2.5 sm:px-6 sm:py-3 rounded-3xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center gap-2"
                 >
-                  Cari <ArrowRight className="h-4 w-4" />
+                  Cari <ArrowRight className="h-4 w-4 hidden sm:block" />
                 </button>
               </form>
             </div>
 
             {/* Quick Suggestions */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-4">
-              <span className="text-xs font-black uppercase tracking-widest text-slate-400 mr-2">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">
                 Populer:
               </span>
-              {["Izin Operasional", "Mutasi Pegawai", "Legalisir Ijazah"].map(
-                (sugg: string) => (
-                  <Link
-                    key={sugg}
-                    href={`/layanan?q=${encodeURIComponent(sugg)}`}
-                    className="text-xs font-bold text-slate-500 hover:text-emerald-600 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all"
-                  >
-                    {sugg}
-                  </Link>
-                ),
-              )}
+              {popularSuggestions.map((sugg: string) => (
+                <Link
+                  key={sugg}
+                  href={`/layanan?q=${encodeURIComponent(sugg)}`}
+                  className="text-[10px] font-bold text-slate-500 hover:text-emerald-600 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all"
+                >
+                  {sugg}
+                </Link>
+              ))}
+            </div>
+
+            {/* View All Card (Desktop Only) */}
+            <div className="hidden lg:block pt-4 w-full">
+              <Link
+                href="/layanan"
+                className="group flex flex-row items-center justify-between p-3 sm:p-4 rounded-[1.25rem] bg-emerald-950 shadow-lg shadow-emerald-900/20 hover:bg-emerald-900 transition-all w-full"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="h-8 w-8 shrink-0 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base text-white font-black tracking-tight mb-0.5">
+                      Lihat Seluruh Katalog Layanan
+                    </h4>
+                    <p className="text-emerald-400/80 text-[9px] font-bold uppercase tracking-widest">
+                      Jelajahi Semua Unit & Layanan
+                    </p>
+                  </div>
+                </div>
+                <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-md shadow-emerald-900/50">
+                  <ArrowRight className="h-4 w-4" />
+                </div>
+              </Link>
             </div>
           </motion.div>
 
           {/* Right Side: Category Cards Grid */}
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
-            className="w-full lg:w-[480px] grid grid-cols-2 gap-4"
+            viewport={{ once: true, amount: 0.1 }}
+            className="w-full lg:w-[60%] grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
           >
-            {popularCategories.map((cat: any, idx: number) => {
-              const Icon = cat.icon;
+            {displayServices.map((service: any, idx: number) => {
               return (
-                <motion.div variants={cardVariants} key={cat.name}>
+                <motion.div
+                  variants={cardVariants}
+                  key={service.id || service.name}
+                  className="h-full"
+                >
                   <Link
-                    href={`/layanan?q=${encodeURIComponent(cat.query)}`}
-                    className="group relative overflow-hidden rounded-[2.5rem] bg-slate-50 p-8 border border-slate-100 hover:border-emerald-200 hover:bg-white hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-500 hover:-translate-y-2 block"
+                    href={`/layanan/${service.slug}`}
+                    className="group relative flex flex-col justify-end aspect-square sm:aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-slate-100 border-2 border-transparent hover:border-emerald-400/50 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-500 hover:-translate-y-1 block"
                   >
+                    {/* Background Image */}
                     <div
-                      className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ${cat.bg} ${cat.color} group-hover:scale-110 transition-transform duration-500`}
-                    >
-                      <Icon className="h-7 w-7" />
-                    </div>
-                    <h4 className="text-base font-black text-slate-900 tracking-tight group-hover:text-emerald-600 transition-colors">
-                      {cat.name}
-                    </h4>
-                    <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                      Lihat Syarat{" "}
-                      <ChevronRight className="inline h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </p>
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                      style={{
+                        backgroundImage: `url(/banners/${service.slug}.png)`,
+                      }}
+                    />
 
-                    {/* Subtle Background Pattern for Cards */}
-                    <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                      <Icon className="h-24 w-24" />
+                    {/* Dark Gradient Overlay for text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    <div className="relative z-10 p-3 sm:p-4 w-full">
+                      <div className="mb-2 h-6 w-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-lg border border-white/10 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-colors duration-500">
+                        <Building2 className="h-3 w-3" />
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-md">
+                        {service.name}
+                      </h4>
                     </div>
                   </Link>
                 </motion.div>
               );
             })}
 
-            {/* View All Card */}
-            <motion.div variants={cardVariants} className="col-span-2">
+            {/* View All Card (Mobile/Tablet Only) */}
+            <div className="col-span-2 sm:col-span-3 xl:col-span-4 pt-4 lg:hidden">
               <Link
                 href="/layanan"
-                className="group flex items-center justify-between p-6 rounded-[2rem] bg-emerald-900 shadow-xl shadow-emerald-900/20 hover:bg-emerald-800 transition-all"
+                className="group flex flex-row items-center justify-between p-3 sm:p-4 rounded-[1.25rem] bg-emerald-950 shadow-lg shadow-emerald-900/20 hover:bg-emerald-900 transition-all w-full"
               >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center text-white">
-                    <BookOpen className="h-6 w-6" />
+                <div className="flex items-center gap-3 text-left">
+                  <div className="h-8 w-8 shrink-0 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
-                    <h4 className="text-white font-black tracking-tight">
-                      Lihat Seluruh Katalog
+                    <h4 className="text-sm sm:text-base text-white font-black tracking-tight mb-0.5">
+                      Lihat Seluruh Katalog Layanan
                     </h4>
-                    <p className="text-emerald-300/60 text-[10px] font-bold uppercase tracking-widest">
-                      30+ Jenis Layanan Tersedia
+                    <p className="text-emerald-400/80 text-[9px] font-bold uppercase tracking-widest">
+                      Jelajahi Semua Unit & Layanan
                     </p>
                   </div>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:translate-x-1 transition-transform">
-                  <ChevronRight className="h-5 w-5" />
+                <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-md shadow-emerald-900/50">
+                  <ArrowRight className="h-4 w-4" />
                 </div>
               </Link>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </div>

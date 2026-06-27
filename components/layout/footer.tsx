@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -52,26 +54,25 @@ export function SiteFooter() {
             variants={fadeUpVariants}
             className="lg:col-span-5 space-y-6"
           >
-            <Link href="/" className="group flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 transition-all duration-300 group-hover:bg-white/20">
+            <Link href="/" className="group flex flex-shrink-0 items-center gap-3">
+              <span className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-white/10 shadow-sm ring-1 ring-white/20 transition-transform group-hover:scale-95">
                 <Image
-                  src="/kemenag.svg"
-                  alt="Logo Kemenag"
+                  src="/atak-portal.png"
+                  alt="Logo"
                   width={32}
                   height={32}
-                  className="h-7 w-7 object-contain"
-                  style={{ width: "auto", height: "auto" }}
-                  priority
-                  loading="eager"
+                  className="h-6 w-6 sm:h-7 sm:w-7 object-contain"
+                  unoptimized
                 />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10px] sm:text-sm font-black tracking-widest text-white uppercase whitespace-nowrap overflow-hidden text-ellipsis">
-                  PELAYANAN TERPADU SATU PINTU (PTSP)
-                </span>
-                <span className="text-[8px] sm:text-[10px] font-bold text-white/40 uppercase tracking-tighter sm:tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
-                  KANTOR KEMENTERIAN AGAMA KABUPATEN BARITO UTARA
-                </span>
+              </span>
+              <div className="min-w-0 flex flex-col justify-center">
+                <p className="truncate text-[11px] sm:text-[13px] lg:text-sm font-black tracking-wide text-white flex items-center gap-1">
+                  PTSP Si{" "}
+                  <Image src="/atak.png" alt="ATAK" width={48} height={20} className="h-[1em] w-auto object-contain inline-block brightness-0 invert" style={{ height: "1em", width: "auto" }} />
+                </p>
+                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-white/50 leading-tight truncate">
+                  <span className="text-amber-400">S</span>istem <span className="text-amber-400">I</span>nformasi <span className="text-amber-400">A</span>dministrasi <span className="text-amber-400">T</span>erpadu l<span className="text-amber-400">A</span>yanan <span className="text-amber-400">K</span>eagamaan
+                </div>
               </div>
             </Link>
 

@@ -1,5 +1,5 @@
 import { Building2, Layers3 } from "lucide-react";
-import { ServicesFilter } from "@/components/services/services-filter";
+import { ServicesGrid } from "@/components/services/services-grid";
 import { getPublicServices } from "@/lib/queries";
 import PageBanner from "@/components/common/PageBanner";
 import { MotionDiv, springPopVariants, staggerContainerVariants, fadeUpVariants } from "@/components/common/MotionDiv";
@@ -20,7 +20,7 @@ export default async function ServicesPage() {
   return (
     <main className="min-h-screen bg-slate-50/50 pb-16">
       <PageBanner
-        title="Katalog Layanan Digital"
+        title="Katalog Layanan Masyarakat Digital"
         description="Pilih Unit Kerja, Cek Detail Persyaratan secara Transparan, dan Siapkan Dokumen Anda Sebelum Mengajukan secara Online."
         breadcrumb={[
           { label: "Beranda", href: "/" },
@@ -30,43 +30,15 @@ export default async function ServicesPage() {
       />
 
       <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8 space-y-8">
-        {/* Sleek Premium Stats Bar */}
-        <MotionDiv
-          variants={staggerContainerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl"
-        >
-          <MotionDiv variants={springPopVariants} className="flex items-center gap-4 rounded-2xl border border-emerald-500/10 bg-emerald-50/20 p-4 shadow-sm backdrop-blur-md">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Unit Kerja</p>
-              <p className="text-2xl font-black text-slate-800">{services.length}</p>
-            </div>
-          </MotionDiv>
-          <MotionDiv variants={springPopVariants} className="flex items-center gap-4 rounded-2xl border border-emerald-500/10 bg-emerald-50/20 p-4 shadow-sm backdrop-blur-md">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
-              <Layers3 className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Layanan</p>
-              <p className="text-2xl font-black text-slate-800">{totalItems}</p>
-            </div>
-          </MotionDiv>
-        </MotionDiv>
-
         {/* Main Content Area */}
         <MotionDiv 
           variants={fadeUpVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.1 }}
-          className="rounded-3xl bg-white p-6 sm:p-10 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.05)] border border-slate-100"
+          className="rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/50 p-6 sm:p-10 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.1)] border border-slate-200/60 backdrop-blur-sm"
         >
-          <ServicesFilter services={services} />
+          <ServicesGrid services={services} totalItems={totalItems} />
         </MotionDiv>
       </div>
     </main>

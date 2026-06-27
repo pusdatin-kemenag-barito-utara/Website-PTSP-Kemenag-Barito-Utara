@@ -1,110 +1,97 @@
 "use client";
 
 import Image from "next/image";
-import { MessageSquareQuote } from "lucide-react";
+import { Quote } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function HomeSambutanKepala() {
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden bg-[#f8fafc]">
-      {/* Decorative subtle background glows */}
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
+    <section className="relative py-24 md:py-32 bg-[#f8fafc] overflow-hidden">
+      {/* Abstract Background Elements */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-100/50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
-      <div className="mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-24 relative z-10">
-        {/* Section Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-16 text-center max-w-3xl mx-auto space-y-4"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100/80 animate-pulse">
-            <MessageSquareQuote className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
-              Sambutan Kepala Kantor
-            </span>
-          </div>
-
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight uppercase">
-            Sambutan Kepala Kantor
-          </h2>
-          <p className="text-sm sm:text-base text-slate-500 font-semibold max-w-2xl mx-auto leading-relaxed">
-            Sambutan Kepala Kantor Kementerian Agama Kabupaten Barito Utara
-          </p>
-        </motion.div>
-
-        {/* Speech Card */}
-        <div className="max-w-5xl mx-auto bg-white rounded-[2rem] border border-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.03)] overflow-hidden p-8 sm:p-12 hover:shadow-[0_20px_60px_rgba(15,23,42,0.06)] transition-shadow duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center overflow-hidden">
-            {/* Left Column: Portrait and Name */}
+      <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+            
+            {/* Left Column: Image with Artistic Frame */}
             <motion.div 
-              initial={{ opacity: 0, x: -50 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="md:col-span-4 flex flex-col items-center text-center space-y-5"
+              className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center lg:justify-start gap-8"
             >
-              <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border-4 border-emerald-50/80 shadow-md group">
-                <Image
-                  src="/pejabat.png"
-                  alt="Kepala Kantor Kemenag Barito Utara"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
-                  className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                />
+              <div className="relative w-[220px] sm:w-[280px] lg:w-full lg:max-w-[340px]">
+                {/* Decorative Offset Frame */}
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-[2rem] lg:rounded-[3rem] transform -translate-x-3 translate-y-4 lg:-translate-x-6 lg:translate-y-6 shadow-lg opacity-80" />
+                
+                {/* Image Container */}
+                <div className="relative aspect-[3/4] w-full rounded-[2rem] lg:rounded-[3rem] overflow-hidden border-4 border-white shadow-xl bg-slate-100 z-10 group">
+                  <Image
+                    src="/pejabat.png"
+                    alt="H. Arbaja, S.Ag., M.A.P."
+                    fill
+                    className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 60vw, (max-width: 1200px) 30vw, 25vw"
+                  />
+                  
+                  {/* Badge Overlay */}
+                  <div className="absolute bottom-4 left-4 right-4 lg:bottom-6 lg:left-6 lg:right-6 z-20 flex justify-center">
+                    <div className="inline-flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-1.5 lg:py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-white shadow-sm">
+                      <div className="h-1.5 w-1.5 lg:h-2 lg:w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-emerald-800">
+                        Kepala Kantor
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#10b981] mb-1">
-                  Kepala Kantor
-                </p>
-                <h4 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+
+              {/* Name & Title */}
+              <div className="text-center lg:text-center lg:max-w-[340px] w-full pt-2">
+                <h4 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight">
                   H. Arbaja, S.Ag., M.A.P.
                 </h4>
+                <p className="text-emerald-600 font-bold mt-1 tracking-wide text-[10px] sm:text-xs lg:text-sm">
+                  Kepala Kantor Kementerian Agama
+                  <span className="block text-slate-400 font-semibold text-[10px] sm:text-xs mt-0.5">Kabupaten Barito Utara</span>
+                </p>
               </div>
             </motion.div>
 
-            {/* Right Column: Speech Text */}
+            {/* Right Column: Premium Typography Quote */}
             <motion.div 
-              initial={{ opacity: 0, x: 50 }}
+              initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-              className="md:col-span-8 space-y-6"
+              className="lg:col-span-7 relative text-center lg:text-left"
             >
-              <div className="space-y-2">
-                <h3 className="text-lg sm:text-xl font-black text-slate-800 leading-tight">
-                  Sambutan Kepala Kantor,
+              <Quote className="absolute -top-6 -left-6 sm:-top-10 sm:-left-10 h-16 w-16 sm:h-24 sm:w-24 text-emerald-100 rotate-180 -z-10" />
+              
+              <div className="relative z-10 space-y-5 sm:space-y-6 lg:space-y-8">
+                <p className="text-emerald-600 font-serif italic text-sm sm:text-base lg:text-lg tracking-wide">
+                  Assalamu'alaikum Warahmatullahi Wabarakatuh
+                </p>
+                
+                <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-medium text-slate-800 leading-[1.4] sm:leading-[1.4] tracking-tight">
+                  "Untuk mewujudkan pelayanan prima kepada masyarakat, kami berkomitmen untuk terus berinovasi memberikan pelayanan terbaik melalui program <strong className="font-black text-emerald-600">Pelayanan Terpadu Satu Pintu (PTSP) Online</strong>."
                 </h3>
-                <div className="h-1 w-20 bg-[#10b981] rounded-full" />
-              </div>
-
-              <p className="text-xs sm:text-sm font-black text-[#10b981] italic tracking-wide">
-                Assalamu'alaikum Warahmatullahi Wabarakatuh
-              </p>
-
-              <div className="space-y-4 text-xs sm:text-sm text-slate-500 leading-relaxed font-bold text-justify">
-                <p>
-                  Untuk mewujudkan pelayanan prima kepada masyarakat dan pegawai
-                  khususnya di Lingkungan Kantor Kementerian Agama Kabupaten
-                  Barito Utara, kami berkomitmen untuk terus berinovasi
-                  memberikan pelayanan terbaik melalui program Pelayanan Terpadu
-                  Satu Pintu (PTSP) Online.
+                
+                <div className="w-12 h-1 bg-gradient-to-r from-emerald-500 to-amber-400 rounded-full mx-auto lg:mx-0" />
+                
+                <p className="text-xs sm:text-sm lg:text-base text-slate-500 leading-relaxed font-medium text-justify lg:text-left">
+                  Diharapkan dengan adanya portal PTSP ini, akses informasi, kecepatan proses, serta transparansi pelayanan keagamaan dapat diakses secara merata, efisien, dan akuntabel oleh seluruh elemen masyarakat Kabupaten Barito Utara. Datanglah...!! kami siap melayani dengan tulus, BERSIH MELAYANI.
                 </p>
-                <p>
-                  Diharapkan dengan adanya portal PTSP ini, akses informasi,
-                  kecepatan proses, serta transparansi pelayanan keagamaan dapat
-                  diakses secara merata, efisien, dan akuntabel oleh seluruh
-                  elemen masyarakat Kabupaten Barito Utara. Datanglah...!! kami
-                  siap melayani dengan tulus, BERSIH MELAYANI.
+                
+                <p className="text-emerald-600 font-serif italic text-sm sm:text-base lg:text-lg tracking-wide pt-1 lg:pt-2">
+                  Wassalamu'alaikum Warahmatullahi Wabarakatuh
                 </p>
               </div>
-
-              <p className="text-xs sm:text-sm font-black text-[#10b981] italic tracking-wide">
-                Wassalamu'alaikum Warahmatullahi Wabarakatuh
-              </p>
             </motion.div>
+
           </div>
         </div>
       </div>

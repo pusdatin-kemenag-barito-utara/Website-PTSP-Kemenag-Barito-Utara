@@ -35,7 +35,7 @@ export function ConditionalShell({
     <>
       {!isDashboard && !isAdmin && !isMaintenance && header}
       <main
-        className={`relative flex w-full flex-1 flex-col ${!isHome && !isDashboard && !isAdmin && !isMaintenance ? "pt-[72px] md:pt-[84px]" : ""}`}
+        className="relative flex w-full flex-1 flex-col"
       >
         {children}
         {isAuthPage && (

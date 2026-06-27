@@ -5,11 +5,11 @@ import {
   serviceRequirements,
   serviceFormFields,
 } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 
 export async function getPublicServices() {
   const data = await db.query.services.findMany({
-    where: eq(services.isActive, true),
+    where: and(eq(services.isActive, true), eq(services.category, "public")),
     with: {
       serviceItems: {
         orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
