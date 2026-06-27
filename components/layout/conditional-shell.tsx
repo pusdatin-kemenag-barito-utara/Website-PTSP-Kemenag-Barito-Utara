@@ -16,7 +16,7 @@ export function ConditionalShell({
   const isAdmin = pathname.startsWith("/admin");
 
   const isLengkapiProfil = pathname.startsWith("/lengkapi-profil");
-  const isBarcode = pathname === "/buku-tamu/barcode";
+  const isBarcode = pathname === "/barcode" || pathname.endsWith("/barcode");
 
   if (isAdmin || isLengkapiProfil || isBarcode) {
     // For admin routes & lengkapi-profil & barcode: no header, no footer, no ptsp-shell padding
