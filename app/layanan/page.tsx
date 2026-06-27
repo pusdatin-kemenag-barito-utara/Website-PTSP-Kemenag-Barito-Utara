@@ -4,6 +4,7 @@ import { getPublicServices } from "@/lib/queries";
 import PageBanner from "@/components/common/PageBanner";
 import { MotionDiv, springPopVariants, staggerContainerVariants, fadeUpVariants } from "@/components/common/MotionDiv";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Katalog Jenis Layanan",
@@ -38,7 +39,9 @@ export default async function ServicesPage() {
           viewport={{ once: true, amount: 0.1 }}
           className="rounded-3xl bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/50 p-6 sm:p-10 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.1)] border border-slate-200/60 backdrop-blur-sm"
         >
-          <ServicesGrid services={services} totalItems={totalItems} />
+          <Suspense fallback={<div className="py-20 text-center text-slate-400">Memuat layanan...</div>}>
+            <ServicesGrid services={services} totalItems={totalItems} />
+          </Suspense>
         </MotionDiv>
       </div>
     </main>
