@@ -99,15 +99,7 @@ export function HomeHero() {
               variants={itemVariants}
               className="inline-flex items-center gap-3 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.15)]"
             >
-              <div className="relative h-6 w-16">
-                <Image
-                  src="/atak.png"
-                  alt="Logo Si ATAK"
-                  fill
-                  sizes="64px"
-                  className="object-contain"
-                />
-              </div>
+              <span className="font-black text-sm tracking-wide text-white italic">Si ATAK</span>
               <div className="h-4 w-[1px] bg-emerald-500/40" />
               <span className="text-[10px] sm:text-xs font-bold tracking-widest text-emerald-300 uppercase flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3" /> Siap Melayani
@@ -124,11 +116,8 @@ export function HomeHero() {
                   </span>
                   <span className="absolute -bottom-1 left-0 z-0 h-4 w-full -skew-x-12 rounded bg-emerald-600/30 blur-sm" />
                 </span>{" "}
-                <span className="inline-flex items-center gap-2 lg:gap-3 flex-wrap mt-2 xl:mt-0">
-                  Bersama Si
-                  <span className="relative h-[1.2em] w-[3em] shrink-0 mt-1">
-                    <Image src="/atak.png" alt="ATAK" fill sizes="48px" className="object-contain object-left" />
-                  </span>
+                <span className="inline-flex items-center flex-wrap mt-2 xl:mt-0">
+                  Bersama Si <span className="text-yellow-500 italic ml-2">ATAK</span>
                 </span>
               </h1>
               <p className="max-w-xl text-base leading-relaxed text-slate-300 md:text-lg">
@@ -207,10 +196,7 @@ export function HomeHero() {
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-900/40 rounded-[2.5rem] blur-2xl transform translate-y-4 translate-x-4" />
             
             <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-2xl">
-              {/* Subtle Watermark */}
-              <div className="absolute -bottom-10 -right-10 opacity-[0.03] w-64 h-64 pointer-events-none">
-                <Image src="/atak.png" alt="Watermark" fill sizes="256px" className="object-contain" />
-              </div>
+              {/* Subtle Watermark Removed */}
 
               {/* Header */}
               <div className="flex items-center gap-4 mb-8">

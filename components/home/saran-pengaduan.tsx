@@ -155,7 +155,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-          className="max-w-3xl mx-auto"
+          className="w-full mx-auto"
         >
           {/* Feedback Form */}
           <div className={`bg-[#f8fafc] sm:rounded-3xl border-y sm:border border-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.03)] p-6 sm:p-10 relative ${hideHeader ? "rounded-none" : "rounded-3xl"}`}>
