@@ -1,33 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LoginFormByRole } from "@/components/auth/login-form-by-role";
-import { UserCircle2, ArrowLeft } from "lucide-react";
+import { ArrowLeft, UserCircle2 } from "lucide-react";
 import Image from "next/image";
 import { AuthCardMotion, AuthBgMotionPemohon, AuthPageSwipeMotion } from "@/components/auth/auth-motion-wrapper";
+import { PemohonResetForm } from "@/components/auth/pemohon-reset-form";
 
 export const metadata: Metadata = {
-  title: "Masuk Pemohon",
+  title: "Lupa Password Pemohon",
   description:
-    "Masuk ke portal layanan PTSP Kemenag Barito Utara untuk masyarakat umum.",
+    "Pemulihan password untuk pemohon layanan PTSP Kemenag Barito Utara.",
 };
 
-export default async function LoginPemohonPage(props: {
+export default async function ForgotPasswordPemohonPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
   const callbackUrl = searchParams?.callbackUrl;
-  const error = searchParams?.error;
+  const cbQuery = callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : "";
 
   return (
     <div className="relative flex min-h-screen w-full bg-slate-50 overflow-hidden">
       <AuthPageSwipeMotion direction="left">
       {/* Desktop Back Button */}
       <Link 
-        href="/"
+        href={`/forgot-password${cbQuery}`}
         className="hidden lg:flex absolute top-8 left-8 z-50 items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full text-sm font-bold shadow-xl transition-all hover:-translate-x-1"
       >
         <ArrowLeft className="h-4 w-4" />
-        Kembali ke PTSP
+        Kembali
       </Link>
 
       {/* Left Panel: Branding & Background (Hidden on mobile) */}
@@ -38,6 +38,7 @@ export default async function LoginPemohonPage(props: {
             alt="Kantor Kemenag Barito Utara"
             fill
             priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover object-center grayscale"
           />
           {/* Teal/Ocean theme for Pemohon */}
@@ -50,11 +51,11 @@ export default async function LoginPemohonPage(props: {
             <UserCircle2 className="h-8 w-8" />
           </div>
           <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-white mb-6 leading-tight">
-            Portal Masyarakat <br />
-            <span className="text-teal-300">PTSP Kemenag</span>
+            Pemulihan <br />
+            <span className="text-teal-300">Password</span>
           </h1>
           <p className="text-lg text-teal-50 font-medium max-w-md leading-relaxed">
-            Ajukan layanan administrasi keagamaan secara online dengan cepat, mudah, dan transparan.
+            Verifikasi nomor WhatsApp terdaftar Anda untuk mengatur ulang kata sandi dan kembali mengakses portal layanan.
           </p>
         </div>
 
@@ -71,6 +72,8 @@ export default async function LoginPemohonPage(props: {
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag"
             fill
+            priority
+            sizes="100vw"
             className="object-cover object-center grayscale opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-teal-950/90 to-slate-900/95" />
@@ -79,7 +82,7 @@ export default async function LoginPemohonPage(props: {
         {/* Mobile Header & Back Button */}
         <div className="lg:hidden absolute top-0 left-0 w-full p-4 sm:p-6 flex justify-between items-center z-50">
           <Link 
-            href="/"
+            href={`/forgot-password${cbQuery}`}
             className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-full text-xs font-semibold shadow-lg transition-all active:scale-95"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -99,20 +102,13 @@ export default async function LoginPemohonPage(props: {
                 Layanan Masyarakat
               </p>
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                Masuk Pemohon
+                Lupa Password
               </h2>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500">
-                Masuk menggunakan nomor WhatsApp terdaftar.
-              </p>
             </div>
 
             {/* Form area */}
             <div className="px-6 sm:px-8 pb-5 sm:pb-6">
-              <LoginFormByRole
-                mode="pemohon"
-                callbackUrl={callbackUrl as string}
-                initialError={error as string}
-              />
+              <PemohonResetForm />
               
               <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
                 <div className="relative mb-2">
@@ -120,15 +116,15 @@ export default async function LoginPemohonPage(props: {
                     <span className="w-full border-t border-slate-200" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-3 font-semibold text-slate-400">Belum punya akun?</span>
+                    <span className="bg-white px-3 font-semibold text-slate-400">Atau</span>
                   </div>
                 </div>
                 
                 <Link
-                  href="/register"
+                  href={`/login/pemohon${cbQuery}`}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 sm:py-3 text-[13px] sm:text-sm font-bold text-slate-600 transition-colors hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50/50"
                 >
-                  Buat Akun Pemohon Baru
+                  Kembali ke Halaman Login
                 </Link>
               </div>
             </div>

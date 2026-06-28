@@ -23,6 +23,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { GlobalSearchModal } from "@/components/global-search-modal";
 import { isAdminRole } from "@/lib/constants";
 import { LoginDropdown } from "@/components/header/login-dropdown";
 import { MobileNav } from "@/components/header/mobile-nav";
@@ -38,7 +39,7 @@ const navItems = [
     icon: LayoutGrid,
     children: [
       { label: "Katalog Layanan Masyarakat", href: "/layanan", icon: LayoutGrid },
-      { label: "Katalog Layanan Pegawai", href: "#", icon: LayoutGrid },
+      { label: "Katalog Layanan Pegawai", href: "/layanan-pegawai", icon: LayoutGrid },
       { label: "Cek Cuti", href: "/cek-cuti", icon: FilePlus },
     ],
   },
@@ -66,7 +67,19 @@ export function SiteHeaderClient({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -299,7 +312,10 @@ export function SiteHeaderClient({
               </ul>
 
               {/* Global Search Icon UI placeholder */}
-              <button className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mr-2">
+              <button 
+                onClick={() => setIsSearchOpen(true)}
+                className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mr-2"
+              >
                 <Search className="h-4.5 w-4.5" />
               </button>
             </div>
@@ -317,6 +333,7 @@ export function SiteHeaderClient({
         dashboardHref={dashboardHref}
         isAdmin={isAdmin}
       />
+      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }

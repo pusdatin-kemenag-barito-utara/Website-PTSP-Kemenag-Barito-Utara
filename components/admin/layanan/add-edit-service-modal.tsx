@@ -128,6 +128,33 @@ export function AddEditServiceModal({
                   </Field>
 
                   <Field
+                    label="Persyaratan Berkas"
+                    hint="Opsional. Sebutkan berkas apa saja yang harus disiapkan. (Gunakan baris baru untuk setiap poin)"
+                  >
+                    <Textarea
+                      name="requirementsText"
+                      value={formData.requirementsText || ""}
+                      onChange={(e) => onChangeFormData({ requirementsText: e.target.value })}
+                      placeholder="- Fotokopi KTP&#10;- Surat Permohonan"
+                      className="font-medium min-h-[100px]"
+                    />
+                  </Field>
+
+                  <Field
+                    label="Link SOP (Standar Operasional Prosedur)"
+                    hint="Opsional. Masukkan URL tautan menuju dokumen SOP (misal: Google Drive/PDF)."
+                  >
+                    <Input
+                      name="sopUrl"
+                      type="url"
+                      value={formData.sopUrl || ""}
+                      onChange={(e) => onChangeFormData({ sopUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="font-medium"
+                    />
+                  </Field>
+
+                  <Field
                     label="Banner Layanan (Portrait 4x3)"
                     hint="Format: JPG/PNG/WEBP. Upload banner untuk ditampilkan di halaman depan. Kosongkan jika tidak ingin mengubah."
                   >

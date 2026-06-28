@@ -192,7 +192,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
 
   return (
     <m.form 
-      className="space-y-3" 
+      className="space-y-2" 
       onSubmit={onSubmit} 
       autoComplete="off"
       variants={containerVariants}
@@ -239,7 +239,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
             name="address"
             required={step === 1}
             placeholder="Masukkan alamat lengkap"
-            className="min-h-24"
+            className="min-h-16 resize-none"
             autoComplete="off"
           />
         </Field>
@@ -275,7 +275,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-3 space-y-1.5 overflow-hidden"
+                className="mt-1.5 space-y-1 overflow-hidden"
               >
                 <div className="flex gap-1">
                   {[1, 2, 3, 4].map((level) => (

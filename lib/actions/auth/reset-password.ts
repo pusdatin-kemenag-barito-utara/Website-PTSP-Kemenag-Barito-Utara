@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db } from "@/lib/db";
 import { profiles, authOtps, whatsappOutbox } from "@/lib/db/schema";
-import { eq, and, desc, gt } from "drizzle-orm";
+import { eq, and, desc, gt, ne } from "drizzle-orm";
 import { verifyTurnstileAction } from "@/lib/actions/auth/login-helper";
 import crypto from "crypto";
 import { headers } from "next/headers";
@@ -63,7 +63,10 @@ export async function checkPhoneExistsAction(phone: string, token: string) {
   }
 
   const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.phone, phone),
+    where: and(
+      eq(profiles.phone, phone),
+      eq(profiles.role, "user")
+    ),
     columns: { id: true, fullName: true },
   });
 
@@ -86,11 +89,41 @@ export async function checkPhoneExistsAction(phone: string, token: string) {
     // 2. Insert WhatsApp Message Queue
     const waMessage = `*KODE OTP PTSP KEMENAG*\n\nHalo ${profile.fullName},\n\nKode OTP Anda untuk mengatur ulang password adalah:\n*${otpCode}*\n\nKode ini berlaku selama 5 menit. JANGAN BERIKAN KODE INI KEPADA SIAPAPUN.`;
     
-    await db.insert(whatsappOutbox).values({
+    const outboxRes = await db.insert(whatsappOutbox).values({
       phone,
       message: waMessage,
       status: 'pending',
-    });
+    }).returning({ id: whatsappOutbox.id });
+
+    // 3. Send via WA Bot API directly (Recommended for fast OTP delivery)
+    const botUrl = process.env.WA_BOT_URL;
+    const botApiKey = process.env.WA_BOT_API_KEY;
+
+    if (botUrl && botApiKey && outboxRes.length > 0) {
+      try {
+        const response = await fetch(`${botUrl}/api/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': botApiKey
+          },
+          body: JSON.stringify({
+            to: phone,
+            text: waMessage
+          })
+        });
+
+        if (response.ok) {
+          await db.update(whatsappOutbox)
+            .set({ status: 'sent', sentAt: new Date() })
+            .where(eq(whatsappOutbox.id, outboxRes[0].id));
+        } else {
+          console.error("WA Bot API returned error:", await response.text());
+        }
+      } catch (fetchErr) {
+        console.error("Failed to call WA Bot API:", fetchErr);
+      }
+    }
 
     return { exists: true };
   } catch (err: any) {
@@ -176,10 +209,92 @@ export async function checkEmailExistsAction(email: string, token: string) {
   return { success: true };
 }
 
+export async function checkPegawaiPhoneExistsAction(nip: string, phone: string, token: string) {
+  if (!nip || !phone) return { error: "NIP dan Nomor WhatsApp wajib diisi." };
+
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  const { allowed } = checkRateLimit(ip, "otp_req", RATE_LIMITS.FORGOT_PASSWORD);
+  if (!allowed) return { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." };
+
+  const verifyRes = await verifyTurnstileAction(token);
+  if (!verifyRes.success) {
+    return { error: "Verifikasi keamanan gagal. Silakan coba lagi." };
+  }
+
+  const profile = await db.query.profiles.findFirst({
+    where: and(eq(profiles.nip, nip), eq(profiles.phone, phone)),
+    columns: { id: true, fullName: true, role: true },
+  });
+
+  if (!profile) {
+    return { error: "Kombinasi NIP dan Nomor WhatsApp tidak ditemukan di sistem." };
+  }
+
+  // Create OTP and save to DB
+  const otpCode = generateOtp();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  try {
+    // 1. Insert OTP
+    await db.insert(authOtps).values({
+      phone,
+      otp: otpCode,
+      expiresAt,
+    });
+
+    // 2. Insert WhatsApp Message Queue
+    const waMessage = `*KODE OTP PTSP KEMENAG*\n\nHalo ${profile.fullName},\n\nKode OTP Anda untuk mengatur ulang password adalah:\n*${otpCode}*\n\nKode ini berlaku selama 5 menit. JANGAN BERIKAN KODE INI KEPADA SIAPAPUN.`;
+    
+    const outboxRes = await db.insert(whatsappOutbox).values({
+      phone,
+      message: waMessage,
+      status: 'pending',
+    }).returning({ id: whatsappOutbox.id });
+
+    // 3. Send via WA Bot API directly (Recommended for fast OTP delivery)
+    const botUrl = process.env.WA_BOT_URL;
+    const botApiKey = process.env.WA_BOT_API_KEY;
+
+    if (botUrl && botApiKey && outboxRes.length > 0) {
+      try {
+        const response = await fetch(`${botUrl}/api/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': botApiKey
+          },
+          body: JSON.stringify({
+            to: phone,
+            text: waMessage
+          })
+        });
+
+        if (response.ok) {
+          await db.update(whatsappOutbox)
+            .set({ status: 'sent', sentAt: new Date() })
+            .where(eq(whatsappOutbox.id, outboxRes[0].id));
+        } else {
+          console.error("WA Bot API returned error:", await response.text());
+        }
+      } catch (fetchErr) {
+        console.error("Failed to call WA Bot API:", fetchErr);
+      }
+    }
+
+    return { exists: true };
+  } catch (err: any) {
+    console.error("Gagal men-generate OTP:", err);
+    return { error: "Gagal membuat OTP. Silakan coba lagi nanti." };
+  }
+}
+
 export async function resetPasswordByPhoneAction(
   phone: string,
   newPassword: string,
   resetToken: string,
+  type: "pemohon" | "pegawai" = "pemohon"
 ) {
   if (!phone || !newPassword || !resetToken) {
     return { error: "Data tidak lengkap atau token tidak valid." };
@@ -202,9 +317,12 @@ export async function resetPasswordByPhoneAction(
 
   const admin = createAdminClient();
 
-  // 1. Cari user berdasarkan nomor HP di tabel profiles
+  // 1. Cari user berdasarkan nomor HP di tabel profiles sesuai tipe
   const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.phone, phone),
+    where: and(
+      eq(profiles.phone, phone),
+      type === "pemohon" ? eq(profiles.role, "user") : ne(profiles.role, "user")
+    ),
     columns: { id: true, fullName: true, email: true },
   });
 

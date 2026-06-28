@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -36,6 +36,17 @@ export function MobileNav({
 }: MobileNavProps) {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   const toggleExpand = (label: string) => {
     setExpandedItems(prev => ({ ...prev, [label]: !prev[label] }));
   };
@@ -66,14 +77,14 @@ export function MobileNav({
             <Image 
               src="/atak-portal.png" 
               alt="Logo Kemenag" 
-              width={32} 
-              height={32} 
-              className="w-8 h-8 object-contain" 
+              width={40} 
+              height={40} 
+              className="w-10 h-10 object-contain" 
               unoptimized 
             />
-            <p className="text-[13px] font-black uppercase tracking-wide text-emerald-800 leading-tight flex items-center gap-1">
+            <p className="text-base font-black uppercase tracking-wide text-emerald-800 leading-tight flex items-center gap-1">
               PTSP Si{" "}
-              <Image src="/atak.png" alt="ATAK" width={48} height={20} className="h-[1em] w-auto object-contain inline-block" style={{ height: "1em", width: "auto" }} unoptimized />
+              <Image src="/atak.png" alt="ATAK" width={60} height={24} className="h-[1em] w-auto object-contain inline-block" style={{ height: "1em", width: "auto" }} unoptimized />
             </p>
           </div>
           <button 
@@ -86,28 +97,7 @@ export function MobileNav({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto no-scrollbar py-2">
-          
-          {/* HAPAKAT Section */}
-          <div className="px-6 pt-2 pb-1 flex flex-col items-center justify-center text-center">
-            <Image 
-              src="/icons/hapakat.png" 
-              alt="HAPAKAT" 
-              width={60} 
-              height={20} 
-              className="h-4 w-auto object-contain mb-1.5"
-              unoptimized
-            />
-            <p className="text-[9px] font-bold leading-relaxed mt-1 max-w-[280px]">
-              <span className="text-amber-500">H</span><span className="text-emerald-600">armonis, </span>
-              <span className="text-amber-500">A</span><span className="text-emerald-600">manah, </span>
-              <span className="text-amber-500">P</span><span className="text-emerald-600">rofesional, </span>
-              <span className="text-amber-500">A</span><span className="text-emerald-600">kuntabel, </span>
-              <span className="text-amber-500">K</span><span className="text-emerald-600">reatif, </span>
-              <br />
-              <span className="text-amber-500">A</span><span className="text-emerald-600">dil dan </span>
-              <span className="text-amber-500">T</span><span className="text-emerald-600">ransparan</span>
-            </p>
-          </div>
+
 
           {/* Search Box (Dummy UI to match Kemenag Barito Utara) */}
           <div className="px-6 py-3">
@@ -253,6 +243,27 @@ export function MobileNav({
               </div>
             </div>
           )}
+
+          {/* HAPAKAT Section di Footer */}
+          <div className="flex flex-col items-center justify-center gap-2 pt-4 border-t border-slate-100 text-center">
+            <Image 
+              src="/icons/hapakat.png" 
+              alt="HAPAKAT" 
+              width={112} 
+              height={32} 
+              className="w-28 h-auto object-contain"
+              unoptimized
+            />
+            <p className="text-[9px] font-bold leading-relaxed text-center">
+              <span className="text-amber-500">H</span><span className="text-emerald-600">armonis, </span>
+              <span className="text-amber-500">A</span><span className="text-emerald-600">manah, </span>
+              <span className="text-amber-500">P</span><span className="text-emerald-600">rofesional, </span>
+              <span className="text-amber-500">A</span><span className="text-emerald-600">kuntabel, </span>
+              <span className="text-amber-500">K</span><span className="text-emerald-600">reatif, </span>
+              <span className="text-amber-500">A</span><span className="text-emerald-600">dil dan </span>
+              <span className="text-amber-500">T</span><span className="text-emerald-600">ransparan</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

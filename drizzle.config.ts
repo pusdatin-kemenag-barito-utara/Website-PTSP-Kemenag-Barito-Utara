@@ -11,5 +11,6 @@ export default defineConfig({
   },
   verbose: true,
   strict: true,
+  schemaFilter: ["kemenag_ptsp", "public"],
   tablesFilter: ["ptsp_*"],
 });

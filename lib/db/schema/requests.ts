@@ -4,7 +4,9 @@ import {
   timestamp,
   uuid,
   bigint,
+  integer,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { requestStatusEnum } from "./enums";

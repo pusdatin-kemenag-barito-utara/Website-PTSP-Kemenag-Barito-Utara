@@ -22,7 +22,7 @@ interface ServiceItem {
   serviceFormFields: any[];
 }
 
-function ServiceItemCard({
+export function ServiceItemCard({
   item,
   index,
   basePath,

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "framer-motion";
 import {
+  UserCircle2,
   Phone,
   KeyRound,
   Eye,
@@ -18,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   resetPasswordByPhoneAction,
-  checkPhoneExistsAction,
+  checkPegawaiPhoneExistsAction,
   verifyOtpAction,
 } from "@/lib/actions/auth/reset-password";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
@@ -50,15 +51,16 @@ const getPasswordStrength = (pass: string) => {
   }
 };
 
-export function PemohonResetForm() {
+export function PegawaiResetForm() {
   const router = useRouter();
-  // 1: Phone, 2: OTP, 3: New Password
+  // 1: NIP & Phone, 2: OTP, 3: New Password
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [nip, setNip] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -75,13 +77,14 @@ export function PemohonResetForm() {
     setMounted(true);
   }, []);
 
-  const handleCheckPhone = async () => {
+  const handleCheckAccount = async () => {
+    if (!nip) return setError("Masukkan NIP Anda.");
     if (!phone) return setError("Masukkan nomor HP Anda.");
     if (!turnstileToken) return setError("Silakan selesaikan verifikasi keamanan.");
     setLoading(true);
     setError("");
 
-    const result = await checkPhoneExistsAction(phone, turnstileToken);
+    const result = await checkPegawaiPhoneExistsAction(nip, phone, turnstileToken);
 
     setLoading(false);
     if (result.error) {
@@ -93,7 +96,7 @@ export function PemohonResetForm() {
     if (!result.exists) {
       turnstileRef.current?.reset();
       setTurnstileToken(null);
-      return setError("Akun tidak bisa direset / nomor HP belum terdaftar dalam sistem.");
+      return setError("Akun tidak bisa direset / NIP & No HP tidak sesuai.");
     }
 
     toast.success("OTP Dikirim!", {
@@ -129,17 +132,17 @@ export function PemohonResetForm() {
     setLoading(true);
     setError("");
 
-    const result = await resetPasswordByPhoneAction(phone, newPassword, resetToken);
+    const result = await resetPasswordByPhoneAction(phone, newPassword, resetToken, "pegawai");
 
     setLoading(false);
     if (result.error) {
       setError(result.error);
     } else {
       toast.success("Password Berhasil Diperbarui!", {
-        description: `Halo ${result.name}, password Anda telah berhasil diubah.`,
+        description: `Password Anda telah berhasil diubah.`,
         icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
       });
-      router.push("/login/pemohon");
+      router.push("/login/pegawai");
     }
   };
 
@@ -147,12 +150,12 @@ export function PemohonResetForm() {
     <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h2 className="text-xl font-black text-slate-900">
-          {step === 1 && "Verifikasi Nomor HP"}
+          {step === 1 && "Reset Password Pegawai"}
           {step === 2 && "Masukkan Kode OTP"}
           {step === 3 && "Atur Password Baru"}
         </h2>
         <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-          {step === 1 && "Masukkan nomor WhatsApp yang terdaftar untuk verifikasi akun Anda."}
+          {step === 1 && "Masukkan NIP dan Nomor WhatsApp Anda. Kami akan mengirimkan kode OTP."}
           {step === 2 && "Kami telah mengirimkan 6 digit kode OTP ke nomor WhatsApp Anda."}
           {step === 3 && "Kode OTP valid! Sekarang masukkan password baru yang aman."}
         </p>
@@ -167,6 +170,16 @@ export function PemohonResetForm() {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-4"
           >
+            <div className="relative group">
+              <UserCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <Input
+                type="text"
+                value={nip}
+                onChange={(e) => setNip(e.target.value.replace(/\D/g, ""))}
+                placeholder="Masukkan NIP Anda"
+                className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 transition-all"
+              />
+            </div>
             <div className="relative group">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
               <Input
@@ -191,9 +204,9 @@ export function PemohonResetForm() {
             />
 
             <Button
-              onClick={handleCheckPhone}
-              disabled={loading || !turnstileToken || phone.length < 10}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
+              onClick={handleCheckAccount}
+              disabled={loading || !turnstileToken || phone.length < 10 || nip.length < 10}
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#047857] to-[#059669] hover:from-[#064e3b] hover:to-[#047857] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -232,7 +245,7 @@ export function PemohonResetForm() {
             <Button
               onClick={handleVerifyOtp}
               disabled={loading || otp.length < 6}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#047857] to-[#059669] hover:from-[#064e3b] hover:to-[#047857] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -331,7 +344,7 @@ export function PemohonResetForm() {
             <Button
               onClick={handleUpdatePassword}
               disabled={loading}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#047857] to-[#059669] hover:from-[#064e3b] hover:to-[#047857] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />

@@ -29,6 +29,28 @@ export async function getPublicServices() {
   return serializeBigInt(data) ?? [];
 }
 
+export async function getEmployeeServices() {
+  const data = await db.query.services.findMany({
+    where: and(eq(services.isActive, true), eq(services.category, "asn")),
+    with: {
+      serviceItems: {
+        orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
+        with: {
+          serviceRequirements: {
+            orderBy: [
+              asc(serviceRequirements.sortOrder),
+              asc(serviceRequirements.id),
+            ],
+          },
+        },
+      },
+    },
+    orderBy: [asc(services.sortOrder), asc(services.name)],
+  });
+
+  return serializeBigInt(data) ?? [];
+}
+
 export async function getServiceBySlug(slug: string) {
   const data = await db.query.services.findFirst({
     where: eq(services.slug, slug),

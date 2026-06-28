@@ -38,12 +38,15 @@ export async function requestRegistrationOtpAction(phone: string, token: string)
   }
 
   const existingProfile = await db.query.profiles.findFirst({
-    where: eq(profiles.phone, phone),
+    where: and(
+      eq(profiles.phone, phone),
+      eq(profiles.role, "user")
+    ),
     columns: { id: true },
   });
 
   if (existingProfile) {
-    return { error: "Nomor WhatsApp ini sudah terdaftar." };
+    return { error: "Nomor WhatsApp ini sudah terdaftar sebagai pemohon." };
   }
 
   const otpCode = generateOtp();

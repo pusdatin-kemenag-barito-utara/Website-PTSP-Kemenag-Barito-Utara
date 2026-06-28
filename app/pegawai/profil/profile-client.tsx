@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { User, KeyRound, Save, Upload, Info, Image as ImageIcon } from "lucide-react";
 import { updatePegawaiAvatar, updatePegawaiPassword } from "@/lib/actions/pegawai/profile";
+import { updatePegawaiPhoneAction } from "@/lib/actions/auth/complete-profile";
 import { AvatarCropper } from "@/components/ui/avatar-cropper";
 import { PasswordStrength } from "@/components/ui/password-strength";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -25,6 +26,14 @@ export function ProfileClient({ profile }: { profile: any }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+
+  // Phone State
+  const initialPhone = profile?.phone 
+    ? (profile.phone.startsWith("62") ? "0" + profile.phone.substring(2) : profile.phone)
+    : "";
+  const [phoneValue, setPhoneValue] = useState(initialPhone);
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -107,6 +116,35 @@ export function ProfileClient({ profile }: { profile: any }) {
       toast.error("Terjadi kesalahan sistem");
     } finally {
       setIsSavingPassword(false);
+    }
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!phoneValue || phoneValue.length < 10) {
+      toast.error("Format nomor WhatsApp tidak valid.");
+      return;
+    }
+
+    setIsSavingPhone(true);
+    try {
+      const formData = new FormData();
+      formData.append("phone", phoneValue);
+      
+      const result = await updatePegawaiPhoneAction(formData);
+      
+      if (result.success) {
+        toast.success("Nomor WhatsApp berhasil diperbarui.");
+        setIsEditingPhone(false);
+        // Optional: refresh page or state to reflect original state if needed
+      } else {
+        toast.error("Gagal memperbarui nomor", { description: result.error });
+        setPhoneValue(initialPhone); // Revert to original
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan sistem");
+      setPhoneValue(initialPhone); // Revert to original
+    } finally {
+      setIsSavingPhone(false);
     }
   };
 
@@ -196,7 +234,7 @@ export function ProfileClient({ profile }: { profile: any }) {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
-                      <div className="space-y-1.5">
+                      <div className="space-y-1.5 md:col-span-2">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nama Lengkap</label>
                         <input type="text" readOnly value={profile?.fullName || "-"} className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm outline-none" />
                       </div>
@@ -204,9 +242,55 @@ export function ProfileClient({ profile }: { profile: any }) {
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">NIP</label>
                         <input type="text" readOnly value={nipValue} className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm outline-none" />
                       </div>
-                      <div className="space-y-1.5 md:col-span-2">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Jabatan</label>
                         <input type="text" readOnly value={profile?.jabatan || "-"} className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm outline-none" />
+                      </div>
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Nomor WhatsApp</label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text" 
+                            readOnly={!isEditingPhone}
+                            value={phoneValue}
+                            onChange={(e) => setPhoneValue(e.target.value)}
+                            placeholder="Contoh: 08123456789"
+                            className={`flex-1 h-11 px-4 rounded-xl border ${isEditingPhone ? 'border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500' : 'border-slate-200 bg-slate-50 text-slate-700 outline-none'} text-sm transition-all`} 
+                          />
+                          {!isEditingPhone ? (
+                            <Button 
+                              type="button"
+                              onClick={() => setIsEditingPhone(true)}
+                              className="h-11 bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-xl"
+                            >
+                              Ubah Nomor WhatsApp
+                            </Button>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button 
+                                type="button"
+                                onClick={handleUpdatePhone}
+                                disabled={isSavingPhone}
+                                className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white px-4 rounded-xl"
+                              >
+                                {isSavingPhone ? "Menyimpan..." : "Simpan"}
+                              </Button>
+                              <Button 
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  setIsEditingPhone(false);
+                                  setPhoneValue(initialPhone);
+                                }}
+                                disabled={isSavingPhone}
+                                className="h-11 border-slate-200 px-4 rounded-xl"
+                              >
+                                Batal
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-medium">Nomor ini digunakan untuk verifikasi keamanan dan fitur Lupa Password.</p>
                       </div>
                     </div>
                   </div>

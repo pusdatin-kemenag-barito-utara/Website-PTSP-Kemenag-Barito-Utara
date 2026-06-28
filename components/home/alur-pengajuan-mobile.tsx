@@ -35,7 +35,7 @@ export function HomeAlurPengajuanMobile() {
           <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur-2xl">
             {/* Subtle Watermark */}
             <div className="absolute -bottom-10 -right-10 opacity-[0.03] w-48 h-48 pointer-events-none">
-              <Image src="/atak.png" alt="Watermark" fill className="object-contain" />
+              <Image src="/atak.png" alt="Watermark" fill sizes="192px" className="object-contain" />
             </div>
 
             {/* Header */}
@@ -109,7 +109,7 @@ export function HomeAlurPengajuanMobile() {
                     {/* Image Node */}
                     <div className="relative shrink-0 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-slate-800 shadow-xl overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/40 to-transparent z-0" />
-                      <Image src={item.image} alt={item.title} fill className="object-cover object-top scale-110 translate-y-1 z-10" />
+                      <Image src={item.image} alt={item.title} fill sizes="56px" className="object-cover object-top scale-110 translate-y-1 z-10" />
                     </div>
                     {/* Step Details */}
                     <div className="flex flex-col justify-center pt-1">

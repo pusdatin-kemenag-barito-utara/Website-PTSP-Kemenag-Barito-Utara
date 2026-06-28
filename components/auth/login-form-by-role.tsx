@@ -348,18 +348,18 @@ export function LoginFormByRole({
               Ingat Saya
             </span>
           </label>
-          <Link
-            href="/forgot-password"
-            className={`text-xs font-bold hover:underline transition-colors ${
-              mode === "petugas"
-                ? "text-[#0f8a54] hover:text-[#0b7446]"
-                : mode === "pegawai"
+          {mode !== "petugas" && (
+            <Link
+              href={`/forgot-password/${mode}`}
+              className={`text-xs font-bold hover:underline transition-colors ${
+                mode === "pegawai"
                   ? "text-[#047857] hover:text-[#064e3b]"
                   : "text-[#059669] hover:text-[#047857]"
-            }`}
-          >
-            Lupa password?
-          </Link>
+              }`}
+            >
+              Lupa password?
+            </Link>
+          )}
         </div>
       </m.div>
 
@@ -409,8 +409,8 @@ export function LoginFormByRole({
       </m.div>
 
       {mode === "pemohon" && (
-        <m.div variants={itemVariants} className="mt-1 pb-1">
-          <div className="relative my-4">
+        <m.div variants={itemVariants} className="mt-1">
+          <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-slate-200" />
             </div>

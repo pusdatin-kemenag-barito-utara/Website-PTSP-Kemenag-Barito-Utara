@@ -82,7 +82,28 @@ export function SiteFooter() {
               yang modern, transparan, and akuntabel di Kabupaten Barito Utara.
             </p>
 
-            <div className="flex items-center gap-3">
+            {/* HAPAKAT Section */}
+            <div className="flex flex-col items-start gap-2 pt-2">
+              <Image 
+                src="/icons/hapakat.png" 
+                alt="HAPAKAT" 
+                width={112} 
+                height={32} 
+                className="w-28 h-auto object-contain drop-shadow-sm"
+                unoptimized
+              />
+              <p className="text-[10px] sm:text-[11px] font-bold leading-relaxed text-white/70 max-w-sm">
+                <span className="text-amber-400">H</span>armonis,{" "}
+                <span className="text-amber-400">A</span>manah,{" "}
+                <span className="text-amber-400">P</span>rofesional,{" "}
+                <span className="text-amber-400">A</span>kuntabel,{" "}
+                <span className="text-amber-400">K</span>reatif,{" "}
+                <span className="text-amber-400">A</span>dil dan{" "}
+                <span className="text-amber-400">T</span>ransparan
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
               {[
                 {
                   icon: Globe,

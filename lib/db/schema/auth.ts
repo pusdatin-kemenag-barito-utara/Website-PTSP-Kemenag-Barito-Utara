@@ -81,7 +81,7 @@ export const profiles = ptspSchema.table("ptsp_profiles", {
     .references(() => users.id, { onDelete: "cascade" }),
   fullName: text("full_name"),
   email: text("email").unique(),
-  phone: text("phone").unique(),
+  phone: text("phone"),
   address: text("address"),
   role: appRoleEnum("role").notNull().default("user"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })

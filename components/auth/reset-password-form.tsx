@@ -112,7 +112,7 @@ export function ResetPasswordForm() {
   if (success) {
     return (
       <div className="text-center py-6 space-y-4">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-500/5">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-8 ring-indigo-500/5">
           <CheckCircle2 className="h-10 w-10 animate-bounce" />
         </div>
         <div className="space-y-2">
@@ -219,8 +219,8 @@ export function ResetPasswordForm() {
           </div>
           {error.includes("Lupa Password") && (
             <Link
-              href="/forgot-password"
-              className="block text-center text-xs font-bold text-[#0f8a54] hover:text-[#0b7446] hover:underline transition-colors mt-2"
+              href="/forgot-password/petugas"
+              className="block text-center text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors mt-2"
             >
               Klik di sini untuk ke Halaman Lupa Password →
             </Link>
@@ -229,7 +229,7 @@ export function ResetPasswordForm() {
       )}
 
       <Button
-        className="w-full h-11 text-[15px] font-bold shadow-md bg-[#059669]! hover:bg-[#047857]! transition-all flex items-center justify-center gap-2 rounded-xl"
+        className="w-full h-11 text-[15px] font-bold shadow-md bg-indigo-600! hover:bg-indigo-700! text-white transition-all flex items-center justify-center gap-2 rounded-xl"
         disabled={loading}
       >
         {loading ? (

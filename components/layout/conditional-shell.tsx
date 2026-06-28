@@ -16,10 +16,11 @@ export function ConditionalShell({
   const isAdmin = pathname.startsWith("/admin");
 
   const isLengkapiProfil = pathname.startsWith("/lengkapi-profil");
+  const isLengkapiWaPegawai = pathname.startsWith("/lengkapi-wa-pegawai");
   const isBarcode = pathname === "/barcode" || pathname.endsWith("/barcode");
 
-  if (isAdmin || isLengkapiProfil || isBarcode) {
-    // For admin routes & lengkapi-profil & barcode: no header, no footer, no ptsp-shell padding
+  if (isAdmin || isLengkapiProfil || isLengkapiWaPegawai || isBarcode) {
+    // For admin routes & lengkapi-profil & lengkapi-wa-pegawai & barcode: no header, no footer, no ptsp-shell padding
     return <>{children}</>;
   }
 
@@ -33,16 +34,11 @@ export function ConditionalShell({
 
   return (
     <>
-      {!isDashboard && !isAdmin && !isMaintenance && header}
+      {!isDashboard && !isAdmin && !isMaintenance && !isAuthPage && header}
       <main
         className="relative flex w-full flex-1 flex-col"
       >
         {children}
-        {isAuthPage && (
-          <footer className="pointer-events-none absolute bottom-6 left-0 z-20 w-full px-4 text-center text-[10px] sm:text-[11px] font-medium text-white/40">
-            © {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab. Barito Utara
-          </footer>
-        )}
       </main>
       {!isDashboard && !isAuthPage && !isMaintenance && footer}
       {isDashboard && (

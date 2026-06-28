@@ -104,6 +104,7 @@ export function HomeHero() {
                   src="/atak.png"
                   alt="Logo Si ATAK"
                   fill
+                  sizes="64px"
                   className="object-contain"
                 />
               </div>
@@ -126,7 +127,7 @@ export function HomeHero() {
                 <span className="inline-flex items-center gap-2 lg:gap-3 flex-wrap mt-2 xl:mt-0">
                   Bersama Si
                   <span className="relative h-[1.2em] w-[3em] shrink-0 mt-1">
-                    <Image src="/atak.png" alt="ATAK" fill className="object-contain object-left" />
+                    <Image src="/atak.png" alt="ATAK" fill sizes="48px" className="object-contain object-left" />
                   </span>
                 </span>
               </h1>
@@ -208,7 +209,7 @@ export function HomeHero() {
             <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-2xl">
               {/* Subtle Watermark */}
               <div className="absolute -bottom-10 -right-10 opacity-[0.03] w-64 h-64 pointer-events-none">
-                <Image src="/atak.png" alt="Watermark" fill className="object-contain" />
+                <Image src="/atak.png" alt="Watermark" fill sizes="256px" className="object-contain" />
               </div>
 
               {/* Header */}
@@ -269,7 +270,7 @@ export function HomeHero() {
                       {/* Icon Node */}
                       <div className="relative shrink-0 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-slate-800 shadow-xl transition-all duration-300 group-hover:scale-110 group-hover:border-emerald-500/50 group-hover:shadow-emerald-900/40 overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/40 to-transparent z-0" />
-                        <Image src={item.image} alt={item.title} fill className="object-cover object-top scale-110 translate-y-1 z-10" />
+                        <Image src={item.image} alt={item.title} fill sizes="64px" className="object-cover object-top scale-110 translate-y-1 z-10" />
                         
                         {/* Glow effect on hover */}
                         <div className="absolute inset-0 bg-emerald-400/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-20" />

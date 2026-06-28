@@ -115,6 +115,11 @@ export async function requireAuth(allowIncomplete = false) {
         if (!profile!.phone || !profile!.fullName || !profile!.address) {
           redirect("/lengkapi-profil");
         }
+      } else {
+        // Pegawai / Admin roles need WA for password reset features
+        if (!profile!.phone) {
+          redirect("/lengkapi-wa-pegawai");
+        }
       }
     }
   }

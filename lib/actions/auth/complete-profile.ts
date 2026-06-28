@@ -2,8 +2,9 @@
 
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { requireAuth } from "@/lib/auth";
+import { eq, and, ne } from "drizzle-orm";
+import { requireAuth, requireAdmin } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 export async function completeProfileAction(formData: FormData) {
   try {
@@ -34,6 +35,19 @@ export async function completeProfileAction(formData: FormData) {
       return { error: "Format nomor WhatsApp tidak valid." };
     }
 
+    // Cek apakah nomor sudah digunakan oleh pemohon lain
+    const existingUser = await db.query.profiles.findFirst({
+      where: and(
+        eq(profiles.phone, cleanPhone),
+        eq(profiles.role, "user"),
+        ne(profiles.id, profile.id)
+      ),
+    });
+
+    if (existingUser) {
+      return { error: "Nomor WhatsApp ini sudah digunakan oleh pemohon lain." };
+    }
+
     await db
       .update(profiles)
       .set({
@@ -47,9 +61,81 @@ export async function completeProfileAction(formData: FormData) {
     return { success: true };
   } catch (err: any) {
     console.error("Complete profile error:", err);
-    if (err.message?.includes("ptsp_profiles_phone_key") || err.message?.includes("unique constraint")) {
+    const errString = String(err) + String(err.cause);
+    if (
+      errString.includes("ptsp_profiles_phone_unique") ||
+      errString.includes("ptsp_profiles_phone_key") ||
+      err.code === "23505" ||
+      err.cause?.code === "23505" ||
+      errString.includes("unique constraint")
+    ) {
       return { error: "Nomor WhatsApp ini sudah digunakan oleh akun lain." };
     }
     return { error: "Terjadi kesalahan saat menyimpan profil: " + err.message };
+  }
+}
+
+export async function updatePegawaiPhoneAction(formData: FormData) {
+  try {
+    const profile = await requireAuth(true); // Allow incomplete to let them in to update
+
+    if (!profile) {
+      return { error: "Sesi tidak valid. Silakan login kembali." };
+    }
+
+    const phone = formData.get("phone") as string;
+
+    if (!phone) {
+      return { error: "Nomor WhatsApp wajib diisi." };
+    }
+
+    let cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "62" + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith("62")) {
+      cleanPhone = "62" + cleanPhone;
+    }
+
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      return { error: "Format nomor WhatsApp tidak valid." };
+    }
+
+    // Cek apakah nomor sudah digunakan oleh pegawai lain
+    const existingPegawai = await db.query.profiles.findFirst({
+      where: and(
+        eq(profiles.phone, cleanPhone),
+        ne(profiles.role, "user"),
+        ne(profiles.id, profile.id)
+      ),
+    });
+
+    if (existingPegawai) {
+      return { error: "Nomor WhatsApp ini sudah digunakan oleh pegawai lain." };
+    }
+
+    await db
+      .update(profiles)
+      .set({
+        phone: cleanPhone,
+        updatedAt: new Date(),
+      })
+      .where(eq(profiles.id, profile.id));
+
+    revalidatePath("/pegawai/profil");
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Update pegawai phone error:", err);
+    const errString = String(err) + String(err.cause);
+    if (
+      errString.includes("ptsp_profiles_phone_unique") ||
+      errString.includes("ptsp_profiles_phone_key") ||
+      err.code === "23505" ||
+      err.cause?.code === "23505" ||
+      errString.includes("unique constraint")
+    ) {
+      return { error: "Nomor WhatsApp ini sudah digunakan oleh akun lain." };
+    }
+    return { error: "Terjadi kesalahan saat menyimpan nomor WA: " + err.message };
   }
 }

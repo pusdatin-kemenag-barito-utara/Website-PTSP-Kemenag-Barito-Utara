@@ -28,6 +28,36 @@ export function AuthCardMotion({
   );
 }
 
+export function AuthPageSwipeMotion({
+  children,
+  direction = "left",
+}: {
+  children: ReactNode;
+  direction?: "left" | "right";
+}) {
+  return (
+    <m.div
+      initial={{ 
+        opacity: 0, 
+        x: direction === "left" ? "-15vw" : "15vw",
+        scale: 0.98
+      }}
+      animate={{ 
+        opacity: 1, 
+        x: 0,
+        scale: 1
+      }}
+      transition={{ 
+        duration: 0.8, 
+        ease: [0.22, 1, 0.36, 1] // Very smooth Apple-like cubic bezier
+      }}
+      className="w-full h-full flex flex-col md:flex-row min-h-screen relative"
+    >
+      {children}
+    </m.div>
+  );
+}
+
 // Floating particle dots for background ambiance
 const PARTICLES = [
   { size: 4, x: "10%", y: "15%", delay: 0, duration: 6 },

@@ -21,6 +21,8 @@ const serviceSchema = z.object({
   isActive: z.boolean(),
   roleOwner: z.string().optional().nullable(),
   category: z.string().optional(),
+  requirementsText: z.string().optional().nullable(),
+  sopUrl: z.string().optional().nullable(),
   requestCode: z.string().optional().nullable(),
 });
 
@@ -51,6 +53,8 @@ export async function createServiceAction(formData: FormData): Promise<ActionRes
       isActive: formData.get("isActive") === "on",
       roleOwner: formData.get("roleOwner") ? String(formData.get("roleOwner")) : null,
       category: formData.get("category") ? String(formData.get("category")) : "public",
+      requirementsText: formData.get("requirementsText") ? String(formData.get("requirementsText")) : null,
+      sopUrl: formData.get("sopUrl") ? String(formData.get("sopUrl")) : null,
       requestCode: formData.get("requestCode") ? String(formData.get("requestCode")) : null,
     });
 
@@ -73,7 +77,9 @@ export async function createServiceAction(formData: FormData): Promise<ActionRes
     });
 
     revalidatePath("/admin/layanan");
+    revalidatePath("/admin/layanan-asn");
     revalidatePath("/layanan");
+    revalidatePath("/layanan-pegawai");
     await emitRefreshSignal();
 
     return { success: true, message: "Layanan berhasil dibuat" };
@@ -109,6 +115,8 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
       isActive: formData.get("isActive") === "on",
       roleOwner: formData.get("roleOwner") ? String(formData.get("roleOwner")) : null,
       category: formData.get("category") ? String(formData.get("category")) : "public",
+      requirementsText: formData.get("requirementsText") ? String(formData.get("requirementsText")) : null,
+      sopUrl: formData.get("sopUrl") ? String(formData.get("sopUrl")) : null,
       requestCode: formData.get("requestCode") ? String(formData.get("requestCode")) : null,
     });
 
@@ -131,7 +139,9 @@ export async function updateServiceAction(formData: FormData): Promise<ActionRes
     });
 
     revalidatePath("/admin/layanan");
+    revalidatePath("/admin/layanan-asn");
     revalidatePath("/layanan");
+    revalidatePath("/layanan-pegawai");
     await emitRefreshSignal();
 
     return { success: true, message: "Layanan berhasil diperbarui" };

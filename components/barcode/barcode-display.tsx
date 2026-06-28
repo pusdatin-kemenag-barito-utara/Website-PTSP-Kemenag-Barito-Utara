@@ -81,6 +81,7 @@ export function BarcodeDisplay({
               width={64}
               height={64}
               className="w-16 h-16 print:w-20 print:h-20"
+              style={{ width: "auto", height: "auto" }}
               priority
             />
           </div>
@@ -105,6 +106,7 @@ export function BarcodeDisplay({
                 width={48}
                 height={48}
                 className="w-12 h-12 print:w-16 print:h-16"
+                style={{ width: "auto", height: "auto" }}
               />
             </div>
           </div>

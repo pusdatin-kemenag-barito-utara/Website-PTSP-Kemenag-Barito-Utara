@@ -44,6 +44,8 @@ export function LayananClient({
     slug: "",
     isActive: true,
     roleOwner: "",
+    requirementsText: "",
+    sopUrl: "",
   });
 
   useEffect(() => {
@@ -66,6 +68,8 @@ export function LayananClient({
       slug: service.slug,
       isActive: service.isActive,
       roleOwner: service.roleOwner || "",
+      requirementsText: service.requirementsText || "",
+      sopUrl: service.sopUrl || "",
     });
   };
 
@@ -79,6 +83,8 @@ export function LayananClient({
     data.append("slug", formData.slug);
     if (formData.isActive) data.append("isActive", "on");
     if (formData.roleOwner) data.append("roleOwner", formData.roleOwner);
+    if (formData.requirementsText) data.append("requirementsText", formData.requirementsText);
+    if (formData.sopUrl) data.append("sopUrl", formData.sopUrl);
     if (category) data.append("category", category);
     if (bannerFile) data.append("banner", bannerFile);
 
@@ -97,7 +103,7 @@ export function LayananClient({
         });
         setIsAddOpen(false);
         setEditingService(null);
-        setFormData({ name: "", slug: "", isActive: true, roleOwner: "" });
+        setFormData({ name: "", slug: "", isActive: true, roleOwner: "", requirementsText: "", sopUrl: "" });
       } else {
         toast.error(result.error || "Gagal menyimpan data.");
       }
@@ -177,8 +183,9 @@ export function LayananClient({
               name: "",
               slug: "",
               isActive: true,
-              // Jika bukan super admin, pre-fill roleOwner dengan role bidang yang sedang login
               roleOwner: isSuperAdmin ? "" : currentUserRole,
+              requirementsText: "",
+              sopUrl: "",
             });
             setIsAddOpen(true);
           }}

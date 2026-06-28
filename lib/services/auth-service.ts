@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { profiles as profilesTable } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export class AuthService {
@@ -18,10 +18,13 @@ export class AuthService {
 
     // 1. Check uniqueness
     const existing = await db.query.profiles.findFirst({
-      where: eq(profilesTable.phone, phone),
+      where: and(
+        eq(profilesTable.phone, phone),
+        eq(profilesTable.role, "user")
+      ),
       columns: { id: true },
     });
-    if (existing) throw new Error("Nomor WhatsApp sudah terdaftar.");
+    if (existing) throw new Error("Nomor WhatsApp sudah terdaftar sebagai pemohon.");
 
     // 2. Format internal email
     const digits = phone.replace(/\D/g, "");
@@ -71,10 +74,13 @@ export class AuthService {
     }
 
     const existing = await db.query.profiles.findFirst({
-      where: eq(profilesTable.phone, phone),
+      where: and(
+        eq(profilesTable.phone, phone),
+        ne(profilesTable.role, "user")
+      ),
       columns: { id: true },
     });
-    if (existing) throw new Error("Nomor WhatsApp sudah terdaftar.");
+    if (existing) throw new Error("Nomor WhatsApp sudah terdaftar sebagai pegawai.");
 
     const digits = phone.replace(/\D/g, "");
     const internalEmail = `staff_${digits}@ptsp.id`;
