@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { UserCircle2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { Suspense } from "react";
 import { AuthCardMotion, AuthBgMotionPemohon, AuthPageSwipeMotion } from "@/components/auth/auth-motion-wrapper";
 import { PemohonLengkapiWaForm } from "@/components/auth/pemohon-lengkapi-wa-form";
 
@@ -87,7 +88,9 @@ export default function LengkapiWaPage() {
 
             {/* Form area */}
             <div className="px-6 sm:px-8 pb-5 sm:pb-6">
-              <PemohonLengkapiWaForm />
+              <Suspense fallback={<div className="flex justify-center py-8"><div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600" /></div>}>
+                <PemohonLengkapiWaForm />
+              </Suspense>
             </div>
           </div>
         </AuthCardMotion>
