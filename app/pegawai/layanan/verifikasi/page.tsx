@@ -1,7 +1,7 @@
 import { getVerifikasiCutiAtasan } from "@/lib/actions/pegawai/cuti-approval";
 import { getCurrentProfile } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { dataPejabat } from "@/lib/db/schema/pejabat";
+import { profilesPegawai } from "@/lib/db/schema/auth";
 import VerifikasiClient from "./components/verifikasi-client";
 
 export const metadata = {
@@ -24,7 +24,7 @@ export default async function VerifikasiCutiPage() {
 
   const pengajuanData = result.data || [];
   const atasanProfile = await getCurrentProfile();
-  const pejabatList = await db.query.dataPejabat.findMany();
+  const pejabatList = await db.query.profilesPegawai.findMany();
 
   return (
     <div className="space-y-6">

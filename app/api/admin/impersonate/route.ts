@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSuperAdmin } from "@/lib/constants";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, profilesPegawai } from "@/lib/db/schema";
 import { eq, or, ilike } from "drizzle-orm";
 
 /**
@@ -46,12 +46,13 @@ export async function GET(request: NextRequest) {
     .select({
       fullName: profiles.fullName,
       email: profiles.email,
-      jabatan: profiles.jabatan,
-      unitKerja: profiles.unitKerja,
+      jabatan: profilesPegawai.jabatan,
+      unitKerja: profilesPegawai.unitKerja,
       role: profiles.role,
     })
     .from(profiles)
-    .where(or(eq(profiles.nip, nip), ilike(profiles.email, `${nip}@%`)))
+    .leftJoin(profilesPegawai, eq(profiles.id, profilesPegawai.profileId))
+    .where(ilike(profiles.email, `${nip}@%`))
     .limit(1);
 
   if (!profile) {

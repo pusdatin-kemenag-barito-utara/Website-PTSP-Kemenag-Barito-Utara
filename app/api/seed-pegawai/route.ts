@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, profilesPegawai } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -85,9 +85,13 @@ export async function GET() {
           await db.update(profiles).set({
             fullName: nama,
             role: "pegawai",
-            unitKerja: jabatan,
             permissions: ["e_laporan_kinerja"],
           }).where(eq(profiles.id, authData.user.id));
+          await db.insert(profilesPegawai).values({
+            profileId: authData.user.id,
+            nip: nip,
+            unitKerja: jabatan,
+          });
           successCount++;
         } catch (dbErr: any) {
           errorCount++;

@@ -1,19 +1,11 @@
 import { db } from "@/lib/db";
 import { pengajuanCuti, dataCutiPegawai, rekapCutiTahunan } from "@/lib/db/schema/kepegawaian";
 import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
+import { profilesPegawai } from "@/lib/db/schema/auth";
 import { eq, and, gte, count, desc, sql } from "drizzle-orm";
 import { isSuperAdmin } from "@/lib/constants";
 
-const PEJABAT_NIPS = [
-  "197809042007101005",
-  "198110082005011002",
-  "197101231998031004",
-  "197304062005011008",
-  "198002022005011008",
-  "197011032003121002",
-  "198210022009011011",
-  "197311212001121001",
-];
+
 
 const KEPALA_KANTOR_NIP = "197311212001121001";
 
@@ -58,10 +50,16 @@ export async function getPegawaiDashboardData(): Promise<PegawaiDashboardData> {
 
   if (!user || !profile) return defaultData;
 
-  const nip = profile.nip || (profile.email ? profile.email.split("@")[0] : "");
+  const nip = profile.email ? profile.email.split("@")[0] : "";
+  const [profilePegawai] = await db
+    .select()
+    .from(profilesPegawai)
+    .where(eq(profilesPegawai.nip, nip));
+
+  const isAtasanLangsung = profilePegawai?.tipePejabat === "Atasan Langsung";
   const superAdmin = isSuperAdmin(profile.email);
-  const isPejabat = superAdmin || PEJABAT_NIPS.includes(nip);
   const isKepalaKantor = superAdmin || nip === KEPALA_KANTOR_NIP || profile.role === "kepala_kantor";
+  const isPejabat = superAdmin || isAtasanLangsung || isKepalaKantor;
 
   const currentYear = new Date().getFullYear();
   const firstDayOfMonth = new Date();
@@ -135,25 +133,35 @@ export async function getPegawaiDashboardData(): Promise<PegawaiDashboardData> {
     let pendingKepalaCount = 0;
 
     if (isPejabat) {
+      const atasanConditions: any[] = [
+        eq(pengajuanCuti.statusAtasan, "pending"),
+        eq(pengajuanCuti.status, "pending"),
+      ];
+      
+      const kepalaConditions: any[] = [
+        eq(pengajuanCuti.statusKepala, "pending"),
+        eq(pengajuanCuti.statusAtasan, "approved"),
+        eq(pengajuanCuti.status, "pending"),
+      ];
+
+      if (!superAdmin) {
+        if (isAtasanLangsung && profilePegawai?.unitKerja) {
+          atasanConditions.push(eq(pengajuanCuti.unitKerja, profilePegawai.unitKerja));
+        }
+      }
+
       const [atasanResult, kepalaResult] = await Promise.all([
-        db.select({ value: count() })
-          .from(pengajuanCuti)
-          .where(
-            and(
-              eq(pengajuanCuti.statusAtasan, "pending"),
-              eq(pengajuanCuti.status, "pending"),
-            ),
-          ),
-        db.select({ value: count() })
-          .from(pengajuanCuti)
-          .where(
-            and(
-              eq(pengajuanCuti.statusKepala, "pending"),
-              eq(pengajuanCuti.statusAtasan, "approved"),
-              eq(pengajuanCuti.status, "pending"),
-            ),
-          ),
+        // Only count atasan if they are atasan langsung or super admin
+        (superAdmin || (isAtasanLangsung && profilePegawai?.unitKerja)) 
+          ? db.select({ value: count() }).from(pengajuanCuti).where(and(...atasanConditions))
+          : Promise.resolve([{ value: 0 }]),
+          
+        // Only count kepala if they are kepala kantor or super admin
+        (superAdmin || isKepalaKantor)
+          ? db.select({ value: count() }).from(pengajuanCuti).where(and(...kepalaConditions))
+          : Promise.resolve([{ value: 0 }]),
       ]);
+      
       pendingAtasanCount = Number(atasanResult[0]?.value ?? 0);
       pendingKepalaCount = Number(kepalaResult[0]?.value ?? 0);
     }

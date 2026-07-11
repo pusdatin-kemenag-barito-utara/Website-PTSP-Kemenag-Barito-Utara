@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { profiles as profilesTable } from "@/lib/db/schema";
+import { profiles as profilesTable, profilesPemohon } from "@/lib/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -51,11 +51,22 @@ export class AuthService {
           phone,
           address,
           role: "user",
+          userType: "eksternal_masyarakat",
         })
         .onConflictDoUpdate({
           target: profilesTable.id,
-          set: { fullName, email: internalEmail, phone, address, updatedAt: new Date() },
+          set: { fullName, email: internalEmail, phone, address, userType: "eksternal_masyarakat", updatedAt: new Date() },
         });
+
+      await db
+        .insert(profilesPemohon)
+        .values({
+          profileId: authUser.user.id,
+          fullName,
+          noHp: phone,
+          alamat: address,
+        });
+
     } catch (err) {
       await admin.auth.admin.deleteUser(authUser.user.id);
       throw err;

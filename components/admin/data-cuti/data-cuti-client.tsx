@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 interface RekapCuti {
   id: string;
   tahunTarget: number;
-  sisaCutiLalu: number | null;
   cutiTahun1: number | null;
   cutiTahun2: number | null;
   jumlahCuti: number | null;

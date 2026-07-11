@@ -179,9 +179,9 @@ export class SystemService {
     if (q) {
       filters.push(
         or(
-          ilike(auditLogsTable.entityType, `%${q}%`),
+          ilike(auditLogsTable.target, `%${q}%`),
           ilike(auditLogsTable.action, `%${q}%`),
-          sql`EXISTS (SELECT 1 FROM ${profilesTable} WHERE ${profilesTable.id} = ${auditLogsTable.adminId} AND (${ilike(profilesTable.fullName, `%${q}%`)} OR ${ilike(profilesTable.email, `%${q}%`)}))`
+          sql`EXISTS (SELECT 1 FROM ${profilesTable} WHERE ${profilesTable.id} = ${auditLogsTable.performedBy} AND (${ilike(profilesTable.fullName, `%${q}%`)} OR ${ilike(profilesTable.email, `%${q}%`)}))`
         )
       );
     }
@@ -189,13 +189,13 @@ export class SystemService {
       filters.push(ilike(auditLogsTable.action, `%${action}%`));
     }
     if (from) {
-      filters.push(sql`${auditLogsTable.createdAt} >= ${from}::timestamp`);
+      filters.push(sql`${auditLogsTable.timestamp} >= ${from}::timestamp`);
     }
     if (to) {
-      filters.push(sql`${auditLogsTable.createdAt} <= ${to}::timestamp + interval '1 day'`);
+      filters.push(sql`${auditLogsTable.timestamp} <= ${to}::timestamp + interval '1 day'`);
     }
     if (entityType && entityType !== "all") {
-      filters.push(eq(auditLogsTable.entityType, entityType));
+      filters.push(eq(auditLogsTable.target, entityType));
     }
 
     const whereClause = filters.length > 0 ? and(...filters) : undefined;
@@ -206,7 +206,7 @@ export class SystemService {
         with: {
           profile: { columns: { fullName: true, email: true, role: true } },
         },
-        orderBy: [desc(auditLogsTable.createdAt)],
+        orderBy: [desc(auditLogsTable.timestamp)],
         limit: pageSize,
         offset: offset,
       }),
@@ -230,9 +230,9 @@ export class SystemService {
     if (q) {
       filters.push(
         or(
-          ilike(auditLogsTable.entityType, `%${q}%`),
+          ilike(auditLogsTable.target, `%${q}%`),
           ilike(auditLogsTable.action, `%${q}%`),
-          sql`EXISTS (SELECT 1 FROM ${profilesTable} WHERE ${profilesTable.id} = ${auditLogsTable.adminId} AND (${ilike(profilesTable.fullName, `%${q}%`)} OR ${ilike(profilesTable.email, `%${q}%`)}))`
+          sql`EXISTS (SELECT 1 FROM ${profilesTable} WHERE ${profilesTable.id} = ${auditLogsTable.performedBy} AND (${ilike(profilesTable.fullName, `%${q}%`)} OR ${ilike(profilesTable.email, `%${q}%`)}))`
         )
       );
     }
@@ -240,13 +240,13 @@ export class SystemService {
       filters.push(ilike(auditLogsTable.action, `%${action}%`));
     }
     if (from) {
-      filters.push(sql`${auditLogsTable.createdAt} >= ${from}::timestamp`);
+      filters.push(sql`${auditLogsTable.timestamp} >= ${from}::timestamp`);
     }
     if (to) {
-      filters.push(sql`${auditLogsTable.createdAt} <= ${to}::timestamp + interval '1 day'`);
+      filters.push(sql`${auditLogsTable.timestamp} <= ${to}::timestamp + interval '1 day'`);
     }
     if (entityType && entityType !== "all") {
-      filters.push(eq(auditLogsTable.entityType, entityType));
+      filters.push(eq(auditLogsTable.target, entityType));
     }
 
     const whereClause = filters.length > 0 ? and(...filters) : undefined;
@@ -256,7 +256,7 @@ export class SystemService {
       with: {
         profile: { columns: { fullName: true, email: true, role: true } },
       },
-      orderBy: [desc(auditLogsTable.createdAt)],
+      orderBy: [desc(auditLogsTable.timestamp)],
     });
 
     return data.map((log: any) => ({

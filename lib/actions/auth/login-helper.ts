@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, profilesPemohon } from "@/lib/db/schema";
 import { eq, or } from "drizzle-orm";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 
@@ -11,18 +11,27 @@ export async function getEmailByPhoneAction(phone: string) {
   const digits = phone.replace(/\D/g, "");
   const formats = [digits, `0${digits}`, `62${digits}`];
 
-  const profile = await db.query.profiles.findFirst({
-    where: or(...formats.map((f) => eq(profiles.phone, f))),
-    columns: { email: true },
-  });
+  try {
+    const rows = await db
+      .select({ email: profiles.email })
+      .from(profiles)
+      .innerJoin(profilesPemohon, eq(profiles.id, profilesPemohon.profileId))
+      .where(or(...formats.map((f) => eq(profilesPemohon.noHp, f))))
+      .limit(1);
 
-  if (!profile) {
-    return {
-      error: "Nomor WhatsApp tidak ditemukan. Pastikan sudah terdaftar.",
-    };
+    const profile = rows[0];
+
+    if (!profile) {
+      return {
+        error: "Nomor WhatsApp tidak ditemukan. Pastikan sudah terdaftar.",
+      };
+    }
+
+    return { email: profile.email };
+  } catch (err) {
+    console.error("getEmailByPhoneAction query error:", err);
+    return { error: "Sistem belum siap atau terjadi kesalahan saat mencari akun." };
   }
-
-  return { email: profile.email };
 }
 
 export async function verifyTurnstileAction(token: string) {
@@ -48,11 +57,17 @@ export async function handlePegawaiLoginAction(nip: string, password?: string, t
   const pseudoEmail = `${nip}@kemenag.go.id`;
   const defaultPassword = `${nip}barut`;
 
-  // Cek apakah akun sudah pernah dibuat
-  const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.email, pseudoEmail),
-    columns: { email: true },
-  });
+  let profile;
+  try {
+    // Cek apakah akun sudah pernah dibuat
+    profile = await db.query.profiles.findFirst({
+      where: eq(profiles.email, pseudoEmail),
+      columns: { email: true },
+    });
+  } catch (err) {
+    console.error("handlePegawaiLoginAction query error:", err);
+    return { error: "Sistem belum siap atau terjadi kesalahan saat mencari akun pegawai." };
+  }
 
   if (profile) {
     // Jika sudah ada, kembalikan email agar frontend bisa login dengan signInWithPassword

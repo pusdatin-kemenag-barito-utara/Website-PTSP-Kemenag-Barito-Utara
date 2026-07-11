@@ -12,7 +12,7 @@ export function UserStatCards({
   };
 }) {
   return (
-    <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
       {[
         {
           label: "Total Pengguna",
@@ -26,12 +26,7 @@ export function UserStatCards({
           icon: Crown,
           color: "bg-amber-100 text-amber-600",
         },
-        {
-          label: "Admin / Petugas",
-          value: stats.admin,
-          icon: UserCheck,
-          color: "bg-emerald-100 text-emerald-600",
-        },
+
         {
           label: "Pegawai",
           value: stats.pegawai,

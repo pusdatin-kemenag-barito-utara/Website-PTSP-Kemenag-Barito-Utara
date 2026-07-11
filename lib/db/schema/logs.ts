@@ -12,8 +12,8 @@ import { relations } from "drizzle-orm";
 import { profiles } from "./auth";
 import { serviceRequests } from "./requests";
 
-import { ptspSchema } from "./schema";
-export const activityLogs = ptspSchema.table("ptsp_activity_logs", {
+import { ptspSchema, pusdatinSchema } from "./schema";
+export const activityLogs = pusdatinSchema.table("ptsp_activity_logs", {
   id: bigint("id", { mode: "bigint" })
     .primaryKey()
     .generatedByDefaultAsIdentity({ name: "activity_logs_id_seq" }),
@@ -28,20 +28,17 @@ export const activityLogs = ptspSchema.table("ptsp_activity_logs", {
     .defaultNow(),
 }).enableRLS();
 
-export const auditLogs = ptspSchema.table("ptsp_audit_logs", {
-  id: bigserial("id", { mode: "bigint" }).primaryKey().notNull(),
-  adminId: uuid("admin_id")
-    .notNull()
-    .references(() => profiles.id, { onDelete: "cascade" }),
+export const auditLogs = pusdatinSchema.table("audit_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
   action: text("action").notNull(),
-  entityType: text("entity_type"),
-  entityId: text("entity_id"),
-  details: jsonb("details"),
-  ipAddress: text("ip_address"),
-  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
-    .notNull()
-    .defaultNow(),
-}).enableRLS();
+  target: text("target").notNull(),
+  targetSchema: text("target_schema"),
+  performedBy: text("performed_by").notNull(),
+  beforeState: jsonb("before_state"),
+  afterState: jsonb("after_state"),
+  ip: text("ip"),
+  timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const systemStatus = ptspSchema.table("ptsp_system_status", {
   id: text("id").primaryKey().default("heartbeat"),

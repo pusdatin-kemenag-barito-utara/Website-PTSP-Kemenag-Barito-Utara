@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { systemStatus, auditLogs } from "@/lib/db/schema";
+import { systemStatus, auditLogs, satelliteApps } from "@/lib/db/schema";
 import { requirePermission } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -19,17 +19,18 @@ export type MaintenanceStatus = {
  */
 export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
   try {
+    const [app] = await db.select({ status: satelliteApps.status, lastHealthCheck: satelliteApps.lastHealthCheck }).from(satelliteApps).where(eq(satelliteApps.id, "ptsp-kemenag"));
+    
+    // We still need AI chat from systemStatus since that's a local feature
     const result = await db.query.systemStatus.findFirst({
       where: eq(systemStatus.id, "maintenance"),
     });
 
     return {
-      enabled: result?.maintenanceMode ?? false,
-      message:
-        result?.maintenanceMessage ??
-        "Sistem sedang dalam pemeliharaan berkala. Silakan kembali beberapa saat lagi.",
-      startedAt: result?.maintenanceStartedAt ?? null,
-      startedBy: result?.maintenanceStartedBy ?? null,
+      enabled: app?.status === "maintenance",
+      message: "Sistem sedang dalam pemeliharaan berkala. Silakan kembali beberapa saat lagi.",
+      startedAt: app?.lastHealthCheck ?? null,
+      startedBy: null, // we don't store startedBy in satelliteApps currently
       aiChatEnabled: result?.aiChatEnabled ?? true,
     };
   } catch {
@@ -57,32 +58,22 @@ export async function toggleMaintenanceAction(
     const defaultMessage =
       "Sistem sedang dalam pemeliharaan berkala. Silakan kembali beberapa saat lagi.";
 
+    // Update centralized satelliteApps
     await db
-      .insert(systemStatus)
-      .values({
-        id: "maintenance",
-        maintenanceMode: enabled,
-        maintenanceMessage: message || defaultMessage,
-        maintenanceStartedAt: enabled ? new Date() : null,
-        maintenanceStartedBy: enabled ? profile.id : null,
+      .update(satelliteApps)
+      .set({
+        status: enabled ? "maintenance" : "online",
+        lastHealthCheck: new Date(),
       })
-      .onConflictDoUpdate({
-        target: systemStatus.id,
-        set: {
-          maintenanceMode: enabled,
-          maintenanceMessage: message || defaultMessage,
-          maintenanceStartedAt: enabled ? new Date() : null,
-          maintenanceStartedBy: enabled ? profile.id : null,
-        },
-      });
+      .where(eq(satelliteApps.id, "ptsp-kemenag"));
 
     // Log audit
     await db.insert(auditLogs).values({
-      adminId: profile.id,
+      performedBy: profile.id,
       action: enabled ? "MAINTENANCE_ON" : "MAINTENANCE_OFF",
-      entityType: "system",
-      entityId: "maintenance",
-      details: {
+      target: "system",
+      afterState: {
+        entityId: "maintenance",
         message: message || defaultMessage,
         action: enabled ? "Mengaktifkan Mode Pemeliharaan" : "Menonaktifkan Mode Pemeliharaan",
       },
@@ -94,7 +85,7 @@ export async function toggleMaintenanceAction(
     return {
       success: true,
       message: enabled
-        ? "Mode Pemeliharaan telah diaktifkan. Seluruh halaman publik kini menampilkan halaman pemeliharaan."
+        ? "Mode Pemeliharaan telah diaktifkan secara terpusat. Seluruh halaman publik kini menampilkan halaman pemeliharaan."
         : "Mode Pemeliharaan telah dinonaktifkan. Website kembali normal.",
     };
   } catch (error: any) {
@@ -128,11 +119,11 @@ export async function toggleAIChatAction(enabled: boolean) {
 
     // Log audit
     await db.insert(auditLogs).values({
-      adminId: profile.id,
+      performedBy: profile.id,
       action: enabled ? "AI_CHAT_ON" : "AI_CHAT_OFF",
-      entityType: "system",
-      entityId: "ai_chat",
-      details: {
+      target: "system",
+      afterState: {
+        entityId: "ai_chat",
         action: enabled ? "Mengaktifkan AI Chat Widget" : "Menonaktifkan AI Chat Widget",
       },
     });

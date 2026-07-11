@@ -41,10 +41,11 @@ export default async function PegawaiServiceDetailPage({
     let sisaCutiData = { n: "0", n1: "0", n2: "0" };
 
     // Ambil data sisa cuti jika punya NIP
-    if (profile?.nip) {
+    const nip = profile?.email ? profile.email.split("@")[0] : null;
+    if (nip) {
       try {
         const cutiPegawai = await db.query.dataCutiPegawai.findFirst({
-          where: eq(dataCutiPegawai.nip, profile.nip),
+          where: eq(dataCutiPegawai.nip, nip),
         });
 
         if (cutiPegawai) {

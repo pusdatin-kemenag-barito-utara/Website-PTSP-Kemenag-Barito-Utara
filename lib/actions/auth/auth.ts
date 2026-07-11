@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { isSuperAdmin, ALL_ADMIN_MENUS } from "@/lib/constants";
+import { profiles, appPermissions } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
+import { isSuperAdmin, ALL_ADMIN_MENUS, isAdminRole } from "@/lib/constants";
 
 export async function getProfileAfterLoginAction(userId: string) {
   if (!userId) return { error: "ID pengguna tidak valid." };
@@ -14,6 +14,7 @@ export async function getProfileAfterLoginAction(userId: string) {
       columns: {
         role: true,
         isVerified: true,
+        email: true,
       },
     });
 
@@ -59,11 +60,36 @@ export async function getProfileAfterLoginAction(userId: string) {
       return { error: "Profil tidak ditemukan." };
     }
 
+    // Pengecekan RBAC dari tabel app_permissions
+    if (isAdminRole(profile.role) && !isSuperAdmin(profile.email)) {
+      // Cari ID dari aplikasi PTSP secara dinamis (mengandung kata PTSP)
+      const ptspApp = await db.query.satelliteApps.findFirst({
+        where: (apps, { ilike }) => ilike(apps.name, "%PTSP%")
+      });
+      const appId = ptspApp?.id || "ptsp";
+
+      const rbac = await db.query.appPermissions.findFirst({
+        where: and(
+          eq(appPermissions.userId, userId),
+          eq(appPermissions.appId, appId)
+        )
+      });
+      
+      if (!rbac || rbac.role === "none" || rbac.role === "viewer") {
+         return { error: "Akun Anda belum diberikan akses (RBAC) sebagai Operator ke aplikasi PTSP. Hubungi Super Admin." };
+      }
+    }
+
     return { data: profile };
   } catch (err: any) {
-    return { error: err.message };
+    console.error("Profile query error:", err);
+    if (err.message && err.message.toLowerCase().includes("timeout")) {
+      return { error: "Gagal terhubung ke database (koneksi timeout). Server sedang sibuk, silakan refresh." };
+    }
+    return { error: err.message || "Akun Anda belum dikonfigurasi (RBAC) atau tidak memiliki akses ke layanan petugas." };
   }
 }
+
 
 export async function updatePasswordHashAction(
   userId: string,

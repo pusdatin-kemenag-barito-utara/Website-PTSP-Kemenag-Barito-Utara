@@ -16,7 +16,8 @@ export function PegawaiLengkapiWaForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone || phone.length < 10) {
+    const rawPhone = phone.replace(/\D/g, "");
+    if (!rawPhone || rawPhone.length < 10) {
       return setError("Masukkan nomor WhatsApp yang valid.");
     }
 
@@ -24,7 +25,7 @@ export function PegawaiLengkapiWaForm() {
     setError("");
 
     const formData = new FormData();
-    formData.append("phone", phone);
+    formData.append("phone", rawPhone);
 
     const result = await updatePegawaiPhoneAction(formData);
 
@@ -38,6 +39,12 @@ export function PegawaiLengkapiWaForm() {
       // Redirect to admin dashboard after completion
       router.push("/admin");
     }
+  };
+
+  const formatPhone = (val: string) => {
+    const digits = val.replace(/\D/g, "");
+    const match = digits.match(/.{1,4}/g);
+    return match ? match.join("-") : "";
   };
 
   return (
@@ -58,8 +65,8 @@ export function PegawaiLengkapiWaForm() {
             type="tel"
             inputMode="numeric"
             value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-            placeholder="Nomor WhatsApp (Contoh: 0812345...)"
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
+            placeholder="Nomor WhatsApp (Contoh: 0812-3456-...)"
             className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 transition-all"
           />
         </div>
@@ -72,7 +79,7 @@ export function PegawaiLengkapiWaForm() {
 
         <Button
           type="submit"
-          disabled={loading || phone.length < 10}
+          disabled={loading || phone.replace(/\D/g, "").length < 10}
           className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#047857] to-[#059669] hover:from-[#064e3b] hover:to-[#047857] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
         >
           {loading ? (

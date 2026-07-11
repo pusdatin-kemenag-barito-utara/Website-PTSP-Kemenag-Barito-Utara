@@ -21,12 +21,12 @@ export async function createAuditLog({
     const ip = rawIp.split(",")[0]?.trim() || "unknown";
 
     await db.insert(auditLogs).values({
-      adminId,
       action,
-      entityType,
-      entityId,
-      details: details || {},
-      ipAddress: ip,
+      target: entityType && entityId ? `${entityType} ${entityId}` : (entityType || entityId || "System"),
+      targetSchema: "kemenag_ptsp",
+      performedBy: adminId,
+      afterState: details || {},
+      ip: ip,
     });
   } catch (error) {
     console.error("Failed to create audit log:", error);

@@ -10,6 +10,7 @@ import {
   serviceRequirements as serviceRequirementsTable,
   serviceRequestAnswers as serviceRequestAnswersTable,
   profiles as profilesTable,
+  profilesPegawai as profilesPegawaiTable,
   serviceItems as serviceItemsTable,
 } from "@/lib/db/schema";
 import { pengajuanCuti } from "@/lib/db/schema/kepegawaian";
@@ -36,7 +37,7 @@ export class RequestApplicantService {
   }) {
     const { userId, serviceId, serviceItemId, formData } = params;
 
-    const [fields, requirements, userProfile] = await Promise.all([
+    const [fields, requirements, userProfile, profilePegawai] = await Promise.all([
       db.query.serviceFormFields.findMany({
         where: eq(serviceFormFieldsTable.serviceItemId, serviceItemId),
         orderBy: [asc(serviceFormFieldsTable.sortOrder)],
@@ -47,7 +48,11 @@ export class RequestApplicantService {
       }),
       db.query.profiles.findFirst({
         where: eq(profilesTable.id, userId),
-        columns: { fullName: true, phone: true, unitKerja: true },
+        columns: { fullName: true, phone: true },
+      }),
+      db.query.profilesPegawai.findFirst({
+        where: eq(profilesPegawaiTable.profileId, userId),
+        columns: { unitKerja: true },
       }),
     ]);
 
@@ -110,7 +115,7 @@ export class RequestApplicantService {
 
       cutiInsertData = {
         userId,
-        unitKerja: unitKerjaForm || userProfile?.unitKerja || "",
+        unitKerja: unitKerjaForm || profilePegawai?.unitKerja || "",
         jenisCuti,
         tanggalMulai,
         tanggalSelesai,

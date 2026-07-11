@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/lib/db';
-import { auditLogs } from '@/lib/db/schema';
+import { auditLogs, profilesPemohon, profiles } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -29,12 +30,41 @@ export async function GET(request: Request) {
       const forwarded = request.headers.get('x-forwarded-for') || "";
       const ip = forwarded.split(",")[0]?.trim() || "unknown";
       db.insert(auditLogs).values({
-        adminId: user.id,
+        performedBy: user.id,
         action: "LOGIN_OAUTH",
-        entityType: "auth",
-        entityId: user.id,
-        ipAddress: ip,
+        target: "auth",
+        afterState: { userId: user.id },
+        ip: ip,
       }).catch(() => {});
+
+      // Hitung origin dengan benar untuk reverse proxy
+      let baseOrigin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
+      if (!baseOrigin) {
+        const forwardedHost = request.headers.get('x-forwarded-host');
+        const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+        baseOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : url.origin;
+      }
+
+      // Cek apakah ini pemohon (role = user) dan butuh melengkapi data WA
+      try {
+        const profile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, user.id),
+          columns: { role: true },
+        });
+
+        if (!profile || profile.role === "user") {
+          const pemohon = await db.query.profilesPemohon.findFirst({
+            where: eq(profilesPemohon.profileId, user.id),
+          });
+
+          if (!pemohon || !pemohon.noHp) {
+            return NextResponse.redirect(new URL(`/login/pemohon/lengkapi-wa?next=${encodeURIComponent(safeNext)}`, baseOrigin));
+          }
+        }
+      } catch (checkErr) {
+        console.error("Error checking pemohon completeness:", checkErr);
+      }
+
     } else {
       console.error("Auth callback error:", error.message);
       let redirectOrigin = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || url.origin;

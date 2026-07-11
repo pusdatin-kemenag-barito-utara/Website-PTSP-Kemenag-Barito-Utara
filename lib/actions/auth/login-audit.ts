@@ -16,11 +16,11 @@ export async function logLoginAction() {
     const ip = rawIp.split(",")[0]?.trim() || "unknown";
 
     await db.insert(auditLogs).values({
-      adminId: user.id,
+      performedBy: user.id,
       action: "LOGIN_SUCCESS",
-      entityType: "auth",
-      entityId: user.id,
-      ipAddress: ip,
+      target: "auth",
+      afterState: { userId: user.id },
+      ip: ip,
     });
   } catch {
     // Silent fail
@@ -40,12 +40,11 @@ export async function logFailedLoginAction(email: string, reason: string) {
 
     if (user) {
       await db.insert(auditLogs).values({
-        adminId: user.id,
+        performedBy: user.id,
         action: "LOGIN_FAILED",
-        entityType: "auth",
-        entityId: user.id,
-        ipAddress: ip,
-        details: { reason }
+        target: "auth",
+        afterState: { userId: user.id, reason },
+        ip: ip,
       });
     }
   } catch {

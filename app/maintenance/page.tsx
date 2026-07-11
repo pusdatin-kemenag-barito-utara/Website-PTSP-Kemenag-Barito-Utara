@@ -1,95 +1,74 @@
-import Image from "next/image";
-import { ServerCrash, ShieldCheck } from "lucide-react";
-import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
-import { MotionDiv, springPopVariants, fadeUpVariants, staggerContainerVariants } from "@/components/common/MotionDiv";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { Suspense } from "react";
+import { motion } from "framer-motion";
+import { Settings, Wrench, AlertTriangle, Clock } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
-export default async function MaintenancePage() {
-  const status = await getMaintenanceStatus();
-  
-  // Custom message dari admin, atau gunakan pesan bawaan
-  const message = status.message || "Kami sedang melakukan pemeliharaan berkala untuk meningkatkan kualitas layanan. Silakan kembali beberapa saat lagi.";
+function MaintenanceContent() {
+  const searchParams = useSearchParams();
+  const appName = searchParams.get("app") || "PTSP Kemenag Barito Utara";
 
   return (
-    <div className="relative min-h-dvh w-full flex flex-col items-center justify-between overflow-hidden bg-slate-50 font-sans">
-      {/* Background Orbs & Effects */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-[100%] bg-emerald-500/15 blur-[80px]" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-40 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-      </div>
+    <div className="relative min-h-screen flex items-center justify-center bg-slate-50 overflow-hidden">
+      {/* Background Ornaments */}
+      <div className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
+      <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-blue-500/10 blur-[80px]" />
 
-      <MotionDiv 
-        variants={staggerContainerVariants}
-        initial="hidden"
-        animate="show"
-        className="relative z-10 w-full max-w-2xl p-4 sm:p-6 lg:p-8 flex flex-col items-center text-center mt-auto mb-auto"
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative z-10 mx-auto max-w-2xl px-6 py-12 text-center"
       >
-        {/* Kemenag Branding */}
-        <MotionDiv variants={fadeUpVariants} className="flex flex-col items-center mb-8 sm:mb-10">
-          <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-3xl bg-white shadow-xl shadow-emerald-900/10 mb-6 border border-emerald-100">
-            <Image
-              src="/kemenag.svg"
-              alt="Logo Kemenag"
-              width={64}
-              height={64}
-              className="object-contain w-16 h-16 sm:w-20 sm:h-20"
-              style={{ width: "auto", height: "auto" }}
-              priority
-              loading="eager"
-            />
+        <div className="mb-8 flex justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100"
+          >
+            <Settings className="h-12 w-12 text-emerald-600" />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg"
+            >
+              <Wrench className="h-5 w-5" />
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <h1 className="mb-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          Sistem Sedang Pemeliharaan
+        </h1>
+        
+        <p className="mb-8 text-lg text-slate-600">
+          Aplikasi <strong>{appName}</strong> saat ini sedang dalam mode perbaikan terpusat oleh Tim Pusdatin Kemenag Barito Utara. Kami sedang melakukan peningkatan sistem untuk memberikan pengalaman yang lebih baik.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 border border-amber-200/50">
+            <AlertTriangle className="h-4 w-4" />
+            Akses Sementara Ditutup
           </div>
-          <h2 className="text-[12px] sm:text-[15px] font-black tracking-[0.15em] text-emerald-800 uppercase">
-            Kementerian Agama Republik Indonesia
-          </h2>
-          <h3 className="text-[9.5px] sm:text-[12px] font-bold tracking-widest text-emerald-600/80 mt-1.5 uppercase">
-            Kantor Kabupaten Barito Utara
-          </h3>
-        </MotionDiv>
-
-        {/* Main Content Card */}
-        <MotionDiv variants={springPopVariants} className="w-full rounded-[2rem] border border-slate-200/60 bg-white/80 p-8 sm:p-12 backdrop-blur-xl shadow-2xl shadow-emerald-900/5 relative overflow-hidden">
-          {/* Subtle gradient line on top of card */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
-
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 ring-1 ring-amber-500/20">
-            <ServerCrash className="h-8 w-8" />
+          <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 border border-emerald-200/50">
+            <Clock className="h-4 w-4" />
+            Silakan periksa kembali nanti
           </div>
-          
-          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-4">
-            Sistem Dalam Pemeliharaan
-          </h1>
-          
-          <p className="mx-auto max-w-lg text-sm sm:text-base text-slate-600 font-medium leading-relaxed mb-8">
-            {message}
-          </p>
+        </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 shadow-sm">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-              </span>
-              Sedang Dalam Pengerjaan
-            </div>
-            
-            <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50 px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 shadow-sm">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              Data Anda Tetap Aman
-            </div>
-          </div>
-        </MotionDiv>
-      </MotionDiv>
-
-      {/* Footer info (pushed down) */}
-      <MotionDiv 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-        className="relative z-10 w-full pb-8 pt-12 text-center text-[11px] sm:text-xs font-semibold text-slate-400"
-      >
-        &copy; {new Date().getFullYear()} PTSP Kemenag Barito Utara. Hak Cipta Dilindungi.
-      </MotionDiv>
+        <div className="mt-12 text-sm text-slate-500">
+          &copy; {new Date().getFullYear()} Pusdatin Kemenag Barito Utara
+        </div>
+      </motion.div>
     </div>
+  );
+}
+
+export default function MaintenancePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><Wrench className="h-8 w-8 text-amber-500 animate-spin" /></div>}>
+      <MaintenanceContent />
+    </Suspense>
   );
 }

@@ -108,6 +108,7 @@ export function HomeHero() {
 
             {/* Headline */}
             <motion.div variants={itemVariants} className="space-y-4">
+              <h2 className="text-emerald-400 font-bold uppercase tracking-widest text-sm mb-2">PTSP Kemenag Barito Utara</h2>
               <h1 className="text-4xl font-black leading-[1.1] text-white sm:text-5xl md:text-6xl lg:text-[64px]">
                 Layanan Kemenag <br className="hidden md:block" />
                 <span className="relative inline-block mt-2">
@@ -201,7 +202,7 @@ export function HomeHero() {
               {/* Header */}
               <div className="flex items-center gap-4 mb-8">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-900/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+
                   <Zap className="h-7 w-7 text-white drop-shadow-md" />
                 </div>
                 <div>

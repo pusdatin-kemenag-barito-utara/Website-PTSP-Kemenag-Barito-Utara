@@ -46,7 +46,7 @@ export function PenggunaClient({
     (u) => !isAdminRole(u.role) && !isSuperAdmin(u.email),
   );
 
-  const [activeTab, setActiveTab] = useState<"admin" | "pegawai" | "pemohon">("admin");
+  const [activeTab, setActiveTab] = useState<"pegawai" | "pemohon">("pegawai");
 
   const stats = {
     total: users.length,
@@ -95,22 +95,7 @@ export function PenggunaClient({
       {/* TABS SELECTOR */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
         <div className="flex w-full sm:w-auto p-1 bg-slate-100/80 rounded-xl gap-1">
-          <button
-            onClick={() => setActiveTab("admin")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
-              activeTab === "admin"
-                ? "bg-white text-[#059669] shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            <UserCog className="h-4 w-4" />
-            Daftar Admin PTSP
-            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${
-              activeTab === "admin" ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"
-            }`}>
-              {adminUsers.length + pendingUsers.length}
-            </span>
-          </button>
+
           
           <button
             onClick={() => setActiveTab("pegawai")}
@@ -155,39 +140,7 @@ export function PenggunaClient({
       </div>
 
       <div className="transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
-        {activeTab === "admin" && (
-          <div className="space-y-6">
-            {viewerIsSuperAdmin && pendingUsers.length > 0 && (
-              <PendingVerificationSection
-                pendingUsers={pendingUsers}
-                onVerify={handleVerify}
-                onReject={handleReject}
-              />
-            )}
 
-            <UserTable
-              users={adminUsers}
-              title="Daftar Admin PTSP"
-              subtitle="Kelola akun tim yang bertugas sebagai admin di portal PTSP."
-              icon={UserCog}
-              iconColor="text-[#059669]"
-              emptyText="Belum ada admin terdaftar."
-              showRoleChange={viewerIsSuperAdmin}
-              viewerIsSuperAdmin={viewerIsSuperAdmin}
-              onUserUpdated={(id: string, data: any) => {
-                setUsers((prev) =>
-                  prev.map((u) => (u.id === id ? { ...u, ...data } : u)),
-                );
-              }}
-              onOpenPermissions={(user: any) => setPermissionsUser(user)}
-              onUserDeleted={(id: string) =>
-                setUsers((prev) => prev.filter((u) => u.id !== id))
-              }
-              visibleUserId={visibleUserId}
-              onTogglePassword={handleTogglePassword}
-            />
-          </div>
-        )}
 
         {activeTab === "pegawai" && (
           <div className="space-y-6">

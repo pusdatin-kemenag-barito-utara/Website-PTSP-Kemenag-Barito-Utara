@@ -23,7 +23,7 @@ const appUrl = "https://ptsp.kemenag-baritoutara.com";
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: "Pelayanan Terpadu Satu Pintu (PTSP) - Kemenag Barito Utara",
+    default: "PTSP Kemenag Barito Utara",
     template: "%s | PTSP Kemenag Barito Utara",
   },
   applicationName: "PTSP Kemenag Barito Utara",

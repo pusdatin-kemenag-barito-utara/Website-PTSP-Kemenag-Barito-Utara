@@ -6,6 +6,7 @@ import {
   jsonb,
   varchar,
   smallint,
+  integer,
 } from "drizzle-orm/pg-core";
 import { authSchema, appRoleEnum } from "./enums";
 
@@ -73,26 +74,25 @@ export const users = authSchema.table("users", {
   isAnonymous: boolean("is_anonymous").notNull().default(false),
 }).enableRLS();
 
-import { ptspSchema } from "./schema";
-export const profiles = ptspSchema.table("ptsp_profiles", {
+import { ptspSchema, pusdatinSchema } from "./schema";
+export const profiles = pusdatinSchema.table("profiles", {
   id: uuid("id")
     .primaryKey()
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  fullName: text("full_name"),
+  fullName: text("name"),
   email: text("email").unique(),
   phone: text("phone"),
   address: text("address"),
-  role: appRoleEnum("role").notNull().default("user"),
+  role: text("role").notNull().default("user"),
+  userType: text("user_type").notNull().default("internal_admin"),
+  status: text("status").default("active"),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),
-  nip: varchar("nip", { length: 50 }).unique(),
-  jabatan: text("jabatan"),
-  unitKerja: text("unit_kerja"),
   isVerified: boolean("is_verified").default(true),
   permissions: jsonb("permissions").default([
     "ringkasan",
@@ -100,14 +100,46 @@ export const profiles = ptspSchema.table("ptsp_profiles", {
     "dokumen_hasil",
   ]),
   avatarUrl: text("avatar_url"),
+  passwordHash: text("password_hash"),
 }).enableRLS();
 
-import { pgTable } from "drizzle-orm/pg-core";
-export const rolePermissions = ptspSchema.table("ptsp_role_permissions", {
-  role: varchar("role").primaryKey().notNull(),
-  permissions: jsonb("permissions").notNull().default([]),
-  updatedAt: timestamp("updated_at", {
-    withTimezone: true,
-    precision: 6,
-  }).defaultNow(),
-}).enableRLS();
+export const satelliteApps = pusdatinSchema.table("satellite_apps", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("online"),
+  lastHealthCheck: timestamp("last_health_check"),
+});
+
+export const appPermissions = pusdatinSchema.table("app_permissions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  appId: varchar("app_id", { length: 50 }).notNull().references(() => satelliteApps.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull().default("none"),
+  features: jsonb("features"),
+});
+
+export const profilesPegawai = pusdatinSchema.table("profiles_pegawai", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  nip: varchar("nip", { length: 50 }),
+  jabatan: varchar("jabatan", { length: 100 }),
+  pangkatGolongan: varchar("pangkat_golongan", { length: 50 }),
+  unitKerja: varchar("unit_kerja", { length: 255 }),
+  tipePejabat: varchar("tipe_pejabat", { length: 50 }),
+  orderIndex: integer("order_index").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const profilesPemohon = pusdatinSchema.table("profiles_pemohon", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  fullName: varchar("full_name", { length: 255 }),
+  nik: varchar("nik", { length: 50 }).unique(),
+  noHp: varchar("no_hp", { length: 20 }),
+  alamat: text("alamat"),
+  pekerjaan: varchar("pekerjaan", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

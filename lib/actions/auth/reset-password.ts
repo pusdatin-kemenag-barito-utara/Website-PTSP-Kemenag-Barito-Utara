@@ -223,8 +223,9 @@ export async function checkPegawaiPhoneExistsAction(nip: string, phone: string, 
     return { error: "Verifikasi keamanan gagal. Silakan coba lagi." };
   }
 
+  const pseudoEmail = `${nip}@kemenag.go.id`;
   const profile = await db.query.profiles.findFirst({
-    where: and(eq(profiles.nip, nip), eq(profiles.phone, phone)),
+    where: and(eq(profiles.email, pseudoEmail), eq(profiles.phone, phone)),
     columns: { id: true, fullName: true, role: true },
   });
 

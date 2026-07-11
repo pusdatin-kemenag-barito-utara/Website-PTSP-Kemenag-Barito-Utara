@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { laporanKinerja } from "@/lib/db/schema";
-import { profiles, dataCutiPegawai, dataPejabat } from "@/lib/db/schema";
+import { profiles, profilesPegawai, dataCutiPegawai, dataPejabat } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -165,10 +165,15 @@ export async function createPegawaiAction(data: {
       await db.update(profiles).set({
         fullName: data.fullName,
         role: "pegawai",
-        jabatan: data.jabatan,
-        unitKerja: data.unitKerja,
         permissions: ["e_laporan_kinerja"],
       }).where(eq(profiles.id, authData.user.id));
+
+      await db.insert(profilesPegawai).values({
+        profileId: authData.user.id,
+        nip: data.nip,
+        jabatan: data.jabatan,
+        unitKerja: data.unitKerja,
+      });
     }
 
     revalidatePath("/admin/kepegawaian/pegawai");
@@ -198,10 +203,14 @@ export async function updatePegawaiAction(
 
     await db.update(profiles).set({
       fullName: data.fullName,
+      updatedAt: new Date(),
+    }).where(eq(profiles.id, id));
+
+    await db.update(profilesPegawai).set({
       jabatan: data.jabatan,
       unitKerja: data.unitKerja,
       updatedAt: new Date(),
-    }).where(eq(profiles.id, id));
+    }).where(eq(profilesPegawai.profileId, id));
 
     if (profile && profile.email) {
       const nip = profile.email.split('@')[0];

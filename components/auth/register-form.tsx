@@ -192,7 +192,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
 
   return (
     <m.form 
-      className="space-y-2" 
+      className="space-y-4" 
       onSubmit={onSubmit} 
       autoComplete="off"
       variants={containerVariants}
@@ -297,7 +297,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
       </m.div>
 
       {step === 2 && (
-        <m.div variants={itemVariants}>
+        <m.div variants={itemVariants} className="flex flex-col space-y-3">
           <Field
             label="Kode OTP WhatsApp"
             required
@@ -317,18 +317,20 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
               inputMode="numeric"
             />
           </Field>
-          <button
-            type="button"
-            onClick={() => {
-              setStep(1);
-              setError("");
-              setMessage("");
-              setOtp("");
-            }}
-            className="text-sm text-[#059669] hover:underline mt-2 font-medium inline-block"
-          >
-            &laquo; Kembali ke formulir
-          </button>
+          <div className="flex justify-start">
+            <button
+              type="button"
+              onClick={() => {
+                setStep(1);
+                setError("");
+                setMessage("");
+                setOtp("");
+              }}
+              className="text-sm text-[#059669] hover:underline font-medium flex items-center"
+            >
+              &laquo; Kembali ke formulir
+            </button>
+          </div>
         </m.div>
       )}
 
@@ -342,7 +344,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 mb-2">{error}</p>
+            <p className="rounded-lg bg-red-50 px-3 py-3 text-sm text-red-700">{error}</p>
           </m.div>
         )}
         {message && (
@@ -354,12 +356,12 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 mb-2">{message}</p>
+            <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-700 border border-emerald-100">{message}</p>
           </m.div>
         )}
       </AnimatePresence>
 
-      <m.div variants={itemVariants}>
+      <m.div variants={itemVariants} className="pt-2 flex justify-center">
         <LoginTurnstile
           mounted={mounted}
           ref={turnstileRef}
@@ -367,10 +369,10 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         />
       </m.div>
 
-      <m.div variants={itemVariants}>
+      <m.div variants={itemVariants} className="pt-2">
         <m.div whileTap={loading || !turnstileToken ? {} : { scale: 0.96 }}>
           <Button
-            className="w-full h-11 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25"
+            className="w-full h-12 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25 rounded-xl"
             disabled={loading || !turnstileToken}
           >
             {loading ? "Memproses..." : step === 1 ? "Kirim Kode OTP" : "Verifikasi & Buat Akun"}

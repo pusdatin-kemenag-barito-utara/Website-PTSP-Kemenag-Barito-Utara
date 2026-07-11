@@ -46,7 +46,7 @@ export function HomeAlurPengajuanMobile() {
               className="flex items-center gap-4 mb-8"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-900/50 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+
                 <Zap className="h-6 w-6 text-white drop-shadow-md" />
               </div>
               <div>

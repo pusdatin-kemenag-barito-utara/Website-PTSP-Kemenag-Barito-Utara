@@ -86,21 +86,20 @@ export async function GET(request: Request) {
       .select({
         id: auditLogsTable.id,
         action: auditLogsTable.action,
-        entityType: auditLogsTable.entityType,
-        entityId: auditLogsTable.entityId,
-        createdAt: auditLogsTable.createdAt,
+        entityType: auditLogsTable.target,
+        createdAt: auditLogsTable.timestamp,
         adminName: profilesTable.fullName,
       })
       .from(auditLogsTable)
-      .leftJoin(profilesTable, eq(auditLogsTable.adminId, profilesTable.id))
+      .leftJoin(profilesTable, eq(auditLogsTable.performedBy, profilesTable.id))
       .where(
         or(
           ilike(auditLogsTable.action, searchStr),
-          ilike(auditLogsTable.entityType, searchStr),
+          ilike(auditLogsTable.target, searchStr),
           ilike(profilesTable.fullName, searchStr),
         )
       )
-      .orderBy(desc(auditLogsTable.createdAt))
+      .orderBy(desc(auditLogsTable.timestamp))
       .limit(5);
 
     return NextResponse.json(serializeBigInt({ requests, profiles, services, auditLogs }));

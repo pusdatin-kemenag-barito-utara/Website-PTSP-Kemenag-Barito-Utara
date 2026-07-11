@@ -34,18 +34,14 @@ function isSameOrigin(request: NextRequest): boolean {
 
 async function checkMaintenanceStatus(): Promise<boolean> {
   try {
+    const pusdatinUrl = process.env.NEXT_PUBLIC_PUSDATIN_URL || "http://localhost:3000";
+    const appId = "ptsp-kemenag"; 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/ptsp_system_status?id=eq.maintenance&select=maintenance_mode`,
-      {
-        headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-        },
-        next: { revalidate: 5 }, // Cache selama 5 detik untuk performa, tetap terasa instan
-      }
+      `${pusdatinUrl}/api/public/apps/${appId}/status`,
+      { next: { revalidate: 30 } } // Cache 30 detik untuk performa
     );
     const data = await response.json();
-    return data?.[0]?.maintenance_mode === true;
+    return data?.status === "maintenance";
   } catch (error) {
     return false;
   }
@@ -121,8 +117,6 @@ export async function proxy(request: NextRequest) {
   const isMaintenanceMode = await checkMaintenanceStatus();
   const isExemptFromMaintenance = 
     path === "/maintenance" || 
-    path.startsWith("/admin") || 
-    path === "/login/petugas" ||
     path.startsWith("/api");
 
   if (isMaintenanceMode && !isExemptFromMaintenance) {

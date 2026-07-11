@@ -184,6 +184,7 @@ export function LoginFormByRole({
 
       const { data: profile, error: profileError } = await getProfileAfterLoginAction(userRes.user.id);
       if (profileError || !profile) {
+        await supabase.auth.signOut();
         setLoading(false);
         setError(profileError || "Gagal memuat profil.");
         return;

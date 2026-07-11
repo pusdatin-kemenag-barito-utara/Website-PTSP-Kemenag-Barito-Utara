@@ -2,8 +2,8 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
-import { profiles, serviceRequests } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { profiles, serviceRequests, appPermissions, satelliteApps } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { isSuperAdmin, isAdminRole } from "@/lib/constants";
 
 
@@ -98,12 +98,11 @@ export async function requireAuth(allowIncomplete = false) {
       address: isSuper ? "-" : null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      nip: null,
-      jabatan: null,
-      unitKerja: null,
       isVerified: true,
       permissions: ["ringkasan", "pengajuan", "dokumen_hasil"],
       avatarUrl: null,
+      passwordHash: null,
+      status: "active",
     };
   }
 
@@ -115,12 +114,13 @@ export async function requireAuth(allowIncomplete = false) {
         if (!profile!.phone || !profile!.fullName || !profile!.address) {
           redirect("/lengkapi-profil");
         }
-      } else {
-        // Pegawai / Admin roles need WA for password reset features
+      } else if (profile!.role === "pegawai") {
+        // Hanya pegawai biasa yang diwajibkan isi WA
         if (!profile!.phone) {
           redirect("/lengkapi-wa-pegawai");
         }
       }
+      // Admin/Petugas dari pusdatin tidak wajib mengisi nomor WA (dilewati)
     }
   }
 
@@ -136,6 +136,27 @@ export async function requireAdmin() {
     }
     redirect("/dashboard");
   }
+
+  // Pengecekan RBAC dari Pusdatin untuk aplikasi PTSP
+  if (isAdminRole(profile.role) && !isSuperAdmin(profile.email)) {
+    const ptspApp = await db.query.satelliteApps.findFirst({
+      where: (apps, { ilike }) => ilike(apps.name, "%PTSP%")
+    });
+    const appId = ptspApp?.id || "ptsp";
+
+    const rbac = await db.query.appPermissions.findFirst({
+      where: and(
+        eq(appPermissions.userId, profile.id),
+        eq(appPermissions.appId, appId)
+      )
+    });
+    
+    // Jika tidak ada akses atau hanya viewer, tolak akses ke panel admin
+    if (!rbac || rbac.role === "none" || rbac.role === "viewer") {
+      redirect("/dashboard"); // Atau bisa ke halaman /unauthorized khusus
+    }
+  }
+
   if (!profile.isVerified && !isSuperAdmin(profile.email)) {
     redirect("/dashboard");
   }

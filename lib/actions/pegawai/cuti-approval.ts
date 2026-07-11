@@ -6,8 +6,7 @@ import {
   dataCutiPegawai,
   rekapCutiTahunan,
 } from "@/lib/db/schema/kepegawaian";
-import { dataPejabat } from "@/lib/db/schema/pejabat";
-import { profiles } from "@/lib/db/schema/auth";
+import { profiles, profilesPegawai } from "@/lib/db/schema/auth";
 import { getCurrentUser, requireAuth } from "@/lib/auth";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -161,16 +160,16 @@ async function updateRekapAfterApproval(pengajuanCutiId: string) {
     if (!cuti) return;
 
     // Cari profile pegawai yang mengajukan
-    const [profile] = await db
-      .select({ nip: profiles.nip })
-      .from(profiles)
-      .where(eq(profiles.id, cuti.userId));
+    const [profilePegawai] = await db
+      .select({ nip: profilesPegawai.nip })
+      .from(profilesPegawai)
+      .where(eq(profilesPegawai.profileId, cuti.userId));
 
-    if (!profile?.nip) return;
+    if (!profilePegawai?.nip) return;
 
     // Cari dataCutiPegawai via NIP
     const pegawai = await db.query.dataCutiPegawai.findFirst({
-      where: eq(dataCutiPegawai.nip, profile.nip),
+      where: eq(dataCutiPegawai.nip, profilePegawai.nip),
     });
     if (!pegawai) return;
 
@@ -381,8 +380,8 @@ export async function getVerifikasiCutiAtasan() {
     // Check if the user is Atasan Langsung
     const [pejabat] = await db
       .select()
-      .from(dataPejabat)
-      .where(and(eq(dataPejabat.nip, nip), eq(dataPejabat.tipePejabat, "Atasan Langsung")));
+      .from(profilesPegawai)
+      .where(and(eq(profilesPegawai.nip, nip), eq(profilesPegawai.tipePejabat, "Atasan Langsung")));
 
     if (!pejabat) {
       return { error: "Anda tidak memiliki akses sebagai Atasan Langsung." };
@@ -413,12 +412,13 @@ export async function getVerifikasiCutiAtasan() {
         createdAt: pengajuanCuti.createdAt,
         user: {
           fullName: profiles.fullName,
-          nip: profiles.nip,
-          jabatan: profiles.jabatan,
+          nip: profilesPegawai.nip,
+          jabatan: profilesPegawai.jabatan,
         }
       })
       .from(pengajuanCuti)
       .leftJoin(profiles, eq(pengajuanCuti.userId, profiles.id))
+      .leftJoin(profilesPegawai, eq(profiles.id, profilesPegawai.profileId))
       .where(
         eq(pengajuanCuti.unitKerja, pejabat.unitKerja)
       )
@@ -427,7 +427,7 @@ export async function getVerifikasiCutiAtasan() {
     return { success: true, data: pengajuan };
   } catch (error: any) {
     console.error("Gagal mengambil data verifikasi cuti:", error);
-    return { error: error.message || "Terjadi kesalahan sistem." };
+    return { error: error.cause?.message || error.message || "Terjadi kesalahan sistem." };
   }
 }
 export async function verifikasiCutiAtasanAction(

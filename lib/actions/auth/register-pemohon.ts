@@ -19,7 +19,8 @@ const RegisterSchema = z.object({
   fullName: z.string().min(3, "Nama minimal 3 karakter"),
   phone: z.string().min(10, "Nomor WhatsApp tidak valid"),
   address: z.string().min(5, "Alamat minimal 5 karakter"),
-  password: z.string()
+  password: z
+    .string()
     .min(8, "Password minimal 8 karakter")
     .regex(/[A-Za-z]/, "Password harus mengandung huruf")
     .regex(/[0-9]/, "Password harus mengandung angka"),
@@ -29,7 +30,10 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export async function requestRegistrationOtpAction(phone: string, token: string) {
+export async function requestRegistrationOtpAction(
+  phone: string,
+  token: string,
+) {
   if (!phone) return { error: "Nomor WhatsApp wajib diisi." };
 
   const verifyRes = await verifyTurnstileAction(token);
@@ -38,10 +42,7 @@ export async function requestRegistrationOtpAction(phone: string, token: string)
   }
 
   const existingProfile = await db.query.profiles.findFirst({
-    where: and(
-      eq(profiles.phone, phone),
-      eq(profiles.role, "user")
-    ),
+    where: and(eq(profiles.phone, phone), eq(profiles.role, "user")),
     columns: { id: true },
   });
 
@@ -60,11 +61,11 @@ export async function requestRegistrationOtpAction(phone: string, token: string)
     });
 
     const waMessage = `*KODE OTP PENDAFTARAN PTSP*\n\nKode OTP Anda adalah:\n*${otpCode}*\n\nKode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapapun.`;
-    
+
     await db.insert(whatsappOutbox).values({
       phone,
       message: waMessage,
-      status: 'pending',
+      status: "pending",
     });
 
     return { success: true };
@@ -73,32 +74,41 @@ export async function requestRegistrationOtpAction(phone: string, token: string)
   }
 }
 
-export async function registerPemohonAction(formData: FormData, otp?: string): Promise<ActionResult> {
+export async function registerPemohonAction(
+  formData: FormData,
+  otp?: string,
+): Promise<ActionResult> {
   try {
     if (!otp) {
-       return { success: false, error: "Kode OTP wajib diisi." };
+      return { success: false, error: "Kode OTP wajib diisi." };
     }
 
     const turnstileToken = String(formData.get("turnstile_token") || "");
     const verifyRes = await verifyTurnstileAction(turnstileToken);
     if (!verifyRes.success) {
-      return { success: false, error: "Verifikasi keamanan gagal. Silakan coba lagi." };
+      return {
+        success: false,
+        error: "Verifikasi keamanan gagal. Silakan coba lagi.",
+      };
     }
 
     const rawPhone = String(formData.get("phone") || "");
-    
+
     // Verify OTP first
     const latestOtp = await db.query.authOtps.findFirst({
       where: and(
         eq(authOtps.phone, rawPhone),
         eq(authOtps.isUsed, false),
-        gt(authOtps.expiresAt, new Date())
+        gt(authOtps.expiresAt, new Date()),
       ),
       orderBy: [desc(authOtps.createdAt)],
     });
 
     if (!latestOtp || latestOtp.otp !== otp) {
-      return { success: false, error: "Kode OTP tidak valid atau sudah kedaluwarsa." };
+      return {
+        success: false,
+        error: "Kode OTP tidak valid atau sudah kedaluwarsa.",
+      };
     }
 
     const validated = RegisterSchema.safeParse({
@@ -113,13 +123,14 @@ export async function registerPemohonAction(formData: FormData, otp?: string): P
     }
 
     // Mark OTP as used safely
-    const updateRes = await db.update(authOtps)
+    const updateRes = await db
+      .update(authOtps)
       .set({ isUsed: true })
       .where(and(eq(authOtps.id, latestOtp.id), eq(authOtps.isUsed, false)))
       .returning({ id: authOtps.id });
 
     if (updateRes.length === 0) {
-       return { success: false, error: "Kode OTP sudah digunakan." };
+      return { success: false, error: "Kode OTP sudah digunakan." };
     }
 
     await AuthService.registerPemohon(validated.data);
@@ -127,6 +138,9 @@ export async function registerPemohonAction(formData: FormData, otp?: string): P
     return { success: true, message: "Pendaftaran berhasil. Silakan login." };
   } catch (error: any) {
     console.error("Registration error:", error);
-    return { success: false, error: error.message || "Gagal melakukan pendaftaran" };
+    return {
+      success: false,
+      error: error.message || "Gagal melakukan pendaftaran",
+    };
   }
 }

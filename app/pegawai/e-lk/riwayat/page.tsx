@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Edit, Eye, Clock, CheckCircle2, XCircle, FileText, Link as LinkIcon, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { DeleteButton } from "./components/delete-button";
 
 export default async function RiwayatLkhPage() {
   const user = await getCurrentUser();
@@ -64,6 +65,7 @@ export default async function RiwayatLkhPage() {
                               <Edit className="h-4 w-4" />
                             </Button>
                           </Link>
+                          <DeleteButton id={lkh.id} />
                         </div>
                       </td>
                     </tr>

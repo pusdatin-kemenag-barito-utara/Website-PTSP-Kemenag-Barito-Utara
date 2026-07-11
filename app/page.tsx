@@ -4,8 +4,22 @@ import { HomeAlurPengajuanMobile } from "@/components/home/alur-pengajuan-mobile
 import { HomeServiceCatalogSection } from "@/components/home/service-catalog";
 import { HomeVideoProfile } from "@/components/home/video-profile";
 import { getPublicServices } from "@/lib/queries";
+import { redirect } from "next/navigation";
 
-export default async function HomePage() {
+export default async function HomePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
+  if (searchParams?.code) {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(searchParams)) {
+      if (typeof value === 'string') {
+        query.append(key, value);
+      } else if (Array.isArray(value)) {
+        value.forEach(v => query.append(key, v));
+      }
+    }
+    redirect(`/auth/callback?${query.toString()}`);
+  }
+
   const services = await getPublicServices();
 
   return (

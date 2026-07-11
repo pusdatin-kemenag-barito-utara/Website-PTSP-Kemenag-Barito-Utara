@@ -1,28 +1,27 @@
 import { requireAuth } from "@/lib/auth";
-import { getPegawaiListAction } from "@/lib/actions/admin/kepegawaian";
 import { db } from "@/lib/db";
-import { dataCutiPegawai, dataPejabat } from "@/lib/db/schema";
+import { dataCutiPegawai } from "@/lib/db/schema";
 import { asc } from "drizzle-orm";
-import { KepegawaianTabs } from "@/components/admin/kepegawaian/kepegawaian-tabs";
+import { DataCutiClient } from "@/components/admin/data-cuti/data-cuti-client";
+import { PageHeader } from "@/components/admin/page-header";
+import { CalendarCheck } from "lucide-react";
 
-export default async function ManajemenKepegawaianPage() {
+export default async function ManajemenCutiPage() {
   await requireAuth();
 
-  const [{ data: pegawaiList, error }, dataCuti, pejabatList] = await Promise.all([
-    getPegawaiListAction(),
-    db.query.dataCutiPegawai.findMany({
-      orderBy: [asc(dataCutiPegawai.no)],
-      with: { rekapCutiTahunan: true },
-    }),
-    db.query.dataPejabat.findMany(),
-  ]);
+  const dataCuti = await db.query.dataCutiPegawai.findMany({
+    orderBy: [asc(dataCutiPegawai.no)],
+    with: { rekapCutiTahunan: true },
+  });
 
   return (
-    <KepegawaianTabs
-      pegawaiData={pegawaiList || []}
-      pegawaiError={error || null}
-      dataCuti={dataCuti}
-      pejabatList={pejabatList}
-    />
+    <div className="space-y-6 w-full mx-auto pb-10 px-2 sm:px-4">
+      <PageHeader
+        title="Manajemen Cuti"
+        description="Kelola hak cuti dan saldo cuti tahunan pegawai"
+        icon={CalendarCheck}
+      />
+      <DataCutiClient initialData={dataCuti} />
+    </div>
   );
 }

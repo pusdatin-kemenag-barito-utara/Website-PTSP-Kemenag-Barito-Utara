@@ -1,8 +1,8 @@
 import { relations } from "drizzle-orm";
-import { users, profiles, rolePermissions } from "./auth";
+import { users, profiles } from "./auth";
 import { services, serviceItems, serviceRequirements, serviceFormFields } from "./services";
 import { serviceRequests, serviceRequestAnswers, serviceRequestDocuments, serviceRequestReviews, generatedDocuments } from "./requests";
-import { activityLogs, auditLogs } from "./logs";
+import { activityLogs } from "./logs";
 import { dataCutiPegawai, rekapCutiTahunan, pengajuanCuti, laporanKinerja, laporanKinerjaBulanan } from "./kepegawaian";
 
 export const profilesRelations = relations(profiles, ({ one, many }) => ({
@@ -13,7 +13,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   serviceRequests: many(serviceRequests),
   serviceRequestReviews: many(serviceRequestReviews),
   activityLogs: many(activityLogs),
-  auditLogs: many(auditLogs),
   generatedDocuments: many(generatedDocuments),
 }));
 
@@ -107,12 +106,6 @@ export const serviceRequestDocumentsRelations = relations(
   }),
 );
 
-export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
-  profile: one(profiles, {
-    fields: [auditLogs.adminId],
-    references: [profiles.id],
-  }),
-}));
 
 export const generatedDocumentsRelations = relations(
   generatedDocuments,

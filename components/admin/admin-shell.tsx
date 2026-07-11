@@ -119,10 +119,10 @@ const ADMIN_NAV: NavItem[] = [
   },
 
   {
-    label: "Manajemen Kepegawaian",
+    label: "Manajemen Cuti",
     href: "/admin/kepegawaian/pegawai",
-    icon: Users,
-    group: "Kepegawaian",
+    icon: CalendarCheck,
+    group: "Layanan Pegawai",
     id: "manajemen_pegawai",
   },
   {
@@ -132,20 +132,7 @@ const ADMIN_NAV: NavItem[] = [
     group: "Kepegawaian",
     id: "e_laporan_kinerja",
   },
-  {
-    label: "Pengguna",
-    href: "/admin/pengguna",
-    icon: Users,
-    group: "Sistem",
-    id: "pengguna",
-  },
-  {
-    label: "Log Audit",
-    href: "/admin/log-audit",
-    icon: History,
-    group: "Sistem",
-    id: "log_audit",
-  },
+
   {
     label: "Pemeliharaan Storage",
     href: "/admin/pemeliharaan-storage",
@@ -153,13 +140,7 @@ const ADMIN_NAV: NavItem[] = [
     group: "Sistem",
     id: "pemeliharaan_storage",
   },
-  {
-    label: "Mode Pemeliharaan",
-    href: "/admin/mode-pemeliharaan",
-    icon: Construction,
-    group: "Sistem",
-    id: "mode_pemeliharaan",
-  },
+
 ];
 
 export function AdminShell({
