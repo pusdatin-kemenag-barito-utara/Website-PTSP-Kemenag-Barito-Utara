@@ -103,6 +103,7 @@ export async function requireAuth(allowIncomplete = false) {
       avatarUrl: null,
       passwordHash: null,
       status: "active",
+      userType: isSuper ? "internal_admin" : "pemohon",
     };
   }
 
