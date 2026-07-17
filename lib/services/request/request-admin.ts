@@ -122,7 +122,10 @@ export class RequestAdminService {
   ) {
     const request = await db.query.serviceRequests.findFirst({
       where: eq(serviceRequests.id, requestId),
-      with: { profiles: true },
+      with: { 
+        profiles: true,
+        serviceRequestAnswers: true, 
+      },
     });
 
     if (!request) throw new Error("Pengajuan tidak ditemukan");

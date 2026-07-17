@@ -20,6 +20,7 @@ interface ModernSelectProps {
   required?: boolean;
   name?: string;
   id?: string;
+  disabled?: boolean;
 }
 
 export function ModernSelect({
@@ -33,6 +34,7 @@ export function ModernSelect({
   required,
   name,
   id,
+  disabled = false,
 }: ModernSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,6 +84,7 @@ export function ModernSelect({
   };
 
   const handleOpen = () => {
+    if (disabled) return;
     const nextOpen = !isOpen;
     setIsOpen(nextOpen);
     // Only focus search on desktop — skip on mobile to avoid keyboard popup
@@ -109,11 +112,9 @@ export function ModernSelect({
       <button
         type="button"
         onClick={handleOpen}
-        className={`group flex items-center gap-3 w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm transition-all cursor-pointer ${
-          isOpen
-            ? "border-emerald-500 ring-2 ring-emerald-500/10"
-            : "border-slate-200 hover:border-slate-300"
-        }`}
+        className={`flex items-center justify-between w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+          isOpen ? "border-emerald-500 ring-4 ring-emerald-500/20 bg-white" : "hover:border-slate-300"
+        } ${disabled ? "opacity-70 cursor-not-allowed bg-slate-100" : ""}`}
       >
         {Icon && (
           <Icon

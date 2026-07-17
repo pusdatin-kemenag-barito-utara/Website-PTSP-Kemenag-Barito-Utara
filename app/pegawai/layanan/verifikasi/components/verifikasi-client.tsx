@@ -12,27 +12,60 @@ export default function VerifikasiClient({
   initialData,
   atasanProfile,
   pejabatList = [],
+  viewerRole,
 }: {
   initialData: any[];
   atasanProfile?: any;
   pejabatList?: any[];
+  viewerRole?: string;
 }) {
   const [data, setData] = useState<any[]>(initialData);
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-3 h-3 mr-1" /> Disetujui</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" /> Ditolak</Badge>;
-      case "changes":
-        return <Badge className="bg-amber-50 text-amber-700 border-amber-200"><AlertCircle className="w-3 h-3 mr-1" /> Perbaikan</Badge>;
-      case "delayed":
-        return <Badge className="bg-blue-50 text-blue-700 border-blue-200"><Clock className="w-3 h-3 mr-1" /> Ditangguhkan</Badge>;
-      default:
-        return <Badge className="bg-slate-50 text-slate-700 border-slate-200"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+  const getStatusBadge = (item: any) => {
+    let displayStatus = item.statusAtasan;
+    let label = "Pending";
+    let icon = <Clock className="w-3 h-3 mr-1" />;
+    let colorClass = "bg-slate-50 text-slate-700 border-slate-200";
+
+    if (item.status === "approved") {
+      displayStatus = "approved";
+      label = "Disetujui Kepala Kantor";
+      icon = <CheckCircle2 className="w-3 h-3 mr-1" />;
+      colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+    } else if (item.status === "rejected") {
+      displayStatus = "rejected";
+      label = "Ditolak";
+      icon = <XCircle className="w-3 h-3 mr-1" />;
+      colorClass = "bg-red-50 text-red-700 border-red-200";
+    } else if (item.statusAtasan === "approved" && item.statusKepala === "pending") {
+      displayStatus = "approved_atasan";
+      label = "Disetujui Atasan Langsung";
+      icon = <CheckCircle2 className="w-3 h-3 mr-1" />;
+      colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+    } else if (item.statusAtasan === "rejected") {
+      displayStatus = "rejected";
+      label = "Ditolak Atasan Langsung";
+      icon = <XCircle className="w-3 h-3 mr-1" />;
+      colorClass = "bg-red-50 text-red-700 border-red-200";
+    } else if (item.statusAtasan === "changes") {
+      displayStatus = "changes";
+      label = "Perbaikan Atasan";
+      icon = <AlertCircle className="w-3 h-3 mr-1" />;
+      colorClass = "bg-amber-50 text-amber-700 border-amber-200";
+    } else if (item.statusAtasan === "delayed") {
+      displayStatus = "delayed";
+      label = "Ditangguhkan Atasan";
+      icon = <Clock className="w-3 h-3 mr-1" />;
+      colorClass = "bg-blue-50 text-blue-700 border-blue-200";
+    } else if (item.statusKepala === "rejected") {
+      displayStatus = "rejected";
+      label = "Ditolak Pejabat";
+      icon = <XCircle className="w-3 h-3 mr-1" />;
+      colorClass = "bg-red-50 text-red-700 border-red-200";
     }
+
+    return <Badge className={colorClass}>{icon} {label}</Badge>;
   };
 
   const handleUpdate = (updatedItem: any) => {
@@ -78,7 +111,7 @@ export default function VerifikasiClient({
                     {item.jenisCuti}
                   </td>
                   <td className="px-6 py-4">
-                    {getStatusBadge(item.statusAtasan)}
+                    {getStatusBadge(item)}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
@@ -86,7 +119,9 @@ export default function VerifikasiClient({
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-xs font-medium transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      Verifikasi
+                      {viewerRole === "Pejabat Berwenang"
+                        ? (item.statusKepala === "pending" ? "Verifikasi" : "Lihat Detail")
+                        : (item.statusAtasan === "pending" ? "Verifikasi" : "Lihat Detail")}
                     </button>
                   </td>
                 </tr>
@@ -99,10 +134,15 @@ export default function VerifikasiClient({
       {selectedRequest && (
         <VerifikasiModal
           request={selectedRequest}
-          onClose={() => setSelectedRequest(null)}
-          onUpdate={handleUpdate}
           atasanProfile={atasanProfile}
           pejabatList={pejabatList}
+          viewerRole={viewerRole}
+          onClose={() => setSelectedRequest(null)}
+          onUpdate={(updated) => {
+            setData((prev) =>
+              prev.map((item) => (item.id === updated.id ? updated : item))
+            );
+          }}
         />
       )}
     </div>

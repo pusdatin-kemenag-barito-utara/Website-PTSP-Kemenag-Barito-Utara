@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { getServiceBySlug, getServiceCatalog } from "@/lib/queries";
 import { ServiceItemsAccordion } from "@/components/services/service-items-accordion";
 import { PegawaiNewRequestForm } from "@/components/forms/pegawai-new-request-form";
+import { PegawaiUsulPensiunForm } from "@/components/forms/pegawai-usul-pensiun-form";
 import { requireAuth, getCurrentProfile } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { dataCutiPegawai, rekapCutiTahunan } from "@/lib/db/schema/kepegawaian";
@@ -31,12 +32,55 @@ export default async function PegawaiServiceDetailPage({
   const items = service.serviceItems || (service as any).service_items || [];
   const serviceName = service.name?.toLowerCase() || "";
   const isCutiService = serviceName.includes("cuti");
+  const isPensiunService = serviceName.includes("pensiun");
+
+  // For Pensiun services: show the custom pensiun form
+  if (isPensiunService) {
+    const catalog = await getServiceCatalog();
+    const profile = await getCurrentProfile();
+    
+    return (
+      <div className="w-full space-y-4">
+        <div>
+          <Link
+            href="/pegawai/layanan/ajukan"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Kembali ke Daftar Layanan
+          </Link>
+        </div>
+
+        <PegawaiUsulPensiunForm
+          catalog={catalog}
+          profile={profile}
+          redirectPathPrefix="/pegawai/layanan/riwayat"
+          lockedServiceId={String(service.id)}
+        />
+      </div>
+    );
+  }
 
   // For Cuti services: show the form directly with jenis cuti tabs
   if (isCutiService) {
     const catalog = await getServiceCatalog();
     const profile = await getCurrentProfile();
-    const pejabatList = await db.query.dataPejabat.findMany();
+    const pusdatinPejabat = await db.query.profilesPegawai.findMany({
+      where: (pp, { isNotNull }) => isNotNull(pp.tipePejabat),
+      with: {
+        profile: {
+          columns: { fullName: true }
+        }
+      }
+    });
+
+    const pejabatList = pusdatinPejabat.map(p => ({
+      tipePejabat: p.tipePejabat,
+      unitKerja: p.unitKerja,
+      nama: p.profile?.fullName || "",
+      nip: p.nip || "",
+      jabatan: p.jabatan || ""
+    }));
 
     let sisaCutiData = { n: "0", n1: "0", n2: "0" };
 

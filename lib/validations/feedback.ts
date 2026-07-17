@@ -9,5 +9,8 @@ export const feedbackSchema = z.object({
   serviceType: z.string().min(2).max(100),
   isAnonymous: z.boolean().default(false),
   content: z.string().min(10, "Isi pesan terlalu pendek").max(2000, "Isi pesan terlalu panjang"),
+  attachmentUrl: z.string().optional(),
+  incidentDate: z.string().optional(),
+  incidentLocation: z.string().optional(),
   turnstileToken: z.string().min(1, "Token keamanan wajib diisi").optional(),
 });

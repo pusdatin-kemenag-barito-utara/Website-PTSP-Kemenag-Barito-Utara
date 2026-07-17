@@ -3,7 +3,8 @@ import { HomeSambutanKepala } from "@/components/home/sambutan";
 import { HomeAlurPengajuanMobile } from "@/components/home/alur-pengajuan-mobile";
 import { HomeServiceCatalogSection } from "@/components/home/service-catalog";
 import { HomeVideoProfile } from "@/components/home/video-profile";
-import { getPublicServices } from "@/lib/queries";
+import { BannerModal } from "@/components/home/banner-modal";
+import { getPublicServices, getHomeVideos } from "@/lib/queries";
 import { redirect } from "next/navigation";
 
 export default async function HomePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -20,10 +21,16 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
     redirect(`/auth/callback?${query.toString()}`);
   }
 
-  const services = await getPublicServices();
+  const [services, homeVideosData] = await Promise.all([
+    getPublicServices(),
+    getHomeVideos()
+  ]);
+
+  const { videos, totalCount } = homeVideosData;
 
   return (
-    <div className="w-full overflow-x-hidden">
+    <div className="w-full overflow-x-hidden relative">
+      <BannerModal />
       <HomeHero />
       <HomeSambutanKepala />
       <HomeAlurPengajuanMobile />
@@ -44,7 +51,7 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
         <div className="w-full h-8 bg-[#f8fafc]" />
       </div>
 
-      <HomeVideoProfile />
+      <HomeVideoProfile videos={videos} totalCount={totalCount} />
     </div>
   );
 }

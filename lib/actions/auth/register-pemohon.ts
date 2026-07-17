@@ -30,11 +30,23 @@ function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+function formatPhone(phone: string): string {
+  let cleanPhone = phone.replace(/\D/g, "");
+  if (cleanPhone.startsWith("0")) {
+    cleanPhone = "62" + cleanPhone.substring(1);
+  } else if (!cleanPhone.startsWith("62")) {
+    cleanPhone = "62" + cleanPhone;
+  }
+  return cleanPhone;
+}
+
 export async function requestRegistrationOtpAction(
-  phone: string,
+  rawPhone: string,
   token: string,
 ) {
-  if (!phone) return { error: "Nomor WhatsApp wajib diisi." };
+  if (!rawPhone) return { error: "Nomor WhatsApp wajib diisi." };
+
+  const phone = formatPhone(rawPhone);
 
   const verifyRes = await verifyTurnstileAction(token);
   if (!verifyRes.success) {
@@ -47,7 +59,16 @@ export async function requestRegistrationOtpAction(
   });
 
   if (existingProfile) {
-    return { error: "Nomor WhatsApp ini sudah terdaftar sebagai pemohon." };
+    // Check if it's an orphaned profile (exists in DB but not in Auth)
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { error: authError } = await admin.auth.admin.getUserById(existingProfile.id);
+    
+    if (authError && (authError.message.includes("User not found") || authError.status === 404)) {
+      await db.delete(profiles).where(eq(profiles.id, existingProfile.id));
+    } else {
+      return { error: "Nomor WhatsApp ini sudah terdaftar sebagai pemohon." };
+    }
   }
 
   const otpCode = generateOtp();
@@ -62,11 +83,40 @@ export async function requestRegistrationOtpAction(
 
     const waMessage = `*KODE OTP PENDAFTARAN PTSP*\n\nKode OTP Anda adalah:\n*${otpCode}*\n\nKode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapapun.`;
 
-    await db.insert(whatsappOutbox).values({
+    const outboxRes = await db.insert(whatsappOutbox).values({
       phone,
       message: waMessage,
       status: "pending",
-    });
+    }).returning({ id: whatsappOutbox.id });
+
+    const botUrl = process.env.WA_BOT_URL;
+    const botApiKey = process.env.WA_BOT_API_KEY;
+
+    if (botUrl && botApiKey && outboxRes.length > 0) {
+      try {
+        const response = await fetch(`${botUrl}/api/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': botApiKey
+          },
+          body: JSON.stringify({
+            to: phone,
+            text: waMessage
+          })
+        });
+
+        if (response.ok) {
+          await db.update(whatsappOutbox)
+            .set({ status: 'sent', sentAt: new Date() })
+            .where(eq(whatsappOutbox.id, outboxRes[0].id));
+        } else {
+          console.error("WA Bot API returned error:", await response.text());
+        }
+      } catch (fetchErr) {
+        console.error("Failed to call WA Bot API:", fetchErr);
+      }
+    }
 
     return { success: true };
   } catch (err: any) {
@@ -93,11 +143,12 @@ export async function registerPemohonAction(
     }
 
     const rawPhone = String(formData.get("phone") || "");
+    const phone = formatPhone(rawPhone);
 
     // Verify OTP first
     const latestOtp = await db.query.authOtps.findFirst({
       where: and(
-        eq(authOtps.phone, rawPhone),
+        eq(authOtps.phone, phone),
         eq(authOtps.isUsed, false),
         gt(authOtps.expiresAt, new Date()),
       ),

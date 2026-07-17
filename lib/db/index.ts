@@ -6,8 +6,9 @@ const isProd = process.env.NODE_ENV === "production";
 const createPool = () => new Pool({
   connectionString: process.env.DATABASE_URL,
   max: isProd ? 15 : 5, 
-  idleTimeoutMillis: 60000, 
+  idleTimeoutMillis: isProd ? 60000 : 30000,  // Dev: 30s agar cepat lepas
   connectionTimeoutMillis: 30000,
+  allowExitOnIdle: !isProd,                    // Dev: pool exit jika idle
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
 });

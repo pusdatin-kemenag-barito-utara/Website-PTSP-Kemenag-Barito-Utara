@@ -1,29 +1,28 @@
 import { Card } from "@/components/ui/card";
-import { ClipboardList } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 
 export function FormAnswersCard({ request }: { request: any }) {
   return (
-    <Card title="Data Isian Form" icon={ClipboardList}>
+    <Card title="Data Isian Form" icon={ClipboardCheck}>
       <div className="space-y-4">
         {(request.serviceRequestAnswers ?? []).length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-            <ClipboardList className="h-8 w-8 text-slate-300 mb-2" />
-            <p className="text-sm text-slate-500 font-semibold">
+          <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <ClipboardCheck className="h-8 w-8 text-slate-300 mb-2" />
+            <p className="text-sm text-slate-500 font-medium">
               Tidak ada isian form.
             </p>
           </div>
         )}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {(request.serviceRequestAnswers ?? []).map((answer: any) => (
             <div
               key={answer.id}
-              className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-[#059669]/30 hover:bg-emerald-50/20 transition-colors group"
+              className="rounded-xl bg-slate-50 p-4 transition-colors hover:bg-slate-100/80"
             >
-              <div className="absolute top-0 left-0 w-1 h-full bg-[#059669]/20 rounded-l-2xl group-hover:bg-[#059669] transition-colors" />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                 {answer.fieldName}
               </p>
-              <p className="mt-1.5 text-sm font-bold text-slate-800 pl-2 break-words">
+              <p className="text-sm font-semibold text-slate-800 break-words">
                 {answer.fieldValue || "-"}
               </p>
             </div>

@@ -10,6 +10,8 @@ import { activityLogs, serviceRequests } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { createAuditLog } from "@/lib/audit";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { getR2SignedUrl } from "@/lib/r2";
 
 async function verifyRequestOwnership(requestId: string, email: string, role: string) {
   const isSuper = isSuperAdmin(email);
@@ -127,6 +129,114 @@ export async function uploadResultDocumentAction(
   }
 }
 
+const SendWASchema = z.object({
+  requestId: z.string().uuid(),
+});
+
+export async function sendResultWhatsAppAction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const adminProfile = await requireAdmin();
+  try {
+    const validated = SendWASchema.safeParse({
+      requestId: formData.get("requestId"),
+    });
+
+    if (!validated.success) {
+      return { success: false, error: validated.error.issues[0].message };
+    }
+
+    const { requestId } = validated.data;
+    await verifyRequestOwnership(requestId, adminProfile.email ?? "", adminProfile.role ?? "");
+
+    const request = await db.query.serviceRequests.findFirst({
+      where: eq(serviceRequests.id, requestId),
+      with: { 
+        profiles: true,
+        serviceRequestAnswers: true, 
+        generatedDocuments: true,
+      },
+    });
+
+    if (!request) {
+      return { success: false, error: "Pengajuan tidak ditemukan" };
+    }
+
+    let phone = (request as any).profiles?.phone || "";
+    if (request.serviceRequestAnswers) {
+      const waAnswer = request.serviceRequestAnswers.find((a: any) => {
+        const name = (a.fieldName || "").toLowerCase();
+        return name.includes("whatsapp") || name.includes("wa") || name === "hp";
+      });
+      if (waAnswer && waAnswer.fieldValue) {
+        phone = waAnswer.fieldValue;
+      }
+    }
+
+    if (!phone) {
+      return { success: false, error: "Nomor WhatsApp pemohon tidak ditemukan" };
+    }
+
+    let fileUrl: string | undefined = undefined;
+    let fileName: string | undefined = undefined;
+
+    const genDoc = (request as any).generatedDocuments?.[0];
+    if (genDoc && genDoc.filePath) {
+      if (genDoc.filePath.startsWith("r2:") || genDoc.filePath.startsWith("results/")) {
+        try {
+          fileUrl = await getR2SignedUrl(genDoc.filePath);
+          fileName = genDoc.fileName || `Dokumen_Hasil_${request.requestNumber}.pdf`;
+        } catch (e) {
+          console.error("Gagal get R2 Signed URL untuk WA:", e);
+        }
+      }
+      // Tambahkan logika lain di sini jika file disimpan di Supabase bucket, dsb
+    }
+
+    const pesanWA = `*KEMENTERIAN AGAMA KABUPATEN BARITO UTARA*\n\n` +
+      `Halo ${(request as any).profiles?.fullName || "Pemohon"},\n\n` +
+      `Dokumen hasil untuk pengajuan Anda dengan nomor tiket *${request.requestNumber}* telah diterbitkan dan dilampirkan bersama pesan ini.\n\n` +
+      `_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
+      
+    await sendWhatsAppNotification(phone, pesanWA, fileUrl, fileName);
+
+    await db.transaction(async (tx) => {
+      if (request.status !== "completed") {
+        await tx.update(serviceRequests)
+          .set({ status: "completed", completedAt: new Date() })
+          .where(eq(serviceRequests.id, requestId));
+          
+        await tx.insert(activityLogs).values({
+          requestId: requestId,
+          actorId: adminProfile.id,
+          action: "status:completed",
+          notes: "Status pengajuan diubah menjadi Selesai (Dokumen dikirim).",
+        });
+      }
+
+      await tx.insert(activityLogs).values({
+        requestId: requestId,
+        actorId: adminProfile.id,
+        action: "KIRIM_WA_HASIL",
+        notes: "Dokumen hasil pengajuan telah dikirimkan via WhatsApp ke pemohon.",
+      });
+    });
+
+    await createAuditLog({
+      adminId: adminProfile.id,
+      action: "KIRIM_WA_HASIL",
+      entityType: "service_request",
+      entityId: requestId,
+      details: { phone },
+    });
+
+    return { success: true, message: "Notifikasi WhatsApp berhasil dikirim" };
+  } catch (error: any) {
+    console.error("Error sending WA:", error);
+    return { success: false, error: error.message || "Gagal mengirim notifikasi WhatsApp" };
+  }
+}
+
 const DeleteRequestSchema = z.object({
   requestId: z.string().uuid(),
 });
@@ -201,17 +311,32 @@ export async function deleteActivityLogAction(
         )
       );
 
+    // Sync status with latest status log
+    const latestLog = await db.query.activityLogs.findFirst({
+      where: (t, { eq, and, like }) => and(
+        eq(t.requestId, requestId), 
+        like(t.action, "status:%")
+      ),
+      orderBy: (t, { desc }) => [desc(t.createdAt)],
+    });
+
+    const newStatus = latestLog ? latestLog.action.replace("status:", "") : "under_review";
+    
+    await db.update(serviceRequests)
+      .set({ status: newStatus as any })
+      .where(eq(serviceRequests.id, requestId));
+
     await createAuditLog({
       adminId: adminProfile.id,
       action: "HAPUS_AKTIVITAS_LOG",
       entityType: "activity_log",
       entityId: logId,
-      details: { requestId },
+      details: { requestId, statusRevertedTo: newStatus },
     });
 
     revalidatePath(`/admin/pengajuan/${requestId}`);
 
-    return { success: true, message: "Log aktivitas berhasil dihapus" };
+    return { success: true, message: "Log aktivitas berhasil dihapus, status dikembalikan" };
   } catch (error: any) {
     return { success: false, error: error.message || "Gagal menghapus log" };
   }

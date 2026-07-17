@@ -11,6 +11,8 @@ interface SignaturePadProps {
   nama?: string;
 }
 
+import { m } from "framer-motion";
+
 export function SignaturePad({ onSave, className = "", nip = "", nama = "" }: SignaturePadProps) {
   useEffect(() => {
     // Secara otomatis menyimpan data TTE (Tanda Tangan Elektronik)
@@ -31,44 +33,49 @@ export function SignaturePad({ onSave, className = "", nip = "", nama = "" }: Si
   }
 
   return (
-    <div className={`relative flex flex-col gap-2 ${className}`}>
-      <div className="w-full bg-emerald-50/50 border-2 border-emerald-200 rounded-xl overflow-hidden relative transition-colors p-4 sm:p-6 flex flex-col items-center justify-center gap-3 sm:gap-4 hover:border-emerald-300">
+    <m.div 
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={`relative flex flex-col gap-2 ${className}`}
+    >
+      <div className="w-full bg-emerald-50/50 border border-emerald-200 rounded-xl overflow-hidden relative transition-colors p-3 sm:p-4 flex flex-col items-center justify-center gap-2 hover:border-emerald-300">
         
         {/* Dekorasi Background */}
-        <div className="absolute top-0 right-0 -mt-6 -mr-6 w-24 h-24 sm:w-32 sm:h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-24 h-24 sm:w-32 sm:h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
+        <div className="absolute top-0 right-0 -mt-6 -mr-6 w-20 h-20 sm:w-24 sm:h-24 bg-emerald-500/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-20 h-20 sm:w-24 sm:h-24 bg-emerald-500/10 rounded-full blur-xl"></div>
 
-        <div className="relative bg-white p-2.5 sm:p-3.5 rounded-2xl shadow-sm border border-emerald-100 group transition-transform hover:scale-105">
-          <div className="relative w-24 h-24 sm:w-[130px] sm:h-[130px] mx-auto">
+        <div className="relative bg-white p-2 rounded-xl shadow-sm border border-emerald-100 group transition-transform hover:scale-105">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 mx-auto">
             <QRCode 
               value={`TTE-KEMENAG-BARUT-${nip}-${nama}`} 
-              size={110} 
+              size={96} 
               level="H" 
               fgColor="#047857" 
               style={{ width: "100%", height: "100%" }}
               className="rounded-lg"
             />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-white p-1 sm:p-1.5 rounded-full shadow-sm">
-                <img src="/kemenag.svg" alt="Kemenag" className="w-5 h-5 sm:w-7 sm:h-7 object-contain" />
+              <div className="bg-white p-1 rounded-full shadow-sm">
+                <img src="/kemenag.svg" alt="Kemenag" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
               </div>
             </div>
           </div>
         </div>
         
         <div className="text-center relative z-10 w-full px-1">
-          <div className="flex items-center justify-center gap-1.5 mb-1 sm:mb-1.5">
-            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 shrink-0" />
-            <p className="text-emerald-700 font-black text-[13px] sm:text-[15px] tracking-tight leading-tight">Tanda Tangan Valid</p>
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+            <p className="text-emerald-700 font-black text-[11px] sm:text-[12px] tracking-tight leading-tight">Tanda Tangan Valid</p>
           </div>
-          <p className="text-emerald-600/80 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">PTSP Kemenag Barut</p>
+          <p className="text-emerald-600/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-2">PTSP Kemenag Barut</p>
           
-          <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-white px-2.5 py-1 sm:py-1.5 rounded-lg border border-slate-200/60 shadow-sm max-w-full">
-            <span className="text-slate-400 text-[10px] sm:text-[11px] font-semibold shrink-0">NIP</span>
-            <span className="text-slate-700 text-[11px] sm:text-xs font-bold truncate">{nip}</span>
+          <div className="inline-flex items-center justify-center gap-1.5 bg-white px-2 py-1 rounded-lg border border-slate-200/60 shadow-sm max-w-full">
+            <span className="text-slate-400 text-[9px] sm:text-[10px] font-semibold shrink-0">NIP</span>
+            <span className="text-slate-700 text-[10px] sm:text-[11px] font-bold truncate">{nip}</span>
           </div>
         </div>
       </div>
-    </div>
+    </m.div>
   );
 }

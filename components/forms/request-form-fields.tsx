@@ -46,23 +46,10 @@ function SelectFieldWrapper({ field }: { field: any }) {
   );
 }
 
-export function RequestFormFields({ fields }: { fields: any[] }) {
+export function RequestFormFields({ fields, profile }: { fields: any[], profile?: any }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5">
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#059669]">
-          Langkah 2
-        </p>
-        <h3 className="mt-1 text-base font-bold text-slate-900 sm:text-lg">
-          Isi Data Formulir
-        </h3>
-        <p className="mt-1 text-sm text-slate-600">
-          Lengkapi data sesuai kebutuhan item layanan yang dipilih.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {(() => {
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 w-full">
+      {(() => {
           let sortedFields = [...fields].sort(
             (a: any, b: any) => a.sortOrder - b.sortOrder,
           );
@@ -95,6 +82,9 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
           }
 
           return sortedFields.map((field: any) => {
+            const isWhatsApp = field.type === "tel" || field.label.toLowerCase().includes("whatsapp");
+            const hasPhoneProfile = isWhatsApp && profile?.phone;
+
             const handleInvalid = (
               e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
             ) => {
@@ -109,10 +99,15 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
             ) => {
               const target = e.target as HTMLInputElement | HTMLTextAreaElement;
               target.setCustomValidity("");
-              if (field.type === "tel") {
+              if (field.type === "tel" && !hasPhoneProfile) {
                 target.value = target.value.replace(/\D/g, "");
               }
             };
+
+            let formattedPhone = profile?.phone || "";
+            if (formattedPhone.startsWith("62")) {
+              formattedPhone = "0" + formattedPhone.slice(2);
+            }
 
             const commonInput = {
               name: `answer_${field.id}`,
@@ -121,6 +116,7 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
               onInvalid: handleInvalid,
               onInput: handleInput,
               onChange: handleInput,
+              ...(hasPhoneProfile ? { defaultValue: formattedPhone, readOnly: true } : {}),
             };
 
             const icon =
@@ -173,13 +169,15 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
                         <Input
                           type={field.type}
                           {...commonInput}
-                          className={icon ? "pl-9" : ""}
+                          className={`${icon ? "pl-9" : ""} ${hasPhoneProfile ? "bg-slate-50 text-slate-500 pointer-events-none" : ""}`}
                         />
                       </div>
                       {field.type === "tel" && (
                         <p className="text-[10px] text-slate-500">
-                          Notifikasi status permohonan akan dikirim ke nomor
-                          ini, pastikan nomor sudah benar dan aktif.
+                          {hasPhoneProfile 
+                            ? "Nomor WhatsApp diambil otomatis dari profil Anda."
+                            : "Notifikasi status permohonan akan dikirim ke nomor ini, pastikan nomor sudah benar dan aktif."
+                          }
                         </p>
                       )}
                     </div>
@@ -189,7 +187,6 @@ export function RequestFormFields({ fields }: { fields: any[] }) {
             );
           });
         })()}
-      </div>
-    </section>
+    </div>
   );
 }

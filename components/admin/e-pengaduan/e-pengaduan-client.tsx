@@ -38,6 +38,10 @@ interface FeedbackEntry {
   status: "pending" | "processed" | "responded";
   adminReply: string | null;
   createdAt: string;
+  ticketNumber?: string | null;
+  attachmentUrl?: string | null;
+  incidentDate?: string | null;
+  incidentLocation?: string | null;
 }
 
 export function EPengaduanClient({
@@ -203,7 +207,11 @@ export function EPengaduanClient({
         `"${e.serviceType}"`,
         `"${e.name.replace(/"/g, '""')}${e.isAnonymous ? " (Memilih Anonim)" : ""}"`,
         `"${e.phone}"`,
+        `"${e.ticketNumber || "-"}"`,
+        `"${e.incidentDate || "-"}"`,
+        `"${e.incidentLocation || "-"}"`,
         `"${e.content.replace(/"/g, '""')}"`,
+        `"${e.attachmentUrl || "-"}"`,
         `"${e.status}"`,
         `"${e.adminReply ? e.adminReply.replace(/"/g, '""') : ""}"`,
       ].join(","))
@@ -375,9 +383,10 @@ export function EPengaduanClient({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/70 border-b border-slate-100">
-                    <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Pengirim</th>
+                    <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Pengirim & Tiket</th>
                     <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Status</th>
                     <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Isi Saran / Pengaduan</th>
+                    <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Lampiran</th>
                     <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Tanggal</th>
                     <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Aksi</th>
                   </tr>
@@ -422,6 +431,11 @@ export function EPengaduanClient({
                                 <Phone className="h-3 w-3 shrink-0" />
                                 {entry.phone}
                               </a>
+                              {entry.ticketNumber && (
+                                <p className="text-[10px] font-mono font-bold text-slate-400 mt-1">
+                                  #{entry.ticketNumber}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -448,7 +462,14 @@ export function EPengaduanClient({
                         <td className="px-6 py-4 max-w-lg">
                           <div className="flex items-start gap-2">
                             <MessageSquare className="h-4 w-4 shrink-0 text-slate-400 mt-0.5" />
-                            <div className="space-y-1">
+                            <div className="space-y-1 w-full">
+                              {(entry.incidentDate || entry.incidentLocation) && (
+                                <div className="mb-2 p-2 bg-orange-50 rounded border border-orange-100 text-xs">
+                                  <p className="font-bold text-orange-800 mb-1">Detail Kejadian:</p>
+                                  {entry.incidentDate && <p className="text-orange-900">• Tanggal: {entry.incidentDate}</p>}
+                                  {entry.incidentLocation && <p className="text-orange-900">• Lokasi: {entry.incidentLocation}</p>}
+                                </div>
+                              )}
                               <p className="text-xs font-semibold text-slate-700 leading-relaxed whitespace-pre-wrap">{entry.content}</p>
                               {entry.adminReply && (
                                 <div className="mt-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100 text-xs">
@@ -460,13 +481,30 @@ export function EPengaduanClient({
                           </div>
                         </td>
 
+                        {/* Lampiran */}
+                        <td className="px-6 py-4">
+                          {entry.attachmentUrl ? (
+                            <a 
+                              href={entry.attachmentUrl.startsWith("http") ? entry.attachmentUrl : `/api/files?path=${encodeURIComponent(entry.attachmentUrl)}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold uppercase transition-colors"
+                            >
+                              <Download className="w-3 h-3" /> Lihat File
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">Tidak ada</span>
+                          )}
+                        </td>
+
                         {/* Date Received */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
                             <span className="text-xs font-bold text-slate-700">
-                              {new Date(entry.createdAt).toLocaleDateString("id-ID", {
-                                day: "numeric", month: "short", year: "numeric"
+                              {new Date(entry.createdAt).toLocaleString("id-ID", {
+                                day: "numeric", month: "short", year: "numeric",
+                                hour: "2-digit", minute: "2-digit"
                               })}
                             </span>
                           </div>

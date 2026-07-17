@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Pencil, Eye, FileDown } from "lucide-react";
-import { deleteDataCutiAction } from "@/lib/actions/admin/data-cuti";
+import { Search, Plus, Pencil, Eye, FileDown, RefreshCw, CalendarDays } from "lucide-react";
+import { deleteDataCutiAction, syncDataPegawaiFromPusdatinAction, rolloverCutiTahunanAction } from "@/lib/actions/admin/data-cuti";
 import { toast } from "sonner";
 import { DataCutiForm } from "./data-cuti-form";
 import { DataCutiPagination } from "./data-cuti-pagination";
@@ -39,6 +39,70 @@ export function DataCutiClient({ initialData }: Props) {
   const [editingPegawai, setEditingPegawai] = useState<PegawaiCuti | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSync = async () => {
+    try {
+      setIsSyncing(true);
+      const res = await syncDataPegawaiFromPusdatinAction();
+      if (res.success) {
+        toast.success(res.message);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Gagal sinkronisasi data.");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    const currentYear = new Date().getFullYear();
+    const headers = [
+      "No", "Nama", "NIP", "Unit Kerja", "Jabatan",
+      `Cuti ${currentYear - 2}`, `Cuti ${currentYear - 1}`, `Hak Berjalan ${currentYear}`,
+      "Jumlah Cuti", "Sisa Cuti"
+    ];
+
+    const rows = filtered.map((p, index) => {
+      const currentRekap = p.rekapCutiTahunan.find((r) => r.tahunTarget === currentYear);
+      const n1Rekap = p.rekapCutiTahunan.find((r) => r.tahunTarget === currentYear - 1);
+      const n2Rekap = p.rekapCutiTahunan.find((r) => r.tahunTarget === currentYear - 2);
+
+      const cutiTahun2 = currentRekap?.cutiTahun2 ?? (n2Rekap ? Math.min(n2Rekap.sisaCuti || 0, 6) : 0);
+      const cutiTahun1 = currentRekap?.cutiTahun1 ?? (n1Rekap ? Math.min(n1Rekap.sisaCuti || 0, 6) : 0);
+      const hakBerjalan = currentRekap?.jumlahCuti !== null && currentRekap?.jumlahCuti !== undefined
+        ? currentRekap.jumlahCuti - (currentRekap.cutiTahun1 || 0) - (currentRekap.cutiTahun2 || 0)
+        : 12;
+      const jumlahCuti = currentRekap?.jumlahCuti ?? (hakBerjalan + cutiTahun1 + cutiTahun2);
+      const sisaCuti = currentRekap?.sisaCuti ?? jumlahCuti;
+
+      return [
+        p.no || index + 1,
+        `"${p.nama}"`,
+        `'${p.nip || ""}'`,
+        `"${p.unitKerja || ""}"`,
+        `"${p.jabatan || ""}"`,
+        cutiTahun2,
+        cutiTahun1,
+        hakBerjalan,
+        jumlahCuti,
+        sisaCuti
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Rekap_Sisa_Cuti_Pegawai_${currentYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Sinkronkan data saat initialData berubah dari server (via router.refresh)
   useEffect(() => {
@@ -62,6 +126,29 @@ export function DataCutiClient({ initialData }: Props) {
   }
 
   const currentYear = new Date().getFullYear();
+  const hasCurrentYear = initialData.some(p => p.rekapCutiTahunan.some(r => r.tahunTarget === currentYear));
+  const hasNextYear = initialData.some(p => p.rekapCutiTahunan.some(r => r.tahunTarget === currentYear + 1));
+  const targetRolloverYear = !hasCurrentYear ? currentYear : (!hasNextYear ? currentYear + 1 : null);
+
+  const handleRollover = async () => {
+    if (!targetRolloverYear) return;
+    if (!confirm(`Apakah Anda yakin ingin melakukan Tutup Buku untuk membuat rekap cuti tahun ${targetRolloverYear}? Ini akan memindahkan sisa cuti N-1 dan N-2 ke tahun yang baru.`)) return;
+
+    try {
+      setIsSyncing(true);
+      const res = await rolloverCutiTahunanAction(targetRolloverYear);
+      if (res.success) {
+        toast.success(res.message);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Gagal melakukan tutup buku.");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan sistem.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -79,6 +166,34 @@ export function DataCutiClient({ initialData }: Props) {
             }}
             className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
+        </div>
+        <div className="flex items-center gap-2">
+          {targetRolloverYear && (
+            <button
+              onClick={handleRollover}
+              disabled={isSyncing}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+              title={`Tutup Buku & Generate Rekap ${targetRolloverYear}`}
+            >
+              <CalendarDays className="w-4 h-4" />
+              Rekap {targetRolloverYear}
+            </button>
+          )}
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+          >
+            <FileDown className="w-4 h-4" />
+            Ekspor CSV
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+            {isSyncing ? "Menyinkronkan..." : "Sync dari Pusdatin"}
+          </button>
         </div>
       </div>
 

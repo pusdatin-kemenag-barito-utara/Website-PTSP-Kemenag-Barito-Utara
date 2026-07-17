@@ -55,7 +55,7 @@ export async function handlePegawaiLoginAction(nip: string, password?: string, t
   if (!verifyRes) return { error: "Gagal memverifikasi keamanan. Silakan coba lagi." };
   
   const pseudoEmail = `${nip}@kemenag.go.id`;
-  const defaultPassword = `${nip}barut`;
+  const defaultPassword = "12345barut";
 
   let profile;
   try {

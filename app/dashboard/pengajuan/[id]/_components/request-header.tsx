@@ -5,73 +5,86 @@ import { ArrowLeft } from "lucide-react";
 import { StatusBadge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/ui/copy-button";
 import { formatDate } from "@/lib/utils";
+import { CutiDraftButton } from "@/components/ui/cuti-draft-button";
 
 interface RequestHeaderProps {
   request: any;
   backUrl?: string;
+  cutiData?: any;
+  profile?: any;
+  pejabatList?: any[];
 }
 
-export function RequestHeader({ request, backUrl = "/dashboard/pengajuan" }: RequestHeaderProps) {
+export function RequestHeader({ request, backUrl = "/dashboard/pengajuan", cutiData, profile, pejabatList }: RequestHeaderProps) {
   return (
     <div className="flex flex-col gap-4">
       <Link
         href={backUrl}
-        className="group inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-[#059669] transition-colors"
+        className="group inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
       >
-        <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
+        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
         Kembali ke Riwayat
       </Link>
 
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#064e3b] via-[#059669] to-[#047857] p-5 sm:p-6 shadow-md border border-[#047857]/50">
-        <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-5 md:gap-6">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <div className="flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 px-3 py-1.5 backdrop-blur-sm">
-                <h1 className="text-lg sm:text-xl font-black text-white tracking-tight">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
+          <div className="space-y-3 sm:space-y-4 flex-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
                   {request.requestNumber}
                 </h1>
                 <CopyButton
                   text={request.requestNumber}
-                  className="text-white hover:bg-white/10 h-7 w-7"
+                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 h-8 w-8 shrink-0"
                 />
               </div>
               <StatusBadge
                 status={request.status}
-                className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider ring-1 ring-white/30 shadow-sm"
+                className="h-6 sm:h-7 px-2.5 sm:px-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider"
               />
             </div>
 
             <div>
-              <h2 className="text-base font-bold text-emerald-50 md:text-lg tracking-tight">
+              <h2 className="text-base sm:text-lg font-semibold text-slate-800">
                 {request.services?.name}
               </h2>
-              <p className="mt-1 text-xs font-medium text-emerald-100/70">
+              <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
                 {request.serviceItems?.name}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-6 pt-2">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/50">
+            <div className="flex flex-wrap gap-4 sm:gap-8 pt-1 sm:pt-2">
+              <div className="space-y-1">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   Diajukan
                 </span>
-                <span className="text-xs font-black text-white">
+                <p className="text-xs sm:text-sm font-semibold text-slate-800">
                   {formatDate(request.createdAt)}
-                </span>
+                </p>
               </div>
               {request.approvedAt && (
-                <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200/50">
+                <div className="space-y-1 border-l border-slate-200 pl-4 sm:pl-8">
+                  <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     Disetujui
                   </span>
-                  <span className="text-xs font-black text-white">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-800">
                     {formatDate(request.approvedAt)}
-                  </span>
+                  </p>
                 </div>
               )}
             </div>
           </div>
-
+          
+          {cutiData && profile && pejabatList && (
+            <div className="shrink-0 flex items-center justify-start md:justify-end mt-2 md:mt-0 w-full md:w-auto">
+              <CutiDraftButton 
+                cuti={cutiData} 
+                profile={profile} 
+                pejabatList={pejabatList} 
+              />
+            </div>
+          )}
         </div>
       </section>
     </div>

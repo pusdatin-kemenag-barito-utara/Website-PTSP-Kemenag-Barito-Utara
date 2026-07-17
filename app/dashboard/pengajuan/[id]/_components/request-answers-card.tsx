@@ -18,21 +18,22 @@ export function RequestAnswersCard({
   status,
 }: RequestAnswersCardProps) {
   // Helper to format date strings like "2026-06-29" or "2026-06-29,2026-06-30"
-  const formatValue = (value: string) => {
+  const formatValue = (value: string, fieldName: string = "") => {
     if (!value) return "-";
     
-    // Format date range (e.g. "2026-06-29,2026-06-30")
     if (value.includes(",")) {
       const parts = value.split(",").map(p => p.trim());
-      if (parts.length === 2 && /^\d{4}-\d{2}-\d{2}$/.test(parts[0]) && /^\d{4}-\d{2}-\d{2}$/.test(parts[1])) {
-        const d1 = format(new Date(parts[0]), "dd MMMM yyyy", { locale: localeId });
-        const d2 = format(new Date(parts[1]), "dd MMMM yyyy", { locale: localeId });
-        return `${d1} s/d ${d2}`;
+      const allDates = parts.every(p => /^\d{4}-\d{2}-\d{2}$/.test(p));
+      if (allDates) {
+        return `${parts.length} Hari`;
       }
     }
     
     // Format single date (e.g. "2026-06-29")
     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      if (fieldName.toLowerCase().includes("mulai cuti") || fieldName.toLowerCase().includes("tanggal cuti")) {
+        return "1 Hari";
+      }
       return format(new Date(value), "dd MMMM yyyy", { locale: localeId });
     }
     
@@ -51,29 +52,25 @@ export function RequestAnswersCard({
   });
 
   return (
-    <div className="rounded-2xl bg-white p-5 sm:p-6 shadow-sm border border-slate-200">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-            <ClipboardList className="h-5 w-5" />
-          </div>
-          <h3 className="text-lg font-black text-slate-900 tracking-tight">
-            Jawaban Form
-          </h3>
-        </div>
+    <div className="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+      <div className="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
+        <ClipboardList className="h-5 w-5 text-slate-500" />
+        <h3 className="text-base font-semibold text-slate-900">
+          Formulir Isian
+        </h3>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="divide-y divide-slate-100">
         {displayAnswers.map((answer: any) => (
           <div
             key={answer.id}
-            className="rounded-xl bg-slate-50 p-3.5 sm:p-5 group hover:bg-slate-100 transition-colors"
+            className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 px-6 py-4 hover:bg-slate-50/50 transition-colors"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 group-hover:text-slate-500 transition-colors">
+            <p className="text-sm font-medium text-slate-500 md:col-span-1">
               {answer.fieldName}
             </p>
-            <p className="text-sm font-bold text-slate-800 break-words leading-relaxed">
-              {formatValue(answer.fieldValue)}
+            <p className="text-sm font-semibold text-slate-900 md:col-span-2 break-words">
+              {formatValue(answer.fieldValue, answer.fieldName)}
             </p>
           </div>
         ))}

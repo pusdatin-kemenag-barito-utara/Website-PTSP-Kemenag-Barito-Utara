@@ -8,7 +8,7 @@ import {
 } from "@/lib/db/schema/kepegawaian";
 import { profiles, profilesPegawai } from "@/lib/db/schema/auth";
 import { getCurrentUser, requireAuth } from "@/lib/auth";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { createAuditLog } from "@/lib/audit";
@@ -348,13 +348,13 @@ export async function processCutiAction(
       let pesanWA = "";
 
       if (status === "approved") {
-        pesanWA = `🎉 *PENGAJUAN CUTI DISETUJUI*\n\nAssalamu'alaikum Warahmatullahi Wabarakatuh,\n\nPengajuan cuti Anda telah *disetujui* oleh Kepala Kantor Kementerian Agama Kab. Barito Utara.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📌 Pengajuan Anda kini dalam proses pembuatan *Surat Cuti* oleh Admin PTSP. Anda akan dihubungi kembali setelah surat selesai dibuat.\n\nTerima kasih,\n_PTSP Kantor Kemenag Kab. Barito Utara_`;
+        pesanWA = `🎉 *PENGAJUAN CUTI DISETUJUI*\n\nPengajuan cuti Anda telah *disetujui* oleh Kepala Kantor Kementerian Agama Kab. Barito Utara.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📌 Pengajuan Anda kini dalam proses pembuatan *Surat Cuti* oleh Admin PTSP. Anda akan dihubungi kembali setelah surat selesai dibuat.\n\n_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
       } else if (status === "rejected") {
-        pesanWA = `❌ *PENGAJUAN CUTI TIDAK DISETUJUI*\n\nAssalamu'alaikum Warahmatullahi Wabarakatuh,\n\nPengajuan cuti Anda *tidak disetujui* oleh Kepala Kantor.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📝 *Catatan:* ${catatan || "-"}\n\nSilakan hubungi atasan langsung Anda untuk informasi lebih lanjut.\n\n_PTSP Kantor Kemenag Kab. Barito Utara_`;
+        pesanWA = `❌ *PENGAJUAN CUTI TIDAK DISETUJUI*\n\nPengajuan cuti Anda *tidak disetujui* oleh Kepala Kantor.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📝 *Catatan:* ${catatan || "-"}\n\nSilakan hubungi atasan langsung Anda untuk informasi lebih lanjut.\n\n_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
       } else if (status === "delayed") {
-        pesanWA = `⏸️ *PENGAJUAN CUTI DITANGGUHKAN*\n\nAssalamu'alaikum Warahmatullahi Wabarakatuh,\n\nPengajuan cuti Anda *ditangguhkan* sementara oleh Kepala Kantor.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📝 *Catatan:* ${catatan || "-"}\n\n_PTSP Kantor Kemenag Kab. Barito Utara_`;
+        pesanWA = `⏸️ *PENGAJUAN CUTI DITANGGUHKAN*\n\nPengajuan cuti Anda *ditangguhkan* sementara oleh Kepala Kantor.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📝 *Catatan:* ${catatan || "-"}\n\n_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
       } else if (status === "changes") {
-        pesanWA = `🔄 *PENGAJUAN CUTI PERLU PERBAIKAN*\n\nAssalamu'alaikum Warahmatullahi Wabarakatuh,\n\nPengajuan cuti Anda *dikembalikan* untuk diperbaiki.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📝 *Catatan:* ${catatan || "-"}\n\nSilakan perbaiki dan ajukan kembali melalui aplikasi.\n\n_PTSP Kantor Kemenag Kab. Barito Utara_`;
+        pesanWA = `🔄 *PENGAJUAN CUTI PERLU PERBAIKAN*\n\nPengajuan cuti Anda *dikembalikan* untuk diperbaiki.\n\n📋 *Detail Cuti:*\n• Jenis: ${cutiData.jenisCuti}\n• Mulai: ${tglMulai}\n• Selesai: ${tglSelesai}\n\n📝 *Catatan:* ${catatan || "-"}\n\nSilakan perbaiki dan ajukan kembali melalui aplikasi.\n\n_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
       }
 
       if (pesanWA) {
@@ -377,18 +377,33 @@ export async function getVerifikasiCutiAtasan() {
     if (!user || !user.email) return { error: "Anda belum login." };
     const nip = user.email.split("@")[0];
 
-    // Check if the user is Atasan Langsung
+    // Check if the user is Atasan Langsung or Pejabat Berwenang
     const [pejabat] = await db
       .select()
       .from(profilesPegawai)
-      .where(and(eq(profilesPegawai.nip, nip), eq(profilesPegawai.tipePejabat, "Atasan Langsung")));
+      .where(
+        and(
+          eq(profilesPegawai.nip, nip),
+          or(
+            eq(profilesPegawai.tipePejabat, "Atasan Langsung"),
+            eq(profilesPegawai.tipePejabat, "Pejabat Berwenang")
+          )
+        )
+      );
 
     if (!pejabat) {
-      return { error: "Anda tidak memiliki akses sebagai Atasan Langsung." };
+      return { error: "Anda tidak memiliki akses sebagai Atasan Langsung atau Pejabat Berwenang." };
     }
 
-    if (!pejabat.unitKerja) {
-      return { error: "Unit kerja Atasan Langsung belum diatur." };
+    let filterCondition;
+    if (pejabat.tipePejabat === "Atasan Langsung") {
+      if (!pejabat.unitKerja) {
+        return { error: "Unit kerja Atasan Langsung belum diatur." };
+      }
+      filterCondition = eq(pengajuanCuti.unitKerja, pejabat.unitKerja);
+    } else {
+      // Pejabat Berwenang: Can see all requests that have been approved by Atasan Langsung
+      filterCondition = eq(pengajuanCuti.statusAtasan, "approved");
     }
 
     // Fetch cuti requests from this unitKerja
@@ -409,6 +424,12 @@ export async function getVerifikasiCutiAtasan() {
         alamatCuti: pengajuanCuti.alamatCuti,
         jenisPegawai: pengajuanCuti.jenisPegawai,
         ttdPemohon: pengajuanCuti.ttdPemohon,
+        ttdAtasan: pengajuanCuti.ttdAtasan,
+        catatanAtasan: pengajuanCuti.catatanAtasan,
+        ttdKepala: pengajuanCuti.ttdKepala,
+        catatanKepala: pengajuanCuti.catatanKepala,
+        statusKepala: pengajuanCuti.statusKepala,
+        status: pengajuanCuti.status,
         createdAt: pengajuanCuti.createdAt,
         user: {
           fullName: profiles.fullName,
@@ -419,12 +440,10 @@ export async function getVerifikasiCutiAtasan() {
       .from(pengajuanCuti)
       .leftJoin(profiles, eq(pengajuanCuti.userId, profiles.id))
       .leftJoin(profilesPegawai, eq(profiles.id, profilesPegawai.profileId))
-      .where(
-        eq(pengajuanCuti.unitKerja, pejabat.unitKerja)
-      )
+      .where(filterCondition)
       .orderBy(desc(pengajuanCuti.createdAt));
 
-    return { success: true, data: pengajuan };
+    return { success: true, data: pengajuan, role: pejabat.tipePejabat };
   } catch (error: any) {
     console.error("Gagal mengambil data verifikasi cuti:", error);
     return { error: error.cause?.message || error.message || "Terjadi kesalahan sistem." };
@@ -469,7 +488,7 @@ export async function verifikasiCutiAtasanAction(
 
     await createAuditLog({
       adminId: user.id,
-      action: `VERIFIKASI_CUTI_ATASAN_${status.toUpperCase()}`,
+      action: `VERIF_CUTI_ATASAN`,
       entityType: "pengajuan_cuti",
       entityId: id,
       details: { role: "atasan", status, catatan },

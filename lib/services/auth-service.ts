@@ -16,7 +16,7 @@ export class AuthService {
       throw new Error("Password minimal 6 karakter.");
     }
 
-    // 1. Check uniqueness
+    // 1. Check uniqueness & orphaned profiles
     const existing = await db.query.profiles.findFirst({
       where: and(
         eq(profilesTable.phone, phone),
@@ -24,7 +24,18 @@ export class AuthService {
       ),
       columns: { id: true },
     });
-    if (existing) throw new Error("Nomor WhatsApp sudah terdaftar sebagai pemohon.");
+    
+    if (existing) {
+      const { error: authError } = await admin.auth.admin.getUserById(existing.id);
+      if (authError && (authError.message.includes("User not found") || authError.status === 404)) {
+        // Profil yatim (orphaned), hapus agar bisa daftar baru
+        await db.delete(profilesTable).where(eq(profilesTable.id, existing.id));
+      } else if (!authError) {
+        throw new Error("Nomor WhatsApp sudah terdaftar sebagai pemohon.");
+      } else {
+        throw new Error("Gagal memverifikasi status akun: " + authError.message);
+      }
+    }
 
     // 2. Format internal email
     const digits = phone.replace(/\D/g, "");

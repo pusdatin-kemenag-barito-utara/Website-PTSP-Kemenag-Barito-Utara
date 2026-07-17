@@ -200,7 +200,11 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Sisa Akhir</label>
               <div className={`w-full px-3 py-2.5 text-sm border rounded-xl font-bold shadow-sm ${
-                sisaCuti > 0 ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"
+                sisaCuti < 0 
+                  ? "bg-red-500 border-red-600 text-white animate-pulse" 
+                  : sisaCuti === 0 
+                    ? "bg-red-50 border-red-200 text-red-700" 
+                    : "bg-emerald-50 border-emerald-200 text-emerald-700"
               }`}>
                 {sisaCuti}
               </div>
@@ -210,11 +214,17 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
           <fieldset className="border border-blue-200 bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <legend className="text-sm font-bold text-slate-700 px-1">Cuti Tahunan (Per Bulan {currentYear})</legend>
-              <span className="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full shadow-sm">
+              <span className={`text-xs font-bold px-3 py-1 rounded-full shadow-sm ${
+                totalDiambil > totalHak 
+                  ? "bg-red-500 text-white animate-pulse" 
+                  : totalDiambil === totalHak 
+                    ? "bg-emerald-100 text-emerald-700" 
+                    : "bg-blue-100 text-blue-700"
+              }`}>
                 Total Diambil: {totalDiambil}
               </span>
             </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {MONTHS.map((m, i) => (
                 <div key={m}>
                   <label className="block text-xs font-semibold text-slate-500 mb-1.5">{m}</label>
@@ -240,7 +250,7 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
               <div className="relative">
                 <input
                   type="number" min={0}
-                  value={form.cutiAlasanPenting}
+                  value={form.cutiAlasanPenting || "0"}
                   onChange={(e) => setForm((f) => ({ ...f, cutiAlasanPenting: e.target.value }))}
                   className="w-full pl-3 pr-12 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm text-center"
                 />
@@ -252,7 +262,7 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
               <div className="relative">
                 <input
                   type="number" min={0}
-                  value={form.cutiSakit}
+                  value={form.cutiSakit || "0"}
                   onChange={(e) => setForm((f) => ({ ...f, cutiSakit: e.target.value }))}
                   className="w-full pl-3 pr-12 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm text-center"
                 />
@@ -264,7 +274,7 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
               <div className="relative">
                 <input
                   type="number" min={0} max={3} step={0.5}
-                  value={form.cutiBersalin}
+                  value={form.cutiBersalin || "0"}
                   onChange={(e) => setForm((f) => ({ ...f, cutiBersalin: e.target.value }))}
                   className="w-full pl-3 pr-14 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm text-center"
                 />
@@ -276,7 +286,7 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
               <div className="relative">
                 <input
                   type="number" min={0}
-                  value={form.cutiBesar}
+                  value={form.cutiBesar || "0"}
                   onChange={(e) => setForm((f) => ({ ...f, cutiBesar: e.target.value }))}
                   className="w-full pl-3 pr-12 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all shadow-sm text-center"
                 />
@@ -286,6 +296,12 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
           </div>
         </div>
       </div>
+
+      {totalDiambil > totalHak && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-bold text-center animate-pulse">
+          Total cuti yang diambil melebihi jumlah hak cuti tahunan!
+        </div>
+      )}
 
       <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
         {onCancel && (
@@ -299,7 +315,7 @@ export function DataCutiForm({ initialData, onSuccess, onCancel }: Props) {
         )}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || totalDiambil > totalHak}
           className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md shadow-blue-500/20"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}

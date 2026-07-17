@@ -1,4 +1,4 @@
-import { ArrowRight, FileText, Briefcase, TrendingUp, Award, UserMinus, FileText as DefaultIcon } from "lucide-react";
+import { ArrowRight, Briefcase, TrendingUp, Award, UserMinus, FileText as DefaultIcon } from "lucide-react";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";

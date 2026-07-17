@@ -51,8 +51,9 @@ export class RequestQueryService {
         where: whereClause,
         with: {
           profiles: { columns: { fullName: true, email: true } },
-          services: { columns: { name: true } },
+          services: { columns: { name: true, category: true } },
           serviceItems: { columns: { name: true } },
+          pengajuanCuti: { columns: { statusAtasan: true, statusKepala: true } },
         },
         orderBy: [desc(serviceRequests.createdAt)],
         limit: pageSize,

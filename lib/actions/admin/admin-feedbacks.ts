@@ -127,8 +127,7 @@ export async function replyFeedbackAction(idStr: string, replyText: string): Pro
       `💬 *Tanggapan Admin:*\n` +
       `"${replyText}"\n\n` +
       `Terima kasih atas partisipasi Anda dalam meningkatkan kualitas layanan kami.\n\n` +
-      `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
-      `_Kemenag Kabupaten Barito Utara_`;
+      `_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
 
     try {
       await sendWhatsAppNotification(entry.phone, waMessage);

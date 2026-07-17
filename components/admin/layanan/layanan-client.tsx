@@ -204,6 +204,7 @@ export function LayananClient({
         onDelete={setDeletingService}
         showBidangColumn={isSuperAdmin}
         isSuperAdmin={isSuperAdmin}
+        category={category}
       />
 
       {/* FLOATING MODAL: ADD / EDIT */}

@@ -25,7 +25,10 @@ export function DokumenHasilClient({
       />
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <DokumenHasilTable paginatedRequests={requests} urlMap={urlMap} />
+        <DokumenHasilTable 
+          paginatedRequests={requests} 
+          urlMap={urlMap} 
+        />
       </div>
     </div>
   );

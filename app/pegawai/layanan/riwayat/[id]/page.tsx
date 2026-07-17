@@ -54,6 +54,101 @@ export default async function PegawaiRequestDetailPage({
   if (requestData.userId !== profile.id) redirect("/pegawai/layanan/riwayat");
 
   const request = serializeBigInt(requestData);
+  
+  // Ambil data draft cuti (jika ini layanan cuti)
+  const isCutiService = request.services?.name?.toLowerCase().includes("cuti") || false;
+  let cutiData = null;
+  let pejabatList: any[] = [];
+  
+  if (isCutiService) {
+    const { pengajuanCuti } = await import("@/lib/db/schema/kepegawaian");
+    const cutiRecords = await db.query.pengajuanCuti.findMany({
+      where: eq(pengajuanCuti.userId, profile.id),
+      orderBy: (table, { desc }) => [desc(table.createdAt)],
+      limit: 10
+    });
+    
+    // Cocokkan data pengajuan cuti dengan serviceRequest berdasarkan timestamp
+    const reqDate = new Date(request.submittedAt || request.createdAt).getTime();
+    
+    cutiData = cutiRecords.find(c => {
+      const cDate = new Date(c.createdAt).getTime();
+      const diff = Math.abs(cDate - reqDate);
+      return diff < 60000; // toleransi 60 detik
+    });
+    
+    // Fallback: Jika gagal mencocokkan waktu (mungkin karena isu zona waktu), ambil yang paling terbaru
+    if (!cutiData && cutiRecords.length > 0) {
+      cutiData = cutiRecords[0];
+    }
+
+    if (cutiData) {
+      const { profiles, profilesPegawai } = await import("@/lib/db/schema/auth");
+      
+      const pegawaiRecords = await db
+        .select({
+          nama: profiles.fullName,
+          nip: profilesPegawai.nip,
+          tipePejabat: profilesPegawai.tipePejabat,
+          unitKerja: profilesPegawai.unitKerja,
+        })
+        .from(profilesPegawai)
+        .innerJoin(profiles, eq(profilesPegawai.profileId, profiles.id));
+        
+      pejabatList = pegawaiRecords;
+
+      // Ambil data rekap cuti tahunan
+      const profileWithNip = profile as any;
+      if (profileWithNip.nip) {
+        const { dataCutiPegawai, rekapCutiTahunan } = await import("@/lib/db/schema/kepegawaian");
+        const cutiPegawai = await db.query.dataCutiPegawai.findFirst({
+          where: eq(dataCutiPegawai.nip, profileWithNip.nip)
+        });
+        
+        if (cutiPegawai) {
+          const rekap = await db.query.rekapCutiTahunan.findFirst({
+            where: eq(rekapCutiTahunan.pegawaiId, cutiPegawai.id),
+            orderBy: (table, { desc }) => [desc(table.tahunTarget)]
+          });
+          
+          if (rekap) {
+            cutiData = {
+              ...cutiData,
+              cutiTahun2: rekap.cutiTahun2,
+              cutiTahun1: rekap.cutiTahun1,
+              hakBerjalan: rekap.jumlahCuti,
+              jumlahCuti: rekap.sisaCuti,
+              cutiAlasanPenting: rekap.cutiAlasanPenting,
+              cutiBesar: rekap.cutiBesar,
+              cutiBersalin: rekap.cutiBersalin,
+              cutiSakit: rekap.cutiSakit,
+            };
+          }
+        }
+      }
+
+      // Sinkronkan data cutiData dengan jawaban form aktual (Formulir Isian)
+      // agar draf surat persis sama dengan yang diisi pemohon.
+      const findAnswer = (keywords: string[], matchAll = false) => {
+        const answer = request.serviceRequestAnswers?.find((a: any) => {
+          const label = (a.fieldName || "").toLowerCase();
+          return matchAll 
+            ? keywords.every((k) => label.includes(k.toLowerCase()))
+            : keywords.some((k) => label.includes(k.toLowerCase()));
+        });
+        return answer?.fieldValue || "";
+      };
+
+      cutiData = {
+        ...cutiData,
+        alasan: findAnswer(["alasan"]) || cutiData.alasan,
+        alamatCuti: findAnswer(["alamat"]) || cutiData.alamatCuti,
+        noHp: findAnswer(["whatsapp", "hp"]) || cutiData.noHp,
+        masaKerjaTahun: findAnswer(["masa kerja", "tahun"], true) || cutiData.masaKerjaTahun,
+        masaKerjaBulan: findAnswer(["masa kerja", "bulan"], true) || cutiData.masaKerjaBulan,
+      };
+    }
+  }
   const docUrls = (
     await Promise.allSettled(
       (request.serviceRequestDocuments ?? []).map(async (doc: any) => ({
@@ -92,7 +187,13 @@ export default async function PegawaiRequestDetailPage({
     <div className="space-y-8 animate-in fade-in duration-700">
       <RealtimeSync />
 
-      <RequestHeader request={request} backUrl="/pegawai/layanan/riwayat" />
+      <RequestHeader 
+        request={request} 
+        backUrl="/pegawai/layanan/riwayat" 
+        cutiData={cutiData}
+        profile={profile}
+        pejabatList={pejabatList}
+      />
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6 md:space-y-8">

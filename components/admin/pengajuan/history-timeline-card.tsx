@@ -6,10 +6,22 @@ import { ActivityLogActions } from "./activity-log-actions";
 
 const ACTION_MAPPINGS: Record<string, string> = {
   submitted: "Pengajuan Dikirim",
+  request_created: "Pengajuan Baru Dibuat",
   request_updated: "Pembaruan Data & Dokumen",
   revision_uploaded: "Dokumen Revisi Diunggah",
   review_submitted: "Peninjauan oleh Petugas",
   "Pemohon memperbarui data formulir": "Formulir Diperbarui",
+  "status:approved": "Status: Disetujui",
+  "status:rejected": "Status: Ditolak",
+  "status:under_review": "Status: Sedang Ditinjau",
+  "status:revision_required": "Status: Perlu Revisi",
+  "status:completed": "Status: Selesai",
+  "SETUJUI_CUTI_ATASAN": "Cuti Disetujui (Atasan)",
+  "SETUJUI_CUTI_KEPALA": "Cuti Disetujui (Kepala Kantor)",
+  "TOLAK_CUTI_ATASAN": "Cuti Ditolak (Atasan)",
+  "TOLAK_CUTI_KEPALA": "Cuti Ditolak (Kepala Kantor)",
+  "manual_document_uploaded": "Dokumen Hasil Diunggah",
+  "KIRIM_WA_HASIL": "Notifikasi WhatsApp Dikirim",
 };
 
 function formatAction(action: string): string {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, CheckCircle2, AlertCircle, Loader2, IdCard, MapPin, Briefcase } from "lucide-react";
+import { Phone, CheckCircle2, AlertCircle, Loader2, MapPin, UserCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,7 @@ export function PemohonLengkapiWaForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phone, setPhone] = useState("");
-  const [nik, setNik] = useState("");
-  const [pekerjaan, setPekerjaan] = useState("");
+  const [namaLengkap, setNamaLengkap] = useState("");
   const [alamat, setAlamat] = useState("");
   
   const [loading, setLoading] = useState(false);
@@ -26,14 +25,19 @@ export function PemohonLengkapiWaForm() {
     if (!rawPhone || rawPhone.length < 10) {
       return setError("Masukkan nomor WhatsApp yang valid.");
     }
+    if (!namaLengkap.trim()) {
+      return setError("Masukkan nama lengkap Anda.");
+    }
+    if (!alamat.trim()) {
+      return setError("Masukkan alamat lengkap Anda.");
+    }
 
     setLoading(true);
     setError("");
 
     const formData = new FormData();
     formData.append("phone", rawPhone);
-    formData.append("nik", nik);
-    formData.append("pekerjaan", pekerjaan);
+    formData.append("namaLengkap", namaLengkap);
     formData.append("alamat", alamat);
 
     const result = await updatePemohonWhatsappAction(formData);
@@ -73,6 +77,19 @@ export function PemohonLengkapiWaForm() {
       </div>
 
       <div className="space-y-4">
+        <Field label="Nama Lengkap" required>
+          <div className="relative group">
+            <UserCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <Input
+              type="text"
+              value={namaLengkap}
+              onChange={(e) => setNamaLengkap(e.target.value)}
+              placeholder="Ketik nama lengkap Anda"
+              className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-teal-500 focus:ring-teal-500/10 transition-all"
+            />
+          </div>
+        </Field>
+
         <Field label="Nomor WhatsApp" required>
           <div className="relative group">
             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
@@ -87,35 +104,7 @@ export function PemohonLengkapiWaForm() {
           </div>
         </Field>
 
-        <Field label="NIK (Nomor Induk Kependudukan)">
-          <div className="relative group">
-            <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-            <Input
-              type="text"
-              inputMode="numeric"
-              value={nik}
-              onChange={(e) => setNik(e.target.value.replace(/\D/g, ""))}
-              placeholder="16 digit NIK"
-              maxLength={16}
-              className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-teal-500 focus:ring-teal-500/10 transition-all"
-            />
-          </div>
-        </Field>
-
-        <Field label="Pekerjaan">
-          <div className="relative group">
-            <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-            <Input
-              type="text"
-              value={pekerjaan}
-              onChange={(e) => setPekerjaan(e.target.value)}
-              placeholder="Contoh: Wiraswasta, Pegawai Swasta..."
-              className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-teal-500 focus:ring-teal-500/10 transition-all"
-            />
-          </div>
-        </Field>
-
-        <Field label="Alamat">
+        <Field label="Alamat" required>
           <div className="relative group">
             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
             <Input

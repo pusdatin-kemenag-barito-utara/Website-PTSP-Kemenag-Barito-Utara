@@ -26,11 +26,6 @@ export default async function TrackPage({
 
   return (
     <main className="relative min-h-screen bg-slate-50/50 pb-20 overflow-hidden">
-      {/* Decorative Premium Blur Gradients */}
-      <div className="absolute top-[10%] left-1/4 w-[450px] h-[450px] bg-emerald-500/[0.04] rounded-full blur-[120px] pointer-events-none -z-10" />
-      <div className="absolute top-[30%] right-1/4 w-[350px] h-[350px] bg-teal-500/[0.03] rounded-full blur-[100px] pointer-events-none -z-10" />
-      <div className="absolute bottom-[20%] left-1/3 w-[500px] h-[500px] bg-emerald-600/[0.02] rounded-full blur-[130px] pointer-events-none -z-10" />
-
       <PageBanner
         title="Lacak Permohonan Layanan"
         description="Masukkan nomor registrasi permohonan Anda untuk melacak status proses dokumen dan riwayat persetujuan secara real-time."
@@ -43,8 +38,8 @@ export default async function TrackPage({
 
       <RealtimeSync />
       
-      <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8 relative z-10">
-        <div className="mx-auto max-w-4xl space-y-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12 relative z-10">
+        <div className="mx-auto max-w-6xl space-y-6">
           <MotionDiv
             variants={springPopVariants}
             initial="hidden"

@@ -21,6 +21,13 @@ import {
   BookOpen,
   Calendar,
   MessageSquare,
+  Briefcase,
+  Lightbulb,
+  HeartHandshake,
+  Box,
+  FileText,
+  Calculator,
+  Database,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { GlobalSearchModal } from "@/components/global-search-modal";
@@ -38,8 +45,16 @@ const navItems = [
     href: "#",
     icon: LayoutGrid,
     children: [
-      { label: "Katalog Layanan Masyarakat", href: "/layanan", icon: LayoutGrid },
-      { label: "Katalog Layanan Pegawai", href: "/layanan-pegawai", icon: LayoutGrid },
+      {
+        label: "Katalog Layanan Masyarakat",
+        href: "/layanan",
+        icon: LayoutGrid,
+      },
+      {
+        label: "Katalog Layanan Pegawai",
+        href: "/layanan-pegawai",
+        icon: LayoutGrid,
+      },
       { label: "Cek Cuti", href: "/cek-cuti", icon: FilePlus },
     ],
   },
@@ -51,6 +66,49 @@ const navItems = [
     children: [
       { label: "Buku Tamu", href: "/buku-tamu", icon: BookOpen },
       { label: "Janji Temu", href: "/janji-temu", icon: Calendar },
+    ],
+  },
+  {
+    label: "Inovasi",
+    href: "#",
+    icon: Lightbulb,
+    children: [
+      {
+        label: "Pusat Layanan Inklusi",
+        href: "https://inklusi.kemenag-baritoutara.com",
+        icon: HeartHandshake,
+        external: true,
+      },
+      {
+        label: "SI BETANG",
+        href: "https://arsip.kemenag-baritoutara.com",
+        icon: Box,
+        external: true,
+      },
+      {
+        label: "SI MANDAU",
+        href: "https://surat.kemenag-baritoutara.com",
+        icon: LayoutDashboard,
+        external: true,
+      },
+      {
+        label: "E-SOP Digital",
+        href: "https://sop.kemenag-baritoutara.com",
+        icon: FileText,
+        external: true,
+      },
+      {
+        label: "Kalkulator Zakat & Wakaf",
+        href: "https://baritoutara.kemenag.go.id/layanan/kalkulator",
+        icon: Calculator,
+        external: true,
+      },
+      {
+        label: "PUSDATIN",
+        href: "https://pusdatin.kemenag-baritoutara.com",
+        icon: Database,
+        external: true,
+      },
     ],
   },
   { label: "E-Pengaduan", href: "/e-pengaduan", icon: MessageSquare },
@@ -117,14 +175,19 @@ export function SiteHeaderClient({
 
   let dashboardLabel = "Dashboard";
   if (profile) {
-    if (isAdminRole(profile.role)) dashboardLabel = "Dashboard Admin";
-    else if (profile.role === "pegawai") dashboardLabel = "Dashboard Pegawai";
-    else if (profile.role === "user") dashboardLabel = "Dashboard Pemohon";
+    if (isAdminRole(profile.role)) dashboardLabel = "DASHBOARD PETUGAS";
+    else if (profile.role === "pegawai") dashboardLabel = "DASHBOARD PEGAWAI";
+    else if (profile.role === "user") dashboardLabel = "DASHBOARD PEMOHON";
     else if (profile.role)
-      dashboardLabel = `Dashboard ${profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}`;
+      dashboardLabel = `DASHBOARD ${profile.role.toUpperCase()}`;
   }
 
   const isAdmin = isAdminRole(profile?.role);
+  const isPegawai = profile?.role === "pegawai";
+
+  let badgeLabel = "Pemohon";
+  if (isAdmin) badgeLabel = "Petugas";
+  else if (isPegawai) badgeLabel = "Pegawai";
 
   return (
     <>
@@ -148,17 +211,33 @@ export function SiteHeaderClient({
               <div className="min-w-0 flex flex-col justify-center">
                 <p className="truncate text-[11px] sm:text-[13px] lg:text-sm font-black tracking-wide text-emerald-800 flex items-center gap-1">
                   PTSP Si{" "}
-                  <Image src="/atak.png" alt="ATAK" width={48} height={20} className="h-[1em] w-auto object-contain inline-block" style={{ height: "1em", width: "auto" }} />
+                  <Image
+                    src="/atak.png"
+                    alt="ATAK"
+                    width={48}
+                    height={20}
+                    className="h-[1em] w-auto object-contain inline-block"
+                    style={{ height: "1em", width: "auto" }}
+                  />
                 </p>
                 <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-slate-500 leading-tight">
                   <div className="block sm:hidden truncate">
-                    <span className="text-amber-500">S</span>istem <span className="text-amber-500">I</span>nformasi
+                    <span className="text-amber-500">S</span>istem{" "}
+                    <span className="text-amber-500">I</span>nformasi
                   </div>
                   <div className="block sm:hidden truncate">
-                    <span className="text-amber-500">A</span>dministrasi <span className="text-amber-500">T</span>erpadu l<span className="text-amber-500">A</span>yanan <span className="text-amber-500">K</span>eagamaan
+                    <span className="text-amber-500">A</span>dministrasi{" "}
+                    <span className="text-amber-500">T</span>erpadu l
+                    <span className="text-amber-500">A</span>yanan{" "}
+                    <span className="text-amber-500">K</span>eagamaan
                   </div>
                   <div className="hidden sm:block truncate">
-                    <span className="text-amber-500">S</span>istem <span className="text-amber-500">I</span>nformasi <span className="text-amber-500">A</span>dministrasi <span className="text-amber-500">T</span>erpadu l<span className="text-amber-500">A</span>yanan <span className="text-amber-500">K</span>eagamaan
+                    <span className="text-amber-500">S</span>istem{" "}
+                    <span className="text-amber-500">I</span>nformasi{" "}
+                    <span className="text-amber-500">A</span>dministrasi{" "}
+                    <span className="text-amber-500">T</span>erpadu l
+                    <span className="text-amber-500">A</span>yanan{" "}
+                    <span className="text-amber-500">K</span>eagamaan
                   </div>
                 </div>
               </div>
@@ -173,12 +252,12 @@ export function SiteHeaderClient({
                     <div className="flex items-center gap-2 rounded-full px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700">
                       {isAdmin ? (
                         <Shield className="h-4 w-4 text-emerald-600" />
+                      ) : isPegawai ? (
+                        <Briefcase className="h-4 w-4 text-emerald-600" />
                       ) : (
                         <UserCircle2 className="h-4 w-4 text-slate-500" />
                       )}
-                      <span className="text-xs font-bold">
-                        {isAdmin ? "Petugas" : "Pemohon"}
-                      </span>
+                      <span className="text-xs font-bold">{badgeLabel}</span>
                     </div>
                     <Link
                       href={dashboardHref}
@@ -289,6 +368,8 @@ export function SiteHeaderClient({
                                     <li key={child.href}>
                                       <Link
                                         href={child.href}
+                                        target={(child as any).external ? "_blank" : undefined}
+                                        rel={(child as any).external ? "noopener noreferrer" : undefined}
                                         onClick={() => setOpenDropdown(null)}
                                         className="group/item flex items-center justify-between rounded-xl px-4 py-3 text-[11.5px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-emerald-600 hover:text-white"
                                       >
@@ -312,7 +393,7 @@ export function SiteHeaderClient({
               </ul>
 
               {/* Global Search Icon UI placeholder */}
-              <button 
+              <button
                 onClick={() => setIsSearchOpen(true)}
                 className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mr-2"
               >
@@ -333,7 +414,10 @@ export function SiteHeaderClient({
         dashboardHref={dashboardHref}
         isAdmin={isAdmin}
       />
-      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </>
   );
 }

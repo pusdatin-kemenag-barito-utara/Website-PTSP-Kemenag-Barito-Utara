@@ -20,7 +20,7 @@ export async function getPejabatList() {
       })
       .from(profilesPegawai)
       .leftJoin(profiles, eq(profilesPegawai.profileId, profiles.id))
-      .where(inArray(profilesPegawai.tipePejabat, ["Atasan Langsung", "Kepala Kantor"]))
+      .where(inArray(profilesPegawai.tipePejabat, ["Atasan Langsung", "Kepala Kantor", "Pejabat Berwenang"]))
       .orderBy(asc(profilesPegawai.orderIndex));
       
     return { success: true, data: rawData };

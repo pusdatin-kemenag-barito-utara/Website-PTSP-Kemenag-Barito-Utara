@@ -105,17 +105,20 @@ export function PegawaiNewRequestForm({
     // Attempt to extract tanggal
     let tanggalMulai = "";
     let tanggalSelesai = "";
+    let tanggalPilihan = "";
     
     const dateField = selectedItem.serviceFormFields?.find((f: any) => f.type === "date" && f.label.toLowerCase().includes("tanggal"));
     if (dateField) {
       const rawDate = formData.get(`answer_${dateField.id}`) as string || "";
       if (rawDate.includes(",")) {
-        const dates = rawDate.split(",");
+        const dates = rawDate.split(",").map(d => d.trim());
         tanggalMulai = dates[0] || "";
         tanggalSelesai = dates[dates.length - 1] || "";
+        tanggalPilihan = rawDate;
       } else {
         tanggalMulai = rawDate;
         tanggalSelesai = rawDate;
+        tanggalPilihan = rawDate;
       }
     }
 
@@ -139,13 +142,9 @@ export function PegawaiNewRequestForm({
       cutiTahun1: Number(sisaCutiN1 || "0"),
       cutiTahun2: Number(sisaCutiN2 || "0"),
       signature: "TTE_VERIFIED",
-      tanggalPilihan: "",
+      tanggalPilihan: tanggalPilihan,
     } as any;
   };
-
-  useEffect(() => {
-    setRequirementFiles({});
-  }, [serviceItemId]);
 
   useEffect(() => {
     setRequirementFiles({});
@@ -308,60 +307,43 @@ export function PegawaiNewRequestForm({
 
         {/* When service is locked (e.g. Cuti ASN): show jenis cuti tabs directly */}
         {lockedService ? (
-          <div className="p-6 sm:p-8 space-y-8">
-            {/* Jenis Cuti Tabs */}
-            <div>
-              <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-black">1</span>
-                Pilih Jenis Cuti
-              </h2>
-              <div className="relative max-w-sm">
-                <ModernSelect
-                  value={serviceItemId}
-                  onChange={(val) => setServiceItemId(val)}
-                  options={(lockedService.serviceItems || []).map((item: any) => ({
-                    value: String(item.id),
-                    label: item.name
-                  }))}
-                  placeholder="-- Pilih Jenis Cuti --"
-                />
+          <div className="p-6 sm:p-8 space-y-6 sm:space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+              {/* Jenis Cuti */}
+              <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
+                <label className="text-xs font-semibold text-slate-600">Jenis Cuti <span className="text-rose-500">*</span></label>
+                <div className="relative z-40">
+                  <ModernSelect
+                    value={serviceItemId}
+                    onChange={(val) => setServiceItemId(val)}
+                    options={(lockedService.serviceItems || []).map((item: any) => ({
+                      value: String(item.id),
+                      label: item.name
+                    }))}
+                    placeholder="-- Pilih Jenis Cuti --"
+                  />
+                </div>
               </div>
-            </div>
-
-            {/* Data Pegawai Section */}
-            <div>
-              <h2 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2 border-b border-slate-100 pb-4">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-black">2</span>
-                Data Pegawai
-              </h2>
 
               {/* Jenis Pegawai (PNS/PPPK) */}
-              <div className="mb-5">
-                <label className="text-xs font-semibold text-slate-600 block mb-2">Jenis Pegawai <span className="text-rose-500">*</span></label>
+              <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
+                <label className="text-xs font-semibold text-slate-600 block mb-1">Status Pegawai <span className="text-rose-500">*</span></label>
                 <div className="flex gap-3">
                   {(["PNS", "PPPK"] as const).map((jenis) => (
                     <button
                       key={jenis}
                       type="button"
                       onClick={() => setJenisPegawai(jenis)}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${
+                      className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border text-sm font-bold transition-all ${
                         jenisPegawai === jenis
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
-                      <span className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                        jenisPegawai === jenis ? "border-emerald-500" : "border-slate-300"
-                      }`}>
-                        {jenisPegawai === jenis && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
-                      </span>
                       {jenis}
                     </button>
                   ))}
                 </div>
-                {jenisPegawai === "PPPK" && (
-                  <p className="text-xs text-amber-600 mt-2 font-medium">⚠ Format surat cuti PPPK akan digunakan untuk draft.</p>
-                )}
               </div>
 
               {/* Hidden inputs untuk submit */}
@@ -370,8 +352,6 @@ export function PegawaiNewRequestForm({
               <input type="hidden" name="cuti_sisa_n1" value={sisaCutiN1} />
               <input type="hidden" name="cuti_sisa_n2" value={sisaCutiN2} />
               <input type="hidden" name="unitKerja" value={unitKerja} />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-600">Nama Lengkap</label>
                   <input type="text" readOnly value={profile?.fullName || "-"} className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm focus:outline-none" />
@@ -441,23 +421,20 @@ export function PegawaiNewRequestForm({
                     </div>
                   </div>
                 </div>
-              </div>
+              {/* Dynamic Form Fields (only when item selected) */}
+              {selectedItem && (
+                <div className="sm:col-span-2 mt-4 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="border-t border-slate-100 pt-6">
+                    <RequestFormFields fields={selectedItem.serviceFormFields ?? []} profile={profile} />
+                  </div>
+                  <RequestRequirementUpload
+                    requirements={selectedItem.serviceRequirements ?? []}
+                    onFilesChange={setRequirementFiles}
+                    hideHeader={true}
+                  />
+                </div>
+              )}
             </div>
-
-            {/* Dynamic Form Fields (only when item selected) */}
-            {selectedItem && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-                <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-4">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-black">3</span>
-                  Detail Pengajuan {selectedItem.name}
-                </h2>
-                <RequestFormFields fields={selectedItem.serviceFormFields ?? []} />
-                <RequestRequirementUpload
-                  requirements={selectedItem.serviceRequirements ?? []}
-                  onFilesChange={setRequirementFiles}
-                />
-              </div>
-            )}
 
 
 
@@ -544,13 +521,9 @@ export function PegawaiNewRequestForm({
             </div>
 
             {/* Section: Detail Pengajuan (Dynamic Forms) */}
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
-                <ScrollText className="h-5 w-5 text-emerald-600" />
-                Detail Pengajuan {selectedService?.name}
-              </h2>
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 mt-2">
               <div className="space-y-6">
-                <RequestFormFields fields={selectedItem.serviceFormFields ?? []} />
+                <RequestFormFields fields={selectedItem.serviceFormFields ?? []} profile={profile} />
                 <RequestRequirementUpload
                   requirements={selectedItem.serviceRequirements ?? []}
                   onFilesChange={setRequirementFiles}

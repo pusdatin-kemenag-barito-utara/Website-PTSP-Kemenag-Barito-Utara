@@ -119,7 +119,7 @@ export function DraftCutiDocument({ data, pejabatList = [] }: DraftCutiDocumentP
 
   const getPejabatBerwenang = () => {
     const pejabat = pejabatList?.find(
-      (p: any) => p.tipePejabat === "Pejabat Berwenang"
+      (p: any) => p.tipePejabat === "Pejabat Berwenang" || p.tipePejabat === "Kepala Kantor"
     );
     return pejabat
       ? { nama: pejabat.nama, nip: pejabat.nip }

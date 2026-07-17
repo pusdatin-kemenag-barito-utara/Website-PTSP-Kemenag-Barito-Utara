@@ -74,26 +74,26 @@ export function CutiDraftButton({ cuti, profile, pejabatList }: CutiDraftButtonP
     keputusanKepala: cuti.statusKepala !== "pending" ? cuti.statusKepala : undefined,
     catatanAtasan: cuti.catatanAtasan || undefined,
     catatanKepala: cuti.catatanKepala || undefined,
-    sisaCuti: profile?.sisaCuti ?? undefined,
-    cutiTahun2: profile?.cutiTahun2 ?? undefined,
-    cutiTahun1: profile?.cutiTahun1 ?? undefined,
-    hakBerjalan: profile?.hakBerjalan ?? undefined,
-    jumlahCuti: profile?.jumlahCuti ?? undefined,
-    totalDiambil: profile?.totalDiambil ?? 0,
-    cutiAlasanPenting: profile?.cutiAlasanPenting ?? undefined,
-    cutiBesar: profile?.cutiBesar ?? undefined,
-    cutiBersalin: profile?.cutiBersalin ?? undefined,
-    cutiSakit: profile?.cutiSakit ?? undefined,
+    sisaCuti: (profile as any)?.sisaCuti ?? undefined,
+    cutiTahun2: (cuti as any).cutiTahun2 ?? (profile as any)?.cutiTahun2 ?? undefined,
+    cutiTahun1: (cuti as any).cutiTahun1 ?? (profile as any)?.cutiTahun1 ?? undefined,
+    hakBerjalan: (cuti as any).hakBerjalan ?? (profile as any)?.hakBerjalan ?? undefined,
+    jumlahCuti: (cuti as any).jumlahCuti ?? (profile as any)?.jumlahCuti ?? undefined,
+    totalDiambil: (cuti as any).totalDiambil ?? (profile as any)?.totalDiambil ?? 0,
+    cutiAlasanPenting: (cuti as any).cutiAlasanPenting ?? (profile as any)?.cutiAlasanPenting ?? undefined,
+    cutiBesar: (cuti as any).cutiBesar ?? (profile as any)?.cutiBesar ?? undefined,
+    cutiBersalin: (cuti as any).cutiBersalin ?? (profile as any)?.cutiBersalin ?? undefined,
+    cutiSakit: (cuti as any).cutiSakit ?? (profile as any)?.cutiSakit ?? undefined,
   };
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-semibold shadow-sm hover:shadow-md hover:shadow-emerald-500/15 hover:border-emerald-400 transition-all active:scale-95"
+        className="inline-flex items-center justify-center gap-2 px-4 py-2 w-full md:w-auto rounded-xl border-2 border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-semibold shadow-sm hover:shadow-md hover:shadow-emerald-500/15 hover:border-emerald-400 transition-all active:scale-95"
       >
         <FileText className="h-4 w-4" />
-        Lihat Dokumen
+        Lihat Surat Permohonan Cuti
       </button>
 
       {open && (

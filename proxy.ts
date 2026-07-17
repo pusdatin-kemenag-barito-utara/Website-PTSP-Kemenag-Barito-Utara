@@ -33,6 +33,10 @@ function isSameOrigin(request: NextRequest): boolean {
 }
 
 async function checkMaintenanceStatus(): Promise<boolean> {
+  if (process.env.NODE_ENV === "development") {
+    return false;
+  }
+
   try {
     const pusdatinUrl = process.env.NEXT_PUBLIC_PUSDATIN_URL || "http://localhost:3000";
     const appId = "ptsp-kemenag"; 
@@ -113,13 +117,17 @@ export async function proxy(request: NextRequest) {
     response = await updateSession(request);
   }
 
-  // Check maintenance mode
-  const isMaintenanceMode = await checkMaintenanceStatus();
   const isExemptFromMaintenance = 
     path === "/maintenance" || 
     path.startsWith("/api");
 
-  if (isMaintenanceMode && !isExemptFromMaintenance) {
+  // Check maintenance mode only if the path is not exempt
+  let isMaintenanceMode = false;
+  if (!isExemptFromMaintenance) {
+    isMaintenanceMode = await checkMaintenanceStatus();
+  }
+
+  if (isMaintenanceMode) {
     const redirectRes = NextResponse.redirect(new URL("/maintenance", request.url), 302);
     
     // Copy cookies from updateSession to ensure session doesn't die during maintenance

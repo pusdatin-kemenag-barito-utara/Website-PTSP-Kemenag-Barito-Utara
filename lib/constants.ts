@@ -38,6 +38,10 @@ export const UNIT_KERJA_OPTIONS = [
   "KUA Kecamatan Gunung Purei",
   "KUA Kecamatan Montallat",
   "KUA Kecamatan Gunung Timang",
+  "MIN 1 Barito Utara",
+  "MIN 2 Barito Utara",
+  "MTsN Barito",
+  "MAN Barito Utara",
 ];
 
 export type AppRole = (typeof ADMIN_ROLES)[number];
@@ -130,3 +134,26 @@ export function getRoleLabel(
 
   return labels[role ?? ""] || role || "Administrator";
 }
+
+export const HARDCODED_PENSIUN_REQUIREMENTS = [
+  { id: "pensiun-1", documentName: "Surat Permohonan", isRequired: true, allowedExtensions: "pdf", templateUrl: "/templates/form_surat_permohonan.docx" },
+  { id: "pensiun-2", documentName: "SK CPNS", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-3", documentName: "SK PNS", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-4", documentName: "SK Pangkat Terakhir", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-5", documentName: "Surat Penugasan Terakhir", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-6", documentName: "Surat Pernyataan Menduduki Jabatan", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-7", documentName: "Surat Pernyataan Melaksanakan Tugas", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-8", documentName: "Akta Nikah / Buku Nikah / Akta Cerai", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-9", documentName: "Kartu Pegawai (KARPEG)", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-10", documentName: "KARIS / KARSU", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-11", documentName: "KTP", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-12", documentName: "Kartu Keluarga", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-13", documentName: "NPWP", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-14", documentName: "Buku Rekening", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-15", documentName: "KGB Terakhir", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-16", documentName: "SKP 1 Tahun Terakhir", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-17", documentName: "Akta Kelahiran Anak Tertanggung", isRequired: true, allowedExtensions: "pdf" },
+  { id: "pensiun-18", documentName: "Akta Kematian (Untuk Usul Pensiun Meninggal Dunia)", isRequired: false, allowedExtensions: "pdf" },
+  { id: "pensiun-19", documentName: "Surat Keterangan Janda / Duda dari Kecamatan", isRequired: false, allowedExtensions: "pdf" },
+  { id: "pensiun-20", documentName: "Foto resmi background merah", isRequired: true, allowedExtensions: "jpg,jpeg,png" },
+];

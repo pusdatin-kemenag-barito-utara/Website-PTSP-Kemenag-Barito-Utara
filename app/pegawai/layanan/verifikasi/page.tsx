@@ -1,7 +1,8 @@
 import { getVerifikasiCutiAtasan } from "@/lib/actions/pegawai/cuti-approval";
 import { getCurrentProfile } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { profilesPegawai } from "@/lib/db/schema/auth";
+import { profilesPegawai, profiles } from "@/lib/db/schema/auth";
+import { eq } from "drizzle-orm";
 import VerifikasiClient from "./components/verifikasi-client";
 
 export const metadata = {
@@ -24,7 +25,16 @@ export default async function VerifikasiCutiPage() {
 
   const pengajuanData = result.data || [];
   const atasanProfile = await getCurrentProfile();
-  const pejabatList = await db.query.profilesPegawai.findMany();
+  const pejabatList = await db
+    .select({
+      nip: profilesPegawai.nip,
+      jabatan: profilesPegawai.jabatan,
+      unitKerja: profilesPegawai.unitKerja,
+      tipePejabat: profilesPegawai.tipePejabat,
+      nama: profiles.fullName,
+    })
+    .from(profilesPegawai)
+    .leftJoin(profiles, eq(profilesPegawai.profileId, profiles.id));
 
   return (
     <div className="space-y-6">
@@ -37,9 +47,11 @@ export default async function VerifikasiCutiPage() {
           </svg>
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Verifikasi Pengajuan Cuti</h1>
+          <h1 className="text-xl font-bold text-slate-900">
+            {result.role === "Pejabat Berwenang" ? "Verifikasi Pengajuan Cuti (Kepala Kantor)" : "Verifikasi Pengajuan Cuti"}
+          </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Kelola dan berikan persetujuan untuk pengajuan cuti pegawai di unit kerja Anda.
+            Kelola dan berikan persetujuan untuk pengajuan cuti pegawai.
           </p>
         </div>
       </div>
@@ -48,6 +60,7 @@ export default async function VerifikasiCutiPage() {
         initialData={pengajuanData}
         atasanProfile={atasanProfile}
         pejabatList={pejabatList}
+        viewerRole={result.role || undefined}
       />
     </div>
   );

@@ -81,7 +81,7 @@ export default async function LoginPetugasPage(props: {
         <AuthCardMotion className="relative z-10 w-full max-w-[420px] mt-12 sm:mt-0">
           <div className="overflow-hidden rounded-3xl sm:rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-slate-200/50">
             {/* Header area */}
-            <div className="px-6 sm:px-8 pt-10 sm:pt-12 pb-6 sm:pb-8 text-center">
+            <div className="px-6 sm:px-8 pt-12 sm:pt-16 pb-8 sm:pb-10 text-center">
               <div className="lg:hidden mx-auto mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl sm:rounded-3xl bg-indigo-50 text-indigo-600 shadow-inner">
                 <ShieldCheck className="h-8 w-8 sm:h-10 sm:w-10" />
               </div>
@@ -98,7 +98,7 @@ export default async function LoginPetugasPage(props: {
             </div>
 
             {/* Form area */}
-            <div className="px-6 sm:px-8 pb-8 sm:pb-10">
+            <div className="px-6 sm:px-8 pb-10 sm:pb-14">
               <LoginFormByRole
                 mode="petugas"
                 callbackUrl={callbackUrl as string}

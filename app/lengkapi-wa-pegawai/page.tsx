@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { signOutAction } from "@/lib/actions/auth/sign-out";
 
 export const metadata: Metadata = {
   title: "Lengkapi Profil Pegawai | PTSP Kemenag Barito Utara",
@@ -32,6 +33,19 @@ export default async function LengkapiWaPegawaiPage() {
 
       {/* Left Panel: Branding (Visible only on desktop) */}
       <div className="hidden lg:flex lg:flex-1 relative bg-gradient-to-br from-[#047857] via-[#059669] to-[#0f766e] flex-col justify-center items-start p-12 lg:p-24 overflow-hidden">
+        {/* Desktop Back Button */}
+        <div className="absolute top-8 left-8 z-50">
+          <form action={signOutAction.bind(null, "/login/pegawai")}>
+            <button 
+              type="submit"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-full text-sm font-semibold shadow-lg transition-all active:scale-95"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Kembali ke Login
+            </button>
+          </form>
+        </div>
+
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -81,13 +95,15 @@ export default async function LengkapiWaPegawaiPage() {
 
         {/* Mobile Header & Back Button */}
         <div className="lg:hidden absolute top-0 left-0 w-full p-4 sm:p-6 flex justify-between items-center z-50">
-          <Link 
-            href="/login/pegawai"
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-full text-xs font-semibold shadow-lg transition-all active:scale-95"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Kembali
-          </Link>
+          <form action={signOutAction.bind(null, "/login/pegawai")}>
+            <button 
+              type="submit"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-full text-xs font-semibold shadow-lg transition-all active:scale-95"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Kembali
+            </button>
+          </form>
         </div>
 
         <div className="relative z-10 w-full max-w-[420px] mt-12 sm:mt-0">

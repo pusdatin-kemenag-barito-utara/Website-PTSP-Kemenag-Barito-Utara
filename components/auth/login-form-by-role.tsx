@@ -257,7 +257,7 @@ export function LoginFormByRole({
 
   return (
     <m.form 
-      className="space-y-2" 
+      className="space-y-4" 
       onSubmit={onSubmit}
       variants={containerVariants}
       initial="hidden"

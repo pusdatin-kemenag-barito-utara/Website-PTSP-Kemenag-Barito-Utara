@@ -25,6 +25,10 @@ export default async function AdminEPengaduanPage() {
     content: entry.content || "",
     status: entry.status || "pending",
     adminReply: entry.adminReply || null,
+    ticketNumber: entry.ticketNumber || null,
+    attachmentUrl: entry.attachmentUrl || null,
+    incidentDate: entry.incidentDate ? new Date(entry.incidentDate).toLocaleDateString('id-ID') : null,
+    incidentLocation: entry.incidentLocation || null,
     createdAt: entry.createdAt ? new Date(entry.createdAt).toISOString() : new Date().toISOString(),
   }));
 

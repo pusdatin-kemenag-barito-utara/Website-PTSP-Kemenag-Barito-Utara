@@ -170,6 +170,8 @@ export function MobileNav({
                           <li key={child.href}>
                             <Link
                               href={child.href} 
+                              target={child.external ? "_blank" : undefined}
+                              rel={child.external ? "noopener noreferrer" : undefined}
                               onClick={() => setMobileOpen(false)}
                               className={`block rounded-xl px-4 py-3 text-[12px] font-bold transition-colors ${
                                 pathname === child.href 
@@ -198,10 +200,12 @@ export function MobileNav({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 border border-slate-100">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                  {isAdmin ? <Shield className="h-5 w-5" /> : <UserCircle2 className="h-5 w-5" />}
+                  {isAdmin ? <Shield className="h-5 w-5" /> : profile?.role === "pegawai" ? <Briefcase className="h-5 w-5" /> : <UserCircle2 className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">AKUN AKTIF</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                    {isAdmin ? "PETUGAS" : profile?.role === "pegawai" ? "PEGAWAI" : "PEMOHON"}
+                  </p>
                   <p className="text-xs font-bold text-slate-700 truncate">{profile.email || "User Account"}</p>
                 </div>
               </div>
@@ -210,7 +214,7 @@ export function MobileNav({
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-center w-full gap-2 rounded-full bg-emerald-600 px-6 py-3 text-[12px] font-black uppercase tracking-[0.1em] text-white transition-all hover:bg-emerald-700"
               >
-                DASHBOARD
+                {isAdmin ? "DASHBOARD PETUGAS" : profile?.role === "pegawai" ? "DASHBOARD PEGAWAI" : "DASHBOARD PEMOHON"}
               </Link>
               <SignOutButton />
             </div>

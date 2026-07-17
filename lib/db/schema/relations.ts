@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm";
-import { users, profiles } from "./auth";
+import { users, profiles, profilesPegawai } from "./auth";
 import { services, serviceItems, serviceRequirements, serviceFormFields } from "./services";
 import { serviceRequests, serviceRequestAnswers, serviceRequestDocuments, serviceRequestReviews, generatedDocuments } from "./requests";
 import { activityLogs } from "./logs";
-import { dataCutiPegawai, rekapCutiTahunan, pengajuanCuti, laporanKinerja, laporanKinerjaBulanan } from "./kepegawaian";
+import { dataCutiPegawai, rekapCutiTahunan, pengajuanCuti, laporanKinerja, laporanKinerjaBulanan, usulPensiun } from "./kepegawaian";
 
 export const profilesRelations = relations(profiles, ({ one, many }) => ({
   user: one(users, {
@@ -14,6 +14,10 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   serviceRequestReviews: many(serviceRequestReviews),
   activityLogs: many(activityLogs),
   generatedDocuments: many(generatedDocuments),
+  pegawai: one(profilesPegawai, {
+    fields: [profiles.id],
+    references: [profilesPegawai.profileId],
+  }),
 }));
 
 export const servicesRelations = relations(services, ({ many }) => ({
@@ -54,6 +58,10 @@ export const serviceRequestsRelations = relations(
     serviceRequestReviews: many(serviceRequestReviews),
     activityLogs: many(activityLogs),
     generatedDocuments: many(generatedDocuments),
+    pengajuanCuti: one(pengajuanCuti, {
+      fields: [serviceRequests.id],
+      references: [pengajuanCuti.requestId],
+    }),
   }),
 );
 
@@ -162,6 +170,10 @@ export const pengajuanCutiRelations = relations(pengajuanCuti, ({ one }) => ({
     fields: [pengajuanCuti.userId],
     references: [profiles.id],
   }),
+  request: one(serviceRequests, {
+    fields: [pengajuanCuti.requestId],
+    references: [serviceRequests.id],
+  }),
 }));
 
 export const laporanKinerjaRelations = relations(laporanKinerja, ({ one }) => ({
@@ -174,6 +186,31 @@ export const laporanKinerjaRelations = relations(laporanKinerja, ({ one }) => ({
 export const laporanKinerjaBulananRelations = relations(laporanKinerjaBulanan, ({ one }) => ({
   profiles: one(profiles, {
     fields: [laporanKinerjaBulanan.userId],
+    references: [profiles.id],
+  }),
+  pejabatPemberiNilai: one(users, {
+    fields: [laporanKinerjaBulanan.pejabatPenilaiId],
+    references: [users.id],
+  }),
+}));
+
+export const usulPensiunRelations = relations(
+  usulPensiun,
+  ({ one }) => ({
+    request: one(serviceRequests, {
+      fields: [usulPensiun.requestId],
+      references: [serviceRequests.id],
+    }),
+    user: one(users, {
+      fields: [usulPensiun.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const profilesPegawaiRelations = relations(profilesPegawai, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [profilesPegawai.profileId],
     references: [profiles.id],
   }),
 }));

@@ -32,7 +32,8 @@ export const laporanKinerja = ptspSchema.table("ptsp_laporan_kinerja", {
 }).enableRLS();
 
 export const pengajuanCuti = ptspSchema.table("ptsp_pengajuan_cuti", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
+  requestId: uuid("request_id"),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -117,11 +118,41 @@ export const laporanKinerjaBulanan = ptspSchema.table("ptsp_laporan_kinerja_bula
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  pejabatPenilaiId: uuid("pejabat_penilai_id")
+    .references(() => users.id, { onDelete: "set null" }),
   bulan: integer("bulan").notNull(),
   tahun: integer("tahun").notNull(),
   dokumenUrl: text("dokumen_url").notNull(),
   status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, approved, rejected
   catatan: text("catatan"),
+  createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, precision: 6 })
+    .notNull()
+    .defaultNow(),
+}).enableRLS();
+
+export const usulPensiun = ptspSchema.table("ptsp_usul_pensiun", {
+  id: uuid("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
+  requestId: uuid("request_id"), // Will be referenced via relations
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  
+  jenisPensiun: varchar("jenis_pensiun", { length: 100 }).notNull(),
+  tmtPensiun: date("tmt_pensiun").notNull(),
+  nip: varchar("nip", { length: 50 }).notNull(),
+  namaLengkap: text("nama_lengkap").notNull(),
+  golonganTerakhir: varchar("golongan_terakhir", { length: 50 }).notNull(),
+  jabatanTerakhir: varchar("jabatan_terakhir", { length: 255 }).notNull(),
+  unitKerja: varchar("unit_kerja", { length: 255 }).notNull(),
+  noHp: varchar("no_hp", { length: 50 }).notNull(),
+
+  // Persetujuan Atasan Langsung / Kepegawaian (optional, matching cuti structure)
+  statusVerifikasi: varchar("status_verifikasi", { length: 50 }).notNull().default("pending"), 
+  catatanVerifikasi: text("catatan_verifikasi"),
+  
   createdAt: timestamp("created_at", { withTimezone: true, precision: 6 })
     .notNull()
     .defaultNow(),

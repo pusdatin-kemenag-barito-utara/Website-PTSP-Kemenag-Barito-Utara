@@ -149,8 +149,7 @@ export async function updatePemohonWhatsappAction(formData: FormData) {
     }
 
     const phone = formData.get("phone") as string;
-    const nik = formData.get("nik") as string;
-    const pekerjaan = formData.get("pekerjaan") as string;
+    const namaLengkap = formData.get("namaLengkap") as string;
     const alamat = formData.get("alamat") as string;
 
     if (!phone) {
@@ -180,25 +179,25 @@ export async function updatePemohonWhatsappAction(formData: FormData) {
       return { error: "Nomor WhatsApp ini sudah digunakan oleh pemohon lain." };
     }
 
+    const finalFullName = namaLengkap || profile.fullName || null;
+
     // Upsert to profilesPemohon
     await db
       .insert(profilesPemohon)
       .values({
         profileId: profile.id,
         noHp: cleanPhone,
-        nik: nik || null,
-        pekerjaan: pekerjaan || null,
+        nik: null,
+        pekerjaan: null,
         alamat: alamat || null,
-        fullName: profile.fullName || null,
+        fullName: finalFullName,
       })
       .onConflictDoUpdate({
         target: profilesPemohon.profileId,
         set: {
           noHp: cleanPhone,
-          nik: nik || null,
-          pekerjaan: pekerjaan || null,
           alamat: alamat || null,
-          fullName: profile.fullName || null,
+          fullName: finalFullName,
           updatedAt: new Date(),
         },
       });
@@ -208,6 +207,8 @@ export async function updatePemohonWhatsappAction(formData: FormData) {
       .update(profiles)
       .set({
         phone: cleanPhone,
+        fullName: finalFullName,
+        address: alamat || null,
         updatedAt: new Date(),
       })
       .where(eq(profiles.id, profile.id));

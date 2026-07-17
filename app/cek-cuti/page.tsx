@@ -199,10 +199,10 @@ export default function CekCutiPage() {
                               Jabatan
                             </th>
                             <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center border-l border-slate-200">
-                              Total Cuti Tahunan
+                              Hak Cuti Tahunan
                             </th>
                             <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
-                              Cuti Tahunan
+                              Cuti Tahunan Terpakai
                             </th>
                             <th className="py-4 px-4 font-bold text-slate-700 whitespace-nowrap text-sm text-center">
                               Cuti Alasan Penting
@@ -233,7 +233,9 @@ export default function CekCutiPage() {
                               {result.jabatan}
                             </td>
                             <td className="py-4 px-4 text-slate-800 font-black text-center bg-slate-50 border-l border-slate-200">
-                              {result.totalCuti}
+                              <span title={`Sisa N-2: ${result.cutiTahun1} hari&#10;Sisa N-1: ${result.cutiTahun2} hari&#10;Hak N: 12 hari`} className="cursor-help border-b border-dashed border-slate-400 pb-0.5">
+                                {result.totalCuti}
+                              </span>
                             </td>
                             <td className="py-4 px-4 text-slate-600 font-medium text-center">
                               {result.cutiTahunan || "-"}
@@ -287,15 +289,20 @@ export default function CekCutiPage() {
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                           <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
-                            Total Cuti Tahunan
+                            Hak Cuti Tahunan
                           </span>
-                          <span className="text-slate-800 font-black text-sm">
-                            {result.totalCuti}
-                          </span>
+                          <div className="text-right">
+                            <span className="text-slate-800 font-black text-sm">
+                              {result.totalCuti}
+                            </span>
+                            <div className="text-[10px] text-slate-400 mt-1">
+                              (N-2: {result.cutiTahun1}, N-1: {result.cutiTahun2})
+                            </div>
+                          </div>
                         </div>
                         <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                           <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">
-                            Cuti Tahunan
+                            Cuti Tahunan Terpakai
                           </span>
                           <span className="text-slate-600 font-medium text-sm">
                             {result.cutiTahunan || "-"}

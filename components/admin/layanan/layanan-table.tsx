@@ -38,6 +38,7 @@ export function LayananTable({
   onDelete,
   showBidangColumn = false,
   isSuperAdmin = false,
+  category = "public",
 }: {
   services: any[];
   isPending: boolean;
@@ -46,6 +47,7 @@ export function LayananTable({
   onDelete: (service: any) => void;
   showBidangColumn?: boolean;
   isSuperAdmin?: boolean;
+  category?: string;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden text-sm">
@@ -90,6 +92,7 @@ export function LayananTable({
                   showBidangColumn={showBidangColumn}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  category={category}
                 />
               ))}
             </Reorder.Group>
@@ -124,12 +127,14 @@ function ServiceRow({
   showBidangColumn,
   onEdit,
   onDelete,
+  category,
 }: {
   service: any;
   isSuperAdmin: boolean;
   showBidangColumn: boolean;
   onEdit: (service: any) => void;
   onDelete: (service: any) => void;
+  category?: string;
 }) {
   const dragControls = useDragControls();
 
@@ -179,7 +184,7 @@ function ServiceRow({
         </span>
       </div>
       <div className="w-56 shrink-0 flex justify-end gap-2 pr-4">
-        {service.id ? (
+        {service.id && category !== "asn" ? (
           <Link
             href={`/admin/layanan/${service.id}`}
             className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:shadow-md hover:shadow-emerald-500/25 transition-all duration-200"

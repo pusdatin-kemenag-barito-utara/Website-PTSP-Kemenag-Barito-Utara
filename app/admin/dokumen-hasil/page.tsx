@@ -6,8 +6,9 @@ import {
   profiles as profilesTable,
   generatedDocuments as generatedDocumentsTable,
   serviceItems as serviceItemsTable,
+  profilesPegawai,
 } from "@/lib/db/schema";
-import { eq, and, or, ilike, sql, desc, asc } from "drizzle-orm";
+import { eq, and, or, ilike, sql, desc, asc, inArray } from "drizzle-orm";
 import { DokumenHasilClient } from "@/components/admin/dokumen-hasil/dokumen-hasil-client";
 import { AdminPagination } from "@/components/admin/pengajuan/admin-pagination";
 import { ReportExportButton } from "@/components/admin/report-export-button";
@@ -52,7 +53,7 @@ export default async function AdminGeneratedDocumentsPage({
   const offset = (currentPage - 1) * pageSize;
 
   const filters = [
-    sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_generated_documents WHERE kemenag_ptsp.ptsp_generated_documents.request_id = ${serviceRequestsTable.id})`,
+    inArray(serviceRequestsTable.status, ["approved", "completed"] as any[]),
   ];
 
   if (roleOwnerFilter) {
@@ -98,6 +99,9 @@ export default async function AdminGeneratedDocumentsPage({
           columns: { name: true },
         },
         generatedDocuments: true,
+        activityLogs: {
+          columns: { action: true, createdAt: true },
+        },
       },
       orderBy: [desc(serviceRequestsTable.createdAt)],
       limit: pageSize,

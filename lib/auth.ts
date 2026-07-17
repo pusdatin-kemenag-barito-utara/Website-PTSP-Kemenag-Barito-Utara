@@ -24,7 +24,40 @@ export const getCurrentProfile = cache(async () => {
     where: eq(profiles.id, user.id),
   });
 
-  return data ?? null;
+  if (!data || data.status === "inactive") return null;
+
+  try {
+    const { profilesPegawai, profilesPemohon } = await import("@/lib/db/schema");
+    
+    if (data.role === "pegawai" || isAdminRole(data.role)) {
+      const pegawaiData = await db.select().from(profilesPegawai).where(eq(profilesPegawai.profileId, user.id)).limit(1);
+      if (pegawaiData && pegawaiData.length > 0) {
+        return {
+          ...data,
+          nip: pegawaiData[0].nip,
+          jabatan: pegawaiData[0].jabatan,
+          pangkatGolongan: pegawaiData[0].pangkatGolongan,
+          unitKerja: pegawaiData[0].unitKerja,
+          tipePejabat: pegawaiData[0].tipePejabat,
+        };
+      }
+    }
+
+    if (data.role === "user") {
+      const pemohonData = await db.select().from(profilesPemohon).where(eq(profilesPemohon.profileId, user.id)).limit(1);
+      if (pemohonData && pemohonData.length > 0) {
+        return {
+          ...data,
+          nik: pemohonData[0].nik,
+          pekerjaan: pemohonData[0].pekerjaan,
+        };
+      }
+    }
+  } catch (e) {
+    console.error("Gagal mengambil profil tambahan:", e);
+  }
+
+  return data;
 });
 
 import { headers } from "next/headers";
@@ -105,6 +138,10 @@ export async function requireAuth(allowIncomplete = false) {
       status: "active",
       userType: isSuper ? "internal_admin" : "pemohon",
     };
+  }
+
+  if (profile.status === "inactive") {
+    redirect("/login?error=account_inactive");
   }
 
   if (!allowIncomplete) {

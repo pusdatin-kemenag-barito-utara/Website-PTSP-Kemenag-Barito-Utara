@@ -86,7 +86,58 @@ export function AdminRequestTable({
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
-                  <StatusBadge status={request.status} />
+                  {(() => {
+                    let displayStatus = request.status;
+                    let customLabel = undefined;
+                    let tone = undefined;
+
+                    // Specific logic for ASN Cuti requests
+                    if (
+                      request.services?.category === "asn" &&
+                      request.pengajuanCuti
+                    ) {
+                      const cuti = request.pengajuanCuti;
+                      if (cuti.status === "pending") {
+                        if (cuti.statusAtasan === "pending") {
+                          displayStatus = "pending";
+                          customLabel = "Menunggu TTE Atasan";
+                          tone = "warning";
+                        } else if (
+                          cuti.statusAtasan === "approved" &&
+                          cuti.statusKepala === "pending"
+                        ) {
+                          displayStatus = "pending";
+                          customLabel = "Menunggu TTE Pejabat";
+                          tone = "warning";
+                        }
+                      } else if (cuti.status === "approved") {
+                         displayStatus = "approved";
+                      } else if (cuti.status === "rejected") {
+                         displayStatus = "rejected";
+                      }
+                    }
+
+                    if (customLabel) {
+                      return (
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold tracking-wide ${
+                            tone === "warning"
+                              ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200/60"
+                              : ""
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              tone === "warning" ? "bg-amber-500" : ""
+                            }`}
+                          />
+                          {customLabel}
+                        </span>
+                      );
+                    }
+
+                    return <StatusBadge status={displayStatus} />;
+                  })()}
                 </td>
                 <td className="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
                   {formatDate(request.createdAt)}

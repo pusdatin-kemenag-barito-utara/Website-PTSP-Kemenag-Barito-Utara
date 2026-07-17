@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { AlertCircle, ArrowRight } from "lucide-react";
 
-export function AdminAlertBanner({ needAction }: { needAction: number }) {
+export function AdminAlertBanner({ 
+  needAction,
+  title = "Perhatian Tindakan",
+  href = "/admin/pengajuan"
+}: { 
+  needAction: number;
+  title?: string;
+  href?: string;
+}) {
   if (needAction <= 0) return null;
 
   return (
@@ -14,7 +22,7 @@ export function AdminAlertBanner({ needAction }: { needAction: number }) {
           </div>
           <div>
             <h3 className="text-base font-bold text-amber-900">
-              Perhatian Tindakan
+              {title}
             </h3>
             <p className="text-sm font-medium text-amber-700 mt-0.5">
               Terdapat{" "}
@@ -26,7 +34,7 @@ export function AdminAlertBanner({ needAction }: { needAction: number }) {
           </div>
         </div>
         <Link
-          href="/admin/pengajuan"
+          href={href}
           className="flex shrink-0 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-amber-600 active:scale-95 hover:shadow-md hover:shadow-amber-500/25"
         >
           Tinjau Sekarang

@@ -34,6 +34,58 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [otp, setOtp] = useState("");
   const [formDataCache, setFormDataCache] = useState<FormData | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  const handleResendOtp = async () => {
+    if (countdown > 0 || !formDataCache || isSubmittingRef.current) return;
+    
+    setError("");
+    setMessage("");
+    setLoading(true);
+    isSubmittingRef.current = true;
+
+    if (!turnstileToken) {
+      setLoading(false);
+      isSubmittingRef.current = false;
+      setError("Verifikasi keamanan belum siap. Tunggu sebentar.");
+      return;
+    }
+
+    const rawPhone = String(formDataCache.get("phone") || "").trim();
+    const normalizedPhone = normalizeWhatsappNumber(rawPhone);
+
+    try {
+      const result = await requestRegistrationOtpAction(normalizedPhone, turnstileToken);
+      if (result.success) {
+        setCountdown(60);
+        setMessage("Kode OTP baru telah dikirim ke WhatsApp Anda.");
+        setLoading(false);
+        isSubmittingRef.current = false;
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
+      } else {
+        setError(result.error || "Gagal mengirim ulang OTP.");
+        setLoading(false);
+        isSubmittingRef.current = false;
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
+      }
+    } catch (err: any) {
+      setError(err.message || "Gagal memproses permintaan.");
+      setLoading(false);
+      isSubmittingRef.current = false;
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
+    }
+  };
 
   const getPasswordStrength = (pass: string) => {
     if (!pass) return 0;
@@ -112,6 +164,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         if (result.success) {
           setFormDataCache(formData);
           setStep(2);
+          setCountdown(60);
           setMessage("Kode OTP telah dikirim ke WhatsApp Anda.");
           setLoading(false);
           isSubmittingRef.current = false;
@@ -317,20 +370,24 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
               inputMode="numeric"
             />
           </Field>
-          <div className="flex justify-start">
-            <button
-              type="button"
-              onClick={() => {
-                setStep(1);
-                setError("");
-                setMessage("");
-                setOtp("");
-              }}
-              className="text-sm text-[#059669] hover:underline font-medium flex items-center"
-            >
-              &laquo; Kembali ke formulir
-            </button>
+
+          <div className="flex justify-center mt-2">
+            {countdown > 0 ? (
+              <span className="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1.5 rounded-full">
+                Kirim ulang OTP dalam <strong className="text-slate-700">{countdown} detik</strong>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="text-xs text-[#059669] hover:bg-emerald-50 px-3 py-1.5 rounded-full font-bold transition-colors disabled:opacity-50"
+              >
+                Kirim Ulang Kode OTP
+              </button>
+            )}
           </div>
+
         </m.div>
       )}
 

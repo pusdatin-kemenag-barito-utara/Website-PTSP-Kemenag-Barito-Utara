@@ -4,6 +4,8 @@ import { Activity, FolderKanban } from "lucide-react";
 export function AdminStatusProgress({
   totalRequests,
   stats,
+  title = "Status Progres Pengajuan",
+  href = "/admin/pengajuan"
 }: {
   totalRequests: number;
   stats: {
@@ -12,16 +14,18 @@ export function AdminStatusProgress({
     revision: number;
     finished: number;
   };
+  title?: string;
+  href?: string;
 }) {
   return (
     <div className="lg:col-span-2 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
           <Activity className="h-4 w-4 text-[#059669]" />
-          Status Progres Pengajuan
+          {title}
         </h2>
         <Link
-          href="/admin/pengajuan"
+          href={href}
           className="text-xs font-bold text-[#059669] hover:text-emerald-700 transition-colors"
         >
           Lihat Rincian &rarr;

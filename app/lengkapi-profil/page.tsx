@@ -3,6 +3,9 @@ import { requireAuth } from "@/lib/auth";
 import { CompleteProfileForm } from "@/components/auth/complete-profile-form";
 import Link from "next/link";
 
+import { signOutAction } from "@/lib/actions/auth/sign-out";
+import { ArrowLeft } from "lucide-react";
+
 export const metadata = {
   title: "Lengkapi Profil Pemohon | PTSP Kemenag Barito Utara",
 };
@@ -21,6 +24,18 @@ export default async function LengkapiProfilPage() {
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 bg-slate-50 dark:bg-[#020817] overflow-hidden font-sans transition-colors duration-500">
       
+      {/* Back Button */}
+      <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50">
+        <form action={signOutAction.bind(null, "/login/pemohon")}>
+          <button 
+            type="submit"
+            className="flex items-center gap-2 px-4 py-2 bg-white/50 dark:bg-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-700/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-full text-sm font-semibold shadow-sm transition-all active:scale-95"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Kembali ke Login
+          </button>
+        </form>
+      </div>
       {/* Modern Animated Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/20 dark:bg-emerald-600/20 blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-blob"></div>

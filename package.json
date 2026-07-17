@@ -11,7 +11,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "sync:pegawai": "dotenv -e .env.local -- tsx scripts/sync-pegawai-mass.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1046.0",
@@ -25,6 +26,7 @@
     "cloudconvert": "^3.0.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "docx": "^9.7.1",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",

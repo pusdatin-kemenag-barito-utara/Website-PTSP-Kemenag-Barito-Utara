@@ -16,9 +16,11 @@ type UploadedFile = {
 export function RequestRequirementUpload({
   requirements,
   onFilesChange,
+  hideHeader = false,
 }: {
   requirements: any[];
   onFilesChange?: (files: Record<string, File>) => void;
+  hideHeader?: boolean;
 }) {
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, UploadedFile>>({});
   const [processingFiles, setProcessingFiles] = useState<Record<string, boolean>>({});
@@ -207,18 +209,20 @@ export function RequestRequirementUpload({
 
   return (
     <>
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="mb-5">
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-[#059669]">
-            Langkah 3
-          </p>
-          <h3 className="mt-1 text-lg font-black text-slate-900 sm:text-xl">
-            Upload Dokumen Persyaratan
-          </h3>
-          <p className="mt-1.5 text-sm font-medium text-slate-500 leading-relaxed">
-            Unggah dokumen persyaratan dengan format yang ditentukan. Silakan tarik & lepas file ke area yang tersedia.
-          </p>
-        </div>
+      <section className={hideHeader ? "w-full" : "rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm"}>
+        {!hideHeader && (
+          <div className="mb-5">
+            <p className="text-xs font-black uppercase tracking-[0.15em] text-[#059669]">
+              Langkah 3
+            </p>
+            <h3 className="mt-1 text-lg font-black text-slate-900 sm:text-xl">
+              Upload Dokumen Persyaratan
+            </h3>
+            <p className="mt-1.5 text-sm font-medium text-slate-500 leading-relaxed">
+              Unggah dokumen persyaratan dengan format yang ditentukan. Silakan tarik & lepas file ke area yang tersedia.
+            </p>
+          </div>
+        )}
  
         {requirements.length ? (
           <div className="grid gap-5 md:grid-cols-2">
@@ -244,6 +248,11 @@ export function RequestRequirementUpload({
                     <label className="mb-3 block text-sm font-bold text-slate-800 leading-snug">
                       {requirement.documentName}
                       {requirement.isRequired && <span className="ml-1 text-rose-500 font-extrabold">*</span>}
+                      {requirement.templateUrl && (
+                        <a href={requirement.templateUrl} download className="ml-2 text-xs font-semibold text-emerald-600 hover:underline">
+                          (Unduh Template)
+                        </a>
+                      )}
                     </label>
  
                     {/* Tampilan File Terpilih */}

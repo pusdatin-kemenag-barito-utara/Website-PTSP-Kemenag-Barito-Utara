@@ -4,11 +4,12 @@ import { requirePermission } from "@/lib/auth";
 import { db, serializeBigInt } from "@/lib/db";
 import { serviceRequests as serviceRequestsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { pengajuanCuti } from "@/lib/db/schema/kepegawaian";
+import { getPejabatList } from "@/lib/actions/admin/pejabat-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { FormAnswersCard } from "@/components/admin/pengajuan/form-answers-card";
 import { RequestDocumentsCard } from "@/components/admin/pengajuan/request-documents-card";
-import { ResultDocumentCard } from "@/components/admin/pengajuan/result-document-card";
 import { ReviewActionCard } from "@/components/admin/pengajuan/review-action-card";
 import { HistoryTimelineCard } from "@/components/admin/pengajuan/history-timeline-card";
 import { ArrowLeft } from "lucide-react";
@@ -97,6 +98,46 @@ export default async function AdminRequestDetailPage({
 
   const request = serializeBigInt(requestRaw);
 
+  let cutiDataRaw: any = null;
+  let pejabatList: any[] = [];
+  if (request.services?.name?.toLowerCase().includes("cuti")) {
+    const pCuti = await db.query.pengajuanCuti.findFirst({
+      where: eq(pengajuanCuti.requestId, id)
+    });
+    
+    // Get detailed user info
+    let jabatan = "-";
+    let pangkatGolongan = "-";
+    let nip = request.profiles?.email?.split('@')[0] || "-";
+    
+    if (request.profiles?.id) {
+        const userPegawaiRaw = await db.query.profilesPegawai.findFirst({
+            where: (t, { eq }) => eq(t.profileId, request.profiles.id)
+        });
+        if (userPegawaiRaw) {
+            jabatan = userPegawaiRaw.jabatan || "-";
+            pangkatGolongan = userPegawaiRaw.pangkatGolongan || "-";
+            if (userPegawaiRaw.nip) nip = userPegawaiRaw.nip;
+        }
+    }
+
+    if (pCuti) {
+        cutiDataRaw = {
+            ...pCuti,
+            jabatan,
+            pangkatGolongan,
+            nip
+        };
+    }
+
+    const pejabatRes = await getPejabatList();
+    if (pejabatRes.success) {
+      pejabatList = pejabatRes.data || [];
+    }
+  }
+
+  const cutiData = cutiDataRaw ? serializeBigInt(cutiDataRaw) : null;
+
   const docUrls = await Promise.all(
     (request.serviceRequestDocuments ?? []).map(async (doc: any) => ({
       id: doc.id,
@@ -122,19 +163,22 @@ export default async function AdminRequestDetailPage({
 
   const signedUrlMap = new Map(docUrls.map((item: any) => [item.id, item.url]));
 
+  const isAsn = request.services?.category === "asn" || request.requestNumber?.startsWith("ASN");
+  const backUrl = isAsn ? "/admin/pengajuan?type=asn" : "/admin/pengajuan";
+
   return (
     <div className="space-y-6 pb-12">
       <RealtimeSync />
       {/* Back link */}
       <Link
-        href="/admin/pengajuan"
+        href={backUrl}
         className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#059669] transition-all hover:-translate-x-1"
       >
         <ArrowLeft className="h-4 w-4" />
         Kembali ke daftar pengajuan
       </Link>
 
-      <AdminDetailHeader request={request} />
+      <AdminDetailHeader request={request} cutiData={cutiData} pejabatList={pejabatList} />
       <AdminDetailInfoGrid request={request} />
 
       {/* Main Content Layout */}
@@ -143,11 +187,6 @@ export default async function AdminRequestDetailPage({
         <div className="space-y-6 lg:col-span-7">
           <FormAnswersCard request={request} />
           <RequestDocumentsCard request={request} signedUrlMap={signedUrlMap} />
-          <ResultDocumentCard
-            request={request}
-            generatedDoc={generatedDoc}
-            generatedUrl={generatedUrl}
-          />
         </div>
 
         {/* Right Column - Actions & Logs */}

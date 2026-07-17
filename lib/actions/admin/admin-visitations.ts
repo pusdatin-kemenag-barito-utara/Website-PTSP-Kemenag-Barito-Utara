@@ -155,8 +155,7 @@ export async function updateAppointmentStatusAction(
         (isApproved
           ? `\nMohon hadir tepat waktu sesuai dengan jadwal yang telah disetujui. Tunjukkan pesan ini kepada petugas saat Anda tiba di lokasi.\n\n`
           : `\nMohon maaf, janji temu Anda belum dapat dipenuhi saat ini. Silakan hubungi kami untuk informasi lebih lanjut.\n\n`) +
-        `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
-        `_Kemenag Kabupaten Barito Utara_`;
+        `_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
 
       // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
       try {

@@ -45,9 +45,10 @@ interface DraftCutiModalProps {
     cutiSakit?: number;
   };
   pejabatList?: any[];
+  hideActions?: boolean;
 }
 
-export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [] }: DraftCutiModalProps) {
+export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideActions = false }: DraftCutiModalProps) {
   const [zoom, setZoom] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -206,9 +207,29 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [] }: Draf
   };
 
   const getAtasanInfo = (unitKerja: string) => {
-    const atasan = pejabatList.find(
-      (p: any) => p.tipePejabat === "Atasan Langsung" && p.unitKerja === unitKerja?.trim()
-    );
+    if (!unitKerja) return {
+      nama: ".....................................................",
+      nip: "...............................................",
+    };
+
+    const atasan = pejabatList.find((p: any) => {
+      if (p.tipePejabat !== "Atasan Langsung") return false;
+
+      let pUnit = p.unitKerja?.trim().toLowerCase() || "";
+      let pJab = p.jabatan?.trim().toLowerCase() || "";
+      let targetUnit = unitKerja.trim().toLowerCase();
+
+      // Normalize 'kec.' to 'kecamatan'
+      pUnit = pUnit.replace(/kec\./g, "kecamatan").trim();
+      targetUnit = targetUnit.replace(/kec\./g, "kecamatan").trim();
+
+      // Normalize common differences
+      pJab = pJab.replace(/&/g, "dan");
+      targetUnit = targetUnit.replace(/&/g, "dan");
+
+      return pUnit === targetUnit || pJab.includes(targetUnit) || targetUnit.includes(pUnit);
+    });
+
     return atasan
       ? { nama: atasan.nama, nip: atasan.nip }
       : {
@@ -315,24 +336,28 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [] }: Draf
                 </h2>
                 <div className="flex items-center gap-2">
                   <div className="hidden sm:flex items-center gap-2 bg-slate-100 rounded-lg p-1 mr-2">
-                    <button
-                      onClick={executePrint}
-                      className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-emerald-600 text-white rounded shadow-sm transition-all hover:bg-emerald-700 font-medium text-xs"
-                      title="Cetak Dokumen"
-                    >
-                      <Printer className="w-4 h-4" />
-                      <span className="hidden md:inline">Cetak</span>
-                    </button>
-                    <button
-                      onClick={handleDownloadPDF}
-                      disabled={isDownloading}
-                      className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-blue-600 text-white rounded shadow-sm transition-all hover:bg-blue-700 font-medium text-xs disabled:opacity-50"
-                      title="Unduh sebagai PDF"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span className="hidden md:inline">{isDownloading ? "Mengunduh..." : "Unduh PDF"}</span>
-                    </button>
-                    <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                    {!hideActions && (
+                      <>
+                        <button
+                          onClick={executePrint}
+                          className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-emerald-600 text-white rounded shadow-sm transition-all hover:bg-emerald-700 font-medium text-xs"
+                          title="Cetak Dokumen"
+                        >
+                          <Printer className="w-4 h-4" />
+                          <span className="hidden md:inline">Cetak</span>
+                        </button>
+                        <button
+                          onClick={handleDownloadPDF}
+                          disabled={isDownloading}
+                          className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-blue-600 text-white rounded shadow-sm transition-all hover:bg-blue-700 font-medium text-xs disabled:opacity-50"
+                          title="Unduh sebagai PDF"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="hidden md:inline">{isDownloading ? "Mengunduh..." : "Unduh PDF"}</span>
+                        </button>
+                        <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                      </>
+                    )}
                     <button
                       onClick={handleZoomOut}
                       className="p-1.5 hover:bg-white rounded shadow-sm transition-all text-slate-600 hover:text-slate-900"
@@ -391,21 +416,32 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [] }: Draf
                   <Maximize className="w-4 h-4" />
                 </button>
                 <div className="w-px h-6 bg-slate-300 mx-1"></div>
-                <button
-                  onClick={executePrint}
-                  className="p-2 bg-emerald-600 rounded-lg shadow-sm text-white active:scale-95 ml-2"
-                  title="Cetak"
-                >
-                  <Printer className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={isDownloading}
-                  className="p-2 bg-blue-600 rounded-lg shadow-sm text-white active:scale-95 ml-2 disabled:opacity-50"
-                  title="Unduh PDF"
-                >
-                  <Download className="w-4 h-4" />
-                </button>
+                <div className="flex gap-2">
+                  {!hideActions && (
+                    <>
+                      <button
+                        onClick={executePrint}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                      >
+                        <Printer className="w-4 h-4" />
+                        <span className="hidden sm:inline">Cetak</span>
+                      </button>
+                      
+                      <button
+                        onClick={handleDownloadPDF}
+                        disabled={isDownloading}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDownloading ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                        <span className="hidden sm:inline">PDF</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div

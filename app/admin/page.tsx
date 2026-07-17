@@ -32,9 +32,6 @@ import { getAdminSpecificRole } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
-// Note: revalidate = 0 is redundant when force-dynamic is used
-// Data is always fresh because the page is never statically rendered.
-
 export default async function AdminHomePage() {
   const profile = await requireAdmin();
   const isSuper = isSuperAdmin(profile.email);
@@ -52,13 +49,7 @@ export default async function AdminHomePage() {
       (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
   }
 
-  const {
-    serviceCount,
-    userCount,
-    stats,
-    totalRequests,
-    needAction,
-  } = await getAdminDashboardStats(roleOwnerFilter);
+  const { masyarakat, pegawai } = await getAdminDashboardStats(roleOwnerFilter);
 
   const {
     serviceAnalytics,
@@ -120,33 +111,105 @@ export default async function AdminHomePage() {
     }
     return allowedMenus.includes(menu.id);
   });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-10">
       <DashboardRealtimeSync />
-      <PageHeader
-        title="Ringkasan Dashboard"
-        description="Pantau kondisi layanan, aktivitas pengguna, dan progres pengajuan terkini."
-        icon={LayoutDashboard}
-      />
-
-      <AdminAlertBanner needAction={needAction} />
-
-      <AdminDashboardMetrics
-        serviceCount={serviceCount}
-        userCount={userCount}
-        needAction={needAction}
-        totalRequests={totalRequests}
-      />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <AdminStatusProgress totalRequests={totalRequests} stats={stats} />
-        <AdminQuickLinks quickMenus={quickMenus} />
+      
+      {/* Header Utama */}
+      <div>
+        <PageHeader
+          title="Ringkasan Dashboard"
+          description="Pantau kondisi layanan, aktivitas pengguna, dan progres pengajuan terkini."
+          icon={LayoutDashboard}
+        />
+        
+        {/* Alerts Area */}
+        <div className="mt-6 flex flex-col gap-4">
+          <AdminAlertBanner 
+            needAction={masyarakat.needAction} 
+            title="Perhatian Tindakan Masyarakat" 
+            href="/admin/pengajuan?type=public" 
+          />
+          <AdminAlertBanner 
+            needAction={pegawai.needAction} 
+            title="Perhatian Tindakan Pegawai (ASN)" 
+            href="/admin/pengajuan?type=asn" 
+          />
+        </div>
       </div>
 
-      <AdminAnalyticsWrapper
-        serviceAnalytics={serviceAnalytics}
-        trendAnalytics={trendAnalytics}
-      />
+      {/* Bagian Layanan Masyarakat */}
+      <section className="relative">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="h-10 w-2.5 rounded-full bg-emerald-500" />
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+            Sistem Layanan Masyarakat
+          </h2>
+        </div>
+        
+        <div className="space-y-6">
+          <AdminDashboardMetrics
+            serviceCount={masyarakat.serviceCount}
+            userCount={masyarakat.userCount}
+            needAction={masyarakat.needAction}
+            totalRequests={masyarakat.totalRequests}
+          />
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <AdminStatusProgress 
+              totalRequests={masyarakat.totalRequests} 
+              stats={masyarakat.stats} 
+              title="Progres Pengajuan Masyarakat"
+              href="/admin/pengajuan?type=public"
+            />
+            <AdminQuickLinks quickMenus={quickMenus} />
+          </div>
+        </div>
+      </section>
+
+      {/* Pembatas Ombak (Wave) */}
+      <div className="w-full py-4 relative">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" className="w-full h-auto text-indigo-50/50 fill-current">
+          <path d="M0,32L60,42.7C120,53,240,75,360,74.7C480,75,600,53,720,42.7C840,32,960,32,1080,42.7C1200,53,1320,75,1380,85.3L1440,96L1440,100L1380,100C1320,100,1200,100,1080,100C960,100,840,100,720,100C600,100,480,100,360,100C240,100,120,100,60,100L0,100Z"></path>
+        </svg>
+      </div>
+
+      {/* Bagian Layanan Kepegawaian */}
+      <section className="relative rounded-3xl bg-indigo-50/30 p-6 sm:p-8 border border-indigo-100/50">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="h-10 w-2.5 rounded-full bg-indigo-500" />
+          <h2 className="text-2xl font-black text-indigo-900 tracking-tight">
+            Sistem Layanan Kepegawaian
+          </h2>
+        </div>
+        
+        <div className="space-y-6">
+          <AdminDashboardMetrics
+            serviceCount={pegawai.serviceCount}
+            userCount={pegawai.userCount}
+            needAction={pegawai.needAction}
+            totalRequests={pegawai.totalRequests}
+          />
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <AdminStatusProgress 
+              totalRequests={pegawai.totalRequests} 
+              stats={pegawai.stats} 
+              title="Progres Pengajuan Pegawai"
+              href="/admin/pengajuan?type=asn"
+            />
+            {/* Analytics khusus jika dibutuhkan, sementara pakai yang umum */}
+            <div className="lg:col-span-1">
+              <AdminAnalyticsWrapper
+                serviceAnalytics={serviceAnalytics}
+                trendAnalytics={trendAnalytics}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }

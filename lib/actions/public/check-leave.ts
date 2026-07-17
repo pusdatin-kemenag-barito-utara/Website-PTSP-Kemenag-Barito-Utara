@@ -25,6 +25,10 @@ export async function checkLeaveAction(nip: string) {
       ),
     });
 
+    if (!rekap) {
+      return { error: `Data rekap cuti untuk tahun ${currentYear} belum tersedia. Silakan hubungi bagian kepegawaian.` };
+    }
+
     // 3. Hitung Cuti Tahunan Terpakai
     let cutiTahunanTerpakai = 0;
     if (rekap?.cutiTahunan && Array.isArray(rekap.cutiTahunan)) {
@@ -37,6 +41,8 @@ export async function checkLeaveAction(nip: string) {
       nip: pegawai.nip || "-",
       jabatan: pegawai.jabatan || "-",
       totalCuti: rekap?.jumlahCuti || 0,
+      cutiTahun1: rekap?.cutiTahun1 || 0,
+      cutiTahun2: rekap?.cutiTahun2 || 0,
       cutiTahunan: cutiTahunanTerpakai,
       cutiPenting: rekap?.cutiAlasanPenting || 0,
       cutiBesar: rekap?.cutiBesar || 0,

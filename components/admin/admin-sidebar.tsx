@@ -95,7 +95,7 @@ export function AdminSidebar({
                   if (item.href === "/admin") {
                     isActive = pathname === item.href;
                   } else {
-                    isActive = pathname.startsWith(hrefPath);
+                    isActive = pathname === hrefPath || pathname.startsWith(`${hrefPath}/`);
                     if (isActive && hrefQuery) {
                       // Check if the required query params match
                       for (const [key, value] of hrefQuery.entries()) {

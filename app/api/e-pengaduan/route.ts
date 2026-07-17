@@ -9,9 +9,30 @@ import { feedbackSchema } from "@/lib/validations/feedback";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") || "";
+    let dataObj: any = {};
+    let file: File | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      dataObj = {
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        category: formData.get("category"),
+        serviceType: formData.get("serviceType"),
+        isAnonymous: formData.get("isAnonymous") === "true",
+        content: formData.get("content"),
+        incidentDate: formData.get("incidentDate") || undefined,
+        incidentLocation: formData.get("incidentLocation") || undefined,
+        turnstileToken: formData.get("turnstileToken"),
+      };
+      file = formData.get("attachment") as File | null;
+    } else {
+      dataObj = await request.json();
+    }
+
     // Validasi input dengan Zod
-    const validationResult = feedbackSchema.safeParse(body);
+    const validationResult = feedbackSchema.safeParse(dataObj);
     if (!validationResult.success) {
       const errorMessage = validationResult.error.issues[0].message;
       return NextResponse.json(
@@ -27,6 +48,8 @@ export async function POST(request: Request) {
       serviceType,
       isAnonymous,
       content,
+      incidentDate,
+      incidentLocation,
       turnstileToken,
     } = validationResult.data;
 
@@ -44,6 +67,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Upload attachment if exists
+    let attachmentUrl = null;
+    if (file && file.size > 0) {
+      const { uploadToR2 } = await import("@/lib/r2");
+      const ext = file.name.split(".").pop();
+      const uniqueName = `pengaduan/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const uploadRes = await uploadToR2(file, uniqueName);
+      attachmentUrl = uploadRes.path;
+    }
+
+    // Generate unique ticket number
+    const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, ""); // YYMMDD
+    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const ticketNumber = `PTSP-${dateStr}-${randomChars}`;
+
     // Insert to DB using Drizzle
     const [newEntry] = await db
       .insert(feedbacks)
@@ -54,6 +92,10 @@ export async function POST(request: Request) {
         serviceType,
         isAnonymous,
         content,
+        ticketNumber,
+        attachmentUrl,
+        incidentDate,
+        incidentLocation,
         status: "pending",
       })
       .returning();
@@ -94,9 +136,11 @@ export async function POST(request: Request) {
       `Terima kasih telah menghubungi:\n` +
       `🏛 *Kantor Kementerian Agama Kabupaten Barito Utara*\n\n` +
       `📝 *Tiket ${category} Anda telah kami terima dengan detail:*\n` +
+      `• No. Tiket : *${ticketNumber}*\n` +
       `• Tanggal : ${submittedDateFormatted}\n` +
       `• Layanan : ${serviceType}\n` +
       `• Pelapor : ${isAnonymous ? "Anonim (Dirahasiakan)" : name}\n\n` +
+      `Gunakan Nomor Tiket di atas untuk melacak status aduan Anda di website kami.\n` +
       `Laporan Anda sedang berada dalam antrean peninjauan oleh petugas kami. Anda akan menerima notifikasi balasan jika petugas telah memberikan tanggapan.\n\n` +
       `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
       `_Kemenag Kabupaten Barito Utara_`;
@@ -112,6 +156,7 @@ export async function POST(request: Request) {
       message: `Berhasil mengirim ${category.toLowerCase()}.`,
       data: {
         id: newEntry.id.toString(),
+        ticketNumber,
       },
     });
   } catch (error: unknown) {

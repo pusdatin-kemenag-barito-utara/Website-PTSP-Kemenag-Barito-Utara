@@ -2,7 +2,7 @@
 
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { dataCutiPegawai, rekapCutiTahunan } from "@/lib/db/schema";
+import { dataCutiPegawai, rekapCutiTahunan, profiles, profilesPegawai } from "@/lib/db/schema";
 import { eq, desc, asc, like, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -268,4 +268,134 @@ function toInt(val: unknown): number | null {
 
 export async function importCutiCsvAction(formData: FormData): Promise<ActionResponse> {
   return { success: false, error: "Belum diimplementasikan." };
+}
+
+export async function syncDataPegawaiFromPusdatinAction(): Promise<ActionResponse> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Belum login." };
+
+    // Fetch from Pusdatin
+    const pusdatinPegawai = await db
+      .select({
+        nip: profilesPegawai.nip,
+        jabatan: profilesPegawai.jabatan,
+        unitKerja: profilesPegawai.unitKerja,
+        nama: profiles.fullName,
+      })
+      .from(profilesPegawai)
+      .leftJoin(profiles, eq(profilesPegawai.profileId, profiles.id));
+
+    if (!pusdatinPegawai.length) {
+      return { success: false, error: "Tidak ada data pegawai di Pusdatin." };
+    }
+
+    // Fetch existing PTSP Pegawai
+    const ptspPegawai = await db.select().from(dataCutiPegawai);
+
+    let updatedCount = 0;
+    let insertedCount = 0;
+    let deletedCount = 0;
+
+    const pusdatinNips = new Set(pusdatinPegawai.map(p => p.nip).filter(Boolean));
+
+    for (const p of pusdatinPegawai) {
+      if (!p.nip) continue; // Skip if no NIP
+
+      const existing = ptspPegawai.find(x => x.nip === p.nip);
+      if (existing) {
+        // Update if there are changes
+        if (
+          existing.nama !== (p.nama || "Tanpa Nama") ||
+          existing.jabatan !== p.jabatan ||
+          existing.unitKerja !== p.unitKerja
+        ) {
+          await db
+            .update(dataCutiPegawai)
+            .set({
+              nama: p.nama || "Tanpa Nama",
+              jabatan: p.jabatan,
+              unitKerja: p.unitKerja,
+              updatedAt: new Date(),
+            })
+            .where(eq(dataCutiPegawai.id, existing.id));
+          updatedCount++;
+        }
+      } else {
+        // Insert new
+        await db.insert(dataCutiPegawai).values({
+          nama: p.nama || "Tanpa Nama",
+          nip: p.nip,
+          jabatan: p.jabatan,
+          unitKerja: p.unitKerja,
+        });
+        insertedCount++;
+      }
+    }
+
+    for (const ptsp of ptspPegawai) {
+      if (ptsp.nip && !pusdatinNips.has(ptsp.nip)) {
+        await db.delete(dataCutiPegawai).where(eq(dataCutiPegawai.id, ptsp.id));
+        deletedCount++;
+      }
+    }
+
+    revalidatePath("/admin/kepegawaian/pegawai");
+    return { 
+      success: true, 
+      message: `Berhasil sinkronisasi. ${insertedCount} data baru, ${updatedCount} diperbarui, ${deletedCount} dihapus.` 
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Gagal sinkronisasi data dari Pusdatin." };
+  }
+}
+
+export async function rolloverCutiTahunanAction(tahunTujuan: number): Promise<ActionResponse> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Belum login." };
+
+    const ptspPegawai = await db.select().from(dataCutiPegawai);
+    
+    // Cek apakah rekap tahun tujuan sudah ada
+    const existingRekap = await db.select().from(rekapCutiTahunan).where(eq(rekapCutiTahunan.tahunTarget, tahunTujuan));
+    if (existingRekap.length > 0) {
+      return { success: false, error: `Tutup buku untuk tahun ${tahunTujuan} sudah dilakukan.` };
+    }
+
+    const tahunLalu = tahunTujuan - 1;
+    const tahunLalu2 = tahunTujuan - 2;
+
+    const rekapTahunLalu = await db.select().from(rekapCutiTahunan).where(eq(rekapCutiTahunan.tahunTarget, tahunLalu));
+    const rekapTahunLalu2 = await db.select().from(rekapCutiTahunan).where(eq(rekapCutiTahunan.tahunTarget, tahunLalu2));
+
+    let insertedCount = 0;
+
+    for (const pegawai of ptspPegawai) {
+      const rekapN1 = rekapTahunLalu.find(r => r.pegawaiId === pegawai.id);
+      const rekapN2 = rekapTahunLalu2.find(r => r.pegawaiId === pegawai.id);
+
+      const cutiTahun1 = rekapN1 ? Math.min(rekapN1.sisaCuti || 0, 6) : 0;
+      const cutiTahun2 = rekapN2 ? Math.min(rekapN2.sisaCuti || 0, 6) : 0;
+      const jumlahCuti = 12 + cutiTahun1 + cutiTahun2;
+
+      await db.insert(rekapCutiTahunan).values({
+        pegawaiId: pegawai.id,
+        tahunTarget: tahunTujuan,
+        cutiTahun1,
+        cutiTahun2,
+        jumlahCuti,
+        sisaCuti: jumlahCuti,
+      });
+      insertedCount++;
+    }
+
+    revalidatePath("/admin/kepegawaian/pegawai");
+    return { 
+      success: true, 
+      message: `Tutup buku berhasil. ${insertedCount} rekap cuti untuk tahun ${tahunTujuan} telah dibuat.` 
+    };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Gagal melakukan tutup buku." };
+  }
 }

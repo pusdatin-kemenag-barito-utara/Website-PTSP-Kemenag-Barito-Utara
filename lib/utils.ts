@@ -111,3 +111,30 @@ export function getFileUrl(path?: string | null) {
 
   return path;
 }
+
+export function terbilang(angka: number): string {
+  const huruf = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+  if (angka < 12) return huruf[angka];
+  if (angka < 20) return terbilang(angka - 10) + " Belas";
+  if (angka < 100) return terbilang(Math.floor(angka / 10)) + " Puluh " + (angka % 10 ? terbilang(angka % 10) : "");
+  if (angka < 200) return "Seratus " + (angka - 100 ? terbilang(angka - 100) : "");
+  if (angka < 1000) return terbilang(Math.floor(angka / 100)) + " Ratus " + (angka % 100 ? terbilang(angka % 100) : "");
+  return angka.toString();
+}
+
+/**
+ * Helper untuk menghitung jumlah hari (calendar days) antara 2 tanggal
+ */
+export function countDaysBetween(startDate: string | Date, endDate: string | Date): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Reset time part to ensure accurate day calculation
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  
+  return diffDays + 1; // inclusive
+}

@@ -13,7 +13,7 @@ import {
   profilesPegawai as profilesPegawaiTable,
   serviceItems as serviceItemsTable,
 } from "@/lib/db/schema";
-import { pengajuanCuti } from "@/lib/db/schema/kepegawaian";
+import { pengajuanCuti, usulPensiun } from "@/lib/db/schema/kepegawaian";
 import { sanitizeFilename } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteFromR2, uploadToR2 } from "@/lib/r2";
@@ -24,6 +24,7 @@ import {
   generateRequestNumber,
   recycleRequestNumber,
 } from "@/lib/request-number";
+import { HARDCODED_PENSIUN_REQUIREMENTS } from "@/lib/constants";
 
 export class RequestApplicantService {
   /**
@@ -133,6 +134,33 @@ export class RequestApplicantService {
       };
     }
 
+    const isPensiunService = serviceName?.toLowerCase().includes("pensiun") || false;
+    let pensiunInsertData: any = null;
+
+    if (isPensiunService) {
+      const jenisPensiun = formData.get("jenisPensiun") as string || "";
+      const tmtPensiun = formData.get("tmtPensiun") as string || "";
+      const nipForm = formData.get("nip") as string || "";
+      const namaLengkap = formData.get("namaLengkap") as string || "";
+      const golonganTerakhir = formData.get("golonganTerakhir") as string || "";
+      const jabatanTerakhir = formData.get("jabatanTerakhir") as string || "";
+      const unitKerjaForm = formData.get("unitKerja") as string || "";
+      const noHpForm = formData.get("noHp") as string || "";
+
+      pensiunInsertData = {
+        userId,
+        jenisPensiun,
+        tmtPensiun,
+        nip: nipForm,
+        namaLengkap,
+        golonganTerakhir,
+        jabatanTerakhir,
+        unitKerja: unitKerjaForm,
+        noHp: noHpForm,
+        statusVerifikasi: "pending",
+      };
+    }
+
     // Create Request in Transaction
     const result = await db.transaction(async (tx) => {
       const [createdRequest] = await tx
@@ -166,16 +194,27 @@ export class RequestApplicantService {
       });
 
       if (cutiInsertData) {
+        cutiInsertData.requestId = createdRequest.id;
         await tx.insert(pengajuanCuti).values(cutiInsertData);
+      }
+
+      if (pensiunInsertData) {
+        pensiunInsertData.requestId = createdRequest.id;
+        await tx.insert(usulPensiun).values(pensiunInsertData);
       }
 
       return createdRequest;
     });
 
+    let finalRequirements = requirements;
+    if (isPensiunService) {
+      finalRequirements = HARDCODED_PENSIUN_REQUIREMENTS as any[];
+    }
+
     // Handle Uploads
     await RequestApplicantService.handleUploads({
       formData,
-      requirements,
+      requirements: finalRequirements,
       userId,
       fullName: userProfile?.fullName || "User",
       requestId: result.id,
@@ -315,7 +354,7 @@ export class RequestApplicantService {
     const answersJson = formData.get("answers") as string;
     const updates = answersJson ? JSON.parse(answersJson) : [];
 
-    const [requirements, userProfile] = await Promise.all([
+    const [requirements, userProfile, itemInfo] = await Promise.all([
       db.query.serviceRequirements.findMany({
         where: eq(
           serviceRequirementsTable.serviceItemId,
@@ -326,7 +365,17 @@ export class RequestApplicantService {
         where: eq(profilesTable.id, userId),
         columns: { fullName: true },
       }),
+      db.query.serviceItems.findFirst({
+        where: eq(serviceItemsTable.id, request.serviceItemId),
+        with: { service: { columns: { name: true } } },
+      }),
     ]);
+
+    let finalRequirements = requirements;
+    const serviceName = itemInfo?.service?.name || "";
+    if (serviceName.toLowerCase().includes("pensiun")) {
+      finalRequirements = HARDCODED_PENSIUN_REQUIREMENTS as any[];
+    }
 
     await db.transaction(async (tx) => {
       // 1. Update text answers
@@ -354,7 +403,7 @@ export class RequestApplicantService {
     // Handle Uploads
     await RequestApplicantService.handleUploads({
       formData,
-      requirements,
+      requirements: finalRequirements,
       userId,
       fullName: userProfile?.fullName || "User",
       requestId: request.id,
