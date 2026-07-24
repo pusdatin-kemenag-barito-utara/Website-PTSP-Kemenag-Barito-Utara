@@ -1,15 +1,42 @@
-node_modules
-.next
-.env.local
-.env
-dist
-coverage
-.DS_Store
-*.log
+# Dependencies
+node_modules/
 
+# Next.js & Build Output
+.next/
+out/
+build/
+dist/
+.cache/
+.turbo/
+.vercel/
 tsconfig.tsbuildinfo
+*.tsbuildinfo
 
-# AI & Temporary files
-scratch/
+# Environment Variables
+.env
+.env*.local
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+
+# AI Assistants & Temporary Files
+.claude/
+.opencode/
+.antigravitycli/
 .gemini/
+scratch/
 scripts/
+
+# Logs & OS Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+
