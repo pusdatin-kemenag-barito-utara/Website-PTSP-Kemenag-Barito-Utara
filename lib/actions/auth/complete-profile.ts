@@ -182,36 +182,92 @@ export async function updatePemohonWhatsappAction(formData: FormData) {
     const finalFullName = namaLengkap || profile.fullName || null;
 
     // Upsert to profilesPemohon
-    await db
-      .insert(profilesPemohon)
-      .values({
-        profileId: profile.id,
-        noHp: cleanPhone,
-        nik: null,
-        pekerjaan: null,
-        alamat: alamat || null,
-        fullName: finalFullName,
-      })
-      .onConflictDoUpdate({
-        target: profilesPemohon.profileId,
-        set: {
+    const existingPemohonRecord = await db.query.profilesPemohon.findFirst({
+      where: eq(profilesPemohon.profileId, profile.id),
+    });
+
+    if (existingPemohonRecord) {
+      await db
+        .update(profilesPemohon)
+        .set({
           noHp: cleanPhone,
           alamat: alamat || null,
           fullName: finalFullName,
           updatedAt: new Date(),
-        },
-      });
+        })
+        .where(eq(profilesPemohon.profileId, profile.id));
+    } else {
+      await db
+        .insert(profilesPemohon)
+        .values({
+          profileId: profile.id,
+          noHp: cleanPhone,
+          nik: null,
+          pekerjaan: null,
+          alamat: alamat || null,
+          fullName: finalFullName,
+        });
+    }
 
-    // Update profiles as well for backward compatibility
+    // Update profiles as well for backward compatibility & mark userType as eksternal_masyarakat
     await db
       .update(profiles)
       .set({
         phone: cleanPhone,
         fullName: finalFullName,
         address: alamat || null,
+        userType: "eksternal_masyarakat",
         updatedAt: new Date(),
       })
       .where(eq(profiles.id, profile.id));
+
+    // Upsert directly to kemenag_pusdatin schema for Google OAuth / Complete Profile sync
+    try {
+      const { sql } = await import("drizzle-orm");
+
+      // 1. Ensure user exists in kemenag_pusdatin.profiles
+      await db.execute(sql`
+        INSERT INTO "kemenag_pusdatin"."profiles" (id, name, email, phone, address, role, user_type, status, created_at, updated_at)
+        VALUES (
+          ${profile.id},
+          ${finalFullName},
+          ${profile.email || `p${cleanPhone}@ptsp.id`},
+          ${cleanPhone},
+          ${alamat || null},
+          'user',
+          'eksternal_masyarakat',
+          'active',
+          NOW(),
+          NOW()
+        )
+        ON CONFLICT (id) DO UPDATE
+        SET name = EXCLUDED.name,
+            phone = EXCLUDED.phone,
+            address = EXCLUDED.address,
+            user_type = 'eksternal_masyarakat',
+            status = 'active',
+            updated_at = NOW()
+      `);
+
+      // 2. Ensure profile exists in kemenag_pusdatin.profiles_pemohon
+      await db.execute(sql`
+        INSERT INTO "kemenag_pusdatin"."profiles_pemohon" (user_id, full_name, no_hp, alamat, updated_at)
+        VALUES (
+          ${profile.id},
+          ${finalFullName},
+          ${cleanPhone},
+          ${alamat || null},
+          NOW()
+        )
+        ON CONFLICT (user_id) DO UPDATE
+        SET full_name = EXCLUDED.full_name,
+            no_hp = EXCLUDED.no_hp,
+            alamat = EXCLUDED.alamat,
+            updated_at = NOW()
+      `);
+    } catch (pusdatinSyncErr) {
+      console.error("[PUSDATIN SYNC COMPLETE PROFILE ERROR]:", pusdatinSyncErr);
+    }
 
     revalidatePath("/dashboard");
 

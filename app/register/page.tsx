@@ -37,6 +37,7 @@ export default async function RegisterPage(props: {
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag"
             fill
+            sizes="100vw"
             className="object-cover object-center grayscale opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/90 to-slate-900/95" />
@@ -87,7 +88,7 @@ export default async function RegisterPage(props: {
                 </div>
                 
                 <Link
-                  href={`/login/pemohon${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
+                  href={`/login/masyarakat${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl as string)}` : ""}`}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-2 sm:py-2.5 text-[13px] sm:text-sm font-bold text-slate-600 transition-colors hover:border-emerald-500 hover:text-[#059669] hover:bg-emerald-50/50"
                 >
                   Masuk ke Akun Anda
@@ -105,6 +106,7 @@ export default async function RegisterPage(props: {
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag Barito Utara"
             fill
+            sizes="50vw"
             priority
             className="object-cover object-center grayscale"
           />

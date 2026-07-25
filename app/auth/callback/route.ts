@@ -7,11 +7,11 @@ import { eq } from 'drizzle-orm';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const nextParam = url.searchParams.get('next') ?? '/dashboard';
+  const nextParam = url.searchParams.get('next') ?? '/masyarakat';
 
   const safeNext = nextParam.startsWith("/")
-    ? nextParam
-    : "/dashboard";
+    ? (nextParam === "/dashboard" ? "/masyarakat" : nextParam)
+    : "/masyarakat";
 
   if (code) {
     const supabase = await createClient();
@@ -45,8 +45,39 @@ export async function GET(request: Request) {
         baseOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : url.origin;
       }
 
-      // Cek apakah ini pemohon (role = user) dan butuh melengkapi data WA
+      // Cek & sync data profile & pusdatin saat OAuth Google login
       try {
+        const userEmail = user.email || "";
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || userEmail.split("@")[0] || "Pemohon Google";
+        const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+        // 1. Upsert to kemenag_ptsp.profiles
+        const existingProfile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, user.id),
+          columns: { fullName: true },
+        });
+
+        const initialName = existingProfile?.fullName || null;
+
+        await db
+          .insert(profiles)
+          .values({
+            id: user.id,
+            fullName: initialName,
+            email: userEmail,
+            avatarUrl,
+            role: "user",
+            userType: "pemohon",
+          })
+          .onConflictDoUpdate({
+            target: profiles.id,
+            set: {
+              email: userEmail,
+              avatarUrl,
+              updatedAt: new Date(),
+            },
+          });
+
         const profile = await db.query.profiles.findFirst({
           where: eq(profiles.id, user.id),
           columns: { role: true },
@@ -58,11 +89,11 @@ export async function GET(request: Request) {
           });
 
           if (!pemohon || !pemohon.noHp) {
-            return NextResponse.redirect(new URL(`/login/pemohon/lengkapi-wa?next=${encodeURIComponent(safeNext)}`, baseOrigin));
+            return NextResponse.redirect(new URL(`/login/masyarakat/lengkapi-profil?next=${encodeURIComponent(safeNext)}`, baseOrigin));
           }
         }
       } catch (checkErr) {
-        console.error("Error checking pemohon completeness:", checkErr);
+        console.error("Error checking/syncing Google OAuth user to Pusdatin:", checkErr);
       }
 
     } else {

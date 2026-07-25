@@ -67,6 +67,29 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  // Otomatis buka accordion grup menu yang mencakup pathname aktif
+  useEffect(() => {
+    if (!pathname || currentMode === "user") return;
+
+    // Cari item navigasi yang cocok dengan URL saat ini
+    const activeItem = navItems.find((item: any) => {
+      if (item.href === "/admin" || item.href === "/pegawai") {
+        return pathname === item.href;
+      }
+      return pathname.startsWith(item.href);
+    });
+
+    if (activeItem && activeItem.group) {
+      setExpandedGroups((prev) => {
+        if (prev[activeItem.group!]) return prev; // Mencegah re-render tak terbatas
+        return {
+          ...prev,
+          [activeItem.group!]: true,
+        };
+      });
+    }
+  }, [pathname, navItems, currentMode]);
+
   // Close on pathname change (extra safety)
   useEffect(() => {
     setIsOpen(false);
@@ -78,34 +101,35 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
 
   return (
     <>
-      {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between bg-white border border-slate-200/80 rounded-2xl px-4 py-3 shadow-sm mb-1">
+      {/* Mobile Top Bar (Full Width Top Bar) */}
+      <div className="md:hidden sticky top-0 z-[90] -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-xs mb-4 transition-all duration-300">
         <div className="flex items-center gap-3">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${currentMode === "admin" ? "bg-[#059669]/10" : (currentMode === "pegawai" ? "bg-blue-600/10" : "bg-emerald-600/10")}`}>
+          <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${currentMode === "admin" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : (currentMode === "pegawai" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-teal-500/10 text-teal-600 dark:text-teal-400")}`}>
             {currentMode === "admin" ? (
-              <Shield className="h-4 w-4 text-[#059669]" />
+              <Shield className="h-4.5 w-4.5" />
             ) : currentMode === "pegawai" ? (
-              <Briefcase className="h-4 w-4 text-blue-600" />
+              <Briefcase className="h-4.5 w-4.5" />
             ) : (
-              <User className="h-4 w-4 text-emerald-600" />
+              <User className="h-4.5 w-4.5" />
             )}
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-700">
-            {currentMode === "admin" ? "Menu Admin" : (currentMode === "pegawai" ? "Menu Pegawai" : "Menu Utama")}
+          <p className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
+            {currentMode === "admin" ? "Menu Admin" : (currentMode === "pegawai" ? "Menu Pegawai" : "Navigasi Pemohon")}
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="p-2 -mr-2 text-slate-500 hover:text-slate-900 transition-colors focus:outline-none"
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer border border-emerald-100 dark:border-slate-700"
           aria-label="Open menu"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Drawer Overlay with Smooth Backdrop */}
       <div 
-        className={`md:hidden fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
+        className={`md:hidden fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
         onClick={() => setIsOpen(false)} 
       />
 
@@ -114,36 +138,36 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
         ref={sidebarRef}
         className={`
           flex flex-col w-[280px] sm:w-[320px] max-w-[85vw]
-          fixed inset-y-0 right-0 z-[110] bg-transparent shadow-2xl transition-transform duration-300 transform 
+          fixed inset-y-0 right-0 z-[110] bg-transparent shadow-2xl transition-transform duration-300 cubic-bezier(0.16, 1, 0.3, 1) 
           ${isOpen ? "translate-x-0" : "translate-x-full"}
           md:static md:translate-x-0 md:bg-transparent md:shadow-none md:z-0
-          md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-6rem)] md:pb-2 md:w-full
+          md:w-full md:max-h-[calc(100vh-7rem)] shrink-0
         `}
       >
         {/* Navigation */}
-        <nav className="h-full md:h-auto rounded-l-2xl md:rounded-2xl border-l border-y md:border border-slate-200/80 bg-white shadow-sm overflow-hidden flex flex-col transition-all">
+        <nav className="h-full md:h-auto rounded-l-3xl md:rounded-3xl border-l border-y md:border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl md:shadow-xs overflow-hidden flex flex-col transition-colors duration-300">
           {/* Header */}
           <div
-            className="flex w-full items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-4 md:px-4 md:py-3 transition-colors"
+            className="flex w-full items-center justify-between border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/70 px-5 py-4 transition-colors"
           >
-            <div className="flex items-center gap-2">
-              <div className={`flex h-6 w-6 md:h-6 md:w-6 items-center justify-center rounded-lg ${currentMode === "admin" ? "bg-[#059669]/10" : (currentMode === "pegawai" ? "bg-blue-600/10" : "bg-emerald-600/10")}`}>
+            <div className="flex items-center gap-2.5">
+              <div className={`flex h-7 w-7 items-center justify-center rounded-xl ${currentMode === "admin" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : (currentMode === "pegawai" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-teal-500/10 text-teal-600 dark:text-teal-400")}`}>
                 {currentMode === "admin" ? (
-                  <Shield className="h-3.5 w-3.5 text-[#059669]" />
+                  <Shield className="h-4 w-4" />
                 ) : currentMode === "pegawai" ? (
-                  <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                  <Briefcase className="h-4 w-4" />
                 ) : (
-                  <User className="h-3.5 w-3.5 text-emerald-600" />
+                  <User className="h-4 w-4" />
                 )}
               </div>
-              <p className="text-[10px] md:text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
-                {currentMode === "admin" ? "Menu Admin" : (currentMode === "pegawai" ? "Menu Pegawai" : "Menu Utama")}
+              <p className="text-xs font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                {currentMode === "admin" ? "Menu Admin" : (currentMode === "pegawai" ? "Menu Pegawai" : "Navigasi Pemohon")}
               </p>
             </div>
             
             <button 
               onClick={() => setIsOpen(false)} 
-              className="md:hidden p-1.5 -mr-1.5 text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+              className="md:hidden flex h-8 w-8 items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -151,9 +175,9 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
 
           {/* Nav items */}
           <div
-            className="overflow-y-auto flex-1 md:flex-auto md:overflow-visible"
+            className="overflow-y-auto flex-1 md:flex-auto md:max-h-[calc(100vh-12rem)]"
           >
-            <div className="p-2 space-y-1">
+            <div className="p-3 space-y-1">
               {currentMode !== "user" ? (
                 <div className="space-y-1">
                   {groups.map((group: any, gi: number) => {
@@ -166,18 +190,18 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
                         {group && (
                           <button 
                             onClick={() => toggleGroup(group)}
-                            className="mb-1 mt-2 first:mt-0 flex w-full items-center justify-between px-3 py-1.5 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer group/header focus:outline-none"
+                            className="mb-1 mt-2 first:mt-0 flex w-full items-center justify-between px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl transition-colors cursor-pointer group/header focus:outline-none"
                           >
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
                               {GroupIcon && (
-                                <GroupIcon className="h-4 w-4 text-slate-500 group-hover/header:text-emerald-600 transition-colors" />
+                                <GroupIcon className="h-4 w-4 text-slate-400 dark:text-slate-500 group-hover/header:text-emerald-600 dark:group-hover/header:text-emerald-400 transition-colors" />
                               )}
-                              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-600 group-hover/header:text-slate-900 transition-colors">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover/header:text-slate-900 dark:group-hover/header:text-white transition-colors">
                                 {group}
                               </p>
                             </div>
                             <ChevronDown 
-                              className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${expandedGroups[group] ? 'rotate-180' : ''}`} 
+                              className={`h-4 w-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${expandedGroups[group] ? 'rotate-180' : ''}`} 
                             />
                           </button>
                         )}
@@ -198,17 +222,17 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
                           })}
                         </div>
                         {gi < groups.length - 1 && (
-                          <div className="mx-3 mt-2 border-t border-slate-100" />
+                          <div className="mx-3 mt-2 border-t border-slate-100 dark:border-slate-800" />
                         )}
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {navItems.map((item: any) => {
                     const isActive =
-                      item.href === "/dashboard"
+                      item.href === "/dashboard" || item.href === "/masyarakat" || item.href === "/masyarakat/pengajuan"
                         ? pathname === item.href
                         : pathname.startsWith(item.href);
                     return (

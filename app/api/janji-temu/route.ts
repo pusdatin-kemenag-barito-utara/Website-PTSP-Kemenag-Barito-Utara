@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { appointments } from "@/lib/db/schema";
 import { verifyTurnstileToken } from "@/lib/turnstile";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { NextResponse } from "next/server";
 
 import { appointmentSchema } from "@/lib/validations/appointment";
@@ -67,36 +66,6 @@ export async function POST(request: Request) {
         status: "pending",
       })
       .returning();
-
-    // Format tanggal dan jam untuk pesan WA
-    const appointmentDateFormatted = appointmentDateObj.toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "Asia/Jakarta",
-    });
-
-    const waMessage =
-      `Halo *${guestName}* 👋\n\n` +
-      `Permintaan janji temu Anda telah *berhasil dicatat* dan sedang menunggu konfirmasi dari petugas.\n\n` +
-      `📅 *Detail Janji Temu:*\n` +
-      `• Tanggal  : ${appointmentDateFormatted}\n` +
-      `• Jam      : ${appointmentTime} WIB\n` +
-      `• Bertemu  : ${intendedOfficer}\n` +
-      `• Keperluan: ${purpose}\n` +
-      (institutionName ? `• Instansi : ${institutionName}\n` : "") +
-      `\n⏳ *Status: Menunggu Konfirmasi*\n` +
-      `Anda akan dihubungi kembali jika janji temu telah dikonfirmasi.\n\n` +
-      `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
-      `_Kemenag Kabupaten Barito Utara_`;
-
-    // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
-    try {
-      await sendWhatsAppNotification(whatsapp, waMessage);
-    } catch (waErr) {
-      console.error("WhatsApp notification failed:", waErr);
-    }
 
     return NextResponse.json({
       success: true,

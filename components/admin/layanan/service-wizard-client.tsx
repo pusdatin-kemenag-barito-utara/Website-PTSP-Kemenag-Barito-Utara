@@ -4,8 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useServiceWizard } from "@/hooks/use-service-wizard";
 import dynamic from "next/dynamic";
 import { AddEditItemModal } from "@/components/admin/item-layanan/add-edit-item-modal";
-import { AddEditFieldModal } from "@/components/admin/form-layanan/add-edit-field-modal";
-import { AddEditRequirementModal } from "@/components/admin/persyaratan/add-edit-requirement-modal";
+import { FloatingManageFieldsModal } from "@/components/admin/layanan/wizard/floating-manage-fields-modal";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
 const WizardItemList = dynamic(() => import("./wizard/wizard-item-list").then((mod) => mod.WizardItemList), {
@@ -30,6 +29,14 @@ export function ServiceWizardClient({
     [service.serviceItems],
   );
 
+  const [floatingManageItem, setFloatingManageItem] = useState<any | null>(null);
+
+  // Synchronize item data if updated while floating modal is open
+  const currentFloatingItem = useMemo(() => {
+    if (!floatingManageItem) return null;
+    return (service.serviceItems || []).find((i: any) => i.id === floatingManageItem.id) || floatingManageItem;
+  }, [service.serviceItems, floatingManageItem]);
+
   return (
     <div className="space-y-8">
       {/* HEADER SECTION: Items List */}
@@ -37,6 +44,33 @@ export function ServiceWizardClient({
         service={service}
         isSuperAdmin={isSuperAdmin}
         wizard={wizard}
+        onOpenFloatingManage={(item: any) => {
+          setFloatingManageItem(item);
+          // Langsung aktifkan form input field baru tanpa harus klik lagi
+          modals.field.setEditing(null);
+          forms.field.setData({
+            serviceItemId: item.id.toString(),
+            label: "",
+            name: "",
+            type: "text",
+            placeholder: "",
+            isRequired: true,
+            options: "",
+          });
+          modals.field.setOpen(true);
+        }}
+      />
+
+      {/* FLOATING MANAGE FIELDS & REQUIREMENTS MODAL */}
+      <FloatingManageFieldsModal
+        item={currentFloatingItem}
+        onClose={() => setFloatingManageItem(null)}
+        isSuperAdmin={isSuperAdmin}
+        fieldForms={forms.field}
+        fieldModals={modals.field}
+        reqForms={forms.req}
+        reqModals={modals.req}
+        handlers={wizard.handlers}
       />
 
       {/* MODALS */}
@@ -55,40 +89,6 @@ export function ServiceWizardClient({
           forms.item.setData((p: any) => ({ ...p, ...updates }))
         }
         onSubmit={forms.item.onSubmit}
-      />
-
-      <AddEditFieldModal
-        isOpen={modals.field.isOpen}
-        editingField={modals.field.editing}
-        items={sortedItems}
-        formData={forms.field.data}
-        isPending={isPending}
-        onClose={() => {
-          modals.field.setOpen(false);
-          modals.field.setEditing(null);
-        }}
-        onChangeLabel={(e) => forms.field.onChangeLabel(e.target.value)}
-        onChangeFormData={(updates) =>
-          forms.field.setData((p: any) => ({ ...p, ...updates }))
-        }
-        onSubmit={forms.field.onSubmit}
-      />
-
-      <AddEditRequirementModal
-        isOpen={modals.req.isOpen}
-        editingRequirement={modals.req.editing}
-        items={sortedItems}
-        formData={forms.req.data}
-        isPending={isPending}
-        onClose={() => {
-          modals.req.setOpen(false);
-          modals.req.setEditing(null);
-        }}
-        onChangeFormData={(updates) =>
-          forms.req.setData((p: any) => ({ ...p, ...updates }))
-        }
-        onExtensionChange={forms.req.onExtensionChange}
-        onSubmit={forms.req.onSubmit}
       />
 
       <AlertDialog

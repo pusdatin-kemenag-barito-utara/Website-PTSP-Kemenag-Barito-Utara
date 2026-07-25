@@ -16,27 +16,23 @@ export function NavLink({
     <Link
       href={item.href}
       onClick={onClick}
-      className={`group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 ${
+      className={`group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200 ${
         isActive
-          ? "bg-gradient-to-r from-[#059669] to-[#047857] text-white shadow-md shadow-emerald-500/20"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20 dark:shadow-none"
+          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white"
       }`}
     >
       <span
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-200 ${
           isActive
-            ? "bg-white/20 shadow-sm shadow-white/10"
-            : "bg-slate-100/80 group-hover:bg-white group-hover:shadow-sm"
+            ? "bg-white/20 text-white"
+            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-white dark:group-hover:bg-slate-700 group-hover:text-slate-800 dark:group-hover:text-slate-100 shadow-2xs"
         }`}
       >
-        <Icon
-          className={`h-3.5 w-3.5 ${
-            isActive ? "text-white" : "text-slate-500 group-hover:text-slate-700"
-          }`}
-        />
+        <Icon className="h-4 w-4" />
       </span>
       <span className="flex-1 leading-tight truncate">{item.label}</span>
-      {isActive && <ChevronRight className="h-3.5 w-3.5 opacity-60 shrink-0" />}
+      {isActive && <ChevronRight className="h-4 w-4 opacity-70 shrink-0" />}
     </Link>
   );
 }

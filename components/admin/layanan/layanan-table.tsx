@@ -64,11 +64,14 @@ export function LayananTable({
               Nama Layanan & Slug
             </div>
             {showBidangColumn && (
-              <div className="w-48 shrink-0 text-left text-xs font-black uppercase tracking-wider text-slate-400">
+              <div className="w-44 shrink-0 text-left text-xs font-black uppercase tracking-wider text-slate-400">
                 Bidang Pengelola
               </div>
             )}
-            <div className="w-32 shrink-0 text-left text-xs font-black uppercase tracking-wider text-slate-400">
+            <div className="w-32 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+              Jumlah Item
+            </div>
+            <div className="w-28 shrink-0 text-left text-xs font-black uppercase tracking-wider text-slate-400">
               Status
             </div>
             <div className="w-56 shrink-0 text-right text-xs font-black uppercase tracking-wider text-slate-400 pr-4">
@@ -138,6 +141,8 @@ function ServiceRow({
 }) {
   const dragControls = useDragControls();
 
+  const itemCounts = service.serviceItems?.length || 0;
+
   return (
     <Reorder.Item
       value={service}
@@ -165,11 +170,16 @@ function ServiceRow({
         </span>
       </div>
       {showBidangColumn && (
-        <div className="w-48 shrink-0 flex items-center">
+        <div className="w-44 shrink-0 flex items-center">
           <BidangBadge roleOwner={service.roleOwner} />
         </div>
       )}
-      <div className="w-32 shrink-0 flex items-center">
+      <div className="w-32 shrink-0 flex items-center justify-center">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+          {itemCounts} Layanan
+        </span>
+      </div>
+      <div className="w-28 shrink-0 flex items-center">
         <span
           className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
             service.isActive

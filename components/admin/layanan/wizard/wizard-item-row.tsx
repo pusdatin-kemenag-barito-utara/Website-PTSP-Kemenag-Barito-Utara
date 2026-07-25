@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2, FormInput, ListChecks } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2, FormInput, ListChecks, SlidersHorizontal, Settings2, Layers } from "lucide-react";
 import { m, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { WizardFieldSection } from "./wizard-field-section";
 import { WizardRequirementSection } from "./wizard-requirement-section";
@@ -10,6 +10,7 @@ interface WizardItemRowProps {
   isSuperAdmin: boolean;
   expandedItemId: number | null;
   setExpandedItemId: (id: number | null) => void;
+  onOpenFloatingManage: (item: any) => void;
   activeTab: "form" | "req";
   setActiveTab: (tab: "form" | "req") => void;
   itemModals: any;
@@ -27,6 +28,7 @@ export function WizardItemRow({
   isSuperAdmin,
   expandedItemId,
   setExpandedItemId,
+  onOpenFloatingManage,
   activeTab,
   setActiveTab,
   itemModals,
@@ -49,69 +51,80 @@ export function WizardItemRow({
       className="group relative bg-white flex flex-col"
     >
       {/* ITEM ROW */}
-      <div
-        className={`p-4 sm:px-6 flex items-center justify-between cursor-pointer transition-colors select-none ${
-          isExpanded ? "bg-emerald-50/30" : "hover:bg-slate-50"
-        }`}
-        onClick={() => setExpandedItemId(isExpanded ? null : item.id)}
-      >
-        <div className="flex items-center gap-4">
+      <div className="p-4 sm:px-6 flex items-center justify-between transition-colors select-none hover:bg-slate-50">
+        <div className="flex items-center gap-3">
           {/* DRAG HANDLE */}
-          <div className="w-10 shrink-0 flex items-center justify-center -ml-2" onClick={(e) => e.stopPropagation()}>
+          <div className="shrink-0 flex items-center justify-center -ml-2" onClick={(e) => e.stopPropagation()}>
             <div
               onPointerDown={(e) => dragControls.start(e)}
               className="flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-emerald-500 transition-colors p-2"
+              title="Tarik untuk mengubah urutan"
             >
               <GripVertical className="h-5 w-5 pointer-events-none" />
             </div>
           </div>
 
-
-          <div
-            className={`p-2 rounded-lg transition-colors ${
-              isExpanded ? "bg-[#059669] text-white" : "bg-slate-100 text-slate-400 group-hover:bg-slate-200"
-            }`}
-          >
-            {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-          </div>
           <div>
             <h3 className="font-bold text-slate-900">{item.name}</h3>
             <p className="text-xs text-slate-500 font-mono mt-0.5">{item.slug}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-6" onClick={(e) => e.stopPropagation()}>
+          {/* Kolom 1: Status Badge */}
+          <div className="w-24 text-center shrink-0">
+            <span
+              className={`inline-block w-full py-1 rounded-full text-[10px] font-extrabold tracking-wider ${
+                item.isActive 
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200/80" 
+                  : "bg-rose-50 text-rose-700 border border-rose-200/80"
+              }`}
+            >
+              {item.isActive ? "AKTIF" : "NONAKTIF"}
+            </span>
+          </div>
 
-          <span
-            className={`px-2.5 py-1 rounded-md text-[10px] font-bold mr-4 ${
-              item.isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-            }`}
-          >
-            {item.isActive ? "AKTIF" : "NONAKTIF"}
-          </span>
+          {/* Kolom 2: Tindakan Admin (Posisi Center di antara 3 Fitur) */}
+          <div className="flex items-center justify-center gap-2">
+            {/* Fitur 1: Kelola Field (Modal Floating) */}
+            <button
+              onClick={() => onOpenFloatingManage(item)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white text-xs font-bold shadow-xs hover:from-emerald-700 hover:to-teal-800 transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
+              title="Kelola Formulir & Persyaratan Dokumen (Modal Floating)"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>Kelola Field ({ (item.serviceFormFields?.length || 0) + (item.serviceRequirements?.length || 0) })</span>
+            </button>
 
-          <button
-            onClick={() => {
-              itemModals.setEditing(item);
-              itemForms.setData({
-                serviceId: serviceId,
-                name: item.name,
-                slug: item.slug,
-                estimatedTime: item.estimatedTime || "1-3 Hari Kerja",
-                isActive: item.isActive,
-              });
-              itemModals.setOpen(true);
-            }}
-            className="p-2 text-slate-400 hover:text-[#059669] hover:bg-emerald-50 rounded-lg transition-colors"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => handlers.deleteItem(item.id)}
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+            {/* Fitur 2: Edit Layanan */}
+            <button
+              onClick={() => {
+                itemModals.setEditing(item);
+                itemForms.setData({
+                  serviceId: serviceId,
+                  name: item.name,
+                  slug: item.slug,
+                  estimatedTime: item.estimatedTime || "1-3 Hari Kerja",
+                  isActive: item.isActive,
+                });
+                itemModals.setOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl border border-slate-200/80 text-xs font-bold transition-all cursor-pointer shrink-0"
+              title="Edit Detail Layanan (Nama, Slug, Estimasi Waktu)"
+            >
+              <Pencil className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Edit Layanan</span>
+            </button>
+
+            {/* Fitur 3: Hapus Item Layanan */}
+            <button
+              onClick={() => handlers.deleteItem(item.id)}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-slate-200/80 transition-all cursor-pointer shrink-0"
+              title="Hapus Item Layanan Ini"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 

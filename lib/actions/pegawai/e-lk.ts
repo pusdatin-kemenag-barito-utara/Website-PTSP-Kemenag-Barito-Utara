@@ -50,6 +50,7 @@ export async function getLaporanKinerjaAction(
 
 export async function createLaporanKinerjaAction(data: {
   tanggal: string;
+  waktuPelaksanaan?: string;
   kegiatanTugasJabatan: string;
   hasil: string;
   buktiDukungUrl?: string;
@@ -61,6 +62,7 @@ export async function createLaporanKinerjaAction(data: {
     await db.insert(laporanKinerja).values({
       userId: user.id,
       tanggal: data.tanggal,
+      waktuPelaksanaan: data.waktuPelaksanaan,
       kegiatanTugasJabatan: data.kegiatanTugasJabatan,
       hasil: data.hasil,
       buktiDukungUrl: data.buktiDukungUrl,
@@ -75,8 +77,42 @@ export async function createLaporanKinerjaAction(data: {
   }
 }
 
+export async function bulkCreateLaporanKinerjaAction(items: Array<{
+  tanggal: string;
+  waktuPelaksanaan?: string;
+  kegiatanTugasJabatan: string;
+  hasil: string;
+}>) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { error: "Anda belum login." };
+
+    if (!items || items.length === 0) {
+      return { error: "Data LKH dari Excel kosong." };
+    }
+
+    const payload = items.map((item) => ({
+      userId: user.id,
+      tanggal: item.tanggal,
+      waktuPelaksanaan: item.waktuPelaksanaan || null,
+      kegiatanTugasJabatan: item.kegiatanTugasJabatan,
+      hasil: item.hasil,
+      status: "pending",
+    }));
+
+    await db.insert(laporanKinerja).values(payload);
+
+    revalidatePath("/pegawai/e-lk");
+    return { success: true, insertedCount: items.length };
+  } catch (error: any) {
+    console.error("Error bulk inserting LKH:", error);
+    return { error: error.message || "Gagal mengimpor data LKH dari Excel." };
+  }
+}
+
 export async function updateLaporanKinerjaAction(id: string, data: {
   tanggal?: string;
+  waktuPelaksanaan?: string;
   kegiatanTugasJabatan?: string;
   hasil?: string;
   buktiDukungUrl?: string;
@@ -130,8 +166,12 @@ export async function getRekapBulananAction(userId: string, month: number, year:
 
     const data = await db
       .select({
+        id: laporanKinerja.id,
         tanggal: laporanKinerja.tanggal,
-        totalKegiatan: count(laporanKinerja.id),
+        waktuPelaksanaan: laporanKinerja.waktuPelaksanaan,
+        kegiatanTugasJabatan: laporanKinerja.kegiatanTugasJabatan,
+        hasil: laporanKinerja.hasil,
+        status: laporanKinerja.status,
       })
       .from(laporanKinerja)
       .where(
@@ -141,7 +181,6 @@ export async function getRekapBulananAction(userId: string, month: number, year:
           lte(laporanKinerja.tanggal, endDate)
         )
       )
-      .groupBy(laporanKinerja.tanggal)
       .orderBy(asc(laporanKinerja.tanggal));
 
     return { data, error: null };

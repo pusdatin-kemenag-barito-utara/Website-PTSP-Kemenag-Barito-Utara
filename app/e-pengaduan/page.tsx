@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function EPengaduanPage() {
   return (
-    <main className="min-h-screen bg-slate-50/50 pb-16">
+    <main className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-16">
       <PageBanner
         title="E-Pengaduan & Saran"
         description="Sampaikan saran, kritik, masukan, maupun pengaduan secara online. Laporan Anda sangat berarti untuk peningkatan kualitas layanan kami."

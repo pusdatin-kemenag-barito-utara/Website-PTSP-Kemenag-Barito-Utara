@@ -1,11 +1,10 @@
 import { getCurrentUser } from "@/lib/auth";
 import { getRekapBulananAction } from "@/lib/actions/pegawai/e-lk";
-import { Card } from "@/components/ui/card";
-import { CalendarDays, FileText, Download } from "lucide-react";
+import { CalendarDays, ClipboardCheck, Sparkles, Clock, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { RekapFilter } from "@/components/pegawai/e-lk/rekap-filter";
-import { CetakDrafButton } from "@/components/pegawai/e-lk/cetak-draf-button";
+import { RekapTableClient } from "./_components/rekap-table-client";
 
 export default async function RekapLkhPage({
   searchParams,
@@ -32,38 +31,35 @@ export default async function RekapLkhPage({
   );
 
   const monthNames = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
   ];
 
-  const totalKegiatanBulanIni =
-    rekap?.reduce((acc, curr) => acc + (curr.totalKegiatan || 0), 0) || 0;
-  const totalHariKerjaIsi = rekap?.length || 0;
+  // Calculate unique days with records
+  const uniqueDaysCount = rekap 
+    ? new Set(rekap.map(item => item.tanggal)).size 
+    : 0;
+
+  const totalKegiatanBulanIni = rekap?.length || 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
+      {/* Header & Filter Toolbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Rekapitulasi Bulanan
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Rekapitulasi Kinerja ASN</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            Rekap E-LK Bulanan
           </h1>
-          <p className="text-slate-500 mt-1">
-            Lihat ringkasan jumlah kegiatan yang Anda laporkan per bulan.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
+            Lihat dan cetak ringkasan rekapitulasi laporan aktivitas kerja harian Anda per bulan.
           </p>
         </div>
 
-        {/* Simple filter UI using regular links/buttons for this Server Component */}
-        <div className="flex items-center gap-2">
+        <div className="shrink-0">
           <RekapFilter
             initialMonth={selectedMonth}
             initialYear={selectedYear}
@@ -71,107 +67,58 @@ export default async function RekapLkhPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-md rounded-2xl sm:rounded-3xl overflow-hidden">
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              <div className="p-2.5 sm:p-3 bg-white/20 rounded-xl w-fit">
-                <CalendarDays className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-              </div>
-              <div>
-                <p className="text-blue-100 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1">
-                  Hari Terisi
-                </p>
-                <div className="text-xl sm:text-3xl font-bold">
-                  {totalHariKerjaIsi} Hari
-                </div>
-              </div>
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-teal-600 to-emerald-700 text-white shadow-xl shadow-teal-700/15 border border-teal-500/30">
+          <div className="flex items-center justify-between relative z-10">
+            <div className="space-y-1">
+              <p className="text-teal-100 text-xs font-bold uppercase tracking-wider">
+                Hari Terisi
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+                {uniqueDaysCount} <span className="text-lg font-extrabold text-teal-200">Hari</span>
+              </h2>
+              <p className="text-xs text-teal-100/80 font-medium pt-1">
+                Tercatat aktif di bulan {monthNames[selectedMonth - 1]} {selectedYear}
+              </p>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/20">
+              <CalendarDays className="h-7 w-7" />
             </div>
           </div>
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none shadow-md rounded-2xl sm:rounded-3xl overflow-hidden">
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-              <div className="p-2.5 sm:p-3 bg-white/20 rounded-xl w-fit">
-                <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-              </div>
-              <div>
-                <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-0.5 sm:mb-1">
-                  Total Laporan
-                </p>
-                <div className="text-xl sm:text-3xl font-bold">
-                  {totalKegiatanBulanIni} Laporan
-                </div>
-              </div>
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl shadow-emerald-700/15 border border-emerald-500/30">
+          <div className="flex items-center justify-between relative z-10">
+            <div className="space-y-1">
+              <p className="text-emerald-100 text-xs font-bold uppercase tracking-wider">
+                Total Aktivitas Laporan
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+                {totalKegiatanBulanIni} <span className="text-lg font-extrabold text-emerald-200">Aktivitas</span>
+              </h2>
+              <p className="text-xs text-emerald-100/80 font-medium pt-1">
+                Poin laporan kinerja yang diselesaikan
+              </p>
+            </div>
+            <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white shrink-0 border border-white/20">
+              <ClipboardCheck className="h-7 w-7" />
             </div>
           </div>
+          <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
         </div>
       </div>
 
-      <div className="border border-slate-200 shadow-sm overflow-hidden bg-white rounded-3xl">
-        <div className="p-0">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <h3 className="font-bold text-slate-700">
-              Rincian Per Hari - {monthNames[selectedMonth - 1]} {selectedYear}
-            </h3>
-            <CetakDrafButton
-              rekap={rekap || []}
-              monthName={monthNames[selectedMonth - 1]}
-              year={selectedYear}
-              userName={
-                user.user_metadata?.full_name || user.email || "Pegawai"
-              }
-            />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-[11px] sm:text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-3 sm:px-6 sm:py-4 font-bold whitespace-nowrap">
-                    Tanggal
-                  </th>
-                  <th className="px-4 py-3 sm:px-6 sm:py-4 font-bold text-center whitespace-nowrap">
-                    Jumlah Kegiatan
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-                {rekap && rekap.length > 0 ? (
-                  rekap.map((item, i) => (
-                    <tr
-                      key={i}
-                      className="hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 sm:px-6 sm:py-4 font-medium text-slate-700 whitespace-nowrap">
-                        {format(
-                          new Date(item.tanggal as string),
-                          "EEEE, d MMMM yyyy",
-                          { locale: id },
-                        )}
-                      </td>
-                      <td className="px-4 py-3 sm:px-6 sm:py-4 text-center">
-                        <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-1 bg-emerald-100 text-emerald-700 font-bold rounded-full text-[10px] sm:text-xs">
-                          {item.totalKegiatan}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={2}
-                      className="px-6 py-12 text-center text-slate-500"
-                    >
-                      Tidak ada data laporan kinerja di bulan ini.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      {/* Main Activity Table Card Client Component */}
+      <RekapTableClient
+        rekap={rekap || []}
+        monthName={monthNames[selectedMonth - 1]}
+        year={selectedYear}
+        userName={
+          user.user_metadata?.full_name || user.email || "Pegawai"
+        }
+      />
     </div>
   );
 }

@@ -103,11 +103,12 @@ export function useWizardFields(startTransition: any) {
     });
   };
 
-  const handleChangeLabel = (label: string) => {
+  const handleChangeLabel = (val: string | React.ChangeEvent<HTMLInputElement>) => {
+    const label = typeof val === "string" ? val : val.target.value;
     setFormData((p) => ({
       ...p,
       label,
-      name: label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
+      name: (label || "").toLowerCase().replace(/[^a-z0-9]/g, "_"),
     }));
   };
 

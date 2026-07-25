@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Building2, UserCheck } from "lucide-react";
+import { Building2, UserCheck, User, Landmark, Briefcase, Users, HelpCircle, Send, Loader2, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, Variants } from "framer-motion";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
@@ -12,6 +12,10 @@ import {
   LoginTurnstile,
   TurnstileRef,
 } from "@/components/auth/_components/login-turnstile";
+import {
+  AppointmentSuccessModal,
+  AppointmentSuccessModalData,
+} from "./appointment-success-modal";
 
 const OFFICER_OPTIONS = [
   "Kepala Kantor",
@@ -54,6 +58,8 @@ export default function AppointmentForm() {
   const [mounted, setMounted] = useState(false);
   const turnstileRef = useRef<TurnstileRef>(null);
 
+  const [successData, setSuccessData] = useState<AppointmentSuccessModalData | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -69,6 +75,8 @@ export default function AppointmentForm() {
     if (
       !guestName ||
       !whatsapp ||
+      !institutionType ||
+      !institutionName ||
       !intendedOfficer ||
       !purpose ||
       !appointmentDate ||
@@ -126,6 +134,15 @@ export default function AppointmentForm() {
           "Permintaan janji temu Anda telah berhasil dicatat. Silakan tunggu konfirmasi petugas.",
       });
 
+      setSuccessData({
+        guestName,
+        intendedOfficer,
+        purpose,
+        appointmentDate,
+        appointmentTime,
+        institutionName: institutionName || null,
+      });
+
       // Reset Form
       setGuestName("");
       setWhatsapp("");
@@ -165,6 +182,7 @@ export default function AppointmentForm() {
   };
 
   return (
+    <>
     <motion.form 
       variants={containerVariants}
       initial="hidden"
@@ -238,42 +256,42 @@ export default function AppointmentForm() {
           </p>
         </motion.div>
 
-        {/* Jenis Instansi */}
+        {/* Kategori Instansi */}
         <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">
-            Instansi <span className="text-red-500">*</span>
+            Kategori Instansi <span className="text-red-500">*</span>
           </label>
           <ModernSelect
             options={[
-              { value: "Pribadi", label: "Pribadi / Perorangan" },
-              { value: "Pemerintah", label: "Lembaga Pemerintah" },
-              { value: "Swasta", label: "Perusahaan Swasta" },
-              { value: "Ormas", label: "Organisasi Masyarakat (Ormas)" },
-              { value: "Lainnya", label: "Lainnya" },
+              { value: "Pribadi", label: "Pribadi / Perorangan", icon: User },
+              { value: "Pemerintah", label: "Lembaga Pemerintah", icon: Landmark },
+              { value: "Swasta", label: "Perusahaan Swasta", icon: Briefcase },
+              { value: "Ormas", label: "Organisasi Masyarakat (Ormas)", icon: Users },
+              { value: "Lainnya", label: "Lainnya", icon: HelpCircle },
             ]}
             value={institutionType}
             onChange={(val) => setInstitutionType(val)}
             icon={Building2}
-            placeholder="Pilih Instansi"
+            placeholder="Pilih Kategori Instansi"
             required
           />
         </motion.div>
 
-        {/* Nama Instansi */}
+        {/* Nama Instansi / Asal Lembaga */}
         <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
           <label
             htmlFor="institutionName"
             className="text-sm font-semibold text-slate-700"
           >
-            Nama Instansi{" "}
-            <span className="text-xs text-slate-400">(Opsional)</span>
+            Nama Instansi / Asal Lembaga <span className="text-red-500">*</span>
           </label>
           <input
             id="institutionName"
             type="text"
+            required
             value={institutionName}
             onChange={(e) => setInstitutionName(capitalizeEachWord(e.target.value))}
-            placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan Barito Utara / Instansi Lainnya"
+            placeholder="Contoh: KUA Teweh Tengah / Dinas Pendidikan / Nama PT / Perorangan"
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
         </motion.div>
@@ -351,15 +369,32 @@ export default function AppointmentForm() {
       </motion.div>
 
       {/* Submit Button */}
-      <motion.div variants={itemVariants} className="flex justify-center pt-2">
+      <motion.div variants={itemVariants} className="flex justify-center pt-3">
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full sm:w-auto px-8 py-3 text-sm font-bold bg-[#1e88e5] hover:bg-[#1565c0] text-white rounded-xl shadow-md transition-all hover:scale-105 active:scale-95"
+          className="w-full sm:w-auto px-8 py-3.5 text-sm font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl shadow-lg shadow-emerald-700/20 hover:shadow-emerald-700/30 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2 group cursor-pointer"
         >
-          {submitting ? "Menyimpan..." : "SIMPAN"}
+          {submitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+              <span>Memproses Janji Temu...</span>
+            </>
+          ) : (
+            <>
+              <CalendarCheck className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
+              <span>Kirim & Ajukan Janji Temu</span>
+            </>
+          )}
         </Button>
       </motion.div>
     </motion.form>
+
+    {/* Floating Success Modal */}
+    <AppointmentSuccessModal
+      data={successData}
+      onClose={() => setSuccessData(null)}
+    />
+    </>
   );
 }

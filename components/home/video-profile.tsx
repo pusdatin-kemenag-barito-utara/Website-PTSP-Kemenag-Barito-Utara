@@ -53,10 +53,10 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
   const displayCount = totalCount !== undefined ? totalCount : validVideos.length;
 
   return (
-    <section className="py-24 md:py-32 relative overflow-hidden bg-[#f8fafc]">
+    <section className="py-12 md:py-16 relative overflow-hidden bg-[#f8fafc] dark:bg-slate-950 transition-colors duration-300">
       {/* Decorative ambient glowing backdrops */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-50 rounded-full blur-[120px] opacity-70 pointer-events-none z-0" />
-      <div className="absolute top-10 right-10 w-72 h-72 bg-blue-50/50 rounded-full blur-3xl opacity-40 pointer-events-none z-0" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-50 dark:bg-emerald-950/20 rounded-full blur-[120px] opacity-70 pointer-events-none z-0" />
+      <div className="absolute top-10 right-10 w-72 h-72 bg-blue-50/50 dark:bg-blue-950/20 rounded-full blur-3xl opacity-40 pointer-events-none z-0" />
 
       <div className="mx-auto w-full px-6 sm:px-10 lg:px-16 xl:px-24 relative z-10">
         {/* Section Header */}
@@ -67,17 +67,17 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-16 text-center max-w-3xl mx-auto space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100/80 animate-pulse">
-            <Sparkles className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100/80 dark:border-emerald-900/50 animate-pulse">
+            <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
               Galeri Video Lembaga
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-            Kenali <span className="text-emerald-600">Layanan & Kegiatan</span> Kami
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
+            Kenali <span className="text-emerald-600 dark:text-emerald-400">Layanan & Kegiatan</span> Kami
           </h2>
-          <p className="text-sm sm:text-base text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
             Saksikan berbagai liputan, kegiatan, dan inovasi Kementerian Agama Barito Utara secara eksklusif langsung dari kanal YouTube kami.
           </p>
         </motion.div>
@@ -112,15 +112,15 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
             {/* Main Video Details */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 px-2">
               <div className="space-y-3 flex-1">
-                <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-rose-100 text-rose-600 text-[10px] font-bold uppercase tracking-wider">
-                  <Play className="w-3 h-3 mr-1 fill-rose-600" />
+                <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-rose-100 dark:bg-rose-950/60 border border-rose-200/50 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase tracking-wider">
+                  <Play className="w-3 h-3 mr-1 fill-rose-600 dark:fill-rose-400" />
                   Sedang Diputar
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 leading-snug">
                   {activeVideo.title}
                 </h3>
                 {activeVideo.createdAt && (
-                  <div className="text-sm text-slate-500 font-medium">
+                  <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">
                     {formatDate(activeVideo.createdAt)}
                   </div>
                 )}
@@ -139,13 +139,13 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
 
           {/* Playlist Section */}
           <div className="lg:col-span-4 flex flex-col">
-            <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-6">
-              <h4 className="font-extrabold text-slate-800 tracking-tight">VIDEO LAINNYA</h4>
+            <div className="flex items-center justify-between border-b-2 border-slate-200 dark:border-slate-800 pb-4 mb-6">
+              <h4 className="font-extrabold text-slate-800 dark:text-slate-200 tracking-tight">VIDEO LAINNYA</h4>
               <a 
                 href="https://baritoutara.kemenag.go.id/video" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-xs font-bold text-slate-500 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 px-3 py-1 rounded-full transition-colors cursor-pointer"
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950 hover:text-emerald-600 dark:hover:text-emerald-400 px-3 py-1 rounded-full transition-colors cursor-pointer"
               >
                 {displayCount} VIDEO &rsaquo;
               </a>
@@ -156,9 +156,9 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
                 <button
                   key={vid.id}
                   onClick={() => setActiveVideo(vid)}
-                  className="group flex gap-4 items-center p-2 -mx-2 rounded-2xl hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all text-left border border-transparent hover:border-slate-100"
+                  className="group flex gap-4 items-center p-2 -mx-2 rounded-2xl hover:bg-white dark:hover:bg-slate-900 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-none transition-all text-left border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
                 >
-                  <div className="relative w-32 shrink-0 aspect-video rounded-xl overflow-hidden bg-slate-100">
+                  <div className="relative w-32 shrink-0 aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`https://img.youtube.com/vi/${vid.youtubeId}/hqdefault.jpg`}
@@ -171,16 +171,16 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
                     </div>
                   </div>
                   <div className="flex flex-col flex-1 space-y-1.5 py-1">
-                    <h5 className="font-bold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-emerald-600 transition-colors">
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 text-sm line-clamp-2 leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                       {vid.title}
                     </h5>
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">
                       <span className="text-red-500 flex items-center gap-1">
                         <Youtube className="w-3 h-3" /> YOUTUBE
                       </span>
                       {vid.createdAt && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-slate-300" />
+                          <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
                           <span>{formatDate(vid.createdAt)}</span>
                         </>
                       )}
@@ -190,7 +190,7 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
               ))}
               
               {otherVideos.length === 0 && (
-                <div className="text-center py-10 text-slate-400 font-medium text-sm">
+                <div className="text-center py-10 text-slate-400 dark:text-slate-500 font-medium text-sm">
                   Tidak ada video lain.
                 </div>
               )}

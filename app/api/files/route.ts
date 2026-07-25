@@ -55,11 +55,27 @@ export async function GET(request: Request) {
       }
     }
 
-    // Generate a signed URL that expires in 1 hour
-    const signedUrl = await getR2SignedUrl(path, 3600);
+    // Stream file contents directly from R2 to bypass iframe x-frame-options / CORS blocks
+    const key = path.replace("r2:", "");
+    const { getR2Object } = await import("@/lib/r2");
+    const r2Object = await getR2Object(key);
 
-    // Redirect to the signed URL
-    return NextResponse.redirect(signedUrl);
+    if (!r2Object.Body) {
+      return NextResponse.json({ error: "File body is empty" }, { status: 404 });
+    }
+
+    const contentType = r2Object.ContentType || "application/pdf";
+    const bytes = await r2Object.Body.transformToByteArray();
+    const buffer = Buffer.from(bytes);
+
+    return new NextResponse(buffer, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": `inline; filename="${key.split("/").pop() || "document"}"`,
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
   } catch (error: any) {
     console.error("Error serving R2 file:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });

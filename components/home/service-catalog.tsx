@@ -77,11 +77,11 @@ export function HomeServiceCatalogSection({
   const popularSuggestions = displayServices.slice(0, 3).map((s: any) => s.name);
 
   return (
-    <section className="pt-12 pb-24 md:py-36 relative overflow-hidden bg-white">
+    <section className="py-12 md:py-16 relative overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-300">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] rounded-full bg-emerald-50/50 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] rounded-full bg-blue-50/30 blur-[100px]" />
+        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] rounded-full bg-emerald-50/50 dark:bg-emerald-950/20 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] rounded-full bg-blue-50/30 dark:bg-blue-950/20 blur-[100px]" />
       </div>
 
       <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 relative z-10">
@@ -94,19 +94,19 @@ export function HomeServiceCatalogSection({
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="w-full lg:w-[40%] text-center lg:text-left space-y-6 lg:space-y-8 relative lg:sticky lg:top-32 z-20"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
                 Katalog Layanan Digital
               </span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-              Cari Tahu <span className="text-emerald-600">Syarat</span>{" "}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-[1.1]">
+              Cari Tahu <span className="text-emerald-600 dark:text-emerald-400">Syarat</span>{" "}
               <br className="hidden md:block" /> Layanan Anda
             </h2>
 
-            <p className="text-sm sm:text-base md:text-lg text-slate-500 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base md:text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
               Persiapkan dokumen Anda lebih awal. Cari jenis layanan keagamaan
               yang Anda butuhkan dan lihat rincian persyaratannya secara
               transparan.
@@ -114,21 +114,21 @@ export function HomeServiceCatalogSection({
 
             {/* Modern Search Bar */}
             <div className="relative max-w-2xl mx-auto lg:mx-0 group">
-              <div className="absolute inset-0 bg-emerald-600/5 rounded-[2rem] blur-2xl group-focus-within:bg-emerald-600/10 transition-all duration-500" />
+              <div className="absolute inset-0 bg-emerald-600/5 dark:bg-emerald-500/10 rounded-[2rem] blur-2xl group-focus-within:bg-emerald-600/10 transition-all duration-500" />
               <form
                 action="/layanan"
                 method="get"
-                className="relative flex items-center bg-white border-2 border-slate-100 rounded-[2rem] p-1.5 sm:p-2 shadow-xl shadow-slate-200/50 group-focus-within:border-emerald-500/30 transition-all duration-500"
+                className="relative flex items-center bg-white dark:bg-slate-900/90 border-2 border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-1.5 sm:p-2 shadow-xl shadow-slate-200/50 dark:shadow-none group-focus-within:border-emerald-500/50 transition-all duration-500"
               >
                 <div className="flex items-center flex-1 px-2 sm:px-4">
-                  <Search className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Search className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400 dark:text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                   <input
                     type="text"
                     name="q"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Contoh: Izin Madrasah..."
-                    className="w-full bg-transparent border-none focus:ring-0 text-slate-800 text-sm sm:text-base font-bold placeholder:text-slate-300 placeholder:font-semibold py-2.5 px-2 sm:py-3 sm:px-3"
+                    className="w-full bg-transparent border-none focus:outline-none focus:ring-0 focus:border-none text-slate-800 dark:text-white dark:bg-transparent text-sm sm:text-base font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold py-2.5 px-2 sm:py-3 sm:px-3 shadow-none"
                   />
                 </div>
                 <button
@@ -199,7 +199,7 @@ export function HomeServiceCatalogSection({
                 >
                   <Link
                     href={`/layanan/${service.slug}`}
-                    className="group relative flex flex-col justify-end aspect-square sm:aspect-[4/5] overflow-hidden rounded-[1.5rem] bg-slate-100 border-2 border-transparent hover:border-emerald-400/50 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-500 hover:-translate-y-1 block"
+                    className="group relative flex flex-col justify-end aspect-[3/4] sm:aspect-[3/4.2] overflow-hidden rounded-[1.5rem] bg-slate-100 dark:bg-slate-900 border-2 border-transparent hover:border-emerald-400/50 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-500 hover:-translate-y-1 block"
                   >
                     {/* Background Image */}
                     <div

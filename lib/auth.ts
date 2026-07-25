@@ -70,7 +70,7 @@ export async function requireAuth(allowIncomplete = false) {
     const currentPath = headersList.get("x-url");
     const referer = headersList.get("referer");
 
-    let callbackUrl = "/dashboard";
+    let callbackUrl = "/masyarakat";
 
     if (currentPath) {
       callbackUrl = currentPath;
@@ -150,7 +150,7 @@ export async function requireAuth(allowIncomplete = false) {
       // Jika role user (pemohon) dan profil belum lengkap, paksa lengkapi profil
       if (profile!.role === "user") {
         if (!profile!.phone || !profile!.fullName || !profile!.address) {
-          redirect("/lengkapi-profil");
+          redirect("/login/masyarakat/lengkapi-profil");
         }
       } else if (profile!.role === "pegawai") {
         // Hanya pegawai biasa yang diwajibkan isi WA
@@ -172,7 +172,7 @@ export async function requireAdmin() {
     if (profile.role === "pegawai") {
       redirect("/pegawai");
     }
-    redirect("/dashboard");
+    redirect("/masyarakat");
   }
 
   // Pengecekan RBAC dari Pusdatin untuk aplikasi PTSP

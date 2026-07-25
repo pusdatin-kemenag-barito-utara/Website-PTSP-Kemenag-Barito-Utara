@@ -125,14 +125,9 @@ export async function requestRegistrationOtpAction(
 }
 
 export async function registerPemohonAction(
-  formData: FormData,
-  otp?: string,
+  formData: FormData
 ): Promise<ActionResult> {
   try {
-    if (!otp) {
-      return { success: false, error: "Kode OTP wajib diisi." };
-    }
-
     const turnstileToken = String(formData.get("turnstile_token") || "");
     const verifyRes = await verifyTurnstileAction(turnstileToken);
     if (!verifyRes.success) {
@@ -145,21 +140,21 @@ export async function registerPemohonAction(
     const rawPhone = String(formData.get("phone") || "");
     const phone = formatPhone(rawPhone);
 
-    // Verify OTP first
-    const latestOtp = await db.query.authOtps.findFirst({
-      where: and(
-        eq(authOtps.phone, phone),
-        eq(authOtps.isUsed, false),
-        gt(authOtps.expiresAt, new Date()),
-      ),
-      orderBy: [desc(authOtps.createdAt)],
+    const existingProfile = await db.query.profiles.findFirst({
+      where: and(eq(profiles.phone, phone), eq(profiles.role, "user")),
+      columns: { id: true },
     });
 
-    if (!latestOtp || latestOtp.otp !== otp) {
-      return {
-        success: false,
-        error: "Kode OTP tidak valid atau sudah kedaluwarsa.",
-      };
+    if (existingProfile) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+      const { error: authError } = await admin.auth.admin.getUserById(existingProfile.id);
+      
+      if (authError && (authError.message.includes("User not found") || authError.status === 404)) {
+        await db.delete(profiles).where(eq(profiles.id, existingProfile.id));
+      } else {
+        return { success: false, error: "Nomor WhatsApp ini sudah terdaftar sebagai pemohon." };
+      }
     }
 
     const validated = RegisterSchema.safeParse({
@@ -173,20 +168,9 @@ export async function registerPemohonAction(
       return { success: false, error: validated.error.issues[0].message };
     }
 
-    // Mark OTP as used safely
-    const updateRes = await db
-      .update(authOtps)
-      .set({ isUsed: true })
-      .where(and(eq(authOtps.id, latestOtp.id), eq(authOtps.isUsed, false)))
-      .returning({ id: authOtps.id });
-
-    if (updateRes.length === 0) {
-      return { success: false, error: "Kode OTP sudah digunakan." };
-    }
-
     await AuthService.registerPemohon(validated.data);
 
-    return { success: true, message: "Pendaftaran berhasil. Silakan login." };
+    return { success: true, message: "Pendaftaran berhasil! Akun Anda siap digunakan." };
   } catch (error: any) {
     console.error("Registration error:", error);
     return {

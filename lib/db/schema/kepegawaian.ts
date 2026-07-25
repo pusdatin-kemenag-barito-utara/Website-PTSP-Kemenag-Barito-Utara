@@ -18,6 +18,7 @@ export const laporanKinerja = ptspSchema.table("ptsp_laporan_kinerja", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   tanggal: date("tanggal").notNull(),
+  waktuPelaksanaan: text("waktu_pelaksanaan"),
   kegiatanTugasJabatan: text("kegiatan_tugas_jabatan").notNull(),
   hasil: text("hasil").notNull(),
   buktiDukungUrl: text("bukti_dukung_url"),

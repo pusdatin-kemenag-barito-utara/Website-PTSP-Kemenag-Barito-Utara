@@ -107,16 +107,51 @@ export function JanjiTemuClient({
     setCurrentPage(1);
   }, [search, statusFilter, dateFilter]);
 
-  const handleUpdateStatus = async (id: string, newStatus: "approved" | "rejected") => {
-    setPendingIds((prev) => new Set(prev).add(id));
-    const res = await updateAppointmentStatusAction(id, newStatus);
+  const [rejectingEntry, setRejectingEntry] = useState<AppointmentEntry | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const handleUpdateStatus = async (entry: AppointmentEntry, newStatus: "approved" | "rejected", note?: string) => {
+    setPendingIds((prev) => new Set(prev).add(entry.id));
+    const res = await updateAppointmentStatusAction(entry.id, newStatus);
     if (res.success) {
       toast.success(newStatus === "approved" ? "Janji Temu Disetujui" : "Janji Temu Ditolak", {
-        description: `Status janji temu berhasil diperbarui.`,
+        description: `Status janji temu berhasil diperbarui. Membuka WhatsApp...`,
       });
+
       setEntries((prev) => 
-        prev.map((e) => e.id === id ? { ...e, status: newStatus } : e)
+        prev.map((e) => e.id === entry.id ? { ...e, status: newStatus } : e)
       );
+
+      // Generate WhatsApp link with automated template message
+      const cleanPhone = entry.whatsapp.replace(/\D/g, "");
+      const formattedPhone = cleanPhone.startsWith("0") ? `62${cleanPhone.slice(1)}` : cleanPhone;
+      
+      const [y, m, d] = entry.appointmentDate.split("-").map(Number);
+      const appointmentDateFormatted = new Date(y, m - 1, d).toLocaleDateString("id-ID", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      const isApproved = newStatus === "approved";
+      const waText = 
+        `Halo *${entry.guestName}*\n\n` +
+        `Permohonan janji temu Anda di *PTSP Kemenag Barito Utara* telah *${isApproved ? "DISETUJUI" : "DITOLAK"}* oleh Admin.\n\n` +
+        `*Detail Janji Temu:*\n` +
+        `• Tanggal : ${appointmentDateFormatted}\n` +
+        `• Jam : ${entry.appointmentTime} WIB\n` +
+        `• Bertemu : ${entry.intendedOfficer}\n` +
+        `• Keperluan: ${entry.purpose}\n` +
+        (entry.institutionName ? `• Instansi : ${entry.institutionName}\n` : "") +
+        (isApproved 
+          ? `\nMohon hadir tepat waktu sesuai dengan jadwal yang telah disetujui. Tunjukkan pesan ini kepada petugas saat Anda tiba di lokasi.\n\n` 
+          : `\n*Alasan / Catatan Penolakan:*\n${note || "Mohon maaf, jadwal belum dapat dipenuhi saat ini."}\n\n`) +
+        `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
+        `_Kemenag Kabupaten Barito Utara_`;
+
+      const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(waText)}`;
+      window.open(waUrl, "_blank");
     } else {
       toast.error("Gagal memperbarui status", {
         description: res.error || "Terjadi kesalahan sistem.",
@@ -124,7 +159,7 @@ export function JanjiTemuClient({
     }
     setPendingIds((prev) => {
       const next = new Set(prev);
-      next.delete(id);
+      next.delete(entry.id);
       return next;
     });
   };
@@ -374,26 +409,29 @@ export function JanjiTemuClient({
 
                       {/* Actions & Status Updates */}
                       <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {entry.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() => handleUpdateStatus(entry.id, "approved")}
-                                disabled={pendingIds.has(entry.id)}
-                                className={`p-2 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-100 hover:text-emerald-700"}`}
-                                title="Setujui Janji Temu"
-                              >
-                                {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                              </button>
-                              <button
-                                onClick={() => handleUpdateStatus(entry.id, "rejected")}
-                                disabled={pendingIds.has(entry.id)}
-                                className={`p-2 rounded-xl bg-rose-50 text-rose-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100 hover:text-rose-700"}`}
-                                title="Tolak Janji Temu"
-                              >
-                                {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                              </button>
-                            </>
+                        <div className="flex items-center justify-center gap-1.5">
+                          {entry.status !== "approved" && (
+                            <button
+                              onClick={() => handleUpdateStatus(entry, "approved")}
+                              disabled={pendingIds.has(entry.id)}
+                              className={`p-2 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-100 hover:text-emerald-700"}`}
+                              title="Setujui Janji Temu"
+                            >
+                              {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                            </button>
+                          )}
+                          {entry.status !== "rejected" && (
+                            <button
+                              onClick={() => {
+                                setRejectReason("");
+                                setRejectingEntry(entry);
+                              }}
+                              disabled={pendingIds.has(entry.id)}
+                              className={`p-2 rounded-xl bg-rose-50 text-rose-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100 hover:text-rose-700"}`}
+                              title="Tolak Janji Temu"
+                            >
+                              {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                            </button>
                           )}
                           <button
                             onClick={() => setDeletingEntry(entry)}
@@ -510,6 +548,72 @@ export function JanjiTemuClient({
                     <Trash2 className="h-4 w-4" />
                   )}
                   Ya, Hapus Permanen
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* ── REJECTION REASON MODAL ───────────────────────────────────────── */}
+      <AnimatePresence>
+        {rejectingEntry && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setRejectingEntry(null)}
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-5"
+            >
+              <div className="flex items-start gap-4">
+                <div className="h-11 w-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                  <XCircle className="h-6 w-6" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-slate-900 text-base">Tolak Janji Temu</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Tuliskan alasan penolakan permohonan janji temu dari <strong className="text-slate-800">{rejectingEntry.guestName}</strong> untuk dikirimkan ke WhatsApp pemohon.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">
+                  Catatan / Alasan Penolakan <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Contoh: Bapak Kepala Kantor sedang ada tugas dinas di luar kota pada tanggal tersebut..."
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-800 focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  onClick={() => setRejectingEntry(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    const entryToReject = rejectingEntry;
+                    const reason = rejectReason;
+                    setRejectingEntry(null);
+                    handleUpdateStatus(entryToReject, "rejected", reason);
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20 transition-all flex items-center gap-1.5"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>Tolak & Kirim WA</span>
                 </button>
               </div>
             </motion.div>

@@ -35,20 +35,18 @@ export default async function HomePage(props: { searchParams: Promise<{ [key: st
       <HomeSambutanKepala />
       <HomeAlurPengajuanMobile />
 
-      {/* Modern Flat Horizontal Layered Divider: Sambutan to Catalog */}
-      <div className="w-full bg-[#f8fafc] flex flex-col">
-        <div className="w-full h-[6px] bg-[#10b981]/15" />
-        <div className="w-full h-[3px] bg-[#10b981]" />
-        <div className="w-full h-8 bg-white" />
+      {/* Modern Full-Width Glowing Gradient Divider: Sambutan to Catalog */}
+      <div className="relative w-full h-8 bg-gradient-to-b from-[#f8fafc] via-[#f8fafc]/50 to-white dark:from-slate-950 dark:via-slate-950/50 dark:to-slate-950 flex items-center justify-center overflow-hidden transition-colors duration-300">
+        <div className="w-full h-[3px] bg-gradient-to-r from-transparent via-emerald-500/80 dark:via-emerald-400/90 to-transparent shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+        <div className="absolute w-3/4 max-w-5xl h-8 bg-emerald-500/20 dark:bg-emerald-400/25 blur-2xl rounded-full pointer-events-none" />
       </div>
 
       <HomeServiceCatalogSection services={services} />
 
-      {/* Modern Flat Horizontal Layered Divider: Catalog to Video Profile */}
-      <div className="w-full bg-white flex flex-col">
-        <div className="w-full h-[6px] bg-[#10b981]/15" />
-        <div className="w-full h-[3px] bg-[#10b981]" />
-        <div className="w-full h-8 bg-[#f8fafc]" />
+      {/* Modern Full-Width Glowing Gradient Divider: Catalog to Video Profile */}
+      <div className="relative w-full h-8 bg-gradient-to-b from-white via-white/50 to-[#f8fafc] dark:from-slate-950 dark:via-slate-950/50 dark:to-slate-950 flex items-center justify-center overflow-hidden transition-colors duration-300">
+        <div className="w-full h-[3px] bg-gradient-to-r from-transparent via-emerald-500/80 dark:via-emerald-400/90 to-transparent shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+        <div className="absolute w-3/4 max-w-5xl h-8 bg-emerald-500/20 dark:bg-emerald-400/25 blur-2xl rounded-full pointer-events-none" />
       </div>
 
       <HomeVideoProfile videos={videos} totalCount={totalCount} />

@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { guestBook } from "@/lib/db/schema";
 import { verifyTurnstileToken } from "@/lib/turnstile";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { NextResponse } from "next/server";
 
 import { guestBookSchema } from "@/lib/validations/guestbook";
@@ -57,35 +56,6 @@ export async function POST(request: Request) {
         visitDate: visitDate ? new Date(visitDate) : new Date(),
       })
       .returning();
-
-    // Kirim notifikasi WhatsApp ke tamu (fire-and-forget, tidak memblokir response)
-    const visitDateFormatted = new Date(newEntry.visitDate).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone: "Asia/Jakarta",
-    });
-
-    const waMessage =
-      `Halo *${guestName}* 👋\n\n` +
-      `Terima kasih telah berkunjung ke:\n` +
-      `🏛 *Kantor Kementerian Agama Kabupaten Barito Utara*\n\n` +
-      `📝 *Data kunjungan Anda telah berhasil dicatat:*\n` +
-      `• Tanggal : ${visitDateFormatted}\n` +
-      `• Tujuan  : ${intendedOfficer}\n` +
-      `• Keperluan: ${purpose}\n` +
-      (institutionName ? `• Instansi : ${institutionName}\n` : "") +
-      `\nJika ada pertanyaan lebih lanjut, silakan hubungi kami.\n\n` +
-      `_Pelayanan Terpadu Satu Pintu (PTSP)_\n` +
-      `_Kemenag Kabupaten Barito Utara_`;
-
-    // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
-    try {
-      await sendWhatsAppNotification(whatsapp, waMessage);
-    } catch (waErr) {
-      console.error("WhatsApp notification failed:", waErr);
-    }
 
     return NextResponse.json({
       success: true,

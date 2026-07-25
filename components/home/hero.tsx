@@ -135,7 +135,7 @@ export function HomeHero() {
               className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 pt-2"
             >
               <Link
-                href="/login/pemohon"
+                href="/login/masyarakat"
                 className="w-full sm:w-auto group inline-flex justify-center items-center gap-1.5 sm:gap-2.5 rounded-2xl bg-emerald-500 px-3 sm:px-7 py-3 sm:py-3.5 text-[11px] sm:text-sm font-bold text-white shadow-xl shadow-emerald-900/50 transition-all duration-300 hover:-translate-y-1 hover:bg-emerald-400 hover:shadow-2xl hover:shadow-emerald-500/30 active:translate-y-0"
               >
                 <FilePlus2 className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 shrink-0" />
@@ -287,21 +287,20 @@ export function HomeHero() {
       </div>
 
       {/* Bottom organic curve divider */}
-      <div className="absolute bottom-0 left-0 right-0 z-20">
+      <div className="absolute -bottom-1 left-0 right-0 z-20 pointer-events-none">
         <svg
           viewBox="0 0 1440 120"
           xmlns="http://www.w3.org/2000/svg"
-          className="block w-full h-auto"
+          className="block w-full h-12 sm:h-16 md:h-20 lg:h-24"
           preserveAspectRatio="none"
         >
           <path
             d="M0 60C240 120 480 0 720 60C960 120 1200 20 1440 60V120H0V60Z"
-            fill="white"
-            fillOpacity="0.4"
+            className="fill-emerald-400/20 dark:fill-emerald-500/10"
           />
           <path
             d="M0 80C360 130 720 30 1080 80C1440 130 1440 80 1440 80V120H0V80Z"
-            fill="white"
+            className="fill-[#f8fafc] dark:fill-slate-950 transition-colors duration-300"
           />
         </svg>
       </div>

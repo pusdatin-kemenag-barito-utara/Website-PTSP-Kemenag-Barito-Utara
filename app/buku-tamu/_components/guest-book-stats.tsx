@@ -120,38 +120,38 @@ export default function GuestBookStats({ entries, onSwitchTab }: GuestBookStatsP
       </div>
 
       <div className="mb-8 text-center md:text-left">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-800 md:text-3xl">Statistik Kunjungan Tamu</h2>
-        <p className="mt-1 text-sm text-slate-500">Pilih tanggal kunjungan dan tipe grafik di bawah ini untuk melihat analisis data.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100 md:text-3xl">Statistik Kunjungan Tamu</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Pilih tanggal kunjungan dan tipe grafik di bawah ini untuk melihat analisis data.</p>
       </div>
 
       {/* Filter Form Card */}
-      <div className="relative z-30 mb-8 rounded-2xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-md">
+      <div className="relative z-30 mb-8 rounded-2xl border border-white/40 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 shadow-sm backdrop-blur-md transition-colors duration-300">
         <form onSubmit={handleViewStats} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">Skala Waktu Statistik</label>
-            <div className="inline-flex rounded-xl bg-slate-100/80 p-1 text-xs font-semibold h-[42px] items-center border border-slate-200/50">
-              <button type="button" onClick={() => setStatsFilterType("harian")} className={`flex-1 h-full rounded-lg text-center transition-all ${statsFilterType === "harian" ? "bg-white text-emerald-700 shadow-sm font-bold" : "text-slate-500 hover:text-slate-800"}`}>Harian</button>
-              <button type="button" onClick={() => setStatsFilterType("bulanan")} className={`flex-1 h-full rounded-lg text-center transition-all ${statsFilterType === "bulanan" ? "bg-white text-emerald-700 shadow-sm font-bold" : "text-slate-500 hover:text-slate-800"}`}>Bulanan</button>
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Skala Waktu Statistik</label>
+            <div className="inline-flex rounded-xl bg-slate-100/80 dark:bg-slate-800/80 p-1 text-xs font-semibold h-[42px] items-center border border-slate-200/50 dark:border-slate-700/50">
+              <button type="button" onClick={() => setStatsFilterType("harian")} className={`flex-1 h-full rounded-lg text-center transition-all ${statsFilterType === "harian" ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"}`}>Harian</button>
+              <button type="button" onClick={() => setStatsFilterType("bulanan")} className={`flex-1 h-full rounded-lg text-center transition-all ${statsFilterType === "bulanan" ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"}`}>Bulanan</button>
             </div>
           </div>
 
           {statsFilterType === "harian" ? (
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700">Pilih Tanggal Kunjungan <span className="text-red-500">*</span></label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Tanggal Kunjungan <span className="text-red-500">*</span></label>
               <ModernDatePicker value={statsDate} onChange={setStatsDate} required />
             </div>
           ) : (
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700">Pilih Bulan Kunjungan <span className="text-red-500">*</span></label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Bulan Kunjungan <span className="text-red-500">*</span></label>
               <ModernMonthPicker value={statsMonth} onChange={setStatsMonth} required />
             </div>
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">Tipe Grafik <span className="text-red-500">*</span></label>
-            <div className="flex rounded-xl bg-slate-100/80 p-1 text-xs font-semibold h-[42px] items-center border border-slate-200/50 w-full">
-              <button type="button" onClick={() => setStatsChartType("batang")} className={`flex-1 h-full rounded-lg flex items-center justify-center gap-1.5 transition-all ${statsChartType === "batang" ? "bg-white text-emerald-700 shadow-sm font-bold" : "text-slate-500 hover:text-slate-800"}`}><BarChart3 className="h-3.5 w-3.5" />Batang</button>
-              <button type="button" onClick={() => setStatsChartType("lingkaran")} className={`flex-1 h-full rounded-lg flex items-center justify-center gap-1.5 transition-all ${statsChartType === "lingkaran" ? "bg-white text-emerald-700 shadow-sm font-bold" : "text-slate-500 hover:text-slate-800"}`}><PieChartIcon className="h-3.5 w-3.5" />Lingkaran</button>
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tipe Grafik <span className="text-red-500">*</span></label>
+            <div className="flex rounded-xl bg-slate-100/80 dark:bg-slate-800/80 p-1 text-xs font-semibold h-[42px] items-center border border-slate-200/50 dark:border-slate-700/50 w-full">
+              <button type="button" onClick={() => setStatsChartType("batang")} className={`flex-1 h-full rounded-lg flex items-center justify-center gap-1.5 transition-all ${statsChartType === "batang" ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"}`}><BarChart3 className="h-3.5 w-3.5" />Batang</button>
+              <button type="button" onClick={() => setStatsChartType("lingkaran")} className={`flex-1 h-full rounded-lg flex items-center justify-center gap-1.5 transition-all ${statsChartType === "lingkaran" ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm font-bold" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"}`}><PieChartIcon className="h-3.5 w-3.5" />Lingkaran</button>
             </div>
           </div>
 
@@ -164,51 +164,51 @@ export default function GuestBookStats({ entries, onSwitchTab }: GuestBookStatsP
       {showChart && (
         <div className="space-y-8 animate-in fade-in duration-500">
           <div className="text-center md:text-left">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50/80 px-4 py-2.5 rounded-xl border border-emerald-100/50 inline-block">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/60 px-4 py-2.5 rounded-xl border border-emerald-100/50 dark:border-emerald-900/50 inline-block">
               {lastViewedFilterType === "harian" ? `Daftar Tamu Tanggal ${formatDateHeading(lastViewedDate)}` : `Daftar Tamu Bulan ${formatMonthHeading(lastViewedMonth)}`}
             </h3>
           </div>
 
           {totalStatsTamu === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-slate-200 bg-white/30 p-8 backdrop-blur-sm">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400"><Calendar className="h-8 w-8" /></div>
-              <h3 className="text-base font-semibold text-slate-800">Tidak Ada Data Kunjungan</h3>
-              <p className="mt-1 text-sm text-slate-500 max-w-md">
+            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/30 dark:bg-slate-900/30 p-8 backdrop-blur-sm">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"><Calendar className="h-8 w-8" /></div>
+              <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">Tidak Ada Data Kunjungan</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-md">
                 {lastViewedFilterType === "harian" ? `Belum ada tamu yang terdaftar pada tanggal ${formatDateHeading(lastViewedDate)}.` : `Belum ada tamu yang terdaftar pada bulan ${formatMonthHeading(lastViewedMonth)}.`}
               </p>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="flex justify-center md:justify-start">
-                <div className="rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-md flex items-center gap-4 w-full max-w-sm">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600"><Users className="h-6 w-6" /></div>
+                <div className="rounded-2xl border border-white/50 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-5 shadow-sm backdrop-blur-md flex items-center gap-4 w-full max-w-sm transition-colors duration-300">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400"><Users className="h-6 w-6" /></div>
                   <div>
-                    <div className="text-2xl font-extrabold text-emerald-800">{totalStatsTamu}</div>
-                    <div className="text-xs font-semibold text-slate-500">Total Pengunjung</div>
+                    <div className="text-2xl font-extrabold text-emerald-800 dark:text-emerald-400">{totalStatsTamu}</div>
+                    <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Pengunjung</div>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-white/40 bg-white/60 p-6 shadow-xl backdrop-blur-xl">
+              <div className="rounded-3xl border border-white/40 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 p-6 shadow-xl dark:shadow-none backdrop-blur-xl transition-colors duration-300">
                 {lastViewedChartType === "batang" ? (
                   <div className="space-y-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                       <div>
-                        <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2"><BarChart3 className="h-5 w-5 text-emerald-600" />Diagram Batang Kunjungan</h4>
-                        <p className="text-xs text-slate-400 mt-0.5">Kuantitas kunjungan tamu berdasarkan pengelompokan tertentu.</p>
+                        <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />Diagram Batang Kunjungan</h4>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Kuantitas kunjungan tamu berdasarkan pengelompokan tertentu.</p>
                       </div>
-                      <div className="inline-flex rounded-lg bg-slate-100 p-1 text-xs font-semibold self-start sm:self-auto">
-                        <button type="button" onClick={() => setChartMetricType("instansi")} className={`rounded-md px-3 py-1.5 transition-all ${chartMetricType === "instansi" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>Jenis Instansi</button>
-                        <button type="button" onClick={() => setChartMetricType("pejabat")} className={`rounded-md px-3 py-1.5 transition-all ${chartMetricType === "pejabat" ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>Pejabat Dituju</button>
+                      <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 text-xs font-semibold self-start sm:self-auto border border-slate-200/50 dark:border-slate-700/50">
+                        <button type="button" onClick={() => setChartMetricType("instansi")} className={`rounded-md px-3 py-1.5 transition-all ${chartMetricType === "instansi" ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"}`}>Jenis Instansi</button>
+                        <button type="button" onClick={() => setChartMetricType("pejabat")} className={`rounded-md px-3 py-1.5 transition-all ${chartMetricType === "pejabat" ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"}`}>Pejabat Dituju</button>
                       </div>
                     </div>
                     <BarChart data={barData} />
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="border-b border-slate-100 pb-4">
-                      <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2"><PieChartIcon className="h-5 w-5 text-emerald-600" />Diagram Lingkaran Kunjungan</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">Persentase sebaran jenis instansi asal dari tamu yang berkunjung.</p>
+                    <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><PieChartIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />Diagram Lingkaran Kunjungan</h4>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Persentase sebaran jenis instansi asal dari tamu yang berkunjung.</p>
                     </div>
                     <DonutChart data={pieData} totalValue={totalStatsTamu} />
                   </div>

@@ -116,89 +116,94 @@ export function RiwayatTable({ requests }: { requests: Request[] }) {
   });
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      {/* Toolbar */}
-      <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3">
+    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+      {/* Toolbar Pencarian & Filter */}
+      <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row gap-3 bg-slate-50/50 dark:bg-slate-950/40">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari nomor pengajuan atau layanan..."
+            placeholder="Cari nomor pengajuan atau nama layanan..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent bg-white"
+          className="sm:w-52 px-4 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
         >
-          <option value="all">Semua Status</option>
+          <option value="all">Semua Status (All)</option>
           {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-            <option key={key} value={key}>{cfg.label}</option>
+            <option key={key} value={key}>
+              {cfg.label}
+            </option>
           ))}
         </select>
       </div>
 
       {/* Summary counts */}
-      <div className="px-5 py-3 border-b border-slate-50 flex gap-4 text-xs text-slate-500 font-medium">
-        <span>{requests.length} total pengajuan</span>
-        <span>·</span>
-        <span>{filtered.length} ditampilkan</span>
+      <div className="px-5 py-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-900 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold">
+        <span>Total: {requests.length} Berkas</span>
+        <span className="bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold text-slate-600 dark:text-slate-300">
+          {filtered.length} Ditemukan
+        </span>
       </div>
 
       {/* Content */}
       {filtered.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center text-center gap-3">
-          <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center">
-            <ScrollText className="h-8 w-8 text-slate-300" />
+        <div className="py-16 sm:py-20 flex flex-col items-center justify-center text-center gap-3 px-4">
+          <div className="h-16 w-16 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <ScrollText className="h-8 w-8 text-slate-400" />
           </div>
-          <p className="text-slate-500 font-medium">Tidak ada pengajuan ditemukan</p>
-          <p className="text-slate-400 text-sm max-w-xs">
+          <p className="text-slate-800 dark:text-slate-200 font-extrabold text-base">Tidak Ada Pengajuan Ditemukan</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-xs font-medium leading-relaxed">
             {search || filterStatus !== "all"
-              ? "Coba ubah filter atau kata kunci pencarian."
-              : "Belum ada layanan yang pernah Anda ajukan."}
+              ? "Coba ubah kata kunci pencarian atau filter status pengajuan."
+              : "Belum ada berkas layanan yang pernah Anda ajukan."}
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-slate-50">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
           {filtered.map((req) => (
-              <div key={req.id} className="hover:bg-slate-50/60 transition-colors">
-                <Link
-                  href={`/pegawai/layanan/riwayat/${req.id}`}
-                  className="w-full px-5 py-4 flex items-center gap-4 text-left"
-                >
-                  {/* Icon */}
-                  <div className="h-10 w-10 shrink-0 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-emerald-600" />
-                  </div>
+            <div key={req.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
+              <Link
+                href={`/pegawai/layanan/riwayat/${req.id}`}
+                className="w-full p-4 sm:p-5 flex items-center gap-3.5 sm:gap-4 text-left"
+              >
+                {/* Icon */}
+                <div className="h-11 w-11 shrink-0 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <FileText className="h-5.5 w-5.5 text-emerald-600 dark:text-emerald-400" />
+                </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-slate-900 truncate">
-                        {req.serviceItemName ?? req.serviceName ?? "Layanan"}
-                      </p>
-                      <StatusBadge status={req.status} />
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 flex-wrap">
-                      <span className="font-mono">{req.requestNumber}</span>
-                      <span>·</span>
-                      <span>{req.serviceName ?? "-"}</span>
-                      <span>·</span>
-                      <span>
-                        {format(new Date(req.createdAt), "dd MMM yyyy, HH:mm", { locale: id })}
-                      </span>
-                    </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <p className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+                      {req.serviceItemName ?? req.serviceName ?? "Layanan ASN"}
+                    </p>
+                    <StatusBadge status={req.status} />
                   </div>
+                  <div className="flex items-center gap-2 text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 flex-wrap font-medium">
+                    <span className="font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[10px] sm:text-xs">
+                      {req.requestNumber}
+                    </span>
+                    <span>·</span>
+                    <span>{req.serviceName ?? "-"}</span>
+                    <span>·</span>
+                    <span>
+                      {format(new Date(req.createdAt), "dd MMM yyyy, HH:mm", { locale: id })}
+                    </span>
+                  </div>
+                </div>
 
-                  {/* Chevron */}
-                  <ChevronRight
-                    className="h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0"
-                  />
-                </Link>
-              </div>
+                {/* Chevron */}
+                <div className="h-8 w-8 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center transition-all shrink-0 group-hover:translate-x-1">
+                  <ChevronRight className="h-4 w-4" />
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       )}

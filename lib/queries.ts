@@ -101,11 +101,38 @@ export async function getServiceBySlug(slug: string) {
   return serializeBigInt(data);
 }
 
+export async function getPublicServiceCatalog() {
+  const data = await db.query.services.findMany({
+    where: and(eq(services.isActive, true), eq(services.category, "public")),
+    with: {
+      serviceItems: {
+        where: eq(serviceItems.isActive, true),
+        orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
+        with: {
+          serviceFormFields: {
+            orderBy: [asc(serviceFormFields.sortOrder)],
+          },
+          serviceRequirements: {
+            orderBy: [
+              asc(serviceRequirements.sortOrder),
+              asc(serviceRequirements.id),
+            ],
+          },
+        },
+      },
+    },
+    orderBy: [asc(services.sortOrder), asc(services.name)],
+  });
+
+  return serializeBigInt(data) ?? [];
+}
+
 export async function getServiceCatalog() {
   const data = await db.query.services.findMany({
     where: eq(services.isActive, true),
     with: {
       serviceItems: {
+        where: eq(serviceItems.isActive, true),
         orderBy: [asc(serviceItems.sortOrder), asc(serviceItems.name)],
         with: {
           serviceFormFields: {

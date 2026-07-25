@@ -45,6 +45,8 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
       password: password || undefined,
     });
 
+    revalidatePath("/masyarakat/profil");
+    revalidatePath("/masyarakat");
     revalidatePath("/dashboard/profil");
     revalidatePath("/dashboard");
     revalidatePath("/admin/pengguna");

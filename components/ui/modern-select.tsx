@@ -7,6 +7,7 @@ import { m, AnimatePresence } from "framer-motion";
 interface ModernSelectOption {
   value: string;
   label: string;
+  icon?: LucideIcon;
 }
 
 interface ModernSelectProps {
@@ -112,20 +113,23 @@ export function ModernSelect({
       <button
         type="button"
         onClick={handleOpen}
-        className={`flex items-center justify-between w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
-          isOpen ? "border-emerald-500 ring-4 ring-emerald-500/20 bg-white" : "hover:border-slate-300"
-        } ${disabled ? "opacity-70 cursor-not-allowed bg-slate-100" : ""}`}
+        className={`flex items-center justify-between gap-3 w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/50 ${
+          isOpen ? "border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/20 bg-white dark:bg-slate-800" : "hover:border-slate-300 dark:hover:border-slate-600"
+        } ${disabled ? "opacity-70 cursor-not-allowed bg-slate-100 dark:bg-slate-900" : ""}`}
       >
-        {Icon && (
-          <Icon
-            className={`h-4 w-4 shrink-0 transition-colors ${
-              isOpen ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-500"
-            }`}
-          />
-        )}
+        {(() => {
+          const ActiveIcon = selectedOption?.icon || Icon;
+          return ActiveIcon ? (
+            <ActiveIcon
+              className={`h-4 w-4 shrink-0 transition-colors ${
+                isOpen ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-500"
+              }`}
+            />
+          ) : null;
+        })()}
         <span
-          className={`flex-1 text-left truncate font-semibold ${
-            value ? "text-slate-900" : "text-slate-400"
+          className={`flex-1 text-left text-xs font-semibold leading-snug break-words ${
+            value ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"
           }`}
         >
           {selectedOption ? selectedOption.label : placeholder}
@@ -144,11 +148,11 @@ export function ModernSelect({
             animate={{ opacity: 1, y: 5, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute z-[100] mt-2 w-full bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden"
+            className="absolute z-[100] mt-2 w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden"
           >
             {enableSearch && (
-              <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
-                <Search className="h-4 w-4 text-slate-400 ml-2" />
+              <div className="p-2 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-900/50">
+                <Search className="h-4 w-4 text-slate-400 dark:text-slate-500 ml-2" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -157,7 +161,7 @@ export function ModernSelect({
                   value={searchQuery}
                   onChange={(e) => !isMobile() && setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full bg-transparent border-0 px-2 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0"
+                  className="w-full bg-transparent border-0 px-2 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-0"
                 />
                 {searchQuery && (
                   <button
@@ -175,18 +179,26 @@ export function ModernSelect({
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => {
                   const isSelected = opt.value === value;
+                  const OptionIcon = opt.icon;
                   return (
                     <button
                       key={opt.value}
                       type="button"
                       onClick={() => handleSelect(opt.value)}
-                      className={`w-full text-left px-3 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-between ${
+                      className={`w-full text-left px-3 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2.5 ${
                         isSelected
-                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-100"
-                          : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-600"
+                          ? "bg-emerald-500 text-white shadow-lg shadow-emerald-100 dark:shadow-emerald-900/30"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-600 dark:hover:text-emerald-400"
                       }`}
                     >
-                      <span className="truncate pr-4">{opt.label}</span>
+                      {OptionIcon && (
+                        <OptionIcon
+                          className={`h-4 w-4 shrink-0 ${
+                            isSelected ? "text-white" : "text-emerald-600"
+                          }`}
+                        />
+                      )}
+                      <span className="flex-1 break-words leading-snug">{opt.label}</span>
                     </button>
                   );
                 })

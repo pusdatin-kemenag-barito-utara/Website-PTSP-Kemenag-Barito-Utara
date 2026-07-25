@@ -36,6 +36,18 @@ export function RequestRequirementUpload({
     };
   }, []);
 
+  // Lock scroll background when preview modal is open
+  useEffect(() => {
+    if (previewModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [previewModal]);
+
   // Reset uploaded files when requirements list changes to prevent crossover & memory leaks
   useEffect(() => {
     Object.values(uploadedFiles).forEach((uploaded) => {
@@ -61,7 +73,7 @@ export function RequestRequirementUpload({
     if (!allowedExtensions.includes(fileExtension)) {
       toast.error(`Format File Salah!`, {
         description: `Format yang diizinkan hanya: ${allowedExtensions.join(", ")}.`,
-        duration: 5000,
+        duration: 3000,
       });
       return;
     }
@@ -98,7 +110,7 @@ export function RequestRequirementUpload({
       if (fileToUpload.size > maxSizeBytes) {
         toast.error(`File Terlalu Besar!`, {
           description: `Batas maksimal adalah ${maxSizeMb} MB.`,
-          duration: 5000,
+          duration: 3000,
         });
         setUploadProgress(prev => ({ ...prev, [reqId]: 0 }));
         return;
@@ -209,19 +221,11 @@ export function RequestRequirementUpload({
 
   return (
     <>
-      <section className={hideHeader ? "w-full" : "rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm"}>
+      <section className={hideHeader ? "w-full" : "rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-2xs transition-colors duration-300"}>
         {!hideHeader && (
-          <div className="mb-5">
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-[#059669]">
-              Langkah 3
-            </p>
-            <h3 className="mt-1 text-lg font-black text-slate-900 sm:text-xl">
-              Upload Dokumen Persyaratan
-            </h3>
-            <p className="mt-1.5 text-sm font-medium text-slate-500 leading-relaxed">
-              Unggah dokumen persyaratan dengan format yang ditentukan. Silakan tarik & lepas file ke area yang tersedia.
-            </p>
-          </div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+            Upload Dokumen Persyaratan
+          </h3>
         )}
  
         {requirements.length ? (
@@ -238,14 +242,14 @@ export function RequestRequirementUpload({
                   key={requirement.id}
                   className={`group rounded-2xl border-2 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between ${
                     uploaded
-                      ? "border-emerald-200 bg-emerald-50/20 shadow-sm"
+                      ? "border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/30 shadow-xs"
                       : isDragActive
-                      ? "border-[#059669] bg-emerald-50/30 scale-[1.02] shadow-md shadow-emerald-500/5"
-                      : "border-slate-100 bg-slate-50/30 hover:border-slate-200 hover:bg-slate-50/50"
+                      ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/40 scale-[1.02] shadow-md shadow-emerald-500/5"
+                      : "border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/50 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50/50"
                   }`}
                 >
                   <div>
-                    <label className="mb-3 block text-sm font-bold text-slate-800 leading-snug">
+                    <label className="mb-3 block text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
                       {requirement.documentName}
                       {requirement.isRequired && <span className="ml-1 text-rose-500 font-extrabold">*</span>}
                       {requirement.templateUrl && (
@@ -258,33 +262,42 @@ export function RequestRequirementUpload({
                     {/* Tampilan File Terpilih */}
                     {uploaded ? (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3 rounded-2xl bg-white border border-emerald-200/60 p-3 shadow-sm transition-all duration-300">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100/70 text-emerald-600 shadow-inner">
+                        <div className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-slate-800/60 border border-emerald-200/60 dark:border-emerald-800/40 p-2.5 sm:p-3 shadow-xs transition-all duration-300">
+                          <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
                             {uploaded.file.type.startsWith("image/") ? (
-                              <ImageIcon className="h-5 w-5" />
+                              <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                             ) : (
-                              <FileText className="h-5 w-5" />
+                              <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-bold text-slate-800">{uploaded.file.name}</p>
-                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                          <div className="min-w-0 flex-1 overflow-hidden">
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[200px] sm:max-w-[320px] leading-tight" title={uploaded.file.name}>
+                              {(() => {
+                                const fname = uploaded.file.name || "";
+                                if (fname.length > 28) {
+                                  const ext = fname.includes(".") ? `.${fname.split(".").pop()}` : "";
+                                  return `${fname.substring(0, 18)}...${ext}`;
+                                }
+                                return fname;
+                              })()}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-0.5 sm:mt-1">
+                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md">
                                 {formatSize(uploaded.file.size)}
                               </span>
                               {uploaded.compressedSize && (
-                                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-100/40 px-2 py-0.5 rounded-md">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-100/40 px-1.5 py-0.5 rounded-md">
                                   Hemat {Math.round(((uploaded.originalSize - uploaded.compressedSize) / uploaded.originalSize) * 100)}%
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-0.5">
+                          <div className="flex items-center gap-0.5 shrink-0">
                             {uploaded.previewUrl && (
                               <button
                                 type="button"
                                 onClick={() => setPreviewModal({ url: uploaded.previewUrl!, name: requirement.documentName, type: uploaded.file.type })}
-                                className="p-2 text-slate-400 hover:text-[#059669] hover:bg-emerald-50 rounded-xl transition-all"
+                                className="p-1.5 sm:p-2 text-slate-400 hover:text-[#059669] hover:bg-emerald-50 rounded-lg sm:rounded-xl transition-all"
                                 title="Lihat Berkas"
                               >
                                 <Eye className="h-4 w-4" />
@@ -293,7 +306,7 @@ export function RequestRequirementUpload({
                             <button
                               type="button"
                               onClick={() => removeFile(reqId)}
-                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                              className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg sm:rounded-xl transition-all"
                               title="Hapus Berkas"
                             >
                               <X className="h-4 w-4" />
@@ -309,10 +322,10 @@ export function RequestRequirementUpload({
                         onDragLeave={(e) => handleDrag(reqId, e)}
                         onDrop={(e) => handleDrop(requirement, e)}
                         onClick={() => document.getElementById(`file_input_${requirement.id}`)?.click()}
-                        className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-300 min-h-[145px] ${
+                        className={`relative flex flex-col items-center justify-center rounded-xl sm:rounded-2xl border-2 border-dashed p-3.5 sm:p-5 text-center cursor-pointer transition-all duration-300 min-h-[100px] sm:min-h-[135px] ${
                           isDragActive
-                            ? "border-[#059669] bg-emerald-50/20"
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/40"
+                            ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/30"
+                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/40 dark:hover:bg-slate-800/80"
                         }`}
                       >
                         <input
@@ -325,11 +338,11 @@ export function RequestRequirementUpload({
                         />
                         
                         {isProcessing ? (
-                          <div className="space-y-3 w-full animate-in fade-in duration-300">
-                            <Loader2 className="mx-auto h-7 w-7 animate-spin text-[#059669]" />
-                            <div className="text-xs font-bold text-slate-700">Sedang Memproses Berkas...</div>
+                          <div className="space-y-2 w-full animate-in fade-in duration-300">
+                            <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-600 dark:text-emerald-400" />
+                            <div className="text-xs font-bold text-slate-700 dark:text-slate-200">Sedang Memproses Berkas...</div>
                             {uploadProgress[reqId] > 0 && (
-                              <div className="space-y-1.5 w-full max-w-[200px] mx-auto">
+                              <div className="space-y-1 w-full max-w-[180px] mx-auto">
                                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/20 shadow-inner">
                                   <div
                                     className="h-full bg-gradient-to-r from-[#059669] to-[#10b981] rounded-full transition-all duration-300"
@@ -342,73 +355,68 @@ export function RequestRequirementUpload({
                           </div>
                         ) : (
                           <div className="group-hover:scale-102 transition-transform duration-300 flex flex-col items-center">
-                            <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 shadow-sm border border-slate-100 group-hover:bg-emerald-50 group-hover:text-[#059669] transition-all duration-300">
-                              <UploadCloud className="h-5 w-5" />
+                            <div className="mb-2 sm:mb-2.5 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 shadow-xs border border-slate-100 dark:border-slate-700 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/60 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-all duration-300">
+                              <UploadCloud className="h-4 w-4 sm:h-5 sm:w-5" />
                             </div>
-                            <p className="text-xs font-bold text-slate-700">
-                              Seret & lepas berkas, atau <span className="text-[#059669] hover:underline font-extrabold">Pilih Berkas</span>
-                            </p>
-                            <p className="mt-1.5 text-[10px] text-slate-400 font-semibold tracking-wide">
-                              Format: {extensions.toUpperCase()} (Maks: {requirement.maxFileSizeMb || 5}MB)
+                            <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                              <span className="hidden sm:inline">Seret & lepas berkas, atau </span>
+                              <span className="text-emerald-600 dark:text-emerald-400 hover:underline font-extrabold">Pilih / Tap Berkas</span>
                             </p>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
- 
-                  <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400 font-semibold border-t border-slate-100/50 pt-2.5">
-                    <span className="truncate mr-2 uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">Format: {extensions}</span>
-                    <span className="shrink-0 font-bold text-[#059669] bg-emerald-50 px-2 py-0.5 rounded-md">Batas: {requirement.maxFileSizeMb || 5} MB</span>
+
+                  <div className="mt-2.5 sm:mt-3 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-semibold border-t border-slate-100/50 dark:border-slate-800/50 pt-2 shrink-0">
+                    <span className="truncate mr-2 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-md">Format: {extensions}</span>
+                    <span className="shrink-0 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">Batas: {requirement.maxFileSizeMb || 5} MB</span>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Item layanan ini tidak memiliki dokumen wajib.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Item layanan ini tidak memiliki dokumen wajib.</p>
         )}
       </section>
 
       {/* Preview Modal */}
       {previewModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b px-5 py-3">
-              <h4 className="text-sm font-bold text-slate-800 truncate">{previewModal.name}</h4>
-              <button onClick={() => setPreviewModal(null)} className="p-1.5 text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-6 select-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            className="relative w-[92vw] max-w-7xl h-[88vh] rounded-2xl bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 bg-slate-50/80 dark:bg-slate-900">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{previewModal.name}</h4>
+              <button
+                type="button"
+                onClick={() => setPreviewModal(null)}
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-600 transition-all font-bold cursor-pointer"
+                title="Tutup Preview (X)"
+              >
+                <X className="h-4.5 w-4.5" />
               </button>
             </div>
-            <div className="flex-1 overflow-auto p-2">
-              {previewModal.type.startsWith("image/") ? (
-                <div className="flex items-center justify-center min-h-[300px]">
-                  <img src={previewModal.url} alt={previewModal.name} className="w-full h-auto object-contain" />
+            <div className="flex-1 overflow-hidden p-2 bg-slate-900/90 dark:bg-slate-950 flex items-center justify-center relative">
+              {previewModal.type.startsWith("image/") || previewModal.url.match(/\.(jpg|jpeg|png|webp)(\?.*)?$/i) ? (
+                <div className="flex items-center justify-center w-full h-full p-2">
+                  <img
+                    src={previewModal.url}
+                    alt={previewModal.name}
+                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-md"
+                  />
                 </div>
               ) : (
-                <>
-                  {/* Tampilan Desktop: Tetap pakai iframe */}
-                  <iframe src={previewModal.url} className="hidden md:block w-full h-[75vh] border-0" />
-                  
-                  {/* Tampilan Mobile/Tablet: Pakai tombol Buka di Tab Baru */}
-                  <div className="md:hidden flex flex-col items-center justify-center text-center p-8 min-h-[300px]">
-                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 mx-auto">
-                      <FileText className="h-10 w-10" />
-                    </div>
-                    <h5 className="text-lg font-bold text-slate-900 mb-2">Preview PDF</h5>
-                    <p className="text-sm text-slate-500 mb-6 max-w-xs mx-auto">
-                      PDF dibuka di tab baru untuk kenyamanan tampilan di perangkat seluler.
-                    </p>
-                    <a 
-                      href={previewModal.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex h-12 items-center justify-center px-8 rounded-xl bg-[#059669] text-white font-bold shadow-lg shadow-emerald-500/20 hover:bg-[#047857] transition-all active:scale-95"
-                    >
-                      Buka di Tab Baru
-                    </a>
-                  </div>
-                </>
+                <iframe
+                  src={previewModal.url}
+                  className="w-full h-full min-h-[75vh] border-0 rounded-lg bg-white"
+                  title={previewModal.name}
+                />
               )}
             </div>
           </div>

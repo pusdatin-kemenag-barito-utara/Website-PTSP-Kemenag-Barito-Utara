@@ -12,6 +12,7 @@ import { createAuditLog } from "@/lib/audit";
 const reqSchema = z.object({
   serviceItemId: z.coerce.string(),
   documentName: z.string().min(1),
+  description: z.string().optional(),
   isRequired: z.boolean().optional(),
   allowedExtensions: z.string().default("pdf,jpg,jpeg,png"),
   maxFileSizeMb: z.coerce.number().default(5),
@@ -30,6 +31,7 @@ export async function createRequirementAction(formData: FormData): Promise<Actio
     const validated = reqSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
       documentName: formData.get("documentName"),
+      description: formData.get("description") || "",
       isRequired: formData.get("isRequired") === "on",
       allowedExtensions: formData.get("allowedExtensions"),
       maxFileSizeMb: formData.get("maxFileSizeMb"),
@@ -70,6 +72,7 @@ export async function updateRequirementAction(formData: FormData): Promise<Actio
     const validated = reqSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
       documentName: formData.get("documentName"),
+      description: formData.get("description") || "",
       isRequired: formData.get("isRequired") === "on",
       allowedExtensions: formData.get("allowedExtensions"),
       maxFileSizeMb: formData.get("maxFileSizeMb"),

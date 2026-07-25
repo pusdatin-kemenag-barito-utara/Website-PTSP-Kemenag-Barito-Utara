@@ -27,19 +27,19 @@ export class RequestQueryService {
     if (serviceId) filters.push(eq(serviceRequests.serviceId, BigInt(serviceId)));
     if (roleOwner) {
       filters.push(
-        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services WHERE kemenag_ptsp.ptsp_services.id = ${serviceRequests.serviceId} AND kemenag_ptsp.ptsp_services.role_owner = ${roleOwner})`
+        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services s WHERE s.id = ${serviceRequests.serviceId} AND s.role_owner = ${roleOwner})`
       );
     }
     if (category) {
       filters.push(
-        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services WHERE kemenag_ptsp.ptsp_services.id = ${serviceRequests.serviceId} AND kemenag_ptsp.ptsp_services.category = ${category})`
+        sql`EXISTS (SELECT 1 FROM kemenag_ptsp.ptsp_services s WHERE s.id = ${serviceRequests.serviceId} AND s.category = ${category})`
       );
     }
     if (q) {
       filters.push(
         or(
           ilike(serviceRequests.requestNumber, `%${q}%`),
-          sql`EXISTS (SELECT 1 FROM ${profilesTable} WHERE ${profilesTable.id} = ${serviceRequests.userId} AND (${ilike(profilesTable.fullName, `%${q}%`)} OR ${ilike(profilesTable.email, `%${q}%`)}))`
+          sql`EXISTS (SELECT 1 FROM kemenag_pusdatin.profiles p WHERE p.id = ${serviceRequests.userId} AND (p.name ILIKE ${`%${q}%`} OR p.email ILIKE ${`%${q}%`}))`
         )
       );
     }

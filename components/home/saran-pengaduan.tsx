@@ -176,26 +176,26 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
 
   if (ticketResult) {
     return (
-      <section className={`relative overflow-hidden bg-white ${hideHeader ? "py-6 md:py-12" : "py-24 md:py-32"}`}>
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
+      <section className={`relative overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-300 ${hideHeader ? "py-6 md:py-12" : "py-24 md:py-32"}`}>
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-50 dark:bg-emerald-950/30 rounded-full blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-50 dark:bg-slate-800/30 rounded-full blur-3xl opacity-60 pointer-events-none" />
         
         <div className="mx-auto w-full max-w-2xl px-6 sm:px-10 relative z-10 text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-100 rounded-full mb-4">
-            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-100 dark:bg-emerald-950/80 rounded-full mb-4">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <h2 className="text-3xl font-black text-slate-900">Aduan Berhasil Dikirim!</h2>
-          <p className="text-slate-600">
+          <h2 className="text-3xl font-black text-slate-900 dark:text-slate-100">Aduan Berhasil Dikirim!</h2>
+          <p className="text-slate-600 dark:text-slate-400">
             Terima kasih atas laporan Anda. Gunakan Nomor Tiket di bawah ini untuk melacak status laporan Anda.
           </p>
           
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 mt-6">
-            <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">Nomor Tiket Anda</p>
+          <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 mt-6">
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nomor Tiket Anda</p>
             <div className="flex items-center justify-center gap-3">
-              <span className="text-3xl font-black text-emerald-700 font-mono tracking-wider">{ticketResult}</span>
+              <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400 font-mono tracking-wider">{ticketResult}</span>
               <button 
                 onClick={handleCopyTicket}
-                className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition-colors"
                 title="Salin Nomor Tiket"
               >
                 <Copy className="w-5 h-5" />
@@ -229,7 +229,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
   }
 
   return (
-    <section className={`relative overflow-hidden bg-white ${hideHeader ? "py-6 md:py-12" : "py-24 md:py-32"}`}>
+    <section className={`relative overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-300 ${hideHeader ? "py-6 md:py-12" : "py-24 md:py-32"}`}>
       {/* Decorative clean ambient gradients */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
@@ -244,18 +244,18 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="mb-8 text-center max-w-3xl mx-auto space-y-4"
           >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100/80 animate-pulse">
-            <MessageSquare className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100/80 dark:border-emerald-900/50 animate-pulse">
+            <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
               Saran & Pengaduan
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
             Sampaikan{" "}
-            <span className="text-emerald-600">Saran & Pengaduan</span> Anda
+            <span className="text-emerald-600 dark:text-emerald-400">Saran & Pengaduan</span> Anda
           </h2>
-          <p className="text-sm sm:text-base text-slate-500 font-semibold max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-semibold max-w-2xl mx-auto leading-relaxed">
             Silakan isi form di bawah yang berisi saran maupun kendala yang Anda
             hadapi saat menggunakan Layanan kami. Isikan nomor HP yang valid
             untuk keperluan konfirmasi tanggapan atas pengaduan Anda.
@@ -265,13 +265,13 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
 
         {/* Mode Toggle (Buat / Lacak) */}
         <div className="flex justify-center mb-8 relative z-20">
-          <div className="inline-flex items-center bg-slate-100 p-1 rounded-xl">
+          <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
             <button
               onClick={() => { setActiveTab("buat"); setTrackResult(null); }}
               className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                 activeTab === "buat" 
-                  ? "bg-white text-emerald-700 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
             >
               Kirim Aduan Baru
@@ -280,8 +280,8 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
               onClick={() => { setActiveTab("lacak"); setTicketResult(null); }}
               className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 ${
                 activeTab === "lacak" 
-                  ? "bg-white text-emerald-700 shadow-sm" 
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm" 
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
               }`}
             >
               <Ticket className="w-4 h-4" />
@@ -303,25 +303,25 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
               {/* Tata Cara Pengaduan Infographic */}
               <div className="max-w-4xl mx-auto mb-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm text-center">
-              <div className="w-10 h-10 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-3">1</div>
-              <h4 className="font-bold text-slate-800 text-sm mb-1">Tulis Laporan</h4>
-              <p className="text-xs text-slate-500">Isi form pengaduan dengan jelas & lengkap.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-center transition-colors duration-300">
+              <div className="w-10 h-10 mx-auto bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center font-bold mb-3">1</div>
+              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1">Tulis Laporan</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Isi form pengaduan dengan jelas & lengkap.</p>
             </div>
-            <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm text-center">
-              <div className="w-10 h-10 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-3">2</div>
-              <h4 className="font-bold text-slate-800 text-sm mb-1">Proses Verifikasi</h4>
-              <p className="text-xs text-slate-500">Laporan Anda akan diverifikasi oleh petugas.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-center transition-colors duration-300">
+              <div className="w-10 h-10 mx-auto bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center font-bold mb-3">2</div>
+              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1">Proses Verifikasi</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Laporan Anda akan diverifikasi oleh petugas.</p>
             </div>
-            <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm text-center">
-              <div className="w-10 h-10 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-3">3</div>
-              <h4 className="font-bold text-slate-800 text-sm mb-1">Tindak Lanjut</h4>
-              <p className="text-xs text-slate-500">Petugas terkait akan menindaklanjuti laporan.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-center transition-colors duration-300">
+              <div className="w-10 h-10 mx-auto bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center font-bold mb-3">3</div>
+              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1">Tindak Lanjut</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Petugas terkait akan menindaklanjuti laporan.</p>
             </div>
-            <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm text-center">
-              <div className="w-10 h-10 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold mb-3">4</div>
-              <h4 className="font-bold text-slate-800 text-sm mb-1">Selesai</h4>
-              <p className="text-xs text-slate-500">Anda dapat melacak status penyelesaian aduan.</p>
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl shadow-sm text-center transition-colors duration-300">
+              <div className="w-10 h-10 mx-auto bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center font-bold mb-3">4</div>
+              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1">Selesai</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Anda dapat melacak status penyelesaian aduan.</p>
             </div>
           </div>
         </div>
@@ -335,14 +335,14 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
           className="w-full mx-auto"
         >
           {/* Feedback Form */}
-          <div className={`bg-[#f8fafc] sm:rounded-3xl border-y sm:border border-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.03)] p-6 sm:p-10 relative ${hideHeader ? "rounded-none" : "rounded-3xl"}`}>
+          <div className={`bg-[#f8fafc] dark:bg-slate-900 sm:rounded-3xl border-y sm:border border-slate-100 dark:border-slate-800 shadow-[0_20px_50px_rgba(15,23,42,0.03)] dark:shadow-none p-6 sm:p-10 relative transition-colors duration-300 ${hideHeader ? "rounded-none" : "rounded-3xl"}`}>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Kategori */}
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="feedback-category"
-                    className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                    className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     Kategori <span className="text-red-500">*</span>
                   </label>
@@ -363,7 +363,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="feedback-service"
-                    className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                    className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     Terkait Layanan Apa? <span className="text-red-500">*</span>
                   </label>
@@ -424,7 +424,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="feedback-name"
-                    className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                    className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     Nama Lengkap <span className="text-red-500">*</span>
                   </label>
@@ -437,7 +437,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                       setName(e.target.value.replace(/[0-9]/g, ""))
                     }
                     placeholder="Masukkan nama lengkap..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
@@ -445,7 +445,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="feedback-phone"
-                    className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                    className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                   >
                     Nomor Handphone / WA <span className="text-red-500">*</span>
                   </label>
@@ -458,7 +458,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                       setPhone(e.target.value.replace(/\D/g, ""))
                     }
                     placeholder="Contoh: 081234567890"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
               </div>
@@ -467,7 +467,7 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="feedback-content"
-                  className="text-xs font-bold uppercase tracking-wider text-slate-500"
+                  className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
                   Isi Saran / Pengaduan <span className="text-red-500">*</span>
                 </label>
@@ -478,13 +478,13 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Tuliskan saran, kritik, masukan, atau pengaduan secara terperinci..."
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-y min-h-[120px]"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-3.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-y min-h-[120px]"
                 />
               </div>
 
               {/* Conditional Fields for Pengaduan */}
               {category === "Pengaduan" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 bg-orange-50/50 border border-orange-100 rounded-xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 bg-orange-50/50 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/40 rounded-xl">
                   <div className="flex flex-col gap-1.5">
                     <ModernDatePicker
                       label="Tanggal Kejadian (Opsional)"
@@ -494,34 +494,34 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
                   </div>
                   
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="incident-location" className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Lokasi Kejadian <span className="text-slate-400 font-normal">(Opsional)</span>
+                    <label htmlFor="incident-location" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Lokasi Kejadian <span className="text-slate-400 dark:text-slate-500 font-normal">(Opsional)</span>
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
                         id="incident-location"
                         type="text"
                         value={incidentLocation}
                         onChange={(e) => setIncidentLocation(e.target.value)}
                         placeholder="Contoh: Loket 2 PTSP"
-                        className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 py-3 text-sm text-slate-800 shadow-sm transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pl-9 pr-4 py-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                       />
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5 sm:col-span-2">
-                    <label htmlFor="attachment" className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Upload Lampiran / Bukti <span className="text-slate-400 font-normal">(Opsional, Max 5MB)</span>
+                    <label htmlFor="attachment" className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Upload Lampiran / Bukti <span className="text-slate-400 dark:text-slate-500 font-normal">(Opsional, Max 5MB)</span>
                     </label>
                     <div className="relative flex items-center justify-center w-full">
-                      <label htmlFor="attachment" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-white hover:bg-slate-50 transition-colors">
+                      <label htmlFor="attachment" className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 dark:border-slate-800 border-dashed rounded-xl cursor-pointer bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-6 h-6 mb-2 text-slate-400" />
-                          <p className="mb-1 text-sm text-slate-500"><span className="font-semibold">Klik untuk upload</span> atau drag and drop</p>
-                          <p className="text-xs text-slate-400">PNG, JPG, PDF (MAX. 5MB)</p>
+                          <Upload className="w-6 h-6 mb-2 text-slate-400 dark:text-slate-500" />
+                          <p className="mb-1 text-sm text-slate-500 dark:text-slate-400"><span className="font-semibold">Klik untuk upload</span> atau drag and drop</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">PNG, JPG, PDF (MAX. 5MB)</p>
                           {attachment && (
-                            <p className="mt-2 text-sm font-semibold text-emerald-600">{attachment.name}</p>
+                            <p className="mt-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">{attachment.name}</p>
                           )}
                         </div>
                         <input id="attachment" type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf" onChange={(e) => setAttachment(e.target.files?.[0] || null)} />
@@ -532,20 +532,20 @@ export function HomeSaranPengaduan({ hideHeader = false }: { hideHeader?: boolea
               )}
 
               {/* Anonymous Toggle */}
-              <div className="flex items-center gap-3 bg-slate-50/80 p-4 rounded-xl border border-slate-100 hover:border-emerald-100 transition-colors">
+              <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-100 dark:hover:border-emerald-900/50 transition-colors">
                 <input
                   type="checkbox"
                   id="feedback-anonymous"
                   checked={isAnonymous}
                   onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="w-4.5 h-4.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600 focus:ring-offset-slate-50 cursor-pointer"
+                  className="w-4.5 h-4.5 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-emerald-600 focus:ring-emerald-600 focus:ring-offset-slate-50 cursor-pointer"
                 />
                 <label
                   htmlFor="feedback-anonymous"
-                  className="text-xs sm:text-sm font-bold text-slate-700 cursor-pointer select-none"
+                  className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none"
                 >
                   Kirim sebagai Anonim{" "}
-                  <span className="font-semibold text-slate-500">
+                  <span className="font-semibold text-slate-500 dark:text-slate-400">
                     (Rahasiakan identitas saya kepada publik)
                   </span>
                 </label>

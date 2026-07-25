@@ -34,6 +34,7 @@ import { GlobalSearchModal } from "@/components/global-search-modal";
 import { isAdminRole } from "@/lib/constants";
 import { LoginDropdown } from "@/components/header/login-dropdown";
 import { MobileNav } from "@/components/header/mobile-nav";
+import { HeaderControls } from "@/components/header/header-controls";
 type HeaderProfile = {
   role?: string | null;
 };
@@ -171,7 +172,7 @@ export function SiteHeaderClient({
     ? "/admin"
     : profile?.role === "pegawai"
       ? "/pegawai"
-      : "/dashboard";
+      : "/masyarakat";
 
   let dashboardLabel = "Dashboard";
   if (profile) {
@@ -191,7 +192,9 @@ export function SiteHeaderClient({
 
   return (
     <>
-      <header className="sticky top-0 left-0 right-0 z-[100] w-full border-b transition-all duration-300 shadow-sm bg-white/95 border-slate-200/50 backdrop-blur-xl">
+      <header className="sticky top-0 left-0 right-0 z-[100] w-full transition-colors duration-300 shadow-sm bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
+        {/* Modern Gradient Line Divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 dark:via-emerald-400/50 to-transparent" />
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16">
           {/* Top Header Bar */}
           <div className="flex items-center justify-between py-2.5 lg:py-4">
@@ -204,7 +207,7 @@ export function SiteHeaderClient({
                   width={40}
                   height={40}
                   className="h-auto w-8 sm:w-10 object-contain"
-                  style={{ width: "auto", height: "auto" }}
+                  style={{ width: "40px", height: "auto" }}
                   priority
                 />
               </span>
@@ -220,31 +223,56 @@ export function SiteHeaderClient({
                     style={{ height: "1em", width: "auto" }}
                   />
                 </p>
-                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-slate-500 leading-tight">
+                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-emerald-800 dark:text-emerald-300 leading-tight">
                   <div className="block sm:hidden truncate">
-                    <span className="text-amber-500">S</span>istem{" "}
-                    <span className="text-amber-500">I</span>nformasi
+                    <span className="text-amber-500 font-black">S</span>istem{" "}
+                    <span className="text-amber-500 font-black">I</span>nformasi
                   </div>
                   <div className="block sm:hidden truncate">
-                    <span className="text-amber-500">A</span>dministrasi{" "}
-                    <span className="text-amber-500">T</span>erpadu l
-                    <span className="text-amber-500">A</span>yanan{" "}
-                    <span className="text-amber-500">K</span>eagamaan
+                    <span className="text-amber-500 font-black">A</span>dministrasi{" "}
+                    <span className="text-amber-500 font-black">T</span>erpadu Layanan{" "}
+                    <span className="text-amber-500 font-black">K</span>eagamaan
                   </div>
                   <div className="hidden sm:block truncate">
-                    <span className="text-amber-500">S</span>istem{" "}
-                    <span className="text-amber-500">I</span>nformasi{" "}
-                    <span className="text-amber-500">A</span>dministrasi{" "}
-                    <span className="text-amber-500">T</span>erpadu l
-                    <span className="text-amber-500">A</span>yanan{" "}
-                    <span className="text-amber-500">K</span>eagamaan
+                    <span className="text-amber-500 font-black">S</span>istem{" "}
+                    <span className="text-amber-500 font-black">I</span>nformasi{" "}
+                    <span className="text-amber-500 font-black">A</span>dministrasi{" "}
+                    <span className="text-amber-500 font-black">T</span>erpadu Layanan{" "}
+                    <span className="text-amber-500 font-black">K</span>eagamaan
                   </div>
                 </div>
               </div>
             </Link>
 
             {/* Top Right Controls & CTAs */}
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-6">
+              {/* Logo HAPAKAT (Versi Website Kemenag Barito Utara - Tanpa Wrapper Card) */}
+              <div className="hidden xl:flex items-center gap-2.5">
+                <Image
+                  src="/icons/hapakat.png"
+                  alt="HAPAKAT"
+                  width={96}
+                  height={26}
+                  style={{ width: "96px", height: "auto" }}
+                  className="h-6 w-auto object-contain drop-shadow-sm -translate-y-0.5"
+                  unoptimized
+                />
+                <div className="hidden 2xl:block text-[10.5px] font-bold leading-tight text-emerald-800 dark:text-emerald-300">
+                  <span className="text-amber-500 font-black">H</span>armonis,{" "}
+                  <span className="text-amber-500 font-black">A</span>manah,{" "}
+                  <span className="text-amber-500 font-black">P</span>rofesional,{" "}
+                  <span className="text-amber-500 font-black">A</span>kuntabel,{" "}
+                  <span className="text-amber-500 font-black">K</span>reatif,{" "}
+                  <span className="text-amber-500 font-black">A</span>dil dan{" "}
+                  <span className="text-amber-500 font-black">T</span>ransparan
+                </div>
+              </div>
+
+              {/* Theme (Light/Dark) Switcher - Tampil di Desktop & Mobile sebelah Hamburger */}
+              <div className="flex items-center">
+                <HeaderControls />
+              </div>
+
               {/* CTAs */}
               <div className="hidden lg:flex items-center gap-3">
                 {profile ? (
@@ -315,13 +343,13 @@ export function SiteHeaderClient({
                         <div
                           className={`group inline-flex cursor-pointer flex-shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-black uppercase tracking-tight transition-all duration-300 ${
                             active || isOpen
-                              ? "text-emerald-700 bg-emerald-50"
-                              : "text-slate-900 hover:text-emerald-700 hover:bg-emerald-500/5"
+                              ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
+                              : "text-slate-900 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10"
                           }`}
                         >
                           {item.label}
                           <ChevronDown
-                            className={`h-3 w-3 transition-transform duration-500 ${isOpen ? "rotate-180 text-emerald-500" : "text-slate-400 group-hover:text-emerald-500"}`}
+                            className={`h-3 w-3 transition-transform duration-500 ${isOpen ? "rotate-180 text-emerald-500" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500"}`}
                           />
 
                           {/* Active Indicator Underline */}
@@ -334,8 +362,8 @@ export function SiteHeaderClient({
                           href={item.href}
                           className={`relative inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-black uppercase tracking-tight transition-all duration-300 ${
                             active
-                              ? "text-emerald-700"
-                              : "text-slate-900 hover:bg-emerald-500/5 hover:text-emerald-700"
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-slate-900 dark:text-slate-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400"
                           }`}
                         >
                           {item.label}
@@ -359,7 +387,7 @@ export function SiteHeaderClient({
                             }}
                             className="absolute left-0 top-full z-50 pt-2 min-w-[240px]"
                           >
-                            <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-2 shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+                            <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
                               <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-500/5 blur-2xl" />
                               <ul className="relative z-10 space-y-0.5">
                                 {item.children?.map((child) => {
@@ -371,10 +399,10 @@ export function SiteHeaderClient({
                                         target={(child as any).external ? "_blank" : undefined}
                                         rel={(child as any).external ? "noopener noreferrer" : undefined}
                                         onClick={() => setOpenDropdown(null)}
-                                        className="group/item flex items-center justify-between rounded-xl px-4 py-3 text-[11.5px] font-black uppercase tracking-widest text-slate-900 transition-all hover:bg-emerald-600 hover:text-white"
+                                        className="group/item flex items-center justify-between rounded-xl px-4 py-3 text-[11.5px] font-black uppercase tracking-widest text-slate-900 dark:text-slate-200 transition-all hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white"
                                       >
                                         <div className="flex items-center gap-2.5">
-                                          <ChildIcon className="h-4 w-4 text-emerald-600 group-hover/item:text-white transition-colors" />
+                                          <ChildIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover/item:text-white transition-colors" />
                                           <span>{child.label}</span>
                                         </div>
                                         <ChevronDown className="h-3 w-3 -rotate-90 opacity-0 transition-all -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0" />

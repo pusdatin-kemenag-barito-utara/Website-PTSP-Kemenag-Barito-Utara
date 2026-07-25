@@ -94,32 +94,32 @@ export function PegawaiQuickAccessCards() {
           <motion.div
             key={card.title}
             variants={cardVariants}
-            className={`rounded-2xl border ${colors.border} bg-white shadow-sm hover:shadow-md transition-shadow`}
+            className={`rounded-3xl border ${colors.border} bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between`}
           >
-            <div className="p-3 sm:p-6">
-              <div className={`mb-3 sm:mb-4 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${colors.bg} ${colors.text}`}>
-                <Icon className="h-4 w-4 sm:h-6 sm:w-6" />
+            <div>
+              <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${colors.bg} ${colors.text} shadow-xs`}>
+                <Icon className="h-6 w-6" />
               </div>
-              <h3 className="mb-1 sm:mb-2 text-sm sm:text-lg font-bold text-slate-800">
+              <h3 className="mb-2 text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100">
                 {card.title}
               </h3>
-              <p className="mb-3 sm:mb-4 text-[11px] sm:text-sm leading-relaxed text-slate-500 line-clamp-2 sm:line-clamp-none">
+              <p className="mb-6 text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
                 {card.desc}
               </p>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                <Link
-                  href={card.primaryHref}
-                  className={`inline-flex items-center rounded-lg ${colors.btn} px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-sm font-medium text-white transition-all active:scale-95`}
-                >
-                  {card.primaryLabel}
-                </Link>
-                <Link
-                  href={card.secondaryHref}
-                  className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-                >
-                  {card.secondaryLabel}
-                </Link>
-              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Link
+                href={card.primaryHref}
+                className={`inline-flex items-center justify-center rounded-xl ${colors.btn} px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm transition-all hover:scale-[1.02] active:scale-95`}
+              >
+                {card.primaryLabel}
+              </Link>
+              <Link
+                href={card.secondaryHref}
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all active:scale-95"
+              >
+                {card.secondaryLabel}
+              </Link>
             </div>
           </motion.div>
         );

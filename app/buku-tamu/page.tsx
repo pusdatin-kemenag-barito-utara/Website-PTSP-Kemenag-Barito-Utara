@@ -37,7 +37,7 @@ export default async function GuestBookPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50/50 pb-16">
+    <main className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-16">
       <PageBanner
         title="Buku Tamu Elektronik"
         description="Selamat datang di Kantor Kementerian Agama Kabupaten Barito Utara. Silakan isi daftar kunjungan Anda di bawah ini secara mandiri, aman, dan mudah."

@@ -28,6 +28,9 @@ export default async function AdminServicesPage() {
   const data = await db.query.services.findMany({
     where: whereClause,
     orderBy: [asc(servicesTable.sortOrder)],
+    with: {
+      serviceItems: true,
+    },
   });
 
   services = serializeBigInt(data) ?? [];

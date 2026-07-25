@@ -19,6 +19,7 @@ export function useWizardRequirements(startTransition: any) {
   const [formData, setFormData] = useState({
     serviceItemId: "",
     documentName: "",
+    description: "",
     isRequired: true,
     allowedExtensions: "pdf,jpg,jpeg,png",
     maxFileSizeMb: 5,
@@ -71,6 +72,7 @@ export function useWizardRequirements(startTransition: any) {
     const fd = new FormData();
     fd.append("serviceItemId", formData.serviceItemId);
     fd.append("documentName", formData.documentName);
+    fd.append("description", formData.description || "");
     fd.append("allowedExtensions", formData.allowedExtensions);
     fd.append("maxFileSizeMb", formData.maxFileSizeMb.toString());
     if (formData.isRequired) fd.append("isRequired", "on");
@@ -99,14 +101,18 @@ export function useWizardRequirements(startTransition: any) {
     });
   };
 
-  const handleExtensionChange = (ext: string, checked: boolean) => {
+  const handleExtensionChange = (ext: string, checked?: boolean) => {
     setFormData((prev) => {
       const current = prev.allowedExtensions
         ? prev.allowedExtensions.split(",").map((e: string) => e.trim()).filter(Boolean)
         : [];
+
+      const isCurrentlyChecked = current.includes(ext);
+      const shouldCheck = checked !== undefined ? checked : !isCurrentlyChecked;
+
       let next;
-      if (checked) {
-        if (current.includes(ext)) return prev;
+      if (shouldCheck) {
+        if (isCurrentlyChecked) return prev;
         next = [...current, ext];
       } else {
         next = current.filter((e: string) => e !== ext);

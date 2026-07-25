@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getServiceBySlug, getServiceCatalog } from "@/lib/queries";
 import { ServiceItemsAccordion } from "@/components/services/service-items-accordion";
-import { PegawaiNewRequestForm } from "@/components/forms/pegawai-new-request-form";
-import { PegawaiUsulPensiunForm } from "@/components/forms/pegawai-usul-pensiun-form";
+import { PegawaiUsulCutiForm } from "@/components/forms/pegawai/pegawai-usul-cuti-form";
+import { PegawaiUsulPensiunForm } from "@/components/forms/pegawai/pegawai-usul-pensiun-form";
 import { requireAuth, getCurrentProfile } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { dataCutiPegawai, rekapCutiTahunan } from "@/lib/db/schema/kepegawaian";
@@ -121,7 +121,7 @@ export default async function PegawaiServiceDetailPage({
           </Link>
         </div>
 
-        <PegawaiNewRequestForm
+        <PegawaiUsulCutiForm
           catalog={catalog}
           profile={profile}
           redirectPathPrefix="/pegawai/layanan/riwayat"

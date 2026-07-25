@@ -3,21 +3,24 @@
 import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { Clock, Info } from "lucide-react";
 import { RequestServiceSelection } from "./request-service-selection";
 import { RequestFormFields } from "./request-form-fields";
 import { RequestRequirementUpload } from "./request-requirement-upload";
 import { RealtimeSync } from "@/components/ui/realtime-sync";
 
 // Local Components
-import { RequestConfirmation } from "./_components/request-confirmation";
+import { MasyarakatRequestConfirmation } from "./_components/masyarakat-request-confirmation";
 
 type Catalog = any[];
 
 export function NewRequestForm({
   catalog,
-  redirectPathPrefix = "/dashboard/pengajuan",
+  profile,
+  redirectPathPrefix = "/masyarakat/pengajuan",
 }: {
   catalog: Catalog;
+  profile?: any;
   redirectPathPrefix?: string;
 }) {
   const router = useRouter();
@@ -64,12 +67,23 @@ export function NewRequestForm({
 
   const handleServiceChange = (value: string) => {
     setServiceId(value);
-    const nextService = catalog.find((service: any) => String(service.id) === value);
-    setServiceItemId(String(nextService?.serviceItems?.[0]?.id ?? ""));
+    setServiceItemId("");
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Validasi Dokumen Persyaratan Wajib
+    const requiredDocs = (selectedItem?.serviceRequirements ?? []).filter((r: any) => r.isRequired);
+    const missingDocs = requiredDocs.filter((r: any) => !requirementFiles[String(r.id)]);
+
+    if (missingDocs.length > 0) {
+      toast.error("Dokumen Belum Lengkap", {
+        description: `Silakan unggah dokumen wajib: ${missingDocs.map((m: any) => m.documentName).join(", ")}.`,
+      });
+      return;
+    }
+
     if (!isConfirmed) {
       toast.error("Konfirmasi Diperlukan", { description: "Silakan centang kotak konfirmasi sebelum mengirim." });
       return;
@@ -98,7 +112,10 @@ export function NewRequestForm({
         return;
       }
 
-      toast.success("Berhasil!", { description: "Pengajuan Anda telah berhasil dikirim." });
+      toast.success("Pengajuan Berhasil Dikirim!", {
+        description: `Nomor Tiket: ${result.requestNumber || result.id}\nPengajuan Anda sedang diproses oleh petugas.`,
+        duration: 3500,
+      });
       router.push(`${redirectPathPrefix}/${result.id}`);
       router.refresh();
     } catch (err) {
@@ -108,7 +125,7 @@ export function NewRequestForm({
   };
 
   if (!catalog.length) {
-    return <p className="text-sm text-slate-500">Belum ada layanan aktif.</p>;
+    return <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada katalog layanan aktif.</p>;
   }
 
   return (
@@ -128,35 +145,49 @@ export function NewRequestForm({
 
       {serviceId && serviceItemId && selectedItem ? (
         <div className="space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <RequestFormFields fields={selectedItem.serviceFormFields ?? []} />
+          {/* Service Info Badge & Description */}
+          {(selectedItem.description || selectedItem.estimatedTime) && (
+            <div className="flex flex-col items-center justify-center text-center gap-2.5 rounded-2xl border border-emerald-100 dark:border-emerald-950/60 bg-emerald-50/40 dark:bg-emerald-950/30 p-4 shadow-2xs transition-colors duration-300">
+              {selectedItem.description && (
+                <div className="flex items-center justify-center gap-2 max-w-2xl">
+                  <Info className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">
+                    {selectedItem.description}
+                  </span>
+                </div>
+              )}
+              {selectedItem.estimatedTime && (
+                <div className="inline-flex items-center justify-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-emerald-950/80 border border-emerald-200/80 dark:border-emerald-800/60 px-3.5 py-1.5 rounded-xl text-xs shadow-xs">
+                  <Clock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Estimasi Selesai: {selectedItem.estimatedTime}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Isi Formulir */}
+          {(selectedItem.serviceFormFields ?? []).length > 0 && (
+            <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-2xs transition-colors duration-300">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                Formulir Isian Permohonan
+              </h2>
+              <RequestFormFields fields={selectedItem.serviceFormFields ?? []} profile={profile} />
+            </section>
+          )}
 
           <RequestRequirementUpload
             requirements={selectedItem.serviceRequirements ?? []}
             onFilesChange={setRequirementFiles}
           />
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center text-slate-500">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-          </div>
-          <p className="text-sm font-medium">Langkah 2 & 3 akan muncul di sini</p>
-          <p className="text-xs text-slate-400 mt-1">Silakan selesaikan Langkah 1 terlebih dahulu.</p>
-        </div>
-      )}
 
-      <RequestConfirmation
-        isConfirmed={isConfirmed}
-        onConfirmChange={setIsConfirmed}
-        loading={loading}
-        error={error}
-      />
+          <MasyarakatRequestConfirmation
+            isConfirmed={isConfirmed}
+            onConfirmChange={setIsConfirmed}
+            loading={loading}
+            error={error}
+          />
+        </div>
+      ) : null}
     </form>
   );
 }

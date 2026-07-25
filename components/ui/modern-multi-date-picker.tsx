@@ -29,6 +29,7 @@ interface ModernMultiDatePickerProps {
   value?: string;
   onChange: (value: string) => void;
   label?: string;
+  placeholder?: string;
   required?: boolean;
   name?: string;
 }
@@ -41,6 +42,7 @@ export function ModernMultiDatePicker({
   value,
   onChange,
   label,
+  placeholder = "Pilih Tanggal",
   required,
   name,
 }: ModernMultiDatePickerProps) {
@@ -137,7 +139,7 @@ export function ModernMultiDatePicker({
   return (
     <div className="relative w-full" ref={containerRef}>
       {label && (
-        <label className="text-xs font-semibold text-slate-700 mb-2 block">
+        <label className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2 block">
           {label} {required && <span className="text-rose-500">*</span>}
         </label>
       )}
@@ -158,21 +160,23 @@ export function ModernMultiDatePicker({
       {/* Trigger button */}
       <div
         onClick={togglePicker}
-        className={`group flex items-center gap-3 w-full px-4 py-3 bg-white border rounded-xl text-sm transition-all cursor-pointer ${
+        className={`group flex items-center gap-3 w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border rounded-xl text-sm transition-all cursor-pointer ${
           isOpen
-            ? "border-emerald-500 shadow-sm shadow-emerald-500/10"
-            : "border-emerald-200 hover:border-emerald-400 hover:shadow-sm"
+            ? "border-emerald-600 dark:border-emerald-500 ring-2 ring-emerald-600/10 dark:ring-emerald-500/15"
+            : "border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600"
         }`}
       >
-        <div className={`p-1 transition-colors ${isOpen || selectedDates.length > 0 ? "text-emerald-600" : "text-emerald-500 group-hover:text-emerald-600"}`}>
-          <Calendar className="h-5 w-5" />
+        <div className={`transition-colors ${isOpen || selectedDates.length > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600"}`}>
+          <Calendar className="h-4 w-4 shrink-0" />
         </div>
 
         <div className="flex-1 flex flex-col justify-center min-w-0">
-          <span className={`font-semibold text-[15px] truncate ${selectedDates.length > 0 ? "text-slate-900" : "text-slate-500"}`}>
+          <span className={`font-semibold text-sm truncate ${selectedDates.length > 0 ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}>
             {selectedDates.length > 0
-              ? `${selectedDates.length} Tanggal Dipilih`
-              : "Pilih Tanggal Cuti"}
+              ? selectedDates.length === 1
+                ? format(selectedDates[0], "d MMMM yyyy", { locale: id })
+                : `${format(selectedDates[0], "d MMM", { locale: id })} - ${format(selectedDates[selectedDates.length - 1], "d MMM yyyy", { locale: id })} (${selectedDates.length} Hari)`
+              : placeholder}
           </span>
         </div>
 
@@ -182,7 +186,7 @@ export function ModernMultiDatePicker({
               e.stopPropagation();
               onChange("");
             }}
-            className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full transition-colors"
             title="Hapus Semua"
           >
             <X className="h-4 w-4" />
@@ -204,21 +208,21 @@ export function ModernMultiDatePicker({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[100] w-[90vw] max-w-[320px] sm:absolute sm:left-0 sm:translate-x-0 sm:bottom-full sm:mb-3 sm:w-[340px] sm:max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
+            className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[100] w-[90vw] max-w-[320px] sm:absolute sm:left-0 sm:translate-x-0 sm:bottom-full sm:mb-3 sm:w-[340px] sm:max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 border border-slate-100 dark:border-slate-700 overflow-hidden"
             onClick={(e) => e.preventDefault()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-50">
+            <div className="flex items-center justify-between px-4 py-4 bg-white dark:bg-slate-800 border-b border-slate-50 dark:border-slate-700">
               <div
                 role="button"
                 onClick={(e) => { e.preventDefault(); setView(subMonths(view, 1)); }}
-                className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-all focus:outline-none cursor-pointer"
+                className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full transition-all focus:outline-none cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
               </div>
 
               <div className="flex items-center gap-1">
-                <span className="text-sm font-bold text-slate-800">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
                   {format(view, "MMMM yyyy", { locale: id })}
                 </span>
               </div>
@@ -226,7 +230,7 @@ export function ModernMultiDatePicker({
               <div
                 role="button"
                 onClick={(e) => { e.preventDefault(); setView(addMonths(view, 1)); }}
-                className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-all focus:outline-none cursor-pointer"
+                className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full transition-all focus:outline-none cursor-pointer"
               >
                 <ChevronRight className="h-4 w-4" />
               </div>
@@ -237,7 +241,7 @@ export function ModernMultiDatePicker({
               {DAY_NAMES.map((day, idx) => (
                 <div
                   key={day}
-                  className={`text-[11px] font-bold uppercase text-center py-2 ${idx === 0 ? "text-rose-500" : "text-slate-400"}`}
+                  className={`text-[11px] font-bold uppercase text-center py-2 ${idx === 0 ? "text-rose-500" : "text-slate-400 dark:text-slate-500"}`}
                 >
                   {day}
                 </div>
@@ -266,10 +270,10 @@ export function ModernMultiDatePicker({
                           }}
                           className={`
                             h-10 w-10 flex items-center justify-center text-[14px] font-bold cursor-pointer rounded-xl transition-all duration-200
-                            ${!isCurrentMonth ? "text-slate-300 hover:text-slate-500" : ""}
-                            ${isCurrentMonth && !isSelected && !isSunday ? "text-slate-800 hover:bg-slate-100" : ""}
-                            ${isCurrentMonth && !isSelected && isSunday ? "text-rose-500 hover:bg-rose-50" : ""}
-                            ${isSelected ? "bg-[#059669] text-white shadow-md shadow-emerald-600/30" : ""}
+                            ${!isCurrentMonth ? "text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400" : ""}
+                            ${isCurrentMonth && !isSelected && !isSunday ? "text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700" : ""}
+                            ${isCurrentMonth && !isSelected && isSunday ? "text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40" : ""}
+                            ${isSelected ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30" : ""}
                           `}
                         >
                           {format(currentDay, "d")}
@@ -282,15 +286,15 @@ export function ModernMultiDatePicker({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-50">
-              <span className="text-xs font-semibold text-slate-500">
+            <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-800 border-t border-slate-50 dark:border-slate-700">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 {selectedDates.length} tanggal
               </span>
 
               <div
                 role="button"
                 onClick={(e) => { e.preventDefault(); closePicker(); }}
-                className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors focus:outline-none cursor-pointer"
+                className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors focus:outline-none cursor-pointer"
               >
                 Tutup
               </div>

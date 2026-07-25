@@ -60,7 +60,10 @@ export async function POST(request: Request) {
       formData,
     });
 
-    return NextResponse.json({ id: result.id.toString() }, { status: 201 });
+    return NextResponse.json({ 
+      id: result.id.toString(),
+      requestNumber: result.requestNumber 
+    }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating request:", error);
     if (error.code === "23505") {

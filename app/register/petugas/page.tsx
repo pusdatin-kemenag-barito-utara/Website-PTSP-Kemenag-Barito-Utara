@@ -12,6 +12,7 @@ export default function RegisterPetugasPage() {
           src="/kantor-kemenag.jpg"
           alt="Kantor Kemenag Barito Utara"
           fill
+          sizes="100vw"
           className="object-cover object-center opacity-20 grayscale"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-[#0f8a54]/95 via-[#0b7446]/95 to-[#054125]/95" />

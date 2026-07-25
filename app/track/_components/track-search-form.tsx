@@ -56,7 +56,7 @@ export function TrackSearchForm({ initialQuery }: TrackSearchFormProps) {
                 turnstileRef.current?.reset();
               }
             }}
-            className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-[1.25rem] border border-slate-200/80 bg-white pl-11 pr-4 text-sm sm:text-base font-bold text-slate-800 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] focus:border-[#059669] focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all duration-300 placeholder:text-slate-300 placeholder:text-xs sm:placeholder:text-sm"
+            className="w-full h-12 sm:h-16 rounded-2xl sm:rounded-[1.25rem] border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 pl-11 pr-4 text-sm sm:text-base font-bold text-slate-800 dark:text-white shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] focus:border-[#059669] focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all duration-300 placeholder:text-slate-300 dark:placeholder:text-slate-500 placeholder:text-xs sm:placeholder:text-sm"
           />
         </div>
 

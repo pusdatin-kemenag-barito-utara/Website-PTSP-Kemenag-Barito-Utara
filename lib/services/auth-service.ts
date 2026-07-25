@@ -78,6 +78,22 @@ export class AuthService {
           alamat: address,
         });
 
+      // Sync to Pusdatin Schema
+      try {
+        const { sql } = await import("drizzle-orm");
+        await db.execute(sql`
+          INSERT INTO "kemenag_pusdatin"."profiles" (id, name, email, phone, address, role, user_type, status, created_at, updated_at)
+          VALUES (${authUser.user.id}, ${fullName}, ${internalEmail}, ${phone}, ${address}, 'user', 'eksternal_masyarakat', 'active', NOW(), NOW())
+          ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, phone = EXCLUDED.phone, address = EXCLUDED.address, updated_at = NOW()
+        `);
+
+        await db.execute(sql`
+          INSERT INTO "kemenag_pusdatin"."profiles_pemohon" (user_id, full_name, no_hp, alamat, updated_at)
+          VALUES (${authUser.user.id}, ${fullName}, ${phone}, ${address}, NOW())
+        `);
+      } catch (pusdatinErr) {
+        console.error("[PUSDATIN REGISTRATION SYNC ERROR]:", pusdatinErr);
+      }
     } catch (err) {
       await admin.auth.admin.deleteUser(authUser.user.id);
       throw err;

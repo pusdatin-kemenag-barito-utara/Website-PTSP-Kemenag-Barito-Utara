@@ -67,7 +67,7 @@ export function DashboardActions() {
           </p>
 
           <Link
-            href="/dashboard/pengajuan/baru"
+            href="/masyarakat/pengajuan/baru"
             className="mt-8 flex h-14 items-center justify-center rounded-2xl bg-emerald-600 font-black text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-500 hover:shadow-emerald-500/40 active:scale-95"
           >
             Mulai Daftar

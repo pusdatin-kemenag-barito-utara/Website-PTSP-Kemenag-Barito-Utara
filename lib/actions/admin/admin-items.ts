@@ -60,6 +60,8 @@ export async function createServiceItemAction(
     });
 
     revalidatePath("/admin/layanan");
+    revalidatePath("/layanan", "layout");
+    revalidatePath("/", "layout");
     await emitRefreshSignal();
 
     return { success: true, message: "Item layanan berhasil dibuat" };
@@ -114,6 +116,9 @@ export async function updateServiceItemAction(
     });
 
     revalidatePath("/admin/layanan/[id]", "page");
+    revalidatePath("/admin/layanan");
+    revalidatePath("/layanan", "layout");
+    revalidatePath("/", "layout");
     await emitRefreshSignal();
 
     return { success: true, message: "Item layanan berhasil diperbarui" };
@@ -144,6 +149,8 @@ export async function deleteServiceItemAction(
     });
 
     revalidatePath("/admin/layanan");
+    revalidatePath("/layanan", "layout");
+    revalidatePath("/", "layout");
     await emitRefreshSignal();
 
     return { success: true, message: "Item layanan berhasil dihapus" };
@@ -172,6 +179,8 @@ export async function reorderServiceItemsAction(
 
     revalidatePath("/admin/layanan");
     revalidatePath("/admin/layanan/[id]", "page");
+    revalidatePath("/layanan", "layout");
+    revalidatePath("/", "layout");
     await emitRefreshSignal();
 
     return { success: true, message: "Urutan item layanan berhasil disimpan" };

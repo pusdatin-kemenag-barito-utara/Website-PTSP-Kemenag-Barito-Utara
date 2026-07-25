@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { ModernSelect } from "@/components/ui/modern-select";
 import { Button } from "@/components/ui/button";
-import { Calendar, Search } from "lucide-react";
-import { m } from "framer-motion";
+import { Calendar, Filter, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function RekapFilter({ initialMonth, initialYear }: { initialMonth: number, initialYear: number }) {
   const [month, setMonth] = useState(initialMonth.toString());
@@ -26,7 +26,7 @@ export function RekapFilter({ initialMonth, initialYear }: { initialMonth: numbe
   }));
 
   return (
-    <form className="flex flex-col sm:flex-row items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-200/60 w-full sm:w-auto">
+    <form className="flex flex-col sm:flex-row items-center gap-2.5 bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-3xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200/80 dark:border-slate-800 w-full sm:w-auto transition-all">
       <div className="w-full sm:w-44">
         <ModernSelect
           name="month"
@@ -46,15 +46,19 @@ export function RekapFilter({ initialMonth, initialYear }: { initialMonth: numbe
           placeholder="Pilih Tahun"
         />
       </div>
-      <m.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <motion.div
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         className="w-full sm:w-auto"
       >
-        <Button type="submit" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/20 px-6 rounded-xl gap-2 font-bold h-11">
-          <Search className="h-4 w-4" /> Filter
+        <Button 
+          type="submit" 
+          className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold shadow-md shadow-emerald-500/20 px-5 rounded-2xl gap-2 h-11 transition-all border-0 cursor-pointer"
+        >
+          <Filter className="h-4 w-4" />
+          <span>Terapkan Filter</span>
         </Button>
-      </m.div>
+      </motion.div>
     </form>
   );
 }

@@ -11,13 +11,13 @@ import { getR2SignedUrl, isR2Path } from "@/lib/r2";
 import { RealtimeSync } from "@/components/ui/realtime-sync";
 
 // Reuse same detail components as the pemohon dashboard
-import { RequestHeader } from "@/app/dashboard/pengajuan/[id]/_components/request-header";
-import { RequestDetailsCard } from "@/app/dashboard/pengajuan/[id]/_components/request-details-card";
-import { RequestAnswersCard } from "@/app/dashboard/pengajuan/[id]/_components/request-answers-card";
-import { RequestDocumentsCard } from "@/app/dashboard/pengajuan/[id]/_components/request-documents-card";
-import { OutputDocumentCard } from "@/app/dashboard/pengajuan/[id]/_components/output-document-card";
-import { RevisionSection } from "@/app/dashboard/pengajuan/[id]/_components/revision-section";
-import { ActivityLogsCard } from "@/app/dashboard/pengajuan/[id]/_components/activity-logs-card";
+import { RequestHeader } from "@/app/masyarakat/pengajuan/[id]/_components/request-header";
+import { RequestDetailsCard } from "@/app/masyarakat/pengajuan/[id]/_components/request-details-card";
+import { RequestAnswersCard } from "@/app/masyarakat/pengajuan/[id]/_components/request-answers-card";
+import { RequestDocumentsCard } from "@/app/masyarakat/pengajuan/[id]/_components/request-documents-card";
+import { OutputDocumentCard } from "@/app/masyarakat/pengajuan/[id]/_components/output-document-card";
+import { RevisionSection } from "@/app/masyarakat/pengajuan/[id]/_components/revision-section";
+import { ActivityLogsCard } from "@/app/masyarakat/pengajuan/[id]/_components/activity-logs-card";
 
 async function getSignedUrl(bucket: string, path?: string | null) {
   if (!path) return null;

@@ -7,7 +7,6 @@ import { guestBook, appointments } from "@/lib/db/schema";
 import { systemStatus } from "@/lib/db/schema/logs";
 import { eq } from "drizzle-orm";
 import { createAuditLog } from "@/lib/audit";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 
 export type ActionResult = {
@@ -129,41 +128,6 @@ export async function updateAppointmentStatusAction(
         newStatus: status,
       },
     });
-
-    if (status === "approved" || status === "rejected") {
-      const dateObj = new Date(entry.appointmentDate);
-      const appointmentDateFormatted = dateObj.toLocaleDateString("id-ID", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        timeZone: "Asia/Jakarta",
-      });
-
-      const isApproved = status === "approved";
-      const waMessage =
-        `Halo *${entry.guestName}* 👋\n\n` +
-        `Permintaan janji temu Anda telah *${isApproved ? "DISETUJUI ✅" : "DITOLAK ❌"}* oleh Admin.\n\n` +
-        `📅 *Detail Janji Temu:*\n` +
-        `• Tanggal  : ${appointmentDateFormatted}\n` +
-        `• Jam      : ${entry.appointmentTime} WIB\n` +
-        `• Bertemu  : ${entry.intendedOfficer}\n` +
-        `• Keperluan: ${entry.purpose}\n` +
-        (entry.institutionName
-          ? `• Instansi : ${entry.institutionName}\n`
-          : "") +
-        (isApproved
-          ? `\nMohon hadir tepat waktu sesuai dengan jadwal yang telah disetujui. Tunjukkan pesan ini kepada petugas saat Anda tiba di lokasi.\n\n`
-          : `\nMohon maaf, janji temu Anda belum dapat dipenuhi saat ini. Silakan hubungi kami untuk informasi lebih lanjut.\n\n`) +
-        `_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`;
-
-      // Tunggu notifikasi WA selesai (menghindari dibunuh oleh Vercel serverless)
-      try {
-        await sendWhatsAppNotification(entry.whatsapp, waMessage);
-      } catch (waErr) {
-        console.error("WhatsApp notification failed:", waErr);
-      }
-    }
 
     revalidatePath("/admin/janji-temu");
     return {

@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 import { createAuditLog } from "@/lib/audit";
 import { deleteFromR2, uploadToR2 } from "@/lib/r2";
 import { NotificationService } from "../notification-service";
-import { uploadToGoogleDrive } from "@/lib/google-drive";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export class RequestAdminService {
   /**
@@ -106,7 +106,7 @@ export class RequestAdminService {
           type: newStatus === "rejected" || newStatus === "spam" ? "error" : "success",
           title: `Status Pengajuan Berubah`,
           message: `Pengajuan dengan nomor ${requestNumber} telah diupdate menjadi ${newStatus.replace("_", " ")}.`,
-          link: `/dashboard/pengajuan/${requestId}`,
+          link: `/masyarakat/pengajuan/${requestId}`,
         });
       }
     });
@@ -148,13 +148,6 @@ export class RequestAdminService {
     const r2Result = await uploadToR2(file, r2Path);
 
     if (!r2Result.path) throw new Error("Gagal mengunggah file ke Cloudflare R2");
-
-    // Dual-Storage: Upload backup to Google Drive
-    try {
-      await uploadToGoogleDrive(file, `results/${request.requestNumber}`);
-    } catch (gdriveError) {
-      console.error("Google Drive backup failed for result document:", gdriveError);
-    }
 
     const nextStatus = ["approved", "completed"].includes(request.status || "")
       ? "completed"
@@ -198,7 +191,7 @@ export class RequestAdminService {
         type: "success",
         title: "Dokumen Hasil Diunggah",
         message: `Dokumen hasil "${fileName}" telah diunggah untuk pengajuan ${request.requestNumber}.`,
-        link: `/dashboard/pengajuan/${requestId}`,
+        link: `/masyarakat/pengajuan/${requestId}`,
       });
     });
   }

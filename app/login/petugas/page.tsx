@@ -28,6 +28,7 @@ export default async function LoginPetugasPage(props: {
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag Barito Utara"
             fill
+            sizes="50vw"
             priority
             className="object-cover object-center grayscale"
           />
@@ -58,10 +59,11 @@ export default async function LoginPetugasPage(props: {
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 relative w-full">
         {/* Mobile background (only visible when left panel is hidden) */}
         <div className="absolute inset-0 z-0 lg:hidden">
-           <Image
+          <Image
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag"
             fill
+            sizes="100vw"
             className="object-cover object-center grayscale opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/90 to-slate-900/95" />

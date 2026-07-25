@@ -78,7 +78,7 @@ export async function handlePegawaiLoginAction(nip: string, password?: string, t
   // Syarat: password yang dimasukkan harus sesuai default "NIP+barut"
   if (password !== defaultPassword) {
     return { 
-      error: "Akun Anda belum terdaftar. Untuk login pertama kali, password harus sesuai NIP+barut." 
+      error: "NIP atau password yang Anda masukkan salah. Silakan periksa kembali." 
     };
   }
 

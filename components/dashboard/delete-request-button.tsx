@@ -40,7 +40,7 @@ export function DeleteRequestButton({
       toast.success("Berhasil", {
         description: "Pengajuan telah dibatalkan dan dihapus.",
       });
-      router.push("/dashboard/pengajuan");
+      router.push("/masyarakat/pengajuan");
       router.refresh();
     } catch (err: any) {
       toast.error("Gagal", {
@@ -54,9 +54,10 @@ export function DeleteRequestButton({
   return (
     <>
       <Button
-        variant="outline"
+        type="button"
+        variant="danger"
         size="sm"
-        className="h-8 gap-1.5 border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200 transition-all"
+        className="h-9 px-3.5 gap-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-sm hover:shadow-red-500/25 transition-all active:scale-95 cursor-pointer border-none"
         onClick={() => setIsAlertOpen(true)}
         disabled={loading}
       >

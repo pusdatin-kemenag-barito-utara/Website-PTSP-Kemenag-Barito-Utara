@@ -25,7 +25,7 @@ export default async function TrackPage({
   const result = q && token ? await getPublicRequestStatus(q, token) : null;
 
   return (
-    <main className="relative min-h-screen bg-slate-50/50 pb-20 overflow-hidden">
+    <main className="relative min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-20 overflow-hidden">
       <PageBanner
         title="Lacak Permohonan Layanan"
         description="Masukkan nomor registrasi permohonan Anda untuk melacak status proses dokumen dan riwayat persetujuan secara real-time."

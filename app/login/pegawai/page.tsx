@@ -29,6 +29,7 @@ export default async function LoginPegawaiPage(props: {
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag Barito Utara"
             fill
+            sizes="50vw"
             priority
             className="object-cover object-center grayscale"
           />
@@ -63,6 +64,7 @@ export default async function LoginPegawaiPage(props: {
             src="/kantor-kemenag.jpg"
             alt="Kantor Kemenag"
             fill
+            sizes="100vw"
             className="object-cover object-center grayscale opacity-30"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#064e3b]/95 to-slate-900/95" />

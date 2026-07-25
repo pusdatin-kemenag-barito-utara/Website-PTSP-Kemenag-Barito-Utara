@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-slate-50/50 pb-16">
+    <main className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-16">
       <PageBanner
         title="Hubungi Kami"
         description="Silakan hubungi kami untuk pertanyaan terkait pengajuan layanan, dokumen persyaratan, atau kendala teknis pada portal PTSP. Kami siap melayani Anda sepenuh hati."

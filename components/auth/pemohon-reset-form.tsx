@@ -1,346 +1,138 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { m, AnimatePresence } from "framer-motion";
-import {
-  Phone,
-  KeyRound,
-  Eye,
-  EyeOff,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  MessageSquareShare,
-} from "lucide-react";
-import { toast } from "sonner";
+import { MessageSquare, ArrowRight, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  resetPasswordByPhoneAction,
-  checkPhoneExistsAction,
-  verifyOtpAction,
-} from "@/lib/actions/auth/reset-password";
-import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
-
-const getPasswordStrength = (pass: string) => {
-  if (!pass) return { score: 0, label: "", color: "bg-slate-200", textColor: "text-slate-400" };
-  
-  let score = 0;
-  
-  if (pass.length >= 6) score += 1;
-  if (/\d/.test(pass)) score += 1;
-  if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score += 1;
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) score += 1;
-
-  if (pass.length < 6) {
-    return { score: 0, label: "Terlalu Pendek (Min. 6 Karakter)", color: "bg-rose-500", textColor: "text-rose-500" };
-  }
-
-  switch (score) {
-    case 1:
-      return { score: 1, label: "Lemah 😕", color: "bg-orange-400", textColor: "text-orange-500" };
-    case 2:
-      return { score: 2, label: "Sedang 😐", color: "bg-yellow-400", textColor: "text-yellow-600" };
-    case 3:
-      return { score: 3, label: "Kuat 🙂", color: "bg-green-500", textColor: "text-green-600" };
-    case 4:
-    default:
-      return { score: 4, label: "Sangat Kuat! 💪🚀", color: "bg-emerald-500", textColor: "text-emerald-600" };
-  }
-};
 
 export function PemohonResetForm() {
   const router = useRouter();
-  // 1: Phone, 2: OTP, 3: New Password
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const [nama, setNama] = useState("");
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [resetToken, setResetToken] = useState("");
-  
-  const strength = getPasswordStrength(newPassword);
+  const [error, setError] = useState("");
 
-  const [mounted, setMounted] = useState(false);
-  const turnstileRef = useRef<TurnstileRef>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Nomor WhatsApp Official Petugas Loket PTSP Kemenag Barito Utara
+  const OFFICIAL_WA_PETUGAS = "6285117491212";
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleCheckPhone = async () => {
-    if (!phone) return setError("Masukkan nomor HP Anda.");
-    if (!turnstileToken) return setError("Silakan selesaikan verifikasi keamanan.");
-    setLoading(true);
+  const handleOpenWhatsApp = (e: FormEvent) => {
+    e.preventDefault();
     setError("");
 
-    const result = await checkPhoneExistsAction(phone, turnstileToken);
-
-    setLoading(false);
-    if (result.error) {
-      turnstileRef.current?.reset();
-      setTurnstileToken(null);
-      return setError(result.error);
+    if (!nama.trim()) {
+      setError("Nama lengkap wajib diisi.");
+      return;
     }
 
-    if (!result.exists) {
-      turnstileRef.current?.reset();
-      setTurnstileToken(null);
-      return setError("Akun tidak bisa direset / nomor HP belum terdaftar dalam sistem.");
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setError("Nomor WhatsApp / HP tidak valid (minimal 10 digit).");
+      return;
     }
 
-    toast.success("OTP Dikirim!", {
-      description: "Silakan periksa pesan WhatsApp Anda.",
-    });
-    setStep(2);
-  };
+    const message = `Halo Petugas PTSP Kemenag Barito Utara, saya butuh bantuan pemulihan/reset password akun PTSP Pemohon.\n\n*Detail Akun Saya:*\n- Nama Lengkap: ${nama.trim()}\n- Nomor WhatsApp/HP: ${cleanPhone}\n\nMohon bantuannya untuk me-reset password akun saya. Terima kasih.`;
 
-  const handleVerifyOtp = async () => {
-    if (!otp || otp.length < 6) return setError("Masukkan 6 digit kode OTP.");
-    
-    setLoading(true);
-    setError("");
+    const waUrl = `https://wa.me/${OFFICIAL_WA_PETUGAS}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, "_blank");
 
-    const result = await verifyOtpAction(phone, otp);
-
-    setLoading(false);
-    if (result.error) {
-      return setError(result.error);
-    }
-
-    if (result.success && result.resetToken) {
-      setResetToken(result.resetToken);
-      setStep(3);
-    }
-  };
-
-  const handleUpdatePassword = async () => {
-    if (newPassword.length < 6) return setError("Password minimal 6 karakter.");
-    if (newPassword !== confirmPassword)
-      return setError("Konfirmasi password tidak cocok.");
-
-    setLoading(true);
-    setError("");
-
-    const result = await resetPasswordByPhoneAction(phone, newPassword, resetToken);
-
-    setLoading(false);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      toast.success("Password Berhasil Diperbarui!", {
-        description: `Halo ${result.name}, password Anda telah berhasil diubah.`,
-        icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
-      });
-      router.push("/login/pemohon");
-    }
+    // Otomatis kembalikan pemohon ke halaman login masyarakat setelah membuka WhatsApp
+    setTimeout(() => {
+      router.push("/login/masyarakat");
+    }, 500);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h2 className="text-xl font-black text-slate-900">
-          {step === 1 && "Verifikasi Nomor HP"}
-          {step === 2 && "Masukkan Kode OTP"}
-          {step === 3 && "Atur Password Baru"}
-        </h2>
-        <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-          {step === 1 && "Masukkan nomor WhatsApp yang terdaftar untuk verifikasi akun Anda."}
-          {step === 2 && "Kami telah mengirimkan 6 digit kode OTP ke nomor WhatsApp Anda."}
-          {step === 3 && "Kode OTP valid! Sekarang masukkan password baru yang aman."}
-        </p>
+    <form onSubmit={handleOpenWhatsApp} className="space-y-6 pt-2 text-left">
+      <p className="text-xs sm:text-sm text-slate-500 text-center leading-relaxed font-medium px-2">
+        Silakan lengkapi data wajib Anda di bawah ini untuk terhubung langsung dengan <strong>Petugas Loket PTSP Kemenag Barito Utara</strong> via WhatsApp.
+      </p>
+
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <label className="block text-xs sm:text-sm font-bold text-slate-800">
+            Nama Lengkap <span className="text-rose-500">*</span>
+          </label>
+          <Input
+            type="text"
+            required
+            value={nama}
+            onInput={(e) => {
+              const filtered = e.currentTarget.value.replace(/[^a-zA-Z\s'.,`-]/g, "");
+              e.currentTarget.value = filtered;
+              setNama(filtered);
+              if (error) setError("");
+            }}
+            onChange={(e) => {
+              const filtered = e.target.value.replace(/[^a-zA-Z\s'.,`-]/g, "");
+              setNama(filtered);
+              if (error) setError("");
+            }}
+            placeholder="Masukkan nama lengkap sesuai akun"
+            className="h-12 bg-slate-50/70 text-xs sm:text-sm font-semibold rounded-2xl border-slate-200 focus:bg-white focus:border-teal-500 focus:ring-teal-500/20 transition-all shadow-sm"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-xs sm:text-sm font-bold text-slate-800">
+            Nomor WhatsApp / HP Terdaftar <span className="text-rose-500">*</span>
+          </label>
+          <Input
+            type="tel"
+            required
+            inputMode="numeric"
+            value={phone}
+            onInput={(e) => {
+              // Hanya memperbolehkan angka (0-9)
+              const filtered = e.currentTarget.value.replace(/[^0-9]/g, "");
+              e.currentTarget.value = filtered;
+              setPhone(filtered);
+              if (error) setError("");
+            }}
+            onChange={(e) => {
+              const filtered = e.target.value.replace(/[^0-9]/g, "");
+              setPhone(filtered);
+              if (error) setError("");
+            }}
+            placeholder="Contoh: 085117491212"
+            className="h-12 bg-slate-50/70 text-xs sm:text-sm font-semibold rounded-2xl border-slate-200 focus:bg-white focus:border-teal-500 focus:ring-teal-500/20 transition-all shadow-sm"
+          />
+        </div>
+
+        {error && (
+          <p className="text-xs font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100 animate-shake">
+            {error}
+          </p>
+        )}
+
+        <div className="pt-3">
+          <Button
+            type="submit"
+            className="group relative w-full py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 hover:from-teal-700 hover:to-emerald-800 text-white shadow-xl shadow-teal-600/25 hover:shadow-teal-700/35 transition-all duration-300 font-black text-xs sm:text-sm tracking-wide flex items-center justify-center gap-3 overflow-hidden hover:scale-[1.02] active:scale-[0.98]"
+          >
+            {/* Soft glowing ambient effect */}
+            <span className="absolute inset-0 bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <MessageSquare className="h-5 w-5 shrink-0 group-hover:rotate-12 transition-transform duration-300 text-teal-100" />
+            
+            <div className="flex flex-col items-center justify-center leading-tight">
+              <span className="font-extrabold text-xs sm:text-sm">Hubungi Petugas PTSP</span>
+              <span className="font-medium text-[11px] sm:text-xs text-amber-200 flex items-center gap-1 mt-0.5">
+                via WhatsApp <Sparkles className="h-3 w-3 inline-block animate-pulse text-amber-300" />
+              </span>
+            </div>
+          </Button>
+        </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <m.div
-            key="step1"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-4"
-          >
-            <div className="relative group">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-              <Input
-                type="tel"
-                inputMode="numeric"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                placeholder="Masukkan nomor WhatsApp (Contoh: 0812345...)"
-                className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 transition-all"
-              />
-            </div>
-            {error && (
-              <p className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
-                <AlertCircle className="h-3.5 w-3.5" /> {error}
-              </p>
-            )}
-
-            <LoginTurnstile
-              mounted={mounted}
-              ref={turnstileRef}
-              onTokenChange={setTurnstileToken}
-            />
-
-            <Button
-              onClick={handleCheckPhone}
-              disabled={loading || !turnstileToken || phone.length < 10}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              ) : null}
-              Kirim OTP ke WhatsApp
-            </Button>
-          </m.div>
-        )}
-
-        {step === 2 && (
-          <m.div
-            key="step2"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-4"
-          >
-            <div className="relative group">
-              <MessageSquareShare className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-              <Input
-                type="tel"
-                inputMode="numeric"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                placeholder="● ● ● ● ● ●"
-                maxLength={6}
-                className="h-14 pl-12 pr-12 text-center tracking-[0.5em] placeholder:tracking-normal font-bold text-3xl rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 transition-all"
-              />
-            </div>
-            {error && (
-              <p className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
-                <AlertCircle className="h-3.5 w-3.5" /> {error}
-              </p>
-            )}
-
-            <Button
-              onClick={handleVerifyOtp}
-              disabled={loading || otp.length < 6}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              ) : null}
-              Verifikasi OTP
-            </Button>
-
-            <button 
-              onClick={() => setStep(1)}
-              className="w-full text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors"
-            >
-              Ganti Nomor / Kirim Ulang OTP
-            </button>
-          </m.div>
-        )}
-
-        {step === 3 && (
-          <m.div
-            key="step3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-4"
-          >
-            <div className="relative">
-              <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Password Baru"
-                className="h-14 pl-12 pr-12 rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            {newPassword.length > 0 ? (
-              <div className="space-y-1.5 mt-2 transition-all duration-300">
-                <div className="flex gap-1.5 h-1.5">
-                  {[1, 2, 3, 4].map((index) => (
-                    <div
-                      key={index}
-                      className={`h-full flex-1 rounded-full transition-all duration-300 ${
-                        index <= (strength.score === 0 && newPassword.length >= 6 ? 1 : strength.score)
-                          ? strength.color
-                          : "bg-slate-200"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <div className="flex justify-between items-center text-[11px] font-bold">
-                  <span className="text-slate-400">Kekuatan Password</span>
-                  <span className={`transition-colors duration-300 ${strength.textColor}`}>
-                    {strength.label}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[11px] text-slate-400 font-medium pl-1">Minimal 6 karakter.</p>
-            )}
-            <div className="relative">
-              <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Konfirmasi Password Baru"
-                className="h-14 pl-12 pr-12 rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-            {error && (
-              <p className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
-                <AlertCircle className="h-3.5 w-3.5" /> {error}
-              </p>
-            )}
-            <Button
-              onClick={handleUpdatePassword}
-              disabled={loading}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#0f8a54] to-[#14b870] hover:from-[#0b7446] hover:to-[#0f8a54] text-white shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              ) : null}
-              Update Password
-            </Button>
-          </m.div>
-        )}
-      </AnimatePresence>
-    </div>
+      <div className="pt-6 border-t border-slate-100 text-center">
+        <Link
+          href="/login/masyarakat"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-500 hover:text-teal-600 transition-colors py-1 px-3 rounded-full hover:bg-teal-50/50"
+        >
+          <ArrowRight className="h-4 w-4 rotate-180" />
+          <span>Kembali ke Halaman Login</span>
+        </Link>
+      </div>
+    </form>
   );
 }

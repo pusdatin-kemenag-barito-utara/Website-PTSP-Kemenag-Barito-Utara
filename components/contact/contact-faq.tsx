@@ -27,16 +27,16 @@ export function ContactFaq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="rounded-[2rem] bg-white p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100">
+    <div className="rounded-[2rem] bg-white dark:bg-slate-900 p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-none border border-slate-100 dark:border-slate-800 transition-colors duration-300">
       <div className="flex items-center gap-3 mb-8">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#059669]/10">
-          <HelpCircle className="h-6 w-6 text-[#059669]" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#059669]/10 dark:bg-emerald-950/60 border border-emerald-100/50 dark:border-emerald-900/50">
+          <HelpCircle className="h-6 w-6 text-[#059669] dark:text-emerald-400" />
         </div>
         <div>
-          <h2 className="text-xl font-black text-slate-900">
+          <h2 className="text-xl font-black text-slate-900 dark:text-slate-100">
             Pertanyaan Umum (FAQ)
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Jawaban atas pertanyaan yang paling sering diajukan
           </p>
         </div>
@@ -51,8 +51,8 @@ export function ContactFaq() {
               key={item.q}
               className={`group rounded-2xl border transition-colors cursor-pointer ${
                 isOpen
-                  ? "border-[#059669]/30 bg-[#059669]/5"
-                  : "border-slate-100 bg-slate-50/50 hover:border-[#059669]/20 hover:bg-[#059669]/5"
+                  ? "border-[#059669]/30 dark:border-emerald-500/30 bg-[#059669]/5 dark:bg-emerald-950/30"
+                  : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 hover:border-[#059669]/20 dark:hover:border-emerald-500/20 hover:bg-[#059669]/5 dark:hover:bg-emerald-950/20"
               }`}
               onClick={() => setOpenIndex(isOpen ? null : idx)}
             >
@@ -60,8 +60,8 @@ export function ContactFaq() {
                 <span
                   className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black transition-colors ${
                     isOpen
-                      ? "bg-[#059669] text-white"
-                      : "bg-[#059669]/10 text-[#059669]"
+                      ? "bg-[#059669] dark:bg-emerald-500 text-white"
+                      : "bg-[#059669]/10 dark:bg-emerald-950/60 text-[#059669] dark:text-emerald-400"
                   }`}
                 >
                   {String(idx + 1).padStart(2, "0")}
@@ -72,15 +72,15 @@ export function ContactFaq() {
                     <p
                       className={`text-sm font-bold transition-colors pt-0.5 ${
                         isOpen
-                          ? "text-[#059669]"
-                          : "text-slate-900 group-hover:text-[#059669]"
+                          ? "text-[#059669] dark:text-emerald-400"
+                          : "text-slate-900 dark:text-slate-200 group-hover:text-[#059669] dark:group-hover:text-emerald-400"
                       }`}
                     >
                       {item.q}
                     </p>
                     <ChevronDown
                       className={`h-4 w-4 shrink-0 mt-1 transition-transform duration-300 ${
-                        isOpen ? "rotate-180 text-[#059669]" : "text-slate-400"
+                        isOpen ? "rotate-180 text-[#059669] dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"
                       }`}
                     />
                   </div>
@@ -94,7 +94,7 @@ export function ContactFaq() {
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                         className="overflow-hidden"
                       >
-                        <p className="mt-3 text-sm leading-relaxed text-slate-600 pb-1">
+                        <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400 pb-1">
                           {item.a}
                         </p>
                       </m.div>

@@ -1,9 +1,9 @@
 import { m, AnimatePresence } from "framer-motion";
-import { X, Loader2, Check } from "lucide-react";
+import { X, Loader2, Check, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/ui/field";
-import { Select } from "@/components/ui/select";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 export function AddEditItemModal({
   isOpen,
@@ -26,6 +26,12 @@ export function AddEditItemModal({
   onChangeFormData: (updates: any) => void;
   onSubmit: (e: React.FormEvent) => void;
 }) {
+  const serviceOptions = (services ?? []).map((s: any) => ({
+    value: String(s.id),
+    label: s.name,
+    icon: Building2,
+  }));
+
   return (
     <AnimatePresence>
       {(isOpen || editingItem) && (
@@ -50,29 +56,22 @@ export function AddEditItemModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-xl hover:bg-slate-200/50 text-slate-400 transition-colors"
+                className="p-2 rounded-xl hover:bg-slate-200/50 text-slate-400 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <form onSubmit={onSubmit} className="p-6 space-y-5">
               <Field label="Induk Layanan" required>
-                <Select
-                  name="serviceId"
-                  value={formData.serviceId}
-                  onChange={(e) =>
-                    onChangeFormData({ serviceId: e.target.value })
-                  }
+                <ModernSelect
+                  options={serviceOptions}
+                  value={formData.serviceId ? String(formData.serviceId) : ""}
+                  onChange={(val) => onChangeFormData({ serviceId: val })}
+                  placeholder="-- Pilih Induk Layanan --"
+                  icon={Building2}
+                  enableSearch={serviceOptions.length > 5}
                   required
-                  className="font-medium"
-                >
-                  <option value="">-- Pilih Induk Layanan --</option>
-                  {(services ?? []).map((service: any) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-                </Select>
+                />
               </Field>
 
               <Field label="Nama Item Layanan" required>
@@ -104,16 +103,48 @@ export function AddEditItemModal({
                 </div>
               </Field>
 
-              <Field label="Estimasi Waktu" hint="Contoh: 1-3 Hari Kerja">
-                <Input
-                  name="estimatedTime"
-                  value={formData.estimatedTime}
-                  onChange={(e) =>
-                    onChangeFormData({ estimatedTime: e.target.value })
-                  }
-                  placeholder="Masukkan estimasi waktu pengerjaan"
-                  className="font-medium"
-                />
+              <Field 
+                label="Estimasi Waktu Pengerjaan" 
+                hint="Pilih preset cepat atau ketik kustom (misal: 2 Jam, 1-3 Hari Kerja, 1 Minggu)."
+              >
+                <div className="space-y-2.5">
+                  <Input
+                    name="estimatedTime"
+                    value={formData.estimatedTime || ""}
+                    onChange={(e) =>
+                      onChangeFormData({ estimatedTime: e.target.value })
+                    }
+                    placeholder="Contoh: 1-2 Jam / 3 Hari Kerja / 1 Minggu"
+                    className="font-medium"
+                  />
+
+                  {/* Preset Pilihan Cepat Dinamis */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      "15–30 Menit",
+                      "1–2 Jam",
+                      "1 Hari Kerja",
+                      "1–3 Hari Kerja",
+                      "3–5 Hari Kerja",
+                      "1 Minggu",
+                      "2–4 Minggu",
+                      "1 Bulan",
+                    ].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => onChangeFormData({ estimatedTime: preset })}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                          formData.estimatedTime === preset
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                            : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </Field>
               <div className="pt-2">
                 <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/60 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">

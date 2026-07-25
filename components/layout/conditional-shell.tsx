@@ -25,7 +25,10 @@ export function ConditionalShell({
   }
 
   const isHome = pathname === "/";
-  const isDashboard = pathname.startsWith("/dashboard") || pathname.startsWith("/pegawai");
+  const isDashboard =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/pegawai") ||
+    pathname.startsWith("/masyarakat");
   const isMaintenance = pathname === "/maintenance";
   const isAuthPage =
     pathname.startsWith("/login") ||

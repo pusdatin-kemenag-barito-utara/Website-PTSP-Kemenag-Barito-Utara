@@ -66,8 +66,21 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
 
       const initializeTurnstile = () => {
         setScriptLoaded(true);
-        if (containerRef.current && window.turnstile && !widgetIdRef.current) {
+        if (containerRef.current && window.turnstile) {
           try {
+            // Remove existing widget if re-initializing on the same container
+            if (widgetIdRef.current) {
+              try {
+                window.turnstile.remove(widgetIdRef.current);
+              } catch (e) {}
+              widgetIdRef.current = null;
+            }
+
+            // Clear container HTML to prevent Cloudflare 600010 duplicate error
+            if (containerRef.current) {
+              containerRef.current.innerHTML = "";
+            }
+
             const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
             const widgetId = window.turnstile.render(containerRef.current, {
               sitekey: siteKey,

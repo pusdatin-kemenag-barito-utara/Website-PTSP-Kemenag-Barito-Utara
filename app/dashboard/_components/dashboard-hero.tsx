@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles, LayoutGrid } from "lucide-react";
+import { ArrowRight, Sparkles, LayoutGrid, PlusCircle } from "lucide-react";
 
 interface DashboardHeroProps {
   fullName: string | null;
@@ -33,14 +33,14 @@ export function DashboardHero({ fullName, totalRequests }: DashboardHeroProps) {
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-4">
             <Link
-              href="/dashboard/pengajuan/baru"
-              className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-white px-6 sm:px-8 py-3.5 sm:py-4 text-sm font-black text-[#064e3b] shadow-xl transition-all hover:-translate-y-1 hover:shadow-2xl active:scale-95"
+              href="/masyarakat/pengajuan/baru"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-5 py-3 text-xs font-bold transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-95"
             >
-              Buat Pengajuan Baru
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <PlusCircle className="h-4 w-4" />
+              <span>Buat Pengajuan Baru</span>
             </Link>
             <Link
-              href="/dashboard/pengajuan"
+              href="/masyarakat/pengajuan"
               className="inline-flex items-center justify-center gap-3 rounded-2xl border border-white/20 bg-white/5 px-6 sm:px-8 py-3.5 sm:py-4 text-sm font-black text-white backdrop-blur-md transition-all hover:bg-white/10 active:scale-95"
             >
               Riwayat Saya

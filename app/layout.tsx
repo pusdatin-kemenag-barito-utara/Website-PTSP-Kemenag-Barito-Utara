@@ -146,6 +146,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Toaster
               position="top-center"
               richColors
+              duration={3500}
+              closeButton
               toastOptions={{
                 style: {
                   borderRadius: "14px",

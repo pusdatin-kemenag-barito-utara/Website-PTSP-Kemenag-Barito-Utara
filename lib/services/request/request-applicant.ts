@@ -18,7 +18,6 @@ import { sanitizeFilename } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteFromR2, uploadToR2 } from "@/lib/r2";
 import { NotificationService } from "../notification-service";
-import { uploadToGoogleDrive } from "@/lib/google-drive";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import {
   generateRequestNumber,
@@ -203,22 +202,23 @@ export class RequestApplicantService {
         await tx.insert(usulPensiun).values(pensiunInsertData);
       }
 
+      let finalRequirements = requirements;
+      if (isPensiunService) {
+        finalRequirements = HARDCODED_PENSIUN_REQUIREMENTS as any[];
+      }
+
+      // Handle Uploads inside transaction
+      await RequestApplicantService.handleUploads({
+        formData,
+        requirements: finalRequirements,
+        userId,
+        fullName: userProfile?.fullName || "User",
+        requestId: createdRequest.id,
+        requestNumber: createdRequest.requestNumber,
+        tx,
+      });
+
       return createdRequest;
-    });
-
-    let finalRequirements = requirements;
-    if (isPensiunService) {
-      finalRequirements = HARDCODED_PENSIUN_REQUIREMENTS as any[];
-    }
-
-    // Handle Uploads
-    await RequestApplicantService.handleUploads({
-      formData,
-      requirements: finalRequirements,
-      userId,
-      fullName: userProfile?.fullName || "User",
-      requestId: result.id,
-      requestNumber: result.requestNumber,
     });
 
     // Notification: New request created
@@ -253,72 +253,6 @@ export class RequestApplicantService {
       }
     } catch (e) {
       console.error("Failed to prepare webhook to n8n:", e);
-    }
-
-    // Notifikasi WA langsung ke pegawai setelah pengajuan berhasil
-    try {
-      // Coba ambil nomor WA dari jawaban form (field no_whatsapp / No. WhatsApp) — khusus form cuti
-      const waFromForm =
-        (formData.get("answer_no_whatsapp") as string) ||
-        (Array.from(formData.entries()).find(
-          ([k]) =>
-            k.startsWith("answer_") &&
-            formData.get(k)?.toString().startsWith("08"),
-        )?.[1] as string) ||
-        "";
-
-      const targetPhone =
-        waFromForm?.replace(/\D/g, "") ||
-        userProfile?.phone?.replace(/\D/g, "") ||
-        "";
-
-      const itemInfo = await db.query.serviceItems.findFirst({
-        where: eq(serviceItemsTable.id, serviceItemId),
-        with: { service: true },
-      });
-
-      const namaLayanan =
-        itemInfo?.name || itemInfo?.service?.name || "Layanan";
-
-      if (targetPhone && targetPhone.length >= 9) {
-        const tanggalKirim = new Intl.DateTimeFormat("id-ID", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Jakarta",
-        }).format(new Date());
-
-        const pesanWA = [
-          `✅ *Pengajuan Berhasil Diterima*`,
-          ``,
-          `Halo *${userProfile?.fullName || "Pegawai"}*,`,
-          `Pengajuan Anda telah berhasil dikirimkan ke sistem PTSP Kemenag Barito Utara.`,
-          ``,
-          `📋 *Detail Pengajuan:*`,
-          `• Nomor Tiket : *${result.requestNumber}*`,
-          `• Layanan: *${namaLayanan}*`,
-          `• Waktu Kirim: ${tanggalKirim} WIB`,
-          ``,
-          `🔍 *Lacak Pengajuan Anda*`,
-          `Pantau status pengajuan Anda secara real-time dengan menekan tautan di bawah ini:`,
-          `https://ptsp.kemenag-baritoutara.com/track?q=${result.requestNumber}`,
-          ``,
-          `⏳ Pengajuan Anda sedang dalam proses peninjauan. Anda akan mendapat notifikasi kembali setelah ada pembaruan status.`,
-          ``,
-          `_Pesan ini dikirim otomatis oleh Sistem PTSP Kemenag Barito Utara._`,
-        ].join("\n");
-
-        sendWhatsAppNotification(targetPhone, pesanWA).catch((err) =>
-          console.error("[WA Bot] Gagal kirim notifikasi pengajuan cuti:", err),
-        );
-      }
-    } catch (e) {
-      console.error(
-        "[WA Bot] Error saat menyiapkan notifikasi WA pengajuan:",
-        e,
-      );
     }
 
     return result;
@@ -472,6 +406,7 @@ export class RequestApplicantService {
     fullName,
     requestId,
     requestNumber,
+    tx,
   }: {
     formData: FormData;
     requirements: any[];
@@ -479,7 +414,10 @@ export class RequestApplicantService {
     fullName: string;
     requestId: string;
     requestNumber: string;
+    tx?: any;
   }) {
+    const dbClient = tx || db;
+
     const safeUserName = sanitizeFilename(fullName || "User").replace(
       /\s+/g,
       "_",
@@ -525,19 +463,8 @@ export class RequestApplicantService {
       const r2Path = `requests/${safeUserName}_${userId.substring(0, 5)}/${requestNumber}/${finalFileName}`;
       const { path: storagePath } = await uploadToR2(file, r2Path);
 
-      // Dual-Storage: Upload backup to Google Drive
-      const gdrivePath = `requests/${safeUserName}_${userId.substring(0, 5)}/${requestNumber}`;
-      try {
-        await uploadToGoogleDrive(file, gdrivePath);
-      } catch (gdriveError) {
-        console.error(
-          "Google Drive backup failed for request document:",
-          gdriveError,
-        );
-      }
-
-      // DB Sync
-      await db
+      // DB Sync using dbClient (tx if available)
+      await dbClient
         .insert(serviceRequestDocuments)
         .values({
           requestId,

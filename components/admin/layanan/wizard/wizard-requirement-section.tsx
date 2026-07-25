@@ -125,6 +125,7 @@ function ReqRow({ req, item, isSuperAdmin, reqForms, reqModals, deleteReq }: any
             reqForms.setData({
               serviceItemId: item.id.toString(),
               documentName: req.documentName,
+              description: req.description || "",
               isRequired: req.isRequired,
               allowedExtensions: req.allowedExtensions,
               maxFileSizeMb: req.maxFileSizeMb || 5,

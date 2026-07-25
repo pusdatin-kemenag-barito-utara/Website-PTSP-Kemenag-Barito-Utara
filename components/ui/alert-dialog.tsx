@@ -42,33 +42,33 @@ export function AlertDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-2xl">
-        <div className="p-6">
-          <div className="flex items-start gap-4">
+      <DialogContent className="sm:max-w-[460px] p-0 overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-2xl rounded-3xl bg-white dark:bg-slate-900 transition-colors">
+        <div className="p-6 sm:p-7">
+          <div className="flex flex-col items-center text-center gap-4">
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconStyles[variant]}`}
+              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${iconStyles[variant]} border border-rose-200/60 dark:border-rose-900/40 shadow-lg shadow-rose-500/10`}
             >
-              <AlertTriangle className="h-5 w-5" />
+              <AlertTriangle className="h-8 w-8" />
             </div>
-            <div className="flex-1">
+            <div className="space-y-2">
               <DialogHeader>
-                <DialogTitle className="text-lg font-bold text-slate-900 leading-tight">
+                <DialogTitle className="text-lg font-black text-slate-900 dark:text-slate-100 text-center leading-snug">
                   {title}
                 </DialogTitle>
               </DialogHeader>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
                 {description}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 bg-slate-50/80 px-6 py-4 backdrop-blur-sm border-t border-slate-100">
+        <div className="flex items-center justify-end gap-2.5 bg-slate-50/80 dark:bg-slate-950/60 px-6 py-4 border-t border-slate-100 dark:border-slate-800">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="h-10 px-4 rounded-xl border-slate-200 text-slate-600 hover:bg-white transition-all"
+            className="h-10 px-4 rounded-xl border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer"
             disabled={loading}
           >
             {cancelText}
@@ -77,7 +77,7 @@ export function AlertDialog({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`h-10 px-6 rounded-xl text-white shadow-lg transition-all ${variantStyles[variant]}`}
+            className={`h-10 px-5 rounded-xl text-xs font-bold text-white shadow-md transition-all cursor-pointer ${variantStyles[variant]}`}
           >
             {loading ? "Memproses..." : confirmText}
           </Button>

@@ -65,10 +65,10 @@ export default async function ServiceWizardPage({
       <div>
         <Link
           href="/admin/layanan"
-          className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#059669] transition-colors mb-4"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-xs font-bold text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/80 hover:border-emerald-200/80 shadow-2xs transition-all duration-200 mb-4 group cursor-pointer"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Daftar Layanan
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-x-1" />
+          <span>Kembali ke Daftar Layanan</span>
         </Link>
         <PageHeader
           title={`Kelola: ${service.name}`}

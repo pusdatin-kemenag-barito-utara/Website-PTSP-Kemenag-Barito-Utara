@@ -146,34 +146,65 @@ export function LayananClient({
     });
   };
 
-  const total = initialServices.length;
-  const active = initialServices.filter((s: any) => s.isActive).length;
-  const inactive = total - active;
+  const totalMainServices = initialServices.length;
+  const activeMainServices = initialServices.filter((s: any) => s.isActive).length;
+  const inactiveMainServices = totalMainServices - activeMainServices;
+
+  // Hitung total sub-layanan turunan (serviceItems)
+  const totalSubItems = initialServices.reduce((acc: number, s: any) => acc + (s.serviceItems?.length || 0), 0);
+  const activeSubItems = initialServices.reduce((acc: number, s: any) => {
+    return acc + (s.serviceItems?.filter((item: any) => item.isActive !== false)?.length || 0);
+  }, 0);
+  const inactiveSubItems = totalSubItems - activeSubItems;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        {/* Summary Stats inline */}
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 rounded-xl border border-slate-200/80 bg-white shadow-sm flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Total
-            </span>
-            <span className="text-sm font-black text-slate-900">{total}</span>
+        {/* Summary Stats Cards - Ringkas & Jelas */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Card 1: TOTAL */}
+          <div className="px-4 py-2.5 rounded-2xl border border-slate-200/80 bg-white shadow-2xs flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+              <span className="text-xs font-black text-slate-800">{totalMainServices}</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                Total Layanan
+              </p>
+              <p className="text-xs font-bold text-slate-700">
+                <span className="text-emerald-700 font-black">{totalSubItems}</span> Item Layanan
+              </p>
+            </div>
           </div>
-          <div className="px-4 py-2 rounded-xl border border-emerald-200/80 bg-emerald-50/50 shadow-sm flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-              Aktif
-            </span>
-            <span className="text-sm font-black text-emerald-700">
-              {active}
-            </span>
+
+          {/* Card 2: AKTIF */}
+          <div className="px-4 py-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/50 shadow-2xs flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span className="text-xs font-black">{activeMainServices}</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">
+                Layanan Aktif
+              </p>
+              <p className="text-xs font-bold text-slate-700">
+                <span className="text-emerald-700 font-black">{activeSubItems}</span> Item Aktif
+              </p>
+            </div>
           </div>
-          <div className="px-4 py-2 rounded-xl border border-rose-200/80 bg-rose-50/50 shadow-sm flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">
-              Nonaktif
-            </span>
-            <span className="text-sm font-black text-rose-700">{inactive}</span>
+
+          {/* Card 3: NONAKTIF */}
+          <div className="px-4 py-2.5 rounded-2xl border border-rose-200/80 bg-rose-50/50 shadow-2xs flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <span className="text-xs font-black">{inactiveMainServices}</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700">
+                Layanan Nonaktif
+              </p>
+              <p className="text-xs font-bold text-slate-700">
+                <span className="text-rose-700 font-black">{inactiveSubItems}</span> Item Nonaktif
+              </p>
+            </div>
           </div>
         </div>
 

@@ -211,7 +211,7 @@ export function LoginFormByRole({
 
       const safeRedirect = callbackUrl && isSafeRedirect(callbackUrl) 
         ? callbackUrl 
-        : (mode === "petugas" ? "/admin" : (mode === "pegawai" ? "/pegawai" : "/dashboard"));
+        : (mode === "petugas" ? "/admin" : (mode === "pegawai" ? "/pegawai" : "/masyarakat"));
         
       window.location.href = safeRedirect;
     } catch (err: any) {
@@ -265,12 +265,12 @@ export function LoginFormByRole({
     >
       {mode === "pemohon" ? (
         <m.div variants={itemVariants}>
-          <Field label="Nomor WhatsApp" required hint="Contoh: 08123456789">
+          <Field label="Nomor WhatsApp / HP Aktif" required hint="Contoh: 08123456789">
             <Input 
               key={savedIdentifier || 'phone'}
               name="phone" 
               required 
-              placeholder="Masukkan nomor WhatsApp" 
+              placeholder="Contoh: 08123456789" 
               type="tel"
               inputMode="numeric"
               defaultValue={savedIdentifier}
@@ -330,9 +330,8 @@ export function LoginFormByRole({
 
       <m.div variants={itemVariants}>
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2.5 cursor-pointer group select-none w-fit">
+          <div className="flex items-center gap-2.5 cursor-pointer group select-none w-fit" onClick={() => setRememberMe((prev) => !prev)}>
             <div
-              onClick={() => setRememberMe(!rememberMe)}
               className={`relative w-10 h-5 rounded-full transition-all duration-300 cursor-pointer flex-shrink-0 ${
                 rememberMe
                   ? mode === "petugas" ? "bg-[#0f8a54]" : mode === "pegawai" ? "bg-[#047857]" : "bg-emerald-500"
@@ -348,7 +347,7 @@ export function LoginFormByRole({
             <span className="text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">
               Ingat Saya
             </span>
-          </label>
+          </div>
           {mode !== "petugas" && (
             <Link
               href={`/forgot-password/${mode}`}

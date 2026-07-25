@@ -76,15 +76,15 @@ export const ADMIN_NAV: NavItem[] = [
 ];
 
 export const USER_NAV: NavItem[] = [
-  { label: "Ringkasan", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Pengajuan Saya", href: "/dashboard/pengajuan", icon: FolderKanban },
+  { label: "Ringkasan", href: "/masyarakat", icon: LayoutDashboard },
   {
     label: "Buat Pengajuan",
-    href: "/dashboard/pengajuan/baru",
+    href: "/masyarakat/pengajuan/baru",
     icon: PlusCircle,
   },
-  { label: "Arsip Dokumen", href: "/dashboard/arsip", icon: Files },
-  { label: "Profil", href: "/dashboard/profil", icon: UserCircle2 },
+  { label: "Riwayat Pengajuan", href: "/masyarakat/pengajuan", icon: FolderKanban },
+  { label: "Arsip Dokumen Pengajuan", href: "/masyarakat/arsip", icon: Files },
+  { label: "Profil", href: "/masyarakat/profil", icon: UserCircle2 },
 ];
 
 export const PEGAWAI_NAV: NavItem[] = [
@@ -109,19 +109,13 @@ export const PEGAWAI_NAV: NavItem[] = [
     restrictedToPejabat: true,
   },
   {
-    label: "E-LK Harian Saya",
+    label: "Isi E-LK Harian",
     href: "/pegawai/e-lk/harian",
     icon: ClipboardList,
     group: "E-LK Harian",
   },
   {
-    label: "Isi LKH Harian",
-    href: "/pegawai/e-lk/isi",
-    icon: FormInput,
-    group: "E-LK Harian",
-  },
-  {
-    label: "Rekap Bulan",
+    label: "Rekap E-LK Bulanan",
     href: "/pegawai/e-lk/rekap",
     icon: CalendarDays,
     group: "E-LK Harian",
@@ -130,12 +124,6 @@ export const PEGAWAI_NAV: NavItem[] = [
     label: "Upload Final",
     href: "/pegawai/e-lk/upload",
     icon: UploadCloud,
-    group: "E-LK Harian",
-  },
-  {
-    label: "Riwayat & Bukti",
-    href: "/pegawai/e-lk/riwayat",
-    icon: FileCheck2,
     group: "E-LK Harian",
   },
   { label: "Profil", href: "/pegawai/profil", icon: UserCog, group: "Pengaturan" },

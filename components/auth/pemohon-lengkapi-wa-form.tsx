@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, CheckCircle2, AlertCircle, Loader2, MapPin, UserCircle2 } from "lucide-react";
+import { 
+  PhoneCall, 
+  CheckCircle2, 
+  AlertCircle, 
+  Loader2, 
+  MapPin, 
+  UserCheck,
+  Sparkles,
+  ArrowRight
+} from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,14 +31,14 @@ export function PemohonLengkapiWaForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const rawPhone = phone.replace(/\D/g, "");
-    if (!rawPhone || rawPhone.length < 10) {
-      return setError("Masukkan nomor WhatsApp yang valid.");
-    }
     if (!namaLengkap.trim()) {
       return setError("Masukkan nama lengkap Anda.");
     }
+    if (!rawPhone || rawPhone.length < 10) {
+      return setError("Masukkan nomor WhatsApp / HP yang valid (minimal 10 digit).");
+    }
     if (!alamat.trim()) {
-      return setError("Masukkan alamat lengkap Anda.");
+      return setError("Masukkan alamat domisili lengkap Anda.");
     }
 
     setLoading(true);
@@ -37,8 +46,8 @@ export function PemohonLengkapiWaForm() {
 
     const formData = new FormData();
     formData.append("phone", rawPhone);
-    formData.append("namaLengkap", namaLengkap);
-    formData.append("alamat", alamat);
+    formData.append("namaLengkap", namaLengkap.trim());
+    formData.append("alamat", alamat.trim());
 
     const result = await updatePemohonWhatsappAction(formData);
 
@@ -51,88 +60,109 @@ export function PemohonLengkapiWaForm() {
       });
       
       const nextPath = searchParams.get("next");
-      if (nextPath && nextPath.startsWith("/")) {
+      if (nextPath && nextPath.startsWith("/") && nextPath !== "/dashboard") {
         router.push(nextPath);
       } else {
-        router.push("/dashboard");
+        router.push("/masyarakat");
       }
     }
   };
 
-  const formatPhone = (val: string) => {
-    const digits = val.replace(/\D/g, "");
-    const match = digits.match(/.{1,4}/g);
-    return match ? match.join("-") : "";
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2 text-center">
-        <h2 className="text-xl font-black text-slate-900">
-          Lengkapi Data Anda
-        </h2>
-        <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-          Silakan masukkan nomor WhatsApp Anda agar bisa digunakan untuk masuk (login) dan menerima notifikasi layanan.
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-6 pt-1 text-left">
+      <p className="text-xs sm:text-sm text-slate-500 text-center leading-relaxed font-medium px-1">
+        Silakan isi data profil diri Anda di bawah ini agar dapat digunakan untuk verifikasi layanan & penerimaan notifikasi status pengajuan.
+      </p>
 
       <div className="space-y-4">
         <Field label="Nama Lengkap" required>
           <div className="relative group">
-            <UserCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
             <Input
               type="text"
+              required
               value={namaLengkap}
-              onChange={(e) => setNamaLengkap(e.target.value)}
-              placeholder="Ketik nama lengkap Anda"
-              className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-teal-500 focus:ring-teal-500/10 transition-all"
+              onInput={(e) => {
+                const filtered = e.currentTarget.value.replace(/[^a-zA-Z\s'.,`-]/g, "");
+                e.currentTarget.value = filtered;
+                setNamaLengkap(filtered);
+                if (error) setError("");
+              }}
+              onChange={(e) => {
+                const filtered = e.target.value.replace(/[^a-zA-Z\s'.,`-]/g, "");
+                setNamaLengkap(filtered);
+                if (error) setError("");
+              }}
+              placeholder="Ketik nama lengkap sesuai identitas"
+              className="h-12 pl-12 rounded-2xl border-slate-200 focus:border-teal-600 focus:ring-teal-600/10 text-xs sm:text-sm font-semibold bg-slate-50/50 focus:bg-white transition-all"
             />
           </div>
         </Field>
 
-        <Field label="Nomor WhatsApp" required>
+        <Field label="Nomor WhatsApp / HP Aktif" required hint="Contoh: 081234567890">
           <div className="relative group">
-            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <PhoneCall className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
             <Input
               type="tel"
+              required
               inputMode="numeric"
               value={phone}
-              onChange={(e) => setPhone(formatPhone(e.target.value))}
-              placeholder="0812-3456-..."
-              className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-teal-500 focus:ring-teal-500/10 transition-all"
+              onInput={(e) => {
+                const filtered = e.currentTarget.value.replace(/[^0-9]/g, "");
+                e.currentTarget.value = filtered;
+                setPhone(filtered);
+                if (error) setError("");
+              }}
+              onChange={(e) => {
+                const filtered = e.target.value.replace(/[^0-9]/g, "");
+                setPhone(filtered);
+                if (error) setError("");
+              }}
+              placeholder="Masukkan nomor WhatsApp / HP aktif"
+              className="h-12 pl-12 rounded-2xl border-slate-200 focus:border-teal-600 focus:ring-teal-600/10 text-xs sm:text-sm font-semibold bg-slate-50/50 focus:bg-white transition-all"
             />
           </div>
         </Field>
 
-        <Field label="Alamat" required>
+        <Field label="Alamat Lengkap" required>
           <div className="relative group">
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
             <Input
               type="text"
+              required
               value={alamat}
-              onChange={(e) => setAlamat(e.target.value)}
-              placeholder="Alamat domisili saat ini"
-              className="h-14 pl-12 rounded-2xl border-slate-200 focus:border-teal-500 focus:ring-teal-500/10 transition-all"
+              onChange={(e) => {
+                setAlamat(e.target.value);
+                if (error) setError("");
+              }}
+              placeholder="Masukkan alamat lengkap saat ini"
+              className="h-12 pl-12 rounded-2xl border-slate-200 focus:border-teal-600 focus:ring-teal-600/10 text-xs sm:text-sm font-semibold bg-slate-50/50 focus:bg-white transition-all"
             />
           </div>
         </Field>
 
         {error && (
-          <p className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100">
-            <AlertCircle className="h-3.5 w-3.5" /> {error}
+          <p className="flex items-center gap-2 text-xs font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100 animate-shake">
+            <AlertCircle className="h-4 w-4 shrink-0" /> {error}
           </p>
         )}
 
-        <Button
-          type="submit"
-          disabled={loading || phone.replace(/\D/g, "").length < 10}
-          className="w-full h-14 rounded-2xl bg-gradient-to-r from-teal-700 to-teal-600 hover:from-teal-800 hover:to-teal-700 text-white shadow-xl shadow-teal-500/20 hover:shadow-teal-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] duration-300 font-black tracking-wide"
-        >
-          {loading ? (
-            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-          ) : null}
-          Simpan Data & Lanjutkan
-        </Button>
+        <div className="pt-2">
+          <Button
+            type="submit"
+            disabled={loading || phone.length < 10 || !namaLengkap.trim() || !alamat.trim()}
+            className="group relative w-full h-13 rounded-2xl bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white shadow-xl shadow-teal-600/25 hover:shadow-teal-700/35 transition-all duration-300 font-extrabold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 overflow-hidden hover:scale-[1.02] active:scale-[0.98]"
+          >
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+            ) : (
+              <>
+                <span>Simpan Data & Lanjutkan</span>
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </form>
   );

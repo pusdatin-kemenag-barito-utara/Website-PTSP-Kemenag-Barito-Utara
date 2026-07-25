@@ -57,6 +57,18 @@ export async function getR2SignedUrl(path: string, expiresIn: number = 3600) {
   return await getSignedUrl(s3Client, command, { expiresIn });
 }
 
+export async function getR2Object(key: string) {
+  if (!R2_BUCKET_NAME) throw new Error("R2_BUCKET_NAME is not defined");
+
+  const cleanKey = key.replace("r2:", "");
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: cleanKey,
+  });
+
+  return await s3Client.send(command);
+}
+
 export function isR2Path(path: string) {
   return path.startsWith("r2:");
 }

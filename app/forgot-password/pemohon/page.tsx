@@ -55,7 +55,7 @@ export default async function ForgotPasswordPemohonPage(props: {
             <span className="text-teal-300">Password</span>
           </h1>
           <p className="text-lg text-teal-50 font-medium max-w-md leading-relaxed">
-            Verifikasi nomor WhatsApp terdaftar Anda untuk mengatur ulang kata sandi dan kembali mengakses portal layanan.
+            Hubungi Petugas Loket PTSP Kemenag Barito Utara untuk verifikasi identitas dan bantuan pengisian ulang kata sandi akun Anda.
           </p>
         </div>
 
@@ -93,40 +93,18 @@ export default async function ForgotPasswordPemohonPage(props: {
         <AuthCardMotion className="relative z-10 w-full max-w-[420px] mt-12 sm:mt-0">
           <div className="overflow-hidden rounded-3xl sm:rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-slate-200/50">
             {/* Header area */}
-            <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-3 sm:pb-4 text-center">
-              <div className="lg:hidden mx-auto mb-3 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl sm:rounded-3xl bg-teal-50 text-teal-600 shadow-inner">
-                <UserCircle2 className="h-7 w-7 sm:h-8 sm:w-8" />
-              </div>
-              
-              <p className="mb-1 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-teal-600">
-                Layanan Masyarakat
+            <div className="px-6 sm:px-10 pt-8 sm:pt-10 pb-4 text-center space-y-2">
+              <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-teal-600">
+                Portal Layanan Pemohon
               </p>
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                Lupa Password
+                Pemulihan Kata Sandi
               </h2>
             </div>
 
             {/* Form area */}
-            <div className="px-6 sm:px-8 pb-5 sm:pb-6">
+            <div className="px-6 sm:px-10 pb-8 sm:pb-10">
               <PemohonResetForm />
-              
-              <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
-                <div className="relative mb-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-slate-200" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-3 font-semibold text-slate-400">Atau</span>
-                  </div>
-                </div>
-                
-                <Link
-                  href={`/login/pemohon${cbQuery}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 sm:py-3 text-[13px] sm:text-sm font-bold text-slate-600 transition-colors hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50/50"
-                >
-                  Kembali ke Halaman Login
-                </Link>
-              </div>
             </div>
           </div>
         </AuthCardMotion>

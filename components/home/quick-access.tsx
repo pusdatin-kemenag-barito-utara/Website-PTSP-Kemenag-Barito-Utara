@@ -47,7 +47,7 @@ export function HomeQuickAccess() {
               color: "emerald",
             },
             {
-              href: "/dashboard/pengajuan/baru",
+              href: "/masyarakat/pengajuan/baru",
               icon: FilePlus2,
               label: "Ajukan Baru",
               desc: "Mulai permohonan online.",
