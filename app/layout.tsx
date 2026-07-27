@@ -9,7 +9,7 @@ import { Toaster } from "sonner";
 import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
 import { AuthRedirectListener } from "@/components/auth/auth-redirect-listener";
 
-import { ChatWidgetClient } from "@/components/features/chat/chat-widget-client";
+import { CombinedWidgetClient } from "@/components/features/combined/CombinedWidgetClient";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -160,7 +160,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 className: "text-[14px]",
               }}
             />
-            <ChatWidgetClient initialEnabled={maintenance.aiChatEnabled} />
+            <CombinedWidgetClient initialEnabled={maintenance.aiChatEnabled} />
             <AuthRedirectListener />
           </div>
         </FramerWrapper>

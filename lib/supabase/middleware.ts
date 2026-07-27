@@ -45,9 +45,18 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getSession().catch((e) => {
-    console.error("Supabase auth check failed in middleware:", e);
-  });
+  const { error } = await supabase.auth.getUser();
+  if (error && error.status === 400 && error.code === "refresh_token_not_found") {
+    // Cookie stale/invalid — hapus semua auth cookie agar tidak looping
+    const cookiesToDelete = request.cookies
+      .getAll()
+      .filter((c) => c.name.startsWith("ptsp-auth"))
+      .map((c) => c.name);
+
+    for (const name of cookiesToDelete) {
+      supabaseResponse.cookies.delete(name);
+    }
+  }
 
   return supabaseResponse;
 }

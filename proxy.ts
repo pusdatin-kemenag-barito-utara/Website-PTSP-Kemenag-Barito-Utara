@@ -114,7 +114,14 @@ export async function proxy(request: NextRequest) {
     requestHeaders.set("x-url", path + request.nextUrl.search);
     response = NextResponse.next({ request: { headers: requestHeaders } });
   } else {
-    response = await updateSession(request);
+    try {
+      response = await updateSession(request);
+    } catch {
+      // Fallback: lanjutkan tanpa session refresh jika updateSession() throw
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set("x-url", path + request.nextUrl.search);
+      response = NextResponse.next({ request: { headers: requestHeaders } });
+    }
   }
 
   const isExemptFromMaintenance = 

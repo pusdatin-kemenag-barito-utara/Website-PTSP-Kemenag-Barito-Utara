@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   turbopack: {},
   images: {
     formats: ["image/avif", "image/webp"],
-    qualities: [75, 95],
+    qualities: [75, 82, 95],
   },
   experimental: {
     serverActions: {
