@@ -1,28 +1,25 @@
-import { HomeSaranPengaduan } from "@/components/home/saran-pengaduan";
-import PageBanner from "@/components/common/PageBanner";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "E-Pengaduan & Saran",
-  description: "Sampaikan saran, masukan, maupun pengaduan terkait layanan PTSP Kementerian Agama Kabupaten Barito Utara.",
-};
+import { useEffect } from "react";
 
 export default function EPengaduanPage() {
-  return (
-    <main className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-16">
-      <PageBanner
-        title="E-Pengaduan & Saran"
-        description="Sampaikan saran, kritik, masukan, maupun pengaduan secara online. Laporan Anda sangat berarti untuk peningkatan kualitas layanan kami."
-        breadcrumb={[
-          { label: "Beranda", href: "/" },
-          { label: "E-Pengaduan" },
-        ]}
-        eyebrow="LAYANAN PENGADUAN PUBLIK"
-      />
+  useEffect(() => {
+    window.open("https://pengaduan.kemenag-baritoutara.com", "_blank");
+    window.history.back();
+  }, []);
 
-      <div className="w-full pb-16">
-        <HomeSaranPengaduan hideHeader={true} />
-      </div>
-    </main>
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-slate-600">
+      <p className="text-lg font-medium">Mengarahkan ke halaman E-Pengaduan di tab baru...</p>
+      <a
+        href="https://pengaduan.kemenag-baritoutara.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 text-emerald-600 font-semibold underline"
+      >
+        Klik di sini jika tab tidak terbuka secara otomatis
+      </a>
+    </div>
   );
 }
+

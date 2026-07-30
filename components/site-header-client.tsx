@@ -112,7 +112,12 @@ const navItems = [
       },
     ],
   },
-  { label: "E-Pengaduan", href: "/e-pengaduan", icon: MessageSquare },
+  {
+    label: "E-Pengaduan",
+    href: "https://pengaduan.kemenag-baritoutara.com",
+    icon: MessageSquare,
+    external: true,
+  },
   { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 
@@ -360,6 +365,8 @@ export function SiteHeaderClient({
                       ) : (
                         <Link
                           href={item.href}
+                          target={item.external ? "_blank" : undefined}
+                          rel={item.external ? "noopener noreferrer" : undefined}
                           className={`relative inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-black uppercase tracking-tight transition-all duration-300 ${
                             active
                               ? "text-emerald-700 dark:text-emerald-400"

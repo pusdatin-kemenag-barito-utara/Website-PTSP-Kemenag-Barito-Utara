@@ -36,13 +36,15 @@ export function BarcodeDisplay({
   footerUrl,
 }: BarcodeDisplayProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const qrContainerRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async () => {
-    if (!printRef.current) return;
+    if (!qrContainerRef.current) return;
     try {
-      const canvas = await html2canvas(printRef.current, {
-        scale: 2,
+      const canvas = await html2canvas(qrContainerRef.current, {
+        scale: 3,
         backgroundColor: '#ffffff',
+        useCORS: true,
       });
       const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
@@ -57,78 +59,82 @@ export function BarcodeDisplay({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 print:bg-white print:p-0">
-      <div className="absolute top-4 left-4 print:hidden flex gap-3">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-8 print:bg-white print:p-0 relative">
+      {/* Navigation Buttons (Hidden when printing) */}
+      <div className="w-full max-w-2xl flex items-center justify-between mb-6 print:hidden">
         <Link href={backHref}>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 shadow-sm bg-white">
             <ArrowLeft className="w-4 h-4" /> {backLabel}
           </Button>
         </Link>
+        <div className="flex gap-2">
+          <Button onClick={() => window.print()} variant="outline" size="sm" className="gap-2 shadow-sm bg-white">
+            <Printer className="w-4 h-4" /> Cetak
+          </Button>
+          <Button onClick={handleDownload} size="sm" className="gap-2 shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Download className="w-4 h-4" /> Unduh PNG
+          </Button>
+        </div>
       </div>
 
-      <div className="absolute top-4 right-4 print:hidden flex gap-3">
-        <Button onClick={() => window.print()} className="gap-2">
-          <Printer className="w-4 h-4" /> Cetak Barcode
-        </Button>
-      </div>
-
-      <div className="flex flex-col items-center space-y-6 text-center max-w-sm print:max-w-none print:mt-12 bg-slate-50 print:bg-white p-8 rounded-3xl">
-        <div className="space-y-2">
-          <div className="flex justify-center mb-4">
+      {/* Main Printable Card */}
+      <div ref={printRef} className="flex flex-col items-center space-y-6 text-center max-w-md w-full bg-white print:bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xl print:border-none print:shadow-none print:max-w-none print:p-4">
+        {/* Header Header & Logo */}
+        <div className="space-y-3 flex flex-col items-center">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
             <Image
               src="/kemenag.svg"
               alt="Logo Kemenag"
-              width={64}
-              height={64}
-              className="w-16 h-16 print:w-20 print:h-20"
-              style={{ width: "auto", height: "auto" }}
+              width={72}
+              height={72}
+              className="object-contain"
               priority
             />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 print:text-black">{title}</h1>
-          <p className="text-slate-600 font-medium text-lg print:text-black">{subtitle}</p>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight print:text-black">{title}</h1>
+            <p className="text-slate-600 font-semibold text-base sm:text-lg print:text-slate-800 mt-1">{subtitle}</p>
+          </div>
         </div>
 
-        <div ref={printRef} className="relative p-6 border-2 border-slate-200 rounded-3xl bg-white shadow-sm print:border-none print:shadow-none print:p-0 mt-4">
+        {/* QR Code Container */}
+        <div ref={qrContainerRef} className="relative p-5 sm:p-6 border border-slate-200 rounded-2xl bg-white shadow-inner flex items-center justify-center print:border-2 print:border-slate-300">
           <QRCode
             value={qrUrl}
-            size={300}
-            level="H"
+            size={240}
+            level="M"
             bgColor="#ffffff"
             fgColor="#000000"
-            className="w-[300px] h-[300px] print:w-[400px] print:h-[400px]"
+            className="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] print:w-[320px] print:h-[320px]"
           />
+          {/* Small Center Logo Overlay */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-white p-3 rounded-full shadow-sm border border-slate-100 print:border-none print:shadow-none print:p-4">
+            <div className="bg-white p-1 rounded-full shadow-sm flex items-center justify-center">
               <Image
                 src="/kemenag.svg"
                 alt="Logo Kemenag Center"
-                width={48}
-                height={48}
-                className="w-12 h-12 print:w-16 print:h-16"
-                style={{ width: "auto", height: "auto" }}
+                width={36}
+                height={36}
+                className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
               />
             </div>
           </div>
         </div>
 
-        <div className="mt-8 space-y-2">
-          <p className="text-lg font-semibold text-slate-800 print:text-black">{scanText}</p>
-          <p className="text-sm text-slate-500 print:text-gray-700 max-w-xs mx-auto">{description}</p>
-        </div>
-
-        <div className="pt-4 print:hidden">
-          <Button onClick={handleDownload} variant="secondary" className="gap-2 px-8 py-3 rounded-2xl w-full">
-            <Download className="w-5 h-5" /> Unduh Barcode (PNG)
-          </Button>
+        {/* Footer text inside card */}
+        <div className="space-y-1.5 max-w-xs mx-auto">
+          <p className="text-base sm:text-lg font-bold text-slate-800 print:text-black">{scanText}</p>
+          <p className="text-xs sm:text-sm text-slate-500 print:text-slate-700 leading-relaxed">{description}</p>
         </div>
       </div>
 
-      <div className="hidden print:block fixed bottom-8 text-center w-full text-sm text-gray-500">
-        <p>{footerTitle}</p>
+      {/* Print Footer */}
+      <div className="hidden print:block fixed bottom-6 text-center w-full text-xs text-slate-500">
+        <p className="font-semibold text-slate-700">{footerTitle}</p>
         <p>{footerSubtitle}</p>
-        <p className="mt-2 text-xs">{footerUrl}</p>
+        <p className="mt-1 font-mono text-[10px] text-slate-400">{footerUrl}</p>
       </div>
     </div>
   );
 }
+

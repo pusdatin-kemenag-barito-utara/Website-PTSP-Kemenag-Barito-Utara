@@ -128,6 +128,8 @@ export function MobileNav({
                       ) : (
                         <Link
                           href={item.href}
+                          target={(item as any).external ? "_blank" : undefined}
+                          rel={(item as any).external ? "noopener noreferrer" : undefined}
                           onClick={() => setMobileOpen(false)}
                           className={`flex-1 px-4 py-3.5 text-[13px] font-bold transition-colors block ${
                             active ? "text-emerald-700 dark:text-emerald-400" : "text-slate-600 dark:text-slate-300"
