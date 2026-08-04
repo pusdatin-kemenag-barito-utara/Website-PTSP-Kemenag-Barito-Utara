@@ -34,22 +34,36 @@ const WA_MESSAGE = encodeURIComponent(
   "Halo, saya ingin bertanya mengenai layanan PTSP Kemenag Barito Utara."
 );
 
-function WhatsAppContent() {
+function WhatsAppContent({ onClose }: { onClose?: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       {/* WA Header */}
-      <div style={{ background: "#075E54", padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <div className="relative shrink-0">
-          <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.12)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-            <Image src="/kemenag.svg" alt="Logo Kemenag" width={32} height={32} style={{ width: 32, height: 32 }} priority />
-          </div>
+      <div style={{ background: "#075E54", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+        <div style={{ position: "relative", width: 44, height: 48, flexShrink: 0, display: "flex", alignItems: "flex-end" }}>
+          {/* White Background Circle */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, width: 36, height: 36, borderRadius: "50%", background: "#ffffff", border: "1.5px solid #ffffff", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }} />
+          {/* Mascot Image popping out top */}
+          <Image src="/atak-portal.png" alt="Si ATAK Mascot" width={44} height={52} style={{ position: "absolute", bottom: 0, left: -2, width: 44, height: 52, objectFit: "contain", objectPosition: "bottom center", zIndex: 1 }} priority />
           {/* Online dot */}
-          <span style={{ position: "absolute", bottom: 1, right: 1, width: 11, height: 11, background: "#25D366", borderRadius: "50%", border: "2px solid #075E54" }} />
+          <span style={{ position: "absolute", bottom: 0, right: 4, width: 10, height: 10, background: "#25D366", borderRadius: "50%", border: "2px solid #075E54", zIndex: 2 }} />
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.2 }}>PTSP Kemenag Barito Utara</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>PTSP Kemenag Barito Utara</p>
           <p style={{ color: "#25D366", fontSize: 11, fontWeight: 600, marginTop: 2 }}>WhatsApp SI-ATAK</p>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{ width: 32, height: 32, borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.12)", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+            className="hover:bg-white/20 transition-colors"
+            title="Tutup"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Chat bubble area */}
@@ -201,7 +215,7 @@ export function CombinedWidget({ aiEnabled = true }: CombinedWidgetProps) {
               {/* Tab Content */}
               <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
                 {activeTab === "whatsapp" ? (
-                  <WhatsAppContent />
+                  <WhatsAppContent onClose={() => setIsOpen(false)} />
                 ) : (
                   aiEnabled && <ChatBody onClose={() => setIsOpen(false)} />
                 )}
@@ -213,44 +227,127 @@ export function CombinedWidget({ aiEnabled = true }: CombinedWidgetProps) {
         {/* ── FAB Button ──────────────────────────────────────────── */}
         <m.button
           onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
           style={{
             position: "relative",
-            width: 60,
-            height: 60,
-            borderRadius: "50%",
+            width: 56,
+            height: 64,
             border: "none",
             background: "transparent",
             cursor: "pointer",
+            padding: 0,
+            overflow: "visible",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 0,
           }}
           aria-label={isOpen ? "Tutup widget" : "Buka chat & WhatsApp"}
           aria-expanded={isOpen}
         >
-          <Image
-            src="/kemenag.svg"
-            alt="Kemenag"
-            width={40}
-            height={40}
-            style={{ width: "auto", height: "auto" }}
-            priority
-            loading="eager"
-          />
-          {/* Notification dot — blink/pulse saat tertutup */}
-          {!isOpen && (
-            <span style={{ position: "absolute", top: 0, right: 0, width: 14, height: 14, background: "#ef4444", borderRadius: "50%", border: "2.5px solid #fff", animation: "pulseDot 1.8s ease-in-out infinite" }} />
-          )}
+          <AnimatePresence mode="wait">
+            {!isOpen ? (
+              <m.div
+                key="mascot-fab"
+                initial={{ scale: 0.5, opacity: 0, rotate: -45 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                exit={{ scale: 0.5, opacity: 0, rotate: 45 }}
+                transition={{ type: "spring", stiffness: 350, damping: 22 }}
+                style={{ width: "100%", height: "100%", position: "relative" }}
+              >
+                {/* White Background Circle */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    background: "#ffffff",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.22)",
+                    border: "2px solid #ffffff",
+                  }}
+                />
+
+                {/* Mascot Image sticking out top & bottom */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: 54,
+                    height: 66,
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Image
+                    src="/atak-portal.png"
+                    alt="Si ATAK Mascot"
+                    width={54}
+                    height={66}
+                    style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "bottom center" }}
+                    priority
+                    loading="eager"
+                  />
+                </div>
+
+                {/* Green Status Dot — blink/pulse saat tertutup */}
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 6,
+                    right: 2,
+                    width: 13,
+                    height: 13,
+                    background: "#10b981",
+                    borderRadius: "50%",
+                    border: "2px solid #ffffff",
+                    animation: "pulseGreenDot 1.8s ease-in-out infinite",
+                    zIndex: 10,
+                  }}
+                />
+              </m.div>
+            ) : (
+              <m.div
+                key="close-fab"
+                initial={{ scale: 0.5, opacity: 0, rotate: 45 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                exit={{ scale: 0.5, opacity: 0, rotate: -45 }}
+                transition={{ type: "spring", stiffness: 350, damping: 22 }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: "#075E54",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.3)",
+                  border: "2.5px solid #ffffff",
+                  marginBottom: 4,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </m.div>
+            )}
+          </AnimatePresence>
         </m.button>
 
-        {/* CSS: pulse animation for FAB */}
+        {/* CSS: pulse animation for FAB status dot */}
         <style jsx global>{`
-          @keyframes pulseDot {
-            0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-            50% { transform: scale(1.15); opacity: 0.9; box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+          @keyframes pulseGreenDot {
+            0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { transform: scale(1.2); opacity: 0.95; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
           }
         `}</style>
       </div>

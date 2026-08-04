@@ -9,10 +9,14 @@ export function BannerModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-    }, 600);
-    return () => clearTimeout(timer);
+    const hasSeenBanner = sessionStorage.getItem("ptsp_has_seen_banner");
+    if (!hasSeenBanner) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+        sessionStorage.setItem("ptsp_has_seen_banner", "true");
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleClose = () => {
@@ -30,7 +34,7 @@ export function BannerModal() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={handleClose}
-            className="absolute inset-0 bg-black/65 backdrop-blur-sm cursor-pointer"
+            className="absolute inset-0 bg-black/75 cursor-pointer"
             aria-label="Tutup modal"
           />
 
@@ -46,7 +50,7 @@ export function BannerModal() {
             <div className="flex justify-end">
               <button
                 onClick={handleClose}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-sm font-medium rounded-full transition-all duration-150 backdrop-blur-md border border-white/20 shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-white text-sm font-medium rounded-full transition-all duration-150 border border-white/20 shadow-sm"
                 aria-label="Tutup banner"
               >
                 <X className="w-3.5 h-3.5" />
@@ -57,12 +61,11 @@ export function BannerModal() {
             {/* Gambar Banner — tanpa card wrapper, langsung float */}
             <div className="w-full rounded-xl overflow-hidden shadow-[0_32px_72px_-8px_rgba(0,0,0,0.6)]">
               <Image
-                src="/banners/zona-integritas.jpg"
+                src="/banners/zona-integritas.webp"
                 alt="Zona Integritas - Wilayah Bebas dari Korupsi"
                 width={1920}
                 height={480}
                 quality={82}
-                priority
                 className="w-full h-auto object-contain block"
               />
             </div>

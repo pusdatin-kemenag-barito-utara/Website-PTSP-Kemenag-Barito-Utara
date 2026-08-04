@@ -184,75 +184,75 @@ export default function CekCutiPage() {
                       </div>
                     </div>
 
-                    {/* Desktop View: Table */}
-                    <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
-                      <table className="w-full text-left border-collapse min-w-[800px]">
+                    {/* Desktop View: Table (Clean Full Width, No Horizontal Scroll) */}
+                    <div className="hidden lg:block overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+                      <table className="w-full text-left border-collapse table-auto">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
+                          <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-[11px] xl:text-xs">
+                            <th className="py-3.5 px-3 font-bold text-slate-700 dark:text-slate-300 text-center">
                               Nama Pegawai
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
+                            <th className="py-3.5 px-3 font-bold text-slate-700 dark:text-slate-300 text-center">
                               NIP
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
+                            <th className="py-3.5 px-3 font-bold text-slate-700 dark:text-slate-300 text-center">
                               Jabatan
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center border-l border-slate-200 dark:border-slate-800">
-                              Hak Cuti Tahunan
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center border-l border-slate-200 dark:border-slate-800">
+                              Hak Cuti
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
-                              Cuti Tahunan Terpakai
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
+                              Terpakai
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
-                              Cuti Alasan Penting
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
+                              Penting
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
-                              Cuti Bersalin
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
+                              Bersalin
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
-                              Cuti Besar
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
+                              Besar
                             </th>
-                            <th className="py-4 px-4 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-sm text-center">
-                              Cuti Sakit
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
+                              Sakit
                             </th>
-                            <th className="py-4 px-4 font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap text-sm text-center bg-emerald-50/50 dark:bg-emerald-950/40 border-l border-emerald-100 dark:border-slate-800">
+                            <th className="py-3.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-400 text-center bg-emerald-50/70 dark:bg-emerald-950/40 border-l border-emerald-100 dark:border-slate-800">
                               Sisa Cuti
                             </th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                            <td className="py-4 px-4 text-slate-800 dark:text-slate-100 font-bold whitespace-nowrap text-center">
+                          <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors text-xs xl:text-sm">
+                            <td className="py-3.5 px-3 text-slate-800 dark:text-slate-100 font-bold text-center">
                               {result.name}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap text-center">
+                            <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300 font-semibold text-center font-mono text-[11px] xl:text-xs">
                               {result.nip}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 whitespace-nowrap text-sm text-center">
+                            <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300 font-medium text-center text-[11px] xl:text-xs">
                               {result.jabatan}
                             </td>
-                            <td className="py-4 px-4 text-slate-800 dark:text-slate-100 font-black text-center bg-slate-50 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800">
-                              <span title={`Sisa N-2: ${result.cutiTahun1} hari&#10;Sisa N-1: ${result.cutiTahun2} hari&#10;Hak N: 12 hari`} className="cursor-help border-b border-dashed border-slate-400 dark:border-slate-600 pb-0.5">
+                            <td className="py-3.5 px-2.5 text-slate-800 dark:text-slate-100 font-black text-center bg-slate-50/50 dark:bg-slate-950/50 border-l border-slate-200 dark:border-slate-800">
+                              <span title={`Sisa N-2: ${result.cutiTahun1} hari\nSisa N-1: ${result.cutiTahun2} hari\nHak N: 12 hari`} className="cursor-help border-b border-dashed border-slate-400 dark:border-slate-600 pb-0.5">
                                 {result.totalCuti}
                               </span>
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-medium text-center">
+                            <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
                               {result.cutiTahunan || "-"}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-medium text-center">
+                            <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
                               {result.cutiPenting || "-"}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-medium text-center">
+                            <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
                               {result.cutiBersalin || "-"}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-medium text-center">
+                            <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
                               {result.cutiBesar || "-"}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 dark:text-slate-300 font-medium text-center">
+                            <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
                               {result.cutiSakit || "-"}
                             </td>
-                            <td className="py-4 px-4 text-emerald-600 dark:text-emerald-400 font-black text-xl text-center bg-emerald-50 dark:bg-emerald-950/60 border-l border-emerald-100 dark:border-slate-800">
+                            <td className="py-3.5 px-3 text-emerald-600 dark:text-emerald-400 font-black text-lg text-center bg-emerald-50 dark:bg-emerald-950/60 border-l border-emerald-100 dark:border-slate-800">
                               {result.sisaCuti}
                             </td>
                           </tr>

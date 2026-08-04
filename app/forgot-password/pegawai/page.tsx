@@ -54,7 +54,7 @@ export default async function ForgotPasswordPegawaiPage(props: {
             <span className="text-emerald-300">Password</span>
           </h1>
           <p className="text-lg text-emerald-50 font-medium max-w-md leading-relaxed">
-            Masukkan NIP Anda. Kami akan memverifikasi dan mengirimkan instruksi pemulihan ke email kedinasan yang terhubung.
+            Masukkan NIP dan nomor WhatsApp terdaftar Anda untuk mengajukan pemulihan password langsung ke Admin Kepegawaian PTSP.
           </p>
         </div>
 
@@ -90,21 +90,21 @@ export default async function ForgotPasswordPegawaiPage(props: {
         <AuthCardMotion className="relative z-10 w-full max-w-[420px] mt-12 sm:mt-0">
           <div className="overflow-hidden rounded-3xl sm:rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-slate-200/50">
             {/* Header area */}
-            <div className="px-6 sm:px-8 pt-10 sm:pt-12 pb-6 sm:pb-8 text-center">
-              <div className="lg:hidden mx-auto mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl sm:rounded-3xl bg-emerald-50 text-emerald-600 shadow-inner">
-                <UserCircle2 className="h-8 w-8 sm:h-10 sm:w-10" />
+            <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-2 text-center">
+              <div className="lg:hidden mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-inner">
+                <UserCircle2 className="h-7 w-7" />
               </div>
               
-              <p className="mb-2 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-emerald-600">
+              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-600">
                 Portal Pegawai
               </p>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
                 Lupa Password
               </h2>
             </div>
 
             {/* Form area */}
-            <div className="px-6 sm:px-8 pb-8 sm:pb-10">
+            <div className="px-6 sm:px-8 pb-6 sm:pb-8">
               <PegawaiResetForm />
               
               <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">

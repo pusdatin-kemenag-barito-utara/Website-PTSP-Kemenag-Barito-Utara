@@ -217,26 +217,20 @@ export function SiteHeaderClient({
                 />
               </span>
               <div className="min-w-0 flex flex-col justify-center">
-                <p className="truncate text-[11px] sm:text-[13px] lg:text-sm font-black tracking-wide text-emerald-800 flex items-center gap-1">
+                <p className="text-xs sm:text-[13px] lg:text-sm font-black tracking-wide text-emerald-900 dark:text-white flex items-center gap-1">
                   PTSP Si{" "}
                   <Image
                     src="/atak.png"
                     alt="ATAK"
                     width={48}
                     height={20}
-                    className="h-[1em] w-auto object-contain inline-block"
-                    style={{ height: "1em", width: "auto" }}
+                    className="h-[1.05em] w-auto object-contain inline-block"
+                    style={{ height: "1.05em", width: "auto" }}
                   />
                 </p>
-                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-emerald-800 dark:text-emerald-300 leading-tight">
-                  <div className="block sm:hidden truncate">
-                    <span className="text-amber-500 font-black">S</span>istem{" "}
-                    <span className="text-amber-500 font-black">I</span>nformasi
-                  </div>
-                  <div className="block sm:hidden truncate">
-                    <span className="text-amber-500 font-black">A</span>dministrasi{" "}
-                    <span className="text-amber-500 font-black">T</span>erpadu Layanan{" "}
-                    <span className="text-amber-500 font-black">K</span>eagamaan
+                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-emerald-700 dark:text-emerald-400 leading-tight">
+                  <div className="block sm:hidden text-[9px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-tight">
+                    KEMENAG KABUPATEN BARITO UTARA
                   </div>
                   <div className="hidden sm:block truncate">
                     <span className="text-amber-500 font-black">S</span>istem{" "}
@@ -258,7 +252,7 @@ export function SiteHeaderClient({
                   alt="HAPAKAT"
                   width={96}
                   height={26}
-                  style={{ width: "96px", height: "auto" }}
+                  style={{ width: "96px", height: "26px" }}
                   className="h-6 w-auto object-contain drop-shadow-sm -translate-y-0.5"
                   unoptimized
                 />

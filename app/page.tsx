@@ -7,6 +7,9 @@ import { BannerModal } from "@/components/home/banner-modal";
 import { getPublicServices, getHomeVideos } from "@/lib/queries";
 import { redirect } from "next/navigation";
 
+// Cache Halaman Beranda selama 5 menit (300 detik) via Incremental Static Regeneration (ISR)
+export const revalidate = 300;
+
 export default async function HomePage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const searchParams = await props.searchParams;
   if (searchParams?.code) {

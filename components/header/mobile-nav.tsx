@@ -246,7 +246,7 @@ export function MobileNav({
               alt="HAPAKAT" 
               width={112} 
               height={32} 
-              style={{ width: "112px", height: "auto" }}
+              style={{ width: "112px", height: "32px" }}
               className="w-28 h-auto object-contain"
               unoptimized
             />

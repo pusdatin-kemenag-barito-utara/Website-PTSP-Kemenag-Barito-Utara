@@ -140,12 +140,14 @@ export function ChatBody({ onClose }: ChatBodyProps) {
       )}
 
       {/* Header — sama persis dengan WA SI-ATAK */}
-      <div style={{ background: "#075E54", padding: "16px 18px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <div style={{ position: "relative", flexShrink: 0 }}>
-          <div style={{ width: 40, height: 40, background: "rgba(255,255,255,0.12)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-            <Image src="/kemenag.svg" alt="Logo" width={32} height={32} style={{ width: 32, height: 32 }} priority loading="eager" />
-          </div>
-          <span style={{ position: "absolute", bottom: 1, right: 1, width: 11, height: 11, background: "#25D366", borderRadius: "50%", border: "2px solid #075E54" }} />
+      <div style={{ background: "#075E54", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+        <div style={{ position: "relative", width: 44, height: 48, flexShrink: 0, display: "flex", alignItems: "flex-end" }}>
+          {/* White Background Circle */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, width: 36, height: 36, borderRadius: "50%", background: "#ffffff", border: "1.5px solid #ffffff", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }} />
+          {/* Mascot Image popping out top */}
+          <Image src="/atak-portal.png" alt="Si ATAK Mascot" width={44} height={52} style={{ position: "absolute", bottom: 0, left: -2, width: 44, height: 52, objectFit: "contain", objectPosition: "bottom center", zIndex: 1 }} priority loading="eager" />
+          {/* Online dot */}
+          <span style={{ position: "absolute", bottom: 0, right: 4, width: 10, height: 10, background: "#25D366", borderRadius: "50%", border: "2px solid #075E54", zIndex: 2 }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Asisten PTSP Kemenag</p>

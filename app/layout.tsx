@@ -10,6 +10,8 @@ import { getMaintenanceStatus } from "@/lib/actions/system/maintenance";
 import { AuthRedirectListener } from "@/components/auth/auth-redirect-listener";
 
 import { CombinedWidgetClient } from "@/components/features/combined/CombinedWidgetClient";
+import { AccessibilityWidget } from "@/components/features/accessibility/AccessibilityWidget";
+import { ScrollToTopButton } from "@/components/common/scroll-to-top";
 import { FramerWrapper } from "@/components/layout/framer-wrapper";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -161,6 +163,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               }}
             />
             <CombinedWidgetClient initialEnabled={maintenance.aiChatEnabled} />
+            <AccessibilityWidget />
+            <ScrollToTopButton />
             <AuthRedirectListener />
           </div>
         </FramerWrapper>

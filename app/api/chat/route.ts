@@ -118,6 +118,7 @@ export async function POST(req: Request) {
 
     const groqKey = process.env.GROQ_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
+    const mistralKey = process.env.MISTRAL_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;
 
     const formattedMessages = [
@@ -145,7 +146,7 @@ export async function POST(req: Request) {
               temperature: 0.7,
               max_tokens: 800,
             }),
-            signal: AbortSignal.timeout(6000),
+            signal: AbortSignal.timeout(8000),
           },
         );
 
@@ -153,90 +154,149 @@ export async function POST(req: Request) {
           const groqData = await groqRes.json();
           const answer = groqData.choices?.[0]?.message?.content;
           if (answer) return NextResponse.json({ content: answer });
+        } else {
+          console.warn("Groq status not OK:", groqRes.status, await groqRes.text());
         }
       } catch (e) {
         console.warn("Groq AI Engine failed, trying Gemini...", e);
       }
     }
 
-    // ─── ENGINE 2: GOOGLE GEMINI API (Gemini 2.0 Flash / 1.5 Flash) ─────
+    // ─── ENGINE 2: GOOGLE GEMINI API ──────────────────────────────────────
     if (geminiKey) {
-      try {
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: messages.map((m: any) => ({
-                role: m.role === "assistant" ? "model" : "user",
-                parts: [{ text: m.content }],
-              })),
-              systemInstruction: {
-                parts: [{ text: fullSystemPrompt }],
-              },
-            }),
-            signal: AbortSignal.timeout(6000),
-          },
-        );
+      for (const model of ["gemini-2.0-flash", "gemini-1.5-flash"]) {
+        try {
+          const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: messages.map((m: any) => ({
+                  role: m.role === "assistant" ? "model" : "user",
+                  parts: [{ text: m.content }],
+                })),
+                systemInstruction: {
+                  parts: [{ text: fullSystemPrompt }],
+                },
+              }),
+              signal: AbortSignal.timeout(8000),
+            },
+          );
 
-        if (geminiRes.ok) {
-          const geminiData = await geminiRes.json();
-          const answer =
-            geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (answer) return NextResponse.json({ content: answer });
+          if (geminiRes.ok) {
+            const geminiData = await geminiRes.json();
+            const answer = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (answer) return NextResponse.json({ content: answer });
+          } else {
+            console.warn(`Gemini (${model}) status not OK:`, geminiRes.status, await geminiRes.text());
+          }
+        } catch (e) {
+          console.warn(`Gemini (${model}) failed...`, e);
         }
-      } catch (e) {
-        console.warn("Gemini AI Engine failed, trying OpenRouter...", e);
       }
     }
 
-    // ─── ENGINE 3: OPENROUTER (Llama 3.3 / Gemini Free) ──────────────────
-    if (openrouterKey) {
+    // ─── ENGINE 3: MISTRAL AI API ─────────────────────────────────────────
+    if (mistralKey) {
       try {
-        const appUrl =
-          process.env.NEXT_PUBLIC_APP_URL ||
-          "https://ptsp.kemenag-baritoutara.com";
-
-        const orRes = await fetch(
-          "https://openrouter.ai/api/v1/chat/completions",
+        const mistralRes = await fetch(
+          "https://api.mistral.ai/v1/chat/completions",
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${openrouterKey}`,
+              Authorization: `Bearer ${mistralKey}`,
               "Content-Type": "application/json",
-              "HTTP-Referer": appUrl,
-              "X-Title": "PTSP Kemenag Barito Utara",
             },
             body: JSON.stringify({
-              model: "meta-llama/llama-3.3-70b-instruct:free",
+              model: "mistral-small-latest",
               messages: formattedMessages,
               temperature: 0.7,
+              max_tokens: 800,
             }),
-            signal: AbortSignal.timeout(6000),
+            signal: AbortSignal.timeout(8000),
           },
         );
 
-        if (orRes.ok) {
-          const orData = await orRes.json();
-          const answer = orData.choices?.[0]?.message?.content;
+        if (mistralRes.ok) {
+          const mistralData = await mistralRes.json();
+          const answer = mistralData.choices?.[0]?.message?.content;
           if (answer) return NextResponse.json({ content: answer });
+        } else {
+          console.warn("Mistral status not OK:", mistralRes.status, await mistralRes.text());
         }
       } catch (e) {
-        console.warn("OpenRouter AI Engine failed...", e);
+        console.warn("Mistral AI Engine failed...", e);
       }
     }
 
-    throw new Error("Tidak ada engine AI yang memberikan respons.");
+    // ─── ENGINE 4: OPENROUTER ─────────────────────────────────────────────
+    if (openrouterKey) {
+      const models = [
+        "google/gemini-2.0-flash-exp:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "deepseek/deepseek-r1:free",
+      ];
+      for (const model of models) {
+        try {
+          const appUrl =
+            process.env.NEXT_PUBLIC_APP_URL ||
+            "https://ptsp.kemenag-baritoutara.com";
+
+          const orRes = await fetch(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${openrouterKey}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": appUrl,
+                "X-Title": "PTSP Kemenag Barito Utara",
+              },
+              body: JSON.stringify({
+                model: model,
+                messages: formattedMessages,
+                temperature: 0.7,
+              }),
+              signal: AbortSignal.timeout(8000),
+            },
+          );
+
+          if (orRes.ok) {
+            const orData = await orRes.json();
+            const answer = orData.choices?.[0]?.message?.content;
+            if (answer) return NextResponse.json({ content: answer });
+          } else {
+            console.warn(`OpenRouter (${model}) status not OK:`, orRes.status, await orRes.text());
+          }
+        } catch (e) {
+          console.warn(`OpenRouter (${model}) failed...`, e);
+        }
+      }
+    }
+
+    // ─── LOCAL KNOWLEDGE FALLBACK (Jika semua API Key offline / limit) ──────
+    const lastUserMsg = messages[messages.length - 1]?.content?.toLowerCase() || "";
+    let fallbackText = "Halo Bapak/Ibu, salam dari PTSP Kemenag Barito Utara! Ada yang bisa kami bantu mengenai pendaftaran layanan, syarat dokumen, atau informasi keagamaan?";
+
+    if (lastUserMsg.includes("nikah") || lastUserMsg.includes("kawin")) {
+      fallbackText = "Untuk pendaftaran nikah dapat diakses melalui portal SIMKAH (simkah4.kemenag.go.id). Syarat umum meliputi formulir N1, N2, N4, FC KTP, KK, Akta Nikah/Cerai/Kematian (jika ada), serta foto 2x3 & 4x6 latar biru. Seluruh layanan PTSP gratis!";
+    } else if (lastUserMsg.includes("halal") || lastUserMsg.includes("sertifikat")) {
+      fallbackText = "Pendaftaran Sertifikasi Halal Gratis (SEHATI) dapat diajukan melalui portal ptsp.halal.go.id BPJPH. Persyaratan utama melampirkan NIB dan dokumen data usaha.";
+    } else if (lastUserMsg.includes("ijazah") || lastUserMsg.includes("legalisir")) {
+      fallbackText = "Untuk legalisir ijazah/STTB, silakan membawa Ijazah asli beserta fotokopi maksimal 5 lembar ke Kantor Kemenag Barito Utara pada jam kerja.";
+    } else if (lastUserMsg.includes("pimpinan") || lastUserMsg.includes("kepala") || lastUserMsg.includes("pejabat")) {
+      fallbackText = "Kepala Kantor Kemenag Barito Utara saat ini dijabat oleh H. Arbaja, S.Ag., M.A.P, dan Kasubbag TU dijabat oleh Sony Anwari Husni, S.Pd.";
+    } else if (lastUserMsg.includes("kontak") || lastUserMsg.includes("alamat") || lastUserMsg.includes("wa")) {
+      fallbackText = "Kantor Kemenag Barito Utara berlokasi di Jl. Ahmad Yani No. 126, Muara Teweh. WhatsApp Resmi SI-ATAK: 0851-1749-1212. Jam kerja: Senin-Kamis 07.30-16.00 WIB & Jumat 07.30-16.30 WIB.";
+    }
+
+    return NextResponse.json({ content: fallbackText });
   } catch (error: any) {
     console.error("PTSP AI Route Error:", error);
-    return NextResponse.json(
-      {
-        error:
-          "Maaf, sistem AI sedang dalam pemeliharaan. Silakan hubungi kami via WhatsApp SI-ATAK (0851-1749-1212).",
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({
+      content: "Halo Bapak/Ibu, selamat datang di Portal PTSP Kemenag Barito Utara! Silakan ajukan pertanyaan atau hubungi WhatsApp Call Center SI-ATAK di 0851-1749-1212 untuk informasi lebih lanjut."
+    });
   }
 }
 
