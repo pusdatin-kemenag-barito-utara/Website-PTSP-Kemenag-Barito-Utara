@@ -15,18 +15,25 @@ export async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): 
     },
   };
 
-  const response = await fetch(url, config);
+  try {
+    const response = await fetch(url, config);
 
-  if (!response.ok) {
-    let errorMessage = "Terjadi kesalahan pada server.";
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorData.message || errorMessage;
-    } catch {
-      // Ignore JSON parse error for error responses
+    if (!response.ok) {
+      let errorMessage = "Terjadi kesalahan pada server.";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch {
+        // Ignore JSON parse error
+      }
+      console.warn(`[fetchAPI Warning] Endpoint ${endpoint} returned status ${response.status}: ${errorMessage}`);
+      return { success: false, data: [] } as unknown as T;
     }
-    throw new Error(errorMessage);
-  }
 
-  return response.json();
+    return await response.json();
+  } catch (err: any) {
+    console.warn(`[fetchAPI Error] Failed to connect to Golang API at ${url}: ${err.message}`);
+    return { success: false, data: [] } as unknown as T;
+  }
 }
+
