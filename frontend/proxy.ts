@@ -37,18 +37,27 @@ async function checkMaintenanceStatus(): Promise<boolean> {
   }
 
   try {
-    const pusdatinUrl = process.env.NEXT_PUBLIC_PUSDATIN_URL || "http://localhost:3000";
+    const pusdatinUrl = process.env.NEXT_PUBLIC_PUSDATIN_URL || "https://pusdatin.kemenag-baritoutara.com";
     const appId = "ptsp-kemenag"; 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+
     const response = await fetch(
       `${pusdatinUrl}/api/public/apps/${appId}/status`,
-      { next: { revalidate: 30 } } // Cache 30 detik untuk performa
+      {
+        signal: controller.signal,
+        next: { revalidate: 30 },
+      }
     );
+    clearTimeout(timeoutId);
+    if (!response.ok) return false;
     const data = await response.json();
     return data?.status === "maintenance";
   } catch (error) {
     return false;
   }
 }
+
 
 export async function proxy(request: NextRequest) {
   const ip = getIp(request);
