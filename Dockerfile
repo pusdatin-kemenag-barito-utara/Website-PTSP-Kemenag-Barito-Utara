@@ -14,7 +14,8 @@ FROM node:22-alpine AS frontend-builder
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json* ./frontend/
 WORKDIR /app/frontend
-RUN npm install
+RUN npm install --include=dev
+
 COPY frontend/ ./
 ENV NEXT_TELEMETRY_DISABLED=1
 
