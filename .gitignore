@@ -1,42 +1,70 @@
+# Monorepo Root .gitignore
+
 # Dependencies
 node_modules/
+**/node_modules/
 
-# Next.js & Build Output
+# Next.js & Frontend Build Outputs
 .next/
-out/
-build/
-dist/
-.cache/
-.turbo/
-.vercel/
-tsconfig.tsbuildinfo
+**/frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/.cache/
+frontend/.turbo/
+frontend/.vercel/
 *.tsbuildinfo
+.cache/
 
-# Environment Variables
+# PWA Service Worker Generated Files
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+frontend/public/sw.js
+frontend/public/sw.js.map
+frontend/public/workbox-*.js
+frontend/public/workbox-*.js.map
+
+# Golang & Backend Build Outputs & Hot Reload Logs
+backend/tmp/
+backend/*.exe
+backend/*.dll
+backend/*.so
+backend/*.dylib
+backend/bin/
+backend/main
+backend/build-errors.log
+*.log
+main
+
+# Environment Variables & Secrets
 .env
-.env*.local
+.env*
+!.env.example
+*.env
+*.env.local
 
-# Testing & Coverage
-coverage/
-.nyc_output/
+# Temporary Scratch Files & Utility Scripts
+scratch/
+**/scratch/
+scripts/
+**/scripts/
+frontend/scratch/
+frontend/scripts/
 
-# IDE & Editor Settings
+# IDE & OS System Files
 .vscode/
 .idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
 
-# AI Assistants & Temporary Files
+# AI Assistants, Internal Caches & Workspace Metadata
 .claude/
 .opencode/
 .antigravitycli/
 .gemini/
-scratch/
-scripts/
-
-# Logs & OS Files
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-.DS_Store
-Thumbs.db
-
+.agents/
