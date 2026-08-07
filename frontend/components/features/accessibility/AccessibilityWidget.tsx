@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import "./AccessibilityWidget.css";
+
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 
