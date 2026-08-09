@@ -201,7 +201,7 @@ export function LayananClient({
                 Total Layanan
               </p>
               <p className="text-xs font-bold text-slate-700">
-                <span className="text-emerald-700 font-black">{totalSubItems}</span> Item Layanan
+                {category === "asn" ? `${totalMainServices} Layanan Katalog` : <><span className="text-emerald-700 font-black">{totalSubItems}</span> Item Layanan</>}
               </p>
             </div>
           </div>
@@ -216,7 +216,7 @@ export function LayananClient({
                 Layanan Aktif
               </p>
               <p className="text-xs font-bold text-slate-700">
-                <span className="text-emerald-700 font-black">{activeSubItems}</span> Item Aktif
+                {category === "asn" ? `${activeMainServices} Layanan Aktif` : <><span className="text-emerald-700 font-black">{activeSubItems}</span> Item Aktif</>}
               </p>
             </div>
           </div>
@@ -231,7 +231,7 @@ export function LayananClient({
                 Layanan Nonaktif
               </p>
               <p className="text-xs font-bold text-slate-700">
-                <span className="text-rose-700 font-black">{inactiveSubItems}</span> Item Nonaktif
+                {category === "asn" ? `${inactiveMainServices} Layanan Nonaktif` : <><span className="text-rose-700 font-black">{inactiveSubItems}</span> Item Nonaktif</>}
               </p>
             </div>
           </div>

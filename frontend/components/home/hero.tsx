@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion, Variants } from "framer-motion";
 import {
   ArrowRight,
   ShieldCheck,
@@ -10,37 +9,10 @@ import {
   LayoutGrid,
   Search,
   Layers,
-  CheckCircle2,
   Building2,
   FileCheck2,
   UserCheck
 } from "lucide-react";
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-};
-
-const rightCardVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95, x: 20 },
-  show: {
-    opacity: 1,
-    scale: 1,
-    x: 0,
-    transition: { duration: 0.8, ease: "easeOut", delay: 0.2 },
-  },
-};
 
 export function HomeHero() {
   const currentYear = new Date().getFullYear();
@@ -67,25 +39,17 @@ export function HomeHero() {
       <div className="relative z-10 mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 py-10 lg:py-14">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-10">
           {/* Left Side: Copywriting & Actions */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="space-y-8 max-w-2xl"
-          >
+          <div className="space-y-8 max-w-2xl">
             {/* Official Government Badge */}
-            <motion.div
-              variants={itemVariants}
-              className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-950/70 px-4 py-2 shadow-sm"
-            >
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-950/70 px-4 py-2 shadow-sm">
               <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
               <span className="text-xs font-semibold tracking-wide text-emerald-200">
                 Portal Resmi PTSP • Kemenag Barito Utara
               </span>
-            </motion.div>
+            </div>
 
             {/* Headline */}
-            <motion.div variants={itemVariants} className="space-y-4">
+            <div className="space-y-4">
               <h1 className="text-4xl font-extrabold leading-[1.15] text-white sm:text-5xl md:text-6xl lg:text-[58px] tracking-tight">
                 Layanan Keagamaan <br className="hidden md:block" />
                 <span className="bg-gradient-to-r from-emerald-300 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
@@ -97,13 +61,10 @@ export function HomeHero() {
                 hadir untuk melayani masyarakat Kabupaten Barito Utara secara cepat,
                 akuntabel, dan 100% online.
               </p>
-            </motion.div>
+            </div>
 
             {/* CTA Buttons */}
-            <motion.div
-              variants={itemVariants}
-              className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 pt-2"
-            >
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 pt-2">
               <Link
                 href="/login/masyarakat"
                 className="w-full sm:w-auto group inline-flex justify-center items-center gap-2.5 rounded-xl bg-emerald-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-950 transition-all duration-200 hover:bg-emerald-500 active:scale-98"
@@ -119,13 +80,10 @@ export function HomeHero() {
                 <LayoutGrid className="h-4 w-4 shrink-0 text-slate-400" />
                 <span>Katalog Layanan</span>
               </Link>
-            </motion.div>
+            </div>
 
             {/* Tracking Widget */}
-            <motion.div
-              variants={itemVariants}
-              className="relative mt-8 w-full max-w-xl"
-            >
+            <div className="relative mt-8 w-full max-w-xl">
               <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/90 p-4 shadow-xl">
                 <form
                   action="/track"
@@ -152,16 +110,11 @@ export function HomeHero() {
                   </button>
                 </form>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Right Side: Process Card */}
-          <motion.div
-            variants={rightCardVariants}
-            initial="hidden"
-            animate="show"
-            className="hidden lg:block relative"
-          >
+          <div className="hidden lg:block relative">
             <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl">
               {/* Header */}
               <div className="flex items-center gap-4 mb-7 pb-6 border-b border-slate-800">
@@ -239,7 +192,7 @@ export function HomeHero() {
                 })}
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 

@@ -32,13 +32,15 @@ type UpdateCutiStatusRequest struct {
 
 // CutiPegawaiMaster merepresentasikan data master pegawai cuti.
 type CutiPegawaiMaster struct {
-	ID       string  `json:"id"`
-	Nama     string  `json:"nama"`
-	Nip      string  `json:"nip"`
-	Jabatan  string  `json:"jabatan"`
-	UnitKerja string `json:"unitKerja"`
-	Golongan  string `json:"golongan"`
-	JenisPegawai string `json:"jenisPegawai"`
+	ID               string             `json:"id"`
+	No               *int               `json:"no,omitempty"`
+	Nama             string             `json:"nama"`
+	Nip              string             `json:"nip"`
+	Jabatan          string             `json:"jabatan"`
+	UnitKerja        string             `json:"unitKerja"`
+	Golongan         string             `json:"golongan"`
+	JenisPegawai     string             `json:"jenisPegawai"`
+	RekapCutiTahunan []RekapCutiTahunan `json:"rekapCutiTahunan"`
 }
 
 // CreateCutiPegawaiRequest DTO untuk admin menambah data master pegawai.
@@ -62,17 +64,18 @@ type UpdateCutiPegawaiRequest struct {
 
 // RekapCutiTahunan merepresentasikan rekap cuti tahunan pegawai.
 type RekapCutiTahunan struct {
-	ID              string `json:"id"`
-	PegawaiID       string `json:"pegawaiId"`
-	TahunTarget     int    `json:"tahunTarget"`
-	JumlahCuti      int    `json:"jumlahCuti"`
-	CutiTahun1      int    `json:"cutiTahun1"`
-	CutiTahun2      int    `json:"cutiTahun2"`
-	CutiAlasanPenting int  `json:"cutiAlasanPenting"`
-	CutiBesar       int    `json:"cutiBesar"`
-	CutiBersalin    int    `json:"cutiBersalin"`
-	CutiSakit       int    `json:"cutiSakit"`
-	SisaCuti        int    `json:"sisaCuti"`
+	ID                string `json:"id"`
+	PegawaiID         string `json:"pegawaiId"`
+	TahunTarget       int    `json:"tahunTarget"`
+	JumlahCuti        int    `json:"jumlahCuti"`
+	CutiTahun1        int    `json:"cutiTahun1"`
+	CutiTahun2        int    `json:"cutiTahun2"`
+	CutiTahunan       []int  `json:"cutiTahunan"`
+	CutiAlasanPenting int    `json:"cutiAlasanPenting"`
+	CutiBesar         int    `json:"cutiBesar"`
+	CutiBersalin      int    `json:"cutiBersalin"`
+	CutiSakit         int    `json:"cutiSakit"`
+	SisaCuti          int    `json:"sisaCuti"`
 }
 
 // CreateRekapCutiRequest DTO untuk admin menambah rekap cuti.
@@ -82,6 +85,7 @@ type CreateRekapCutiRequest struct {
 	JumlahCuti        int    `json:"jumlahCuti"`
 	CutiTahun1        int    `json:"cutiTahun1"`
 	CutiTahun2        int    `json:"cutiTahun2"`
+	CutiTahunan       []int  `json:"cutiTahunan"`
 	CutiAlasanPenting int    `json:"cutiAlasanPenting"`
 	CutiBesar         int    `json:"cutiBesar"`
 	CutiBersalin      int    `json:"cutiBersalin"`

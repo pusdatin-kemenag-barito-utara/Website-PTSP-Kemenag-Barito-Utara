@@ -11,8 +11,6 @@ import {
   GuestBookSuccessModalData,
 } from "./guest-book-success-modal";
 
-import { m, AnimatePresence } from "framer-motion";
-
 export default function GuestBookClient({ initialEntries, isManualMode = false }: GuestBookClientProps) {
   const [activeTab, setActiveTab] = useState<"form" | "list" | "stats">("form");
   const [entries, setEntries] = useState(initialEntries);
@@ -94,40 +92,32 @@ export default function GuestBookClient({ initialEntries, isManualMode = false }
           <div className="absolute -bottom-16 -right-16 h-72 w-72 rounded-full bg-teal-500/10 dark:bg-teal-500/20 blur-[100px]" />
         </div>
 
-        <AnimatePresence mode="wait">
-          <m.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            {activeTab === "form" && (
-              <GuestBookForm
-                onSuccess={(newEntry, modalData) => {
-                  setEntries((prev) => [newEntry, ...prev]);
-                  setSuccessData(modalData);
-                }}
-                isManualMode={isManualMode}
-              />
-            )}
+        <div>
+          {activeTab === "form" && (
+            <GuestBookForm
+              onSuccess={(newEntry, modalData) => {
+                setEntries((prev) => [newEntry, ...prev]);
+                setSuccessData(modalData);
+              }}
+              isManualMode={isManualMode}
+            />
+          )}
 
-            {activeTab === "list" && (
-              <GuestBookList
-                entries={entries}
-                statsDate={todayStr}
-                onSwitchTab={setActiveTab}
-              />
-            )}
+          {activeTab === "list" && (
+            <GuestBookList
+              entries={entries}
+              statsDate={todayStr}
+              onSwitchTab={setActiveTab}
+            />
+          )}
 
-            {activeTab === "stats" && (
-              <GuestBookStats
-                entries={entries}
-                onSwitchTab={setActiveTab}
-              />
-            )}
-          </m.div>
-        </AnimatePresence>
+          {activeTab === "stats" && (
+            <GuestBookStats
+              entries={entries}
+              onSwitchTab={setActiveTab}
+            />
+          )}
+        </div>
       </div>
 
       {/* Floating Success Modal */}

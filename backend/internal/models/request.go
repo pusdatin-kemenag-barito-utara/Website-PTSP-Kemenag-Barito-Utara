@@ -21,9 +21,10 @@ type ServiceRequest struct {
 	ServiceName    *string `json:"service_name,omitempty"`
 	ItemName       *string `json:"item_name,omitempty"`
 	ApplicantName  *string `json:"applicant_name,omitempty"`
-	ApplicantEmail *string `json:"applicant_email,omitempty"`
-	RoleOwner      string  `json:"role_owner,omitempty"`
-	Category       string  `json:"category,omitempty"`
+	ApplicantEmail *string           `json:"applicant_email,omitempty"`
+	RoleOwner      string            `json:"role_owner,omitempty"`
+	Category       string            `json:"category,omitempty"`
+	GeneratedDocuments []RequestDocument `json:"generatedDocuments"`
 }
 
 // RequestAnswer merepresentasikan jawaban form pengajuan.
@@ -34,11 +35,12 @@ type RequestAnswer struct {
 
 // RequestDocument merepresentasikan dokumen yang diunggah untuk pengajuan.
 type RequestDocument struct {
-	ID       string `json:"id"`
-	FileName string `json:"file_name"`
-	FilePath string `json:"file_path"`
-	FileType string `json:"file_type"`
-	FileSize int64  `json:"file_size"`
+	ID              string `json:"id"`
+	RequirementName string `json:"requirement_name,omitempty"`
+	FileName        string `json:"file_name"`
+	FilePath        string `json:"file_path"`
+	FileType        string `json:"file_type"`
+	FileSize        int64  `json:"file_size"`
 }
 
 // RequestReview merepresentasikan review/approval dari admin.

@@ -150,11 +150,12 @@ function normalizeRequest(raw: any): any {
     // Documents → serviceRequestDocuments compatibility
     serviceRequestDocuments: (raw.documents || raw.serviceRequestDocuments || raw.request_documents || []).map((d: any) => ({
       id: d.id,
+      requirementName: d.requirement_name || d.requirementName || d.serviceRequirements?.documentName || d.service_requirements?.document_name,
       fileName: d.file_name || d.fileName || d.name || "Dokumen",
       filePath: d.file_path || d.filePath || d.url || "",
       fileType: d.file_type || d.fileType || "pdf",
       fileSize: d.file_size || d.fileSize || 0,
-      serviceRequirements: null,
+      serviceRequirements: d.serviceRequirements || d.service_requirements || (d.requirement_name ? { documentName: d.requirement_name } : null),
     })),
     // Reviews
     serviceRequestReviews: (raw.reviews || raw.serviceRequestReviews || []).map((r: any) => ({
@@ -273,15 +274,15 @@ export default async function AdminRequestDetailPage({
       <AdminDetailInfoGrid request={request} />
 
       {/* Main Content Layout */}
-      <div className="grid gap-6 lg:grid-cols-12 mt-6">
+      <div className="grid gap-6 lg:grid-cols-12 mt-6 w-full min-w-0">
         {/* Left Column - Forms & Documents */}
-        <div className="space-y-6 lg:col-span-7">
+        <div className="space-y-6 lg:col-span-7 min-w-0 w-full overflow-hidden">
           <FormAnswersCard request={request} />
           <RequestDocumentsCard request={request} signedUrlMap={signedUrlMap} />
         </div>
 
         {/* Right Column - Actions & Logs */}
-        <div className="space-y-6 lg:col-span-5">
+        <div className="space-y-6 lg:col-span-5 min-w-0 w-full overflow-hidden">
           <ReviewActionCard request={request} adminProfile={adminProfile} />
           <HistoryTimelineCard request={request} />
         </div>

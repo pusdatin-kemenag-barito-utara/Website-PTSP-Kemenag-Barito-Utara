@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/service"
 
@@ -202,5 +203,13 @@ func (h *CutiHandler) AdminRolloverTahunan(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"success": true, "message": "Tutup buku berhasil", "count": count})
+}
+
+func (h *CutiHandler) AdminSyncPusdatin(c *fiber.Ctx) error {
+	count, err := h.svc.AdminSyncPusdatin(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": fmt.Sprintf("Berhasil sinkronisasi %d data pegawai dari Pusdatin", count)})
 }
 

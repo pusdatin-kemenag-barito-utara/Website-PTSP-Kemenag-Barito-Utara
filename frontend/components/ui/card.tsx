@@ -22,21 +22,21 @@ export function Card({
       )}
     >
       {(title || description) && (
-        <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
-          <div className="flex items-center gap-4">
+        <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex items-center gap-3 sm:gap-4">
             {Icon && (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-100/50 shadow-sm">
+              <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-100/50 shadow-sm">
                 <Icon className="h-5 w-5" />
               </div>
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               {title && (
-                <h3 className="text-base font-bold text-slate-800 leading-tight">
+                <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">
                   {title}
                 </h3>
               )}
               {description && (
-                <p className="mt-1 text-sm text-slate-500 leading-relaxed font-medium">
+                <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
                   {description}
                 </p>
               )}
@@ -44,7 +44,7 @@ export function Card({
           </div>
         </div>
       )}
-      <div className="p-6">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </div>
   );
 }

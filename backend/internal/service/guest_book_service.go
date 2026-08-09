@@ -24,14 +24,21 @@ func NewGuestBookService(repo *repository.GuestBookRepository, cfg *config.Confi
 
 func (s *GuestBookService) GetAll(ctx context.Context, limit int) ([]models.GuestBook, error) {
 	if limit <= 0 {
-		limit = 100
+		limit = 1000
 	}
 	return s.repo.FindAll(ctx, limit)
 }
 
 func (s *GuestBookService) Create(ctx context.Context, req models.CreateGuestBookRequest, clientIP string) (*models.GuestBook, error) {
-	if req.GuestName == "" || req.Whatsapp == "" || req.IntendedOfficer == "" || req.Purpose == "" {
+	if strings.TrimSpace(req.GuestName) == "" || req.Whatsapp == "" || req.IntendedOfficer == "" || req.Purpose == "" {
 		return nil, errors.New("data tidak lengkap")
+	}
+
+	// Validasi nama tidak boleh mengandung angka
+	for _, ch := range req.GuestName {
+		if ch >= '0' && ch <= '9' {
+			return nil, errors.New("nama lengkap tidak boleh mengandung angka")
+		}
 	}
 
 	if req.TurnstileToken != "" && s.cfg.TurnstileSecret != "" {

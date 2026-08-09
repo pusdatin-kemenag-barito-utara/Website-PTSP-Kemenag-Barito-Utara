@@ -2,6 +2,7 @@
 
 import { requireAuth } from "@/lib/auth";
 import { fetchAPI } from "@/lib/api";
+import { revalidatePath } from "next/cache";
 
 export async function completeProfileAction(formData: FormData) {
   try {
@@ -33,10 +34,16 @@ export async function completeProfileAction(formData: FormData) {
     await fetchAPI(`/admin/profile/${profile.id}`, {
       method: "PATCH",
       body: JSON.stringify({
+        name: fullName,
         full_name: fullName,
+        phone: cleanPhone,
+        address: address,
         avatar_url: profile.avatarUrl || undefined,
       }),
     });
+
+    revalidatePath("/", "layout");
+    revalidatePath("/masyarakat", "layout");
 
     return { success: true };
   } catch (err: any) {

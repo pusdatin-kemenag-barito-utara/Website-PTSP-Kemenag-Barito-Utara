@@ -30,8 +30,21 @@ export const getCurrentProfile = cache(async () => {
       const profileData = res.data;
       const email = profileData.email || userEmail;
       const role = isSuper ? "super_admin" : (profileData.role && profileData.role !== "user" ? profileData.role : (user.user_metadata?.role || profileData.role || "user"));
+      const defaultFallback = isSuper ? "Super Admin" : (isAdminRole(role) ? "Pegawai" : "Pemohon");
+      const dbName = profileData.name || profileData.fullName;
+      const metaName = user.user_metadata?.full_name || user.user_metadata?.name;
+      
+      let fullName = defaultFallback;
+      if (dbName && dbName.trim() !== "" && dbName !== "Pemohon" && dbName !== "Pusdatin Kemenag Barito Utara") {
+        fullName = dbName;
+      } else if (metaName && metaName.trim() !== "" && metaName !== "Pusdatin Kemenag Barito Utara") {
+        fullName = metaName;
+      }
       return {
+        id: user.id,
         ...profileData,
+        name: fullName,
+        fullName,
         email,
         role,
         isVerified: isSuper ? true : (profileData.isVerified ?? true),
@@ -44,13 +57,17 @@ export const getCurrentProfile = cache(async () => {
   // Fallback profile object jika belum ada
   const metadataRole = user.user_metadata?.role || (isSuper ? "super_admin" : "user");
   const isInternal = isAdminRole(metadataRole) || isSuper;
+  const defaultFallbackName = isInternal ? "Pegawai" : "Pemohon";
+
+  const rawMetaName = user.user_metadata?.full_name ?? user.user_metadata?.name;
+  const cleanMetaName = (rawMetaName && rawMetaName !== "Pusdatin Kemenag Barito Utara") ? rawMetaName : defaultFallbackName;
 
   return {
     id: user.id,
     email: userEmail || null,
     role: isSuper ? "super_admin" : metadataRole,
-    name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "User",
-    fullName: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "User",
+    name: cleanMetaName,
+    fullName: cleanMetaName,
     phone: isSuper ? "000000000" : null,
     address: isSuper ? "-" : null,
     createdAt: new Date().toISOString(),

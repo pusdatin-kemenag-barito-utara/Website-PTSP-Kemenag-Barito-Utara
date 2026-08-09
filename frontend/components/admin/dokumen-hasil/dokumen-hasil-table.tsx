@@ -74,9 +74,11 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
     waLog?.createdAt || waLog?.created_at ? formatDate(waLog.createdAt || waLog.created_at) : null
   );
   
-  const generatedDocs = request.generated_documents || request.generatedDocuments || [];
-  const isGenerated = !!generatedDocs.length || !!fileUrl;
-  const docDate = generatedDocs.length ? formatDate(generatedDocs[0].generatedAt || generatedDocs[0].generated_at || request.updated_at || request.updatedAt) : null;
+  const genDocs = request.generated_documents || request.generatedDocuments || [];
+  const reqDocs = request.documents || request.request_documents || [];
+  const generatedDocs = genDocs.length > 0 ? genDocs : reqDocs;
+  const isGenerated = generatedDocs.length > 0 || !!fileUrl;
+  const docDate = generatedDocs.length ? formatDate(generatedDocs[0].generatedAt || generatedDocs[0].generated_at || generatedDocs[0].created_at || request.updated_at || request.updatedAt) : null;
   
   const handleConfirmSendWA = () => {
     setShowWADialog(false);
@@ -177,28 +179,46 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
         <div className="flex flex-wrap items-center gap-2 shrink-0 ml-[4.5rem] lg:ml-0">
           <UploadResultButton requestId={request.id} hasFile={isGenerated} />
           
-          {fileUrl ? (
-            <button
-              type="button"
-              onClick={() => setIsDocModalOpen(true)}
-              title="Lihat Dokumen Hasil"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-            >
-              <Eye className="h-4 w-4" />
-              <span>Buka File</span>
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              if (fileUrl) {
+                setIsDocModalOpen(true);
+              } else {
+                toast.info("Dokumen hasil belum diunggah. Silakan klik tombol 'Unggah' di sebelah kiri.");
+              }
+            }}
+            title="Lihat Dokumen Hasil"
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 text-xs font-bold ${
+              fileUrl
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
+                : "bg-slate-100 text-slate-400 border border-slate-200"
+            }`}
+          >
+            <Eye className="h-4 w-4" />
+            <span>Buka File</span>
+          </button>
 
-          {isGenerated && (
-            <button
-              onClick={() => setShowWADialog(true)}
-              disabled={isPending}
-              className="flex items-center justify-center p-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300"
-              title="Kirim notifikasi via WhatsApp"
-            >
-              <Send className={`h-4 w-4 ${isPending ? 'animate-pulse' : ''}`} />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (!fileUrl && !isGenerated) {
+                toast.info("Unggah dokumen hasil terlebih dahulu sebelum mengirim notifikasi WhatsApp.");
+                return;
+              }
+              setShowWADialog(true);
+            }}
+            disabled={isPending}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 text-xs font-bold ${
+              isGenerated || fileUrl
+                ? "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 cursor-pointer"
+                : "bg-slate-100 text-slate-400 border border-slate-200"
+            }`}
+            title="Kirim notifikasi via WhatsApp"
+          >
+            <Send className={`h-4 w-4 ${isPending ? 'animate-pulse' : ''}`} />
+            <span>Kirim WA</span>
+          </button>
         </div>
       </div>
 

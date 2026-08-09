@@ -30,6 +30,8 @@ export async function deleteGuestBookAction(
 
     revalidatePath("/admin/buku-tamu");
     revalidatePath("/buku-tamu");
+
+    await emitRefreshSignal();
     return { success: true, message: "Catatan buku tamu berhasil dihapus" };
   } catch (error: any) {
     return {

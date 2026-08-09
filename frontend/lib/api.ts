@@ -48,9 +48,11 @@ export async function fetchAPI<T>(
       } catch {
         // Ignore JSON parse error
       }
-      console.warn(
-        `[fetchAPI Warning] Endpoint ${endpoint} returned status ${response.status}: ${errorMessage}`,
-      );
+      if (response.status !== 404 || !endpoint.includes("/admin/users/")) {
+        console.warn(
+          `[fetchAPI Warning] Endpoint ${endpoint} returned status ${response.status}: ${errorMessage}`,
+        );
+      }
       return { success: false, data: [] } as unknown as T;
     }
 

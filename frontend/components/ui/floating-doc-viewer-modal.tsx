@@ -14,6 +14,13 @@ import {
   Loader2,
 } from "lucide-react";
 
+import dynamic from "next/dynamic";
+
+const PDFJsViewer = dynamic(
+  () => import("@/components/ui/pdf-js-viewer").then((mod) => mod.PDFJsViewer),
+  { ssr: false }
+);
+
 interface FloatingDocViewerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -104,17 +111,23 @@ export function FloatingDocViewerModal({
           }`}
         >
           {/* Header Controls Bar */}
-          <div className="px-5 py-3.5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-4 shrink-0 select-none">
+          <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-2 sm:gap-4 shrink-0 select-none">
             {/* Title & Icon */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                 <FileText className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-black text-slate-100 truncate">
-                  {title}
-                </h3>
-                <p className="text-[11px] text-slate-400 truncate">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h3 className="text-xs sm:text-sm font-black text-slate-100 truncate">
+                    {title}
+                  </h3>
+                  <span className="hidden xs:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[9px] sm:text-[10px] font-bold border border-red-500/20 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                    PDF.js
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
                   {fileName || "Dokumen Persyaratan"}
                 </p>
               </div>
@@ -212,7 +225,7 @@ export function FloatingDocViewerModal({
                 transformOrigin: "top center",
                 transition: "transform 0.15s ease-out",
               }}
-              className="w-full h-full flex items-center justify-center"
+              className="w-full h-full flex flex-col items-center justify-center min-h-0"
             >
               {isImage ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -223,11 +236,10 @@ export function FloatingDocViewerModal({
                   className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-lg border border-slate-800"
                 />
               ) : (
-                <iframe
-                  src={`/api/view-document?url=${encodeURIComponent(url)}#zoom=${zoomLevel}`}
-                  title={title}
-                  onLoad={() => setIsLoading(false)}
-                  className="w-full h-full rounded-2xl border-0 bg-white shadow-sm"
+                <PDFJsViewer
+                  url={url}
+                  onLoaded={() => setIsLoading(false)}
+                  scale={zoomLevel / 100}
                 />
               )}
             </div>

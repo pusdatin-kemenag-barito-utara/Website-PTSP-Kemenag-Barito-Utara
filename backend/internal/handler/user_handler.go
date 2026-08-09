@@ -73,7 +73,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		}
 	}
 
-	if req.FullName == "" && req.AvatarURL == "" {
+	if req.FullName == "" && req.Phone == "" && req.Address == "" && req.AvatarURL == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Tidak ada data yang diperbarui"})
 	}
 	if err := h.svc.UpdateProfile(c.Context(), id, req); err != nil {

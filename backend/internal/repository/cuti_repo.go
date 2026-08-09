@@ -191,25 +191,87 @@ func (r *CutiRepository) DeleteLKH(ctx context.Context, id string) error {
 // --- Admin: CRUD Data Master Pegawai ---
 
 func (r *CutiRepository) AdminListPegawai(ctx context.Context, search string) ([]models.CutiPegawaiMaster, error) {
-	query := `SELECT id::text, COALESCE(nama,''), COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), '', COALESCE(jenis_pegawai,'')
-		FROM kemenag_ptsp.ptsp_data_cuti_pegawai WHERE 1=1`
+	query := `
+		SELECT 
+			p.id::text, p.no, COALESCE(p.nama,''), COALESCE(p.nip,''), COALESCE(p.jabatan,''), COALESCE(p.unit_kerja,''),
+			COALESCE(r.id::text,''), COALESCE(r.pegawai_id::text,''), COALESCE(r.tahun_target,0),
+			COALESCE(r.jumlah_cuti,12), COALESCE(r.cuti_tahun_1,0), COALESCE(r.cuti_tahun_2,0),
+			COALESCE(r.cuti_tahunan, '[0,0,0,0,0,0,0,0,0,0,0,0]'::jsonb),
+			COALESCE(r.cuti_alasan_penting,0), COALESCE(r.cuti_besar,0), COALESCE(r.cuti_bersalin,0),
+			COALESCE(r.cuti_sakit,0), COALESCE(r.sisa_cuti,12)
+		FROM kemenag_ptsp.ptsp_data_cuti_pegawai p
+		LEFT JOIN kemenag_ptsp.ptsp_rekap_cuti_tahunan r ON r.pegawai_id = p.id
+		WHERE 1=1`
 	args := []interface{}{}
 	if search != "" {
-		query += " AND (nama ILIKE $1 OR nip ILIKE $1)"
+		query += " AND (p.nama ILIKE $1 OR p.nip ILIKE $1)"
 		args = append(args, "%"+search+"%")
 	}
-	query += " ORDER BY nama ASC LIMIT 200"
+	query += " ORDER BY p.no ASC NULLS LAST, p.nama ASC, r.tahun_target DESC NULLS LAST"
+
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return []models.CutiPegawaiMaster{}, nil
 	}
 	defer rows.Close()
-	var result []models.CutiPegawaiMaster
+
+	// Map pegawai by ID to aggregate rekap rows
+	pegawaiMap := map[string]*models.CutiPegawaiMaster{}
+	pegawaiOrder := []string{}
+
 	for rows.Next() {
-		var p models.CutiPegawaiMaster
-		if err := rows.Scan(&p.ID, &p.Nama, &p.Nip, &p.Jabatan, &p.UnitKerja, &p.Golongan, &p.JenisPegawai); err == nil {
-			result = append(result, p)
+		var pID, pNama, pNip, pJabatan, pUnitKerja string
+		var pNo *int
+		var rkID, rkPegawaiID string
+		var rk models.RekapCutiTahunan
+		var cutiTahunanRaw []byte
+
+		if err := rows.Scan(
+			&pID, &pNo, &pNama, &pNip, &pJabatan, &pUnitKerja,
+			&rkID, &rkPegawaiID, &rk.TahunTarget,
+			&rk.JumlahCuti, &rk.CutiTahun1, &rk.CutiTahun2,
+			&cutiTahunanRaw,
+			&rk.CutiAlasanPenting, &rk.CutiBesar, &rk.CutiBersalin,
+			&rk.CutiSakit, &rk.SisaCuti,
+		); err != nil {
+			continue
 		}
+
+		if len(cutiTahunanRaw) > 0 {
+			var ct []int
+			if err := json.Unmarshal(cutiTahunanRaw, &ct); err == nil {
+				rk.CutiTahunan = ct
+			}
+		}
+		if len(rk.CutiTahunan) == 0 {
+			rk.CutiTahunan = make([]int, 12)
+		}
+
+		if _, exists := pegawaiMap[pID]; !exists {
+			pegawaiMap[pID] = &models.CutiPegawaiMaster{
+				ID:               pID,
+				No:               pNo,
+				Nama:             pNama,
+				Nip:              pNip,
+				Jabatan:          pJabatan,
+				UnitKerja:        pUnitKerja,
+				JenisPegawai:     "PNS",
+				RekapCutiTahunan: []models.RekapCutiTahunan{},
+			}
+			pegawaiOrder = append(pegawaiOrder, pID)
+		}
+
+		// Only append rekap if this row has actual rekap data
+		if rkID != "" && rk.TahunTarget > 0 {
+			rk.ID = rkID
+			rk.PegawaiID = rkPegawaiID
+			pegawaiMap[pID].RekapCutiTahunan = append(pegawaiMap[pID].RekapCutiTahunan, rk)
+		}
+	}
+
+	result := make([]models.CutiPegawaiMaster, 0, len(pegawaiOrder))
+	for _, id := range pegawaiOrder {
+		result = append(result, *pegawaiMap[id])
 	}
 	return result, nil
 }
@@ -252,31 +314,41 @@ func (r *CutiRepository) AdminDeletePegawai(ctx context.Context, id string) erro
 
 func (r *CutiRepository) AdminCreateRekap(ctx context.Context, req models.CreateRekapCutiRequest) (*models.RekapCutiTahunan, error) {
 	var rk models.RekapCutiTahunan
+	var cutiTahunanRaw []byte
+	ctBytes, _ := json.Marshal(req.CutiTahunan)
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO kemenag_ptsp.ptsp_rekap_cuti_tahunan
-			(pegawai_id, tahun_target, jumlah_cuti, cuti_tahun_1, cuti_tahun_2, cuti_alasan_penting, cuti_besar, cuti_bersalin, cuti_sakit, sisa_cuti)
-		VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING id::text, pegawai_id::text, tahun_target, jumlah_cuti, cuti_tahun_1, cuti_tahun_2, cuti_alasan_penting, cuti_besar, cuti_bersalin, cuti_sakit, sisa_cuti
-	`, req.PegawaiID, req.TahunTarget, req.JumlahCuti, req.CutiTahun1, req.CutiTahun2, req.CutiAlasanPenting, req.CutiBesar, req.CutiBersalin, req.CutiSakit, req.SisaCuti).
-		Scan(&rk.ID, &rk.PegawaiID, &rk.TahunTarget, &rk.JumlahCuti, &rk.CutiTahun1, &rk.CutiTahun2, &rk.CutiAlasanPenting, &rk.CutiBesar, &rk.CutiBersalin, &rk.CutiSakit, &rk.SisaCuti)
+			(pegawai_id, tahun_target, jumlah_cuti, cuti_tahun_1, cuti_tahun_2, cuti_tahunan, cuti_alasan_penting, cuti_besar, cuti_bersalin, cuti_sakit, sisa_cuti)
+		VALUES ($1::uuid, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11)
+		RETURNING id::text, pegawai_id::text, tahun_target, jumlah_cuti, cuti_tahun_1, cuti_tahun_2, cuti_tahunan, cuti_alasan_penting, cuti_besar, cuti_bersalin, cuti_sakit, sisa_cuti
+	`, req.PegawaiID, req.TahunTarget, req.JumlahCuti, req.CutiTahun1, req.CutiTahun2, string(ctBytes), req.CutiAlasanPenting, req.CutiBesar, req.CutiBersalin, req.CutiSakit, req.SisaCuti).
+		Scan(&rk.ID, &rk.PegawaiID, &rk.TahunTarget, &rk.JumlahCuti, &rk.CutiTahun1, &rk.CutiTahun2, &cutiTahunanRaw, &rk.CutiAlasanPenting, &rk.CutiBesar, &rk.CutiBersalin, &rk.CutiSakit, &rk.SisaCuti)
 	if err != nil {
 		return nil, err
+	}
+	if len(cutiTahunanRaw) > 0 {
+		_ = json.Unmarshal(cutiTahunanRaw, &rk.CutiTahunan)
 	}
 	return &rk, nil
 }
 
 func (r *CutiRepository) AdminUpdateRekap(ctx context.Context, id string, req models.UpdateRekapCutiRequest) (*models.RekapCutiTahunan, error) {
 	var rk models.RekapCutiTahunan
+	var cutiTahunanRaw []byte
+	ctBytes, _ := json.Marshal(req.CutiTahunan)
 	err := r.db.QueryRow(ctx, `
 		UPDATE kemenag_ptsp.ptsp_rekap_cuti_tahunan
-		SET tahun_target=$1, jumlah_cuti=$2, cuti_tahun_1=$3, cuti_tahun_2=$4,
-		    cuti_alasan_penting=$5, cuti_besar=$6, cuti_bersalin=$7, cuti_sakit=$8, sisa_cuti=$9, updated_at=NOW()
-		WHERE id=$10
-		RETURNING id::text, pegawai_id::text, tahun_target, jumlah_cuti, cuti_tahun_1, cuti_tahun_2, cuti_alasan_penting, cuti_besar, cuti_bersalin, cuti_sakit, sisa_cuti
-	`, req.TahunTarget, req.JumlahCuti, req.CutiTahun1, req.CutiTahun2, req.CutiAlasanPenting, req.CutiBesar, req.CutiBersalin, req.CutiSakit, req.SisaCuti, id).
-		Scan(&rk.ID, &rk.PegawaiID, &rk.TahunTarget, &rk.JumlahCuti, &rk.CutiTahun1, &rk.CutiTahun2, &rk.CutiAlasanPenting, &rk.CutiBesar, &rk.CutiBersalin, &rk.CutiSakit, &rk.SisaCuti)
+		SET tahun_target=$1, jumlah_cuti=$2, cuti_tahun_1=$3, cuti_tahun_2=$4, cuti_tahunan=$5::jsonb,
+		    cuti_alasan_penting=$6, cuti_besar=$7, cuti_bersalin=$8, cuti_sakit=$9, sisa_cuti=$10, updated_at=NOW()
+		WHERE id=$11
+		RETURNING id::text, pegawai_id::text, tahun_target, jumlah_cuti, cuti_tahun_1, cuti_tahun_2, cuti_tahunan, cuti_alasan_penting, cuti_besar, cuti_bersalin, cuti_sakit, sisa_cuti
+	`, req.TahunTarget, req.JumlahCuti, req.CutiTahun1, req.CutiTahun2, string(ctBytes), req.CutiAlasanPenting, req.CutiBesar, req.CutiBersalin, req.CutiSakit, req.SisaCuti, id).
+		Scan(&rk.ID, &rk.PegawaiID, &rk.TahunTarget, &rk.JumlahCuti, &rk.CutiTahun1, &rk.CutiTahun2, &cutiTahunanRaw, &rk.CutiAlasanPenting, &rk.CutiBesar, &rk.CutiBersalin, &rk.CutiSakit, &rk.SisaCuti)
 	if err != nil {
 		return nil, err
+	}
+	if len(cutiTahunanRaw) > 0 {
+		_ = json.Unmarshal(cutiTahunanRaw, &rk.CutiTahunan)
 	}
 	return &rk, nil
 }
@@ -299,8 +371,30 @@ func (r *CutiRepository) AdminRolloverTahunan(ctx context.Context, tahunTujuan i
 		RETURNING COUNT(*)
 	`, tahunTujuan).Scan(&count)
 	if err != nil {
-		// If no rows to return, that's ok
 		return 0, nil
 	}
 	return count, nil
+}
+
+func (r *CutiRepository) AdminSyncPusdatin(ctx context.Context) (int, error) {
+	tag, err := r.db.Exec(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_data_cuti_pegawai (nama, nip, jabatan, unit_kerja)
+		SELECT 
+			COALESCE(p.name, 'Pegawai Kemenag'),
+			pp.nip,
+			COALESCE(pp.jabatan, ''),
+			COALESCE(pp.unit_kerja, 'Kantor Kementerian Agama')
+		FROM kemenag_pusdatin.profiles_pegawai pp
+		JOIN kemenag_pusdatin.profiles p ON p.id = pp.user_id
+		WHERE pp.nip IS NOT NULL AND pp.nip != ''
+		ON CONFLICT (nip) DO UPDATE SET
+			nama = EXCLUDED.nama,
+			jabatan = EXCLUDED.jabatan,
+			unit_kerja = EXCLUDED.unit_kerja,
+			updated_at = NOW();
+	`)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
 }

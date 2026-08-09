@@ -2,7 +2,10 @@ import Link from "next/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import { AuthCardMotion, AuthBgMotionPetugas } from "@/components/auth/auth-motion-wrapper";
+import {
+  AuthCardMotion,
+  AuthBgMotionPetugas,
+} from "@/components/auth/auth-motion-wrapper";
 
 export default async function LoginPetugasPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -13,7 +16,7 @@ export default async function LoginPetugasPage(props: {
   return (
     <div className="relative flex min-h-screen w-full bg-slate-50 overflow-hidden">
       {/* Desktop Back Button */}
-      <Link 
+      <Link
         href="/"
         className="hidden lg:flex absolute top-8 left-8 z-50 items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-full text-sm font-bold shadow-xl transition-all hover:-translate-x-1"
       >
@@ -46,12 +49,14 @@ export default async function LoginPetugasPage(props: {
             <span className="text-indigo-400">PTSP Kemenag</span>
           </h1>
           <p className="text-lg text-slate-300 font-medium max-w-md leading-relaxed">
-            Akses khusus untuk petugas, admin, dan pimpinan dalam mengelola, memverifikasi, dan menyetujui layanan masyarakat dan kepegawaian.
+            Akses khusus untuk petugas, admin, dan pimpinan dalam mengelola,
+            memverifikasi, dan menyetujui layanan masyarakat dan kepegawaian.
           </p>
         </div>
 
         <div className="relative z-10 text-slate-400 text-xs font-medium tracking-wide">
-          &copy; {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab. Barito Utara
+          &copy; {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab.
+          Barito Utara
         </div>
       </div>
 
@@ -71,7 +76,7 @@ export default async function LoginPetugasPage(props: {
 
         {/* Mobile Header & Back Button */}
         <div className="lg:hidden absolute top-0 left-0 w-full p-4 sm:p-6 flex justify-between items-center z-50">
-          <Link 
+          <Link
             href="/"
             className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white rounded-full text-xs font-semibold shadow-lg transition-all active:scale-95"
           >
@@ -87,7 +92,7 @@ export default async function LoginPetugasPage(props: {
               <div className="lg:hidden mx-auto mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl sm:rounded-3xl bg-indigo-50 text-indigo-600 shadow-inner">
                 <ShieldCheck className="h-8 w-8 sm:h-10 sm:w-10" />
               </div>
-              
+
               <p className="mb-2 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-indigo-600">
                 Akses Terbatas
               </p>

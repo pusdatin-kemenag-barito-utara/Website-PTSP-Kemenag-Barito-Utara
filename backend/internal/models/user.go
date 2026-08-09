@@ -24,9 +24,12 @@ type UpdateUserRequest struct {
 	Permissions *any   `json:"permissions"`
 }
 
-// UpdateProfileRequest DTO untuk self-update profil (nama, avatar).
+// UpdateProfileRequest DTO untuk self-update profil (nama, phone, address, avatar).
 type UpdateProfileRequest struct {
+	Name        string `json:"name"`
 	FullName    string `json:"full_name"`
+	Phone       string `json:"phone"`
+	Address     string `json:"address"`
 	AvatarURL   string `json:"avatar_url"`
 	Base64Image string `json:"base64_image"`
 }

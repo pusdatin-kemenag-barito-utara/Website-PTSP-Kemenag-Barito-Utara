@@ -87,13 +87,7 @@ export function HomeServiceCatalogSection({
       <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 relative z-10">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
           {/* Left Side: Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-full lg:w-[40%] text-center lg:text-left space-y-6 lg:space-y-8 relative lg:sticky lg:top-32 z-20"
-          >
+          <div className="w-full lg:w-[40%] text-center lg:text-left space-y-6 lg:space-y-8 relative lg:sticky lg:top-32 z-20">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
@@ -180,20 +174,15 @@ export function HomeServiceCatalogSection({
                 </div>
               </Link>
             </div>
-          </motion.div>
+          </div>
 
           {/* Right Side: Category Cards Grid */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.1 }}
+          <div
             className="w-full lg:w-[60%] grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
           >
             {displayServices.map((service: any, idx: number) => {
               return (
-                <motion.div
-                  variants={cardVariants}
+                <div
                   key={service.id || service.name}
                   className="h-full"
                 >
@@ -221,7 +210,7 @@ export function HomeServiceCatalogSection({
                       </h4>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               );
             })}
 
@@ -249,7 +238,7 @@ export function HomeServiceCatalogSection({
                 </div>
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

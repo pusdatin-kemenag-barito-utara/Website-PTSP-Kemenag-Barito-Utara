@@ -32,42 +32,41 @@ export function RequestDocumentsCard({
           )}
           {(request.serviceRequestDocuments ?? []).map((doc: any) => {
             const url = signedUrlMap.get(doc.id);
-            const title = doc.serviceRequirements?.documentName || doc.fileName;
+            const reqName = doc.requirementName || doc.requirement_name || doc.serviceRequirements?.documentName || doc.serviceRequirements?.document_name;
+            const title = reqName || "Dokumen Persyaratan";
 
             return (
               <div
                 key={doc.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4 hover:bg-white hover:shadow-sm transition-all"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 sm:p-4 hover:bg-white hover:shadow-sm transition-all"
               >
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 shadow-sm">
+                <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white border border-slate-200 text-emerald-600 shadow-sm">
                     <FileText className="h-5 w-5" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-bold text-sm text-slate-800 truncate">
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <p className="font-bold text-xs sm:text-sm text-slate-800 break-words leading-snug" title={title}>
                       {title}
-                    </p>
-                    <p className="text-xs font-medium text-slate-400 mt-0.5 truncate">
-                      {doc.fileName}
                     </p>
                   </div>
                 </div>
                 {doc.filePath === "EXPIRED" ? (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 self-start sm:self-auto">
                     <AlertCircle className="h-3 w-3" />
                     Kadaluarsa
                   </span>
                 ) : url ? (
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.preventDefault();
                       setActiveDoc({
                         url,
                         title,
                         fileName: doc.fileName,
-                      })
-                    }
-                    className="inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-[#059669] bg-emerald-50 border border-emerald-100 hover:bg-[#059669] hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
+                      });
+                    }}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-[#059669] bg-emerald-50 border border-emerald-100 hover:bg-[#059669] hover:text-white active:bg-[#059669] active:text-white transition-all shadow-sm active:scale-95 cursor-pointer w-full sm:w-auto touch-manipulation z-10"
                   >
                     <Eye className="h-4 w-4" />
                     Buka File

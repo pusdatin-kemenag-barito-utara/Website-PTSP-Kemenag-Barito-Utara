@@ -12,8 +12,13 @@ export default async function AdminBukuTamuPage() {
     const res = await fetchAPI<any>("/guest-book");
     if (res && res.data && Array.isArray(res.data)) {
       entries = res.data.map((entry: any) => ({
-        ...entry,
         id: String(entry.id),
+        guestName: entry.guestName || entry.guest_name || "-",
+        whatsapp: entry.whatsapp || "",
+        institutionType: entry.institutionType || entry.institution_type || "Umum",
+        institutionName: entry.institutionName || entry.institution_name || "",
+        intendedOfficer: entry.intendedOfficer || entry.intended_officer || "",
+        purpose: entry.purpose || "",
         visitDate: entry.visitDate || entry.visit_date ? new Date(entry.visitDate || entry.visit_date).toISOString() : new Date().toISOString(),
         createdAt: entry.createdAt || entry.created_at ? new Date(entry.createdAt || entry.created_at).toISOString() : new Date().toISOString(),
         updatedAt: entry.updatedAt || entry.updated_at ? new Date(entry.updatedAt || entry.updated_at).toISOString() : new Date().toISOString(),
@@ -23,7 +28,15 @@ export default async function AdminBukuTamuPage() {
     console.error("Failed to query guestBook from Golang API:", err);
   }
 
-  const allowManualGuestBookDate = false;
+  let allowManualGuestBookDate = false;
+  try {
+    const sysRes = await fetchAPI<any>("/admin/system/status");
+    if (sysRes && sysRes.data && typeof sysRes.data.allowManualGuestBook === "boolean") {
+      allowManualGuestBookDate = sysRes.data.allowManualGuestBook;
+    }
+  } catch (sysErr) {
+    console.error("Failed to query system status from Golang API:", sysErr);
+  }
 
   return (
     <div className="space-y-6">

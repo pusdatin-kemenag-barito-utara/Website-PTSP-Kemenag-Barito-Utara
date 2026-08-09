@@ -58,11 +58,17 @@ export function PegawaiUsulCutiForm({
   const [serviceItemId, setServiceItemId] = useState<string>("");
 
   // Custom Cuti State
+  const [jenisPegawai, setJenisPegawai] = useState<"PNS" | "PPPK">("PNS");
+  const [jabatan, setJabatan] = useState(profile?.jabatan || "");
+  const [masaKerjaTahun, setMasaKerjaTahun] = useState(profile?.masaKerjaTahun || "0");
+  const [masaKerjaBulan, setMasaKerjaBulan] = useState(profile?.masaKerjaBulan || "0");
+
   const [alamatCuti, setAlamatCuti] = useState("");
   const [alasanCutiText, setAlasanCutiText] = useState("");
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalSelesai, setTanggalSelesai] = useState("");
 
+  const [selectedAtasanId, setSelectedAtasanId] = useState("");
   const [atasanLangsungNip, setAtasanLangsungNip] = useState("");
   const [atasanLangsungNama, setAtasanLangsungNama] = useState("");
   const [atasanLangsungJabatan, setAtasanLangsungJabatan] = useState("");
@@ -93,7 +99,6 @@ export function PegawaiUsulCutiForm({
     const atasanMatches = pejabatList.filter((p) => p.unitKerja && norm(p.unitKerja) === userUk);
 
     if (atasanMatches.length > 0) {
-      // Prioritaskan Kasubag TU / Kepala KUA / Kepala Madrasah jika ada
       const head = atasanMatches.find(
         (p) =>
           p.tipePejabat === "kasubag_tu" ||
@@ -104,9 +109,16 @@ export function PegawaiUsulCutiForm({
           p.jabatan.toLowerCase().includes("kepala man")
       ) || atasanMatches[0];
 
+      setSelectedAtasanId(head.nip);
       setAtasanLangsungNama(head.nama);
       setAtasanLangsungNip(head.nip);
       setAtasanLangsungJabatan(head.jabatan);
+    } else if (pejabatList.length > 0) {
+      const fallbackHead = pejabatList[0];
+      setSelectedAtasanId(fallbackHead.nip);
+      setAtasanLangsungNama(fallbackHead.nama);
+      setAtasanLangsungNip(fallbackHead.nip);
+      setAtasanLangsungJabatan(fallbackHead.jabatan);
     }
 
     // Pejabat Berwenang Memberikan Cuti (biasanya Kepala Kantor Kemenag)
@@ -116,7 +128,6 @@ export function PegawaiUsulCutiForm({
       setPejabatCutiNip(kakankemenag.nip);
       setPejabatCutiJabatan(kakankemenag.jabatan);
     } else {
-      // Fallback ke pejabat tingkat tertinggi jika Kepala Kantor tidak diset khusus
       const anyHead = pejabatList.find((p) => p.tipePejabat === "kasubag_tu") || pejabatList[0];
       if (anyHead) {
         setPejabatCutiNama(anyHead.nama);
@@ -427,8 +438,89 @@ export function PegawaiUsulCutiForm({
           {isCutiService ? (
             <div className="space-y-6">
 
-              {/* GRID FORM CUTI */}
+              {/* INFORMASI PEGAWAI & CUTI */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                {/* Status Kepegawaian (PNS / PPPK) */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold text-slate-600 block">
+                    Status Kepegawaian <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors">
+                      <input
+                        type="radio"
+                        name="jenisPegawai"
+                        value="PNS"
+                        checked={jenisPegawai === "PNS"}
+                        onChange={() => setJenisPegawai("PNS")}
+                        className="text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                      />
+                      <span>PNS (Pegawai Negeri Sipil)</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors">
+                      <input
+                        type="radio"
+                        name="jenisPegawai"
+                        value="PPPK"
+                        checked={jenisPegawai === "PPPK"}
+                        onChange={() => setJenisPegawai("PPPK")}
+                        className="text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                      />
+                      <span>PPPK (Pegawai Pemerintah dengan Perjanjian Kerja)</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Jabatan Pegawai */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-semibold text-slate-600">
+                    Jabatan Pegawai <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="jabatan"
+                    required
+                    value={jabatan}
+                    onChange={(e) => setJabatan(e.target.value)}
+                    placeholder="Contoh: Analis Kepegawaian Ahli Muda / Pengelola Keuangan"
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+
+                {/* Masa Kerja (Tahun & Bulan) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">
+                    Masa Kerja (Tahun) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="masaKerjaTahun"
+                    min="0"
+                    required
+                    value={masaKerjaTahun}
+                    onChange={(e) => setMasaKerjaTahun(e.target.value)}
+                    placeholder="Contoh: 5"
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">
+                    Masa Kerja (Bulan) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="masaKerjaBulan"
+                    min="0"
+                    max="11"
+                    required
+                    value={masaKerjaBulan}
+                    onChange={(e) => setMasaKerjaBulan(e.target.value)}
+                    placeholder="Contoh: 6"
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+
                 {/* Tanggal Mulai Cuti */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-600">
@@ -534,31 +626,64 @@ export function PegawaiUsulCutiForm({
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Atasan Langsung */}
+                  {/* Pemilihan Atasan Langsung Berdasarkan Unit Kerja */}
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                    <span className="text-xs font-bold text-slate-800 block">Atasan Langsung</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">Atasan Langsung</span>
+                      <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        {pejabatList.filter((p) => p.unitKerja && p.unitKerja.toLowerCase().trim() === unitKerja.toLowerCase().trim()).length} Ditemukan
+                      </span>
+                    </div>
+
                     <div className="space-y-2">
-                      <input
-                        type="text"
-                        placeholder="Nama Atasan Langsung"
-                        value={atasanLangsungNama}
-                        onChange={(e) => setAtasanLangsungNama(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                      />
-                      <input
-                        type="text"
-                        placeholder="NIP Atasan Langsung"
-                        value={atasanLangsungNip}
-                        onChange={(e) => setAtasanLangsungNip(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Jabatan Atasan Langsung"
-                        value={atasanLangsungJabatan}
-                        onChange={(e) => setAtasanLangsungJabatan(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                      />
+                      <label className="text-[11px] font-semibold text-slate-600 block">
+                        Pilih Atasan Langsung di Unit Kerja ({unitKerja || "Default"}):
+                      </label>
+                      <select
+                        value={selectedAtasanId}
+                        onChange={(e) => {
+                          const nipSel = e.target.value;
+                          setSelectedAtasanId(nipSel);
+                          const p = pejabatList.find((item) => item.nip === nipSel);
+                          if (p) {
+                            setAtasanLangsungNama(p.nama);
+                            setAtasanLangsungNip(p.nip);
+                            setAtasanLangsungJabatan(p.jabatan);
+                          }
+                        }}
+                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      >
+                        {pejabatList.length === 0 && <option value="">Belum ada master data atasan</option>}
+                        {pejabatList.map((p) => (
+                          <option key={p.nip} value={p.nip}>
+                            {p.nama} ({p.jabatan}) {p.unitKerja ? `- ${p.unitKerja}` : ""}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="pt-2 space-y-1.5 border-t border-slate-200/60">
+                        <input
+                          type="text"
+                          placeholder="Nama Atasan Langsung"
+                          value={atasanLangsungNama}
+                          onChange={(e) => setAtasanLangsungNama(e.target.value)}
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        />
+                        <input
+                          type="text"
+                          placeholder="NIP Atasan Langsung"
+                          value={atasanLangsungNip}
+                          onChange={(e) => setAtasanLangsungNip(e.target.value)}
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Jabatan Atasan Langsung"
+                          value={atasanLangsungJabatan}
+                          onChange={(e) => setAtasanLangsungJabatan(e.target.value)}
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -629,10 +754,11 @@ export function PegawaiUsulCutiForm({
           data={{
             nama: profile?.fullName || "",
             nip: profile?.nip || (profile?.email?.includes('@') ? profile.email.split('@')[0].replace(/\D/g, '') : ""),
-            jabatan: profile?.jabatan || "",
+            jabatan: jabatan || profile?.jabatan || "",
             unitKerja: unitKerja || profile?.unitKerja || "",
-            masaKerjaTahun: profile?.masaKerjaTahun || "0",
-            masaKerjaBulan: profile?.masaKerjaBulan || "0",
+            masaKerjaTahun: masaKerjaTahun || "0",
+            masaKerjaBulan: masaKerjaBulan || "0",
+            jenisPegawai: jenisPegawai,
             jenisCuti: selectedItem?.name || "Cuti Tahunan",
             alasan: alasanCutiText || "[Alasan Cuti]",
             alamatCuti: alamatCuti || "[Alamat Cuti]",

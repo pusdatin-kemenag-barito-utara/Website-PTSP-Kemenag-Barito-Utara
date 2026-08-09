@@ -68,9 +68,11 @@ export function LayananTable({
                 Bidang Pengelola
               </div>
             )}
-            <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
-              Jumlah Item
-            </div>
+            {category !== "asn" && (
+              <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+                Jumlah Item
+              </div>
+            )}
             <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
               Status
             </div>
@@ -177,11 +179,13 @@ function ServiceRow({
           <BidangBadge roleOwner={roleOwner} />
         </div>
       )}
-      <div className="w-28 shrink-0 flex items-center justify-center">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-          {itemCounts} Layanan
-        </span>
-      </div>
+      {category !== "asn" && (
+        <div className="w-28 shrink-0 flex items-center justify-center">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+            {itemCounts} Layanan
+          </span>
+        </div>
+      )}
       <div className="w-28 shrink-0 flex items-center justify-center">
         <span
           className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold ${

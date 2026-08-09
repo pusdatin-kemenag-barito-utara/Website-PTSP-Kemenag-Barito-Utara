@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 interface BreadcrumbItem {
   label: string;
@@ -63,11 +62,7 @@ export default function PageBanner({
       <div className="absolute inset-0 -z-10 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:28px_28px]" />
 
       <div className="w-full px-6 py-10 sm:px-10 md:py-14 lg:px-16 lg:py-16 xl:px-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
+        <div>
         {breadcrumb.length > 0 ? (
           <nav
             aria-label="Breadcrumb"
@@ -119,7 +114,7 @@ export default function PageBanner({
             ) : null}
           </div>
         </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

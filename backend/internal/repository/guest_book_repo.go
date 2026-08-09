@@ -74,6 +74,6 @@ func (r *GuestBookRepository) Create(ctx context.Context, req models.CreateGuest
 
 // Delete menghapus entri buku tamu berdasarkan ID.
 func (r *GuestBookRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM ptsp.ptsp_guest_book WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_guest_book WHERE id = $1`, id)
 	return err
 }

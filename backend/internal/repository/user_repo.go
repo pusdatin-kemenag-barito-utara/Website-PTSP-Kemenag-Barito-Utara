@@ -60,8 +60,26 @@ func (r *UserRepository) FindAll(ctx context.Context, role, status string, limit
 func (r *UserRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
 	var u models.User
 	err := r.db.QueryRow(ctx, `
-		SELECT id, name, email, phone, role, user_type, status, is_verified, avatar_url, created_at
-		FROM kemenag_pusdatin.profiles WHERE id = $1
+		SELECT 
+			p.id, 
+			COALESCE(
+				NULLIF(NULLIF(NULLIF(p.name, 'Pegawai'), 'Pemohon'), 'Pusdatin Kemenag Barito Utara'),
+				dcp.nama,
+				p.name,
+				'Pemohon'
+			) AS name, 
+			p.email, 
+			p.phone, 
+			p.role, 
+			p.user_type, 
+			p.status, 
+			p.is_verified, 
+			p.avatar_url, 
+			p.created_at
+		FROM kemenag_pusdatin.profiles p
+		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.profile_id = p.id
+		LEFT JOIN kemenag_ptsp.ptsp_data_cuti_pegawai dcp ON dcp.nip = pp.nip OR dcp.nip = SPLIT_PART(p.email, '@', 1)
+		WHERE p.id = $1 LIMIT 1
 	`, id).Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Role, &u.UserType, &u.Status, &u.IsVerified, &u.AvatarURL, &u.CreatedAt)
 
 	if err != nil {
@@ -92,26 +110,75 @@ func (r *UserRepository) Update(ctx context.Context, id string, req models.Updat
 }
 
 func (r *UserRepository) UpdateProfile(ctx context.Context, id string, req models.UpdateProfileRequest) error {
-	if req.FullName != "" && req.AvatarURL != "" {
-		_, err := r.db.Exec(ctx,
-			`UPDATE kemenag_pusdatin.profiles SET name=$1, avatar_url=$2, updated_at=$3 WHERE id=$4`,
-			req.FullName, req.AvatarURL, time.Now(), id,
-		)
-		return err
-	} else if req.FullName != "" {
-		_, err := r.db.Exec(ctx,
-			`UPDATE kemenag_pusdatin.profiles SET name=$1, updated_at=$2 WHERE id=$3`,
-			req.FullName, time.Now(), id,
-		)
-		return err
-	} else if req.AvatarURL != "" {
-		_, err := r.db.Exec(ctx,
-			`UPDATE kemenag_pusdatin.profiles SET avatar_url=$1, updated_at=$2 WHERE id=$3`,
-			req.AvatarURL, time.Now(), id,
-		)
+	// First check if profile exists, if not get email from Supabase auth or default
+	var existingCount int
+	_ = r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_pusdatin.profiles WHERE id = $1`, id).Scan(&existingCount)
+
+	if existingCount == 0 {
+		// Auto-provision user into kemenag_pusdatin.profiles
+		nameVal := req.Name
+		if nameVal == "" {
+			nameVal = req.FullName
+		}
+		if nameVal == "" {
+			nameVal = "Pemohon"
+		}
+		phoneVal := req.Phone
+		addrVal := req.Address
+		avatarVal := req.AvatarURL
+
+		// Fetch email from Supabase auth.users for new OAuth user
+		var emailVal string
+		_ = r.db.QueryRow(ctx, `SELECT email FROM auth.users WHERE id = $1`, id).Scan(&emailVal)
+
+		_, err := r.db.Exec(ctx, `
+			INSERT INTO kemenag_pusdatin.profiles (id, email, name, phone, address, avatar_url, role, user_type, status, is_verified, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, 'user', 'eksternal_masyarakat', 'aktif', true, $7, $7)
+			ON CONFLICT (id) DO UPDATE SET
+				name = EXCLUDED.name,
+				email = EXCLUDED.email,
+				phone = EXCLUDED.phone,
+				address = EXCLUDED.address,
+				updated_at = EXCLUDED.updated_at
+		`, id, emailVal, nameVal, phoneVal, addrVal, avatarVal, time.Now())
 		return err
 	}
-	return nil
+
+	query := `UPDATE kemenag_pusdatin.profiles SET updated_at = $1`
+	args := []interface{}{time.Now()}
+	argIdx := 2
+
+	nameInput := req.Name
+	if nameInput == "" {
+		nameInput = req.FullName
+	}
+
+	if nameInput != "" {
+		query += fmt.Sprintf(", name = $%d", argIdx)
+		args = append(args, nameInput)
+		argIdx++
+	}
+	if req.Phone != "" {
+		query += fmt.Sprintf(", phone = $%d", argIdx)
+		args = append(args, req.Phone)
+		argIdx++
+	}
+	if req.Address != "" {
+		query += fmt.Sprintf(", address = $%d", argIdx)
+		args = append(args, req.Address)
+		argIdx++
+	}
+	if req.AvatarURL != "" {
+		query += fmt.Sprintf(", avatar_url = $%d", argIdx)
+		args = append(args, req.AvatarURL)
+		argIdx++
+	}
+
+	query += fmt.Sprintf(" WHERE id = $%d", argIdx)
+	args = append(args, id)
+
+	_, err := r.db.Exec(ctx, query, args...)
+	return err
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id string) error {

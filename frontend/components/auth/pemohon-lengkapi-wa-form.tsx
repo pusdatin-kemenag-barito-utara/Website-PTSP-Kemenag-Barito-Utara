@@ -46,8 +46,8 @@ export function PemohonLengkapiWaForm() {
 
     const formData = new FormData();
     formData.append("phone", rawPhone);
-    formData.append("namaLengkap", namaLengkap.trim());
-    formData.append("alamat", alamat.trim());
+    formData.append("fullName", namaLengkap.trim());
+    formData.append("address", alamat.trim());
 
     const result = await updatePemohonWhatsappAction(formData);
 
@@ -60,11 +60,8 @@ export function PemohonLengkapiWaForm() {
       });
       
       const nextPath = searchParams.get("next");
-      if (nextPath && nextPath.startsWith("/") && nextPath !== "/dashboard") {
-        router.push(nextPath);
-      } else {
-        router.push("/masyarakat");
-      }
+      const targetUrl = (nextPath && nextPath.startsWith("/") && nextPath !== "/dashboard") ? nextPath : "/masyarakat";
+      window.location.href = targetUrl;
     }
   };
 

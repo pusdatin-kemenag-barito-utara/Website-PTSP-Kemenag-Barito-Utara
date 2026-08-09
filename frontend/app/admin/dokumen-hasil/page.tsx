@@ -3,7 +3,7 @@ import { fetchAPI } from "@/lib/api";
 import { DokumenHasilClient } from "@/components/admin/dokumen-hasil/dokumen-hasil-client";
 import { AdminPagination } from "@/components/admin/pengajuan/admin-pagination";
 import { ReportExportButton } from "@/components/admin/report-export-button";
-import { getR2SignedUrl } from "@/lib/r2";
+import { getR2SignedUrl, isR2Path } from "@/lib/r2";
 import { PageHeader } from "@/components/admin/page-header";
 import { FileOutput } from "lucide-react";
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
@@ -11,16 +11,34 @@ import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 async function getSignedUrl(path?: string | null) {
   if (!path) return null;
 
-  if (path.startsWith("r2:") || path.startsWith("results/")) {
+  const isR2 = path.startsWith("r2:") || path.startsWith("results/") || isR2Path(path);
+  if (isR2) {
     try {
-      return await getR2SignedUrl(path);
+      const url = await getR2SignedUrl(path);
+      return url;
     } catch (err) {
-      console.error("Gagal mendapatkan R2 Signed URL:", err);
+      console.error("[R2 SignedURL Error]:", err);
       return null;
     }
   }
 
-  return path;
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  if (path.startsWith("/uploads/") || path.startsWith("uploads/")) {
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `http://127.0.0.1:8080${cleanPath}`;
+  }
+
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { data } = await admin.storage.from("generated-documents").createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  } catch {
+    return path;
+  }
 }
 
 export const revalidate = 0;
@@ -63,14 +81,52 @@ export default async function AdminGeneratedDocumentsPage({
 
   const totalPages = Math.ceil(Number(totalCount) / pageSize);
 
-  // Generate signed URLs for existing documents
+  // Ensure generated_documents and generatedDocuments are populated on requests array
+  const enrichedRequests = await Promise.all(
+    requests.map(async (req: any) => {
+      let gDocs = req.generated_documents || req.generatedDocuments || [];
+      if (!gDocs || gDocs.length === 0) {
+        // Direct DB fallback query via Supabase SQL client to fetch generated documents
+        try {
+          const { createAdminClient } = await import("@/lib/supabase/admin");
+          const admin = createAdminClient();
+          const { data } = await admin
+            .schema("kemenag_ptsp")
+            .from("ptsp_generated_documents")
+            .select("id, file_name, file_path, file_type, file_size, created_at")
+            .eq("request_id", req.id);
+          if (data && data.length > 0) {
+            gDocs = data.map((d: any) => ({
+              id: String(d.id),
+              fileName: d.file_name,
+              filePath: d.file_path,
+              fileType: d.file_type,
+              fileSize: d.file_size,
+              createdAt: d.created_at,
+            }));
+          }
+        } catch (e) {
+          console.error("Fallback query generated documents error:", e);
+        }
+      }
+      return {
+        ...req,
+        generated_documents: gDocs,
+        generatedDocuments: gDocs,
+      };
+    })
+  );
+
+  // Generate signed URLs using enriched requests
   const urlEntries = await Promise.all(
-    requests.map(async (request: any) => {
+    enrichedRequests.map(async (request: any) => {
+      const genDocs = request.generated_documents || request.generatedDocuments || [];
+      const reqDocs = request.request_documents || request.documents || [];
       const docPath =
-        request.generated_documents?.[0]?.file_path ||
-        request.generatedDocuments?.[0]?.filePath ||
-        request.documents?.[0]?.file_path ||
-        request.documents?.[0]?.filePath ||
+        genDocs[0]?.file_path ||
+        genDocs[0]?.filePath ||
+        reqDocs[0]?.file_path ||
+        reqDocs[0]?.filePath ||
         null;
       return {
         id: request.id,
@@ -79,7 +135,7 @@ export default async function AdminGeneratedDocumentsPage({
     }),
   );
 
-  const urlMap = Object.fromEntries(
+  const enrichedUrlMap = Object.fromEntries(
     urlEntries.map((item: any) => [item.id, item.url]),
   );
 
@@ -100,8 +156,8 @@ export default async function AdminGeneratedDocumentsPage({
 
       <div className="space-y-4">
         <DokumenHasilClient
-          requests={requests || []}
-          urlMap={urlMap}
+          requests={enrichedRequests || []}
+          urlMap={enrichedUrlMap}
           services={services || []}
           q={q}
           serviceId={serviceId}

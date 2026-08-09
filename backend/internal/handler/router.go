@@ -166,6 +166,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		adminCuti.Put("/rekap/:id", cutiHdl.AdminUpdateRekap)
 		adminCuti.Delete("/rekap/:id", cutiHdl.AdminDeleteRekap)
 		adminCuti.Post("/rollover", cutiHdl.AdminRolloverTahunan)
+		adminCuti.Post("/sync-pusdatin", cutiHdl.AdminSyncPusdatin)
 	}
 }
 

@@ -87,3 +87,7 @@ func (s *CutiService) AdminRolloverTahunan(ctx context.Context, tahunTujuan int)
 	return s.repo.AdminRolloverTahunan(ctx, tahunTujuan)
 }
 
+func (s *CutiService) AdminSyncPusdatin(ctx context.Context) (int, error) {
+	return s.repo.AdminSyncPusdatin(ctx)
+}
+

@@ -109,10 +109,10 @@ export function DataCutiClient({ initialData }: Props) {
     setData(initialData);
   }, [initialData]);
 
-  const filtered = data.filter(
+  const filtered = (data || []).filter(
     (p) =>
-      p.nama.toLowerCase().includes(search.toLowerCase()) ||
-      (p.nip && p.nip.includes(search)),
+      (p?.nama || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p?.nip && String(p.nip).includes(search)),
   );
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
@@ -223,9 +223,10 @@ export function DataCutiClient({ initialData }: Props) {
               </tr>
             ) : (
               paginatedData.map((p) => {
-                const currentRekap = p.rekapCutiTahunan.find((r) => r.tahunTarget === currentYear);
-                const n1Rekap = p.rekapCutiTahunan.find((r) => r.tahunTarget === currentYear - 1);
-                const n2Rekap = p.rekapCutiTahunan.find((r) => r.tahunTarget === currentYear - 2);
+                const rekap = p.rekapCutiTahunan || [];
+                const currentRekap = rekap.find((r) => r.tahunTarget === currentYear);
+                const n1Rekap = rekap.find((r) => r.tahunTarget === currentYear - 1);
+                const n2Rekap = rekap.find((r) => r.tahunTarget === currentYear - 2);
 
                 const displayCutiTahun2 = currentRekap?.cutiTahun2 !== null && currentRekap?.cutiTahun2 !== undefined
                   ? currentRekap.cutiTahun2
@@ -302,28 +303,35 @@ export function DataCutiClient({ initialData }: Props) {
       />
 
       <Dialog open={!!editingPegawai} onOpenChange={(open) => !open && setEditingPegawai(null)}>
-        <DialogContent className="max-w-[90vw] w-full">
-          <DialogHeader>
-            <DialogTitle>Edit Pegawai</DialogTitle>
+        <DialogContent className="w-[90vw] max-w-[90vw] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden">
+          {/* Header dengan judul + tombol aksi di sebelah kanan */}
+          <DialogHeader className="px-8 pt-5 pb-4 border-b border-slate-100 shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg">Edit Data Cuti Pegawai</DialogTitle>
+              <div id="cuti-form-actions" className="flex items-center gap-3" />
+            </div>
           </DialogHeader>
-          {editingPegawai && (
-            <DataCutiForm
-              initialData={{
-                id: editingPegawai.id,
-                no: editingPegawai.no,
-                nama: editingPegawai.nama,
-                nip: editingPegawai.nip,
-                jabatan: editingPegawai.jabatan,
-                unitKerja: editingPegawai.unitKerja,
-                rekapCutiTahunan: editingPegawai.rekapCutiTahunan,
-              }}
-              onSuccess={() => {
-                setEditingPegawai(null);
-                router.refresh();
-              }}
-              onCancel={() => setEditingPegawai(null)}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto px-8 py-6">
+            {editingPegawai && (
+              <DataCutiForm
+                initialData={{
+                  id: editingPegawai.id,
+                  no: editingPegawai.no,
+                  nama: editingPegawai.nama,
+                  nip: editingPegawai.nip,
+                  jabatan: editingPegawai.jabatan,
+                  unitKerja: editingPegawai.unitKerja,
+                  rekapCutiTahunan: editingPegawai.rekapCutiTahunan,
+                }}
+                onSuccess={() => {
+                  setEditingPegawai(null);
+                  router.refresh();
+                }}
+                onCancel={() => setEditingPegawai(null)}
+                actionsPortalId="cuti-form-actions"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

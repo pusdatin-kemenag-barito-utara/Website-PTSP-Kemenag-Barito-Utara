@@ -17,7 +17,7 @@ func NewGuestBookHandler(svc *service.GuestBookService) *GuestBookHandler {
 }
 
 func (h *GuestBookHandler) GetGuestBook(c *fiber.Ctx) error {
-	limit := c.QueryInt("limit", 100)
+	limit := c.QueryInt("limit", 1000)
 	data, err := h.svc.GetAll(c.Context(), limit)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})

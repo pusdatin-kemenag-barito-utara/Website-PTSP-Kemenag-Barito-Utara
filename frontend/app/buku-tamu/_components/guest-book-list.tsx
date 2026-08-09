@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Search, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { motion, Variants } from "framer-motion";
 import { GuestEntry } from "./types";
 import { formatDate, maskPhoneNumber, formatDateHeading } from "./utils";
 import { ModernSelect } from "@/components/ui/modern-select";
@@ -62,44 +61,26 @@ export default function GuestBookList({
         purpose.toLowerCase().includes(query)
       );
     })
-
     .sort((a, b) => {
-      const timeA = new Date(a.visitDate).getTime();
-      const timeB = new Date(b.visitDate).getTime();
-      return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+      const dateA = new Date(
+        a.visitDate || (a as any).visit_date || (a as any).created_at || 0
+      ).getTime();
+      const dateB = new Date(
+        b.visitDate || (b as any).visit_date || (b as any).created_at || 0
+      ).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
 
-  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage) || 1;
   const currentEntries = filteredEntries.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
-  };
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className="w-full"
-    >
+    <div className="w-full">
       {/* Breadcrumb */}
-      <motion.div
-        variants={itemVariants}
-        className="mb-6 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400"
-      >
+      <div className="mb-6 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-400">
         <button
           onClick={() => onSwitchTab("form")}
           className="hover:text-emerald-600 transition-colors"
@@ -120,12 +101,10 @@ export default function GuestBookList({
         >
           Statistik Tamu 📊
         </button>
-      </motion.div>
+      </div>
 
-      <motion.div
-        variants={itemVariants}
-        className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
-      >
+      {/* Header & Actions */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
             Daftar Kunjungan Tamu
@@ -136,7 +115,7 @@ export default function GuestBookList({
           </p>
         </div>
 
-        {/* Search Box */}
+        {/* Search Bar */}
         <div className="relative w-full max-w-sm">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Search className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
@@ -164,24 +143,18 @@ export default function GuestBookList({
             onChange={(val) => setSortOrder(val as "desc" | "asc")}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Date Heading Banner */}
-      <motion.div
-        variants={itemVariants}
-        className="mb-4 text-center md:text-left"
-      >
+      <div className="mb-4 text-center md:text-left">
         <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/60 px-4 py-2.5 rounded-xl border border-emerald-100/50 dark:border-emerald-900/50 inline-block">
           Daftar Tamu Tanggal {formatDateHeading(statsDate)}
         </h3>
-      </motion.div>
+      </div>
 
       {/* Empty State */}
       {filteredEntries.length === 0 ? (
-        <motion.div
-          variants={itemVariants}
-          className="flex flex-col items-center justify-center py-16 text-center"
-        >
+        <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -217,14 +190,11 @@ export default function GuestBookList({
               Reset Pencarian
             </button>
           )}
-        </motion.div>
+        </div>
       ) : (
         <>
           {/* DESKTOP VIEW: Table */}
-          <motion.div
-            variants={itemVariants}
-            className="hidden overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 md:block transition-colors duration-300"
-          >
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 md:block transition-colors duration-300">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -248,65 +218,44 @@ export default function GuestBookList({
                   return (
                     <tr
                       key={entry.id}
-                      className="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
+                      className="hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors"
                     >
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">
-                          {guestName}
-                        </div>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5 fill-current"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 0 0 1.333 4.978L2 22l5.19-1.354a9.92 9.92 0 0 0 4.82 1.354h.005c5.507 0 9.99-4.478 9.99-9.984A9.99 9.99 0 0 0 12.012 2Zm4.87 14.153c-.27.756-1.38 1.488-1.9 1.554-.51.066-1.02.324-3.23-.58-2.67-1.09-4.38-3.8-4.51-3.98a5.27 5.27 0 0 1-1.12-2.83 3.09 3.09 0 0 1 1-2.31c.14-.14.28-.21.41-.21h.33c.1 0 .23 0 .36.3.13.33.47 1.15.51 1.24a.32.32 0 0 1 .02.3c-.08.16-.18.26-.3.4l-.38.45c-.12.13-.25.27-.1.53.15.25.66 1.09 1.42 1.76.98.87 1.8 1.14 2.06 1.27.26.13.41.11.56-.06.15-.17.66-.76.84-.96.18-.2.36-.16.6-.08l1.52.75c.24.12.4.18.46.28.06.1.06.6-.21 1.35Z" />
-                          </svg>
+                      <td className="px-6 py-4 font-semibold text-slate-900 dark:text-slate-100">
+                        <div>{guestName}</div>
+                        <div className="text-xs text-emerald-600 dark:text-emerald-400 font-normal">
                           {whatsapp && whatsapp !== "-" ? (
                             <MaskedPhone phone={whatsapp} />
                           ) : (
-                            <span className="font-medium text-slate-400 dark:text-slate-500">
-                              -
-                            </span>
+                            <span className="text-slate-400">-</span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">
+                          {instName || "-"}
+                        </div>
+                        <div className="text-xs text-slate-400 dark:text-slate-500">
                           {instType}
-                        </span>
-                        {instName && (
-                          <div className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                            {instName}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-slate-900 dark:text-slate-100">
-                          {intendedOfficer}
                         </div>
                       </td>
-                      <td
-                        className="px-6 py-4 max-w-xs truncate"
-                        title={purpose}
-                      >
-                        <div className="text-slate-600 dark:text-slate-400 line-clamp-2">
-                          {purpose}
-                        </div>
+                      <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">
+                        {intendedOfficer}
                       </td>
-                      <td className="px-6 py-4 text-right text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-400 max-w-xs truncate">
+                        {purpose}
+                      </td>
+                      <td className="px-6 py-4 text-right text-xs text-slate-400 dark:text-slate-500 font-medium">
                         {formatDate(visitDate)}
                       </td>
                     </tr>
                   );
                 })}
-
               </tbody>
             </table>
-          </motion.div>
+          </div>
 
           {/* MOBILE VIEW: Simplified List */}
-          <motion.div variants={itemVariants} className="grid gap-3 md:hidden">
+          <div className="grid gap-3 md:hidden">
             {currentEntries.map((entry: any) => {
               const isExpanded = expandedId === entry.id;
               const guestName = entry.guestName || entry.guest_name || entry.nama || "-";
@@ -353,14 +302,7 @@ export default function GuestBookList({
                   </div>
 
                   {/* Expanded Content */}
-                  <motion.div
-                    initial={false}
-                    animate={{
-                      height: isExpanded ? "auto" : 0,
-                      opacity: isExpanded ? 1 : 0,
-                    }}
-                    className="overflow-hidden"
-                  >
+                  {isExpanded && (
                     <div className="p-4 pt-1 border-t border-slate-100/60 mt-1 space-y-3 bg-slate-50/50">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -393,18 +335,15 @@ export default function GuestBookList({
                         </p>
                       </div>
                     </div>
-                  </motion.div>
+                  )}
                 </div>
               );
             })}
-          </motion.div>
+          </div>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <motion.div
-              variants={itemVariants}
-              className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 border-t border-slate-100 pt-5"
-            >
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 border-t border-slate-100 pt-5">
               <div className="flex items-center justify-between w-full sm:w-auto gap-2 order-2 sm:order-1">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -433,10 +372,10 @@ export default function GuestBookList({
                   dari <span className="text-slate-900">{totalPages}</span>
                 </span>
               </div>
-            </motion.div>
+            </div>
           )}
         </>
       )}
-    </motion.div>
+    </div>
   );
 }

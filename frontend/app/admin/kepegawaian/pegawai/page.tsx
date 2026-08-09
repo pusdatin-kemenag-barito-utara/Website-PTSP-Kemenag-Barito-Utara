@@ -9,7 +9,7 @@ export default async function ManajemenCutiPage() {
 
   let dataCuti: any[] = [];
   try {
-    const res = await fetchAPI<any>("/pegawai/cuti");
+    const res = await fetchAPI<any>("/admin/cuti/pegawai");
     if (res && res.data && Array.isArray(res.data)) {
       dataCuti = res.data;
     }

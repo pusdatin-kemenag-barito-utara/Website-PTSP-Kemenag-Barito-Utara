@@ -105,7 +105,8 @@ export async function updateDataCutiAction(
     const golongan = String(formData.get("golongan") || "");
     const jenisPegawai = String(formData.get("jenisPegawai") || "PNS");
 
-    const res = await fetchAPI<any>(`/admin/cuti/pegawai/${id}`, {
+    // 1. Update master profile pegawai
+    const resPegawai = await fetchAPI<any>(`/admin/cuti/pegawai/${id}`, {
       method: "PUT",
       body: JSON.stringify({
         nama,
@@ -116,11 +117,56 @@ export async function updateDataCutiAction(
       }),
     });
 
+    // 2. Parse rekap cuti fields
+    const tahunTarget = Number(formData.get("tahunTarget") || new Date().getFullYear());
+    const jumlahCuti = Number(formData.get("jumlahCuti") || 12);
+    const cutiTahun1 = Number(formData.get("cutiTahun1") || 0);
+    const cutiTahun2 = Number(formData.get("cutiTahun2") || 0);
+    const cutiAlasanPenting = Number(formData.get("cutiAlasanPenting") || 0);
+    const cutiBesar = Number(formData.get("cutiBesar") || 0);
+    const cutiBersalin = Number(formData.get("cutiBersalin") || 0);
+    const cutiSakit = Number(formData.get("cutiSakit") || 0);
+    const sisaCuti = Number(formData.get("sisaCuti") || 12);
+
+    let cutiTahunan: number[] = Array(12).fill(0);
+    try {
+      const rawCT = formData.get("cutiTahunan");
+      if (rawCT) cutiTahunan = JSON.parse(String(rawCT));
+    } catch {}
+
+    const rekapId = String(formData.get("rekapId") || "");
+
+    const rekapPayload = {
+      pegawaiId: id,
+      tahunTarget,
+      jumlahCuti,
+      cutiTahun1,
+      cutiTahun2,
+      cutiTahunan,
+      cutiAlasanPenting,
+      cutiBesar,
+      cutiBersalin,
+      cutiSakit,
+      sisaCuti,
+    };
+
+    if (rekapId) {
+      await fetchAPI<any>(`/admin/cuti/rekap/${rekapId}`, {
+        method: "PUT",
+        body: JSON.stringify(rekapPayload),
+      });
+    } else {
+      await fetchAPI<any>("/admin/cuti/rekap", {
+        method: "POST",
+        body: JSON.stringify(rekapPayload),
+      });
+    }
+
     revalidatePath("/admin/kepegawaian/pegawai");
     return {
       success: true,
-      message: res.message || "Data pegawai berhasil diperbarui.",
-      data: res.data,
+      message: "Data cuti pegawai berhasil diperbarui.",
+      data: resPegawai?.data,
     };
   } catch (err: any) {
     return { success: false, error: err.message || "Gagal mengubah data." };
@@ -276,14 +322,20 @@ export async function importCutiCsvAction(
   return { success: false, error: "Belum diimplementasikan." };
 }
 
-// TODO: Implementasi API client sinkronisasi data dari Pusdatin Kemenag
 export async function syncDataPegawaiFromPusdatinAction(): Promise<ActionResponse> {
   try {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: "Belum login." };
 
+    const res = await fetchAPI<any>("/admin/cuti/sync-pusdatin", {
+      method: "POST",
+    });
+
     revalidatePath("/admin/kepegawaian/pegawai");
-    return { success: true, message: "Berhasil sinkronisasi." };
+    return {
+      success: true,
+      message: res.message || "Berhasil sinkronisasi data pegawai dari Pusdatin.",
+    };
   } catch (err: any) {
     return {
       success: false,

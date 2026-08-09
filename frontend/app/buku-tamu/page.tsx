@@ -22,7 +22,15 @@ export default async function GuestBookPage() {
     console.error("Failed to query guestBook from Golang API:", err);
   }
 
-  const allowManualGuestBookDate = false;
+  let allowManualGuestBookDate = false;
+  try {
+    const sysRes = await fetchAPI<any>("/admin/system/status");
+    if (sysRes && sysRes.data && typeof sysRes.data.allowManualGuestBook === "boolean") {
+      allowManualGuestBookDate = sysRes.data.allowManualGuestBook;
+    }
+  } catch (sysErr) {
+    console.error("Failed to query system status from Golang API:", sysErr);
+  }
 
   return (
     <main className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-16">

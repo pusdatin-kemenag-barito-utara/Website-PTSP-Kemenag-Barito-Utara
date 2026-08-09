@@ -87,6 +87,25 @@ func (r *RequestRepository) FindAll(ctx context.Context, userID, status, categor
 			req.ItemName = &iName
 			req.ApplicantName = &aName
 			req.ApplicantEmail = &aEmail
+
+			// Fetch generated documents for this request
+			req.GeneratedDocuments = []models.RequestDocument{}
+			genRows, genErr := r.db.Query(ctx, `
+				SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0)
+				FROM kemenag_ptsp.ptsp_generated_documents
+				WHERE request_id::text = $1
+				ORDER BY created_at DESC
+			`, req.ID)
+			if genErr == nil {
+				for genRows.Next() {
+					var gDoc models.RequestDocument
+					if err := genRows.Scan(&gDoc.ID, &gDoc.FileName, &gDoc.FilePath, &gDoc.FileType, &gDoc.FileSize); err == nil {
+						req.GeneratedDocuments = append(req.GeneratedDocuments, gDoc)
+					}
+				}
+				genRows.Close()
+			}
+
 			result = append(result, req)
 		}
 	}
@@ -159,14 +178,36 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 		}
 	}
 
-	// Fetch documents
-	docRows, _ := r.db.Query(ctx, `SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0) FROM kemenag_ptsp.ptsp_service_request_documents WHERE request_id::text = $1`, id)
+	// Fetch documents with requirement name
+	docRows, _ := r.db.Query(ctx, `
+		SELECT d.id::text, COALESCE(sr.document_name, ''), COALESCE(d.file_name, ''), COALESCE(d.file_path, ''), COALESCE(d.file_type, ''), COALESCE(d.file_size, 0)
+		FROM kemenag_ptsp.ptsp_service_request_documents d
+		LEFT JOIN kemenag_ptsp.ptsp_service_requirements sr ON sr.id = d.requirement_id
+		WHERE d.request_id::text = $1
+	`, id)
 	if docRows != nil {
 		defer docRows.Close()
 		for docRows.Next() {
 			var doc models.RequestDocument
-			if err := docRows.Scan(&doc.ID, &doc.FileName, &doc.FilePath, &doc.FileType, &doc.FileSize); err == nil {
+			if err := docRows.Scan(&doc.ID, &doc.RequirementName, &doc.FileName, &doc.FilePath, &doc.FileType, &doc.FileSize); err == nil {
 				detail.Documents = append(detail.Documents, doc)
+			}
+		}
+	}
+
+	// Fetch generated documents
+	genRows, _ := r.db.Query(ctx, `
+		SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0)
+		FROM kemenag_ptsp.ptsp_generated_documents
+		WHERE request_id::text = $1
+		ORDER BY created_at DESC
+	`, id)
+	if genRows != nil {
+		defer genRows.Close()
+		for genRows.Next() {
+			var gDoc models.RequestDocument
+			if err := genRows.Scan(&gDoc.ID, &gDoc.FileName, &gDoc.FilePath, &gDoc.FileType, &gDoc.FileSize); err == nil {
+				detail.GeneratedDocuments = append(detail.GeneratedDocuments, gDoc)
 			}
 		}
 	}

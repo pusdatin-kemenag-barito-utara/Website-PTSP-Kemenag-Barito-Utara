@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Search, 
   Trash2, 
@@ -38,6 +39,7 @@ export function BukuTamuClient({
   initialEntries: GuestBookEntry[];
   initialAllowManual?: boolean;
 }) {
+  const router = useRouter();
   const [entries, setEntries] = useState<GuestBookEntry[]>(initialEntries);
   const [search, setSearch] = useState("");
   const [instTypeFilter, setInstTypeFilter] = useState("all");
@@ -63,12 +65,12 @@ export function BukuTamuClient({
   const filteredEntries = entries.filter((entry) => {
     // 1. Text Search
     const searchLower = search.toLowerCase();
-    const matchesSearch = 
-      entry.guestName.toLowerCase().includes(searchLower) ||
-      entry.whatsapp.includes(searchLower) ||
+    const matchesSearch =
+      (entry.guestName || "").toLowerCase().includes(searchLower) ||
+      (entry.whatsapp || "").includes(searchLower) ||
       (entry.institutionName || "").toLowerCase().includes(searchLower) ||
-      entry.intendedOfficer.toLowerCase().includes(searchLower) ||
-      entry.purpose.toLowerCase().includes(searchLower);
+      (entry.intendedOfficer || "").toLowerCase().includes(searchLower) ||
+      (entry.purpose || "").toLowerCase().includes(searchLower);
 
     // 2. Institution Type Filter
     const matchesType = instTypeFilter === "all" || entry.institutionType === instTypeFilter;
@@ -119,6 +121,7 @@ export function BukuTamuClient({
         });
         setEntries((prev) => prev.filter((e) => e.id !== deletingEntry.id));
         setDeletingEntry(null);
+        router.refresh();
       } else {
         toast.error("Gagal menghapus", {
           description: res.error || "Terjadi kesalahan sistem.",
@@ -315,10 +318,10 @@ export function BukuTamuClient({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 shrink-0 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center font-bold">
-                          {entry.guestName.charAt(0).toUpperCase()}
+                          {(entry.guestName || "G").charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-800">{entry.guestName}</p>
+                          <p className="text-sm font-bold text-slate-800">{entry.guestName || "-"}</p>
                           <a 
                             href={`https://wa.me/${entry.whatsapp.replace(/\D/g, "")}`}
                             target="_blank"

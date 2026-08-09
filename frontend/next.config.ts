@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  webpack: (config) => {
+    // pdfjs-dist needs canvas=false alias when rendering in browser
+    config.resolve.alias = { ...config.resolve.alias, canvas: false };
+    return config;
+  },
 };
 
 export default withPWA(nextConfig);
