@@ -7,6 +7,8 @@ import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import Link from "next/link";
 import { ServiceWizardClient } from "@/components/admin/layanan/service-wizard-client";
 
+export const revalidate = 0;
+
 export default async function ServiceWizardPage({
   params,
 }: {
@@ -18,7 +20,7 @@ export default async function ServiceWizardPage({
 
   let service: any = null;
   try {
-    const res = await fetchAPI<any>("/services");
+    const res = await fetchAPI<any>("/services", { cache: "no-store" });
     if (res && res.data && Array.isArray(res.data)) {
       service = res.data.find((s: any) => String(s.id) === String(id));
     }

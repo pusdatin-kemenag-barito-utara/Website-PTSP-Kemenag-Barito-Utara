@@ -7,6 +7,7 @@ import { UploadResultButton } from "@/components/admin/upload-result-button";
 import { sendResultWhatsAppAction } from "@/lib/actions/admin/admin-requests";
 import { toast } from "sonner";
 import { AlertDialog } from "@/components/ui/alert-dialog";
+import { FloatingDocViewerModal } from "@/components/ui/floating-doc-viewer-modal";
 
 export function DokumenHasilTable({
   paginatedRequests,
@@ -47,14 +48,35 @@ export function DokumenHasilTable({
 function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string | null }) {
   const [isPending, startTransition] = useTransition();
   const [showWADialog, setShowWADialog] = useState(false);
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+
+  const applicantName =
+    request.applicant_name ||
+    request.applicantName ||
+    request.profiles?.fullName ||
+    request.profiles?.name ||
+    request.name ||
+    "Pemohon Tanpa Nama";
+
+  const serviceName =
+    request.service_name ||
+    request.serviceName ||
+    request.services?.name ||
+    request.item_name ||
+    request.itemName ||
+    "Layanan PTSP";
+
+  const reqNum = request.request_number || request.requestNumber || request.requestNo || "-";
+
   const waLog = request.activityLogs?.find((log: any) => log.action === "KIRIM_WA_HASIL");
   const [isWaSent, setIsWaSent] = useState(!!waLog);
   const [waSentDate, setWaSentDate] = useState<string | null>(
-    waLog?.createdAt ? formatDate(waLog.createdAt) : null
+    waLog?.createdAt || waLog?.created_at ? formatDate(waLog.createdAt || waLog.created_at) : null
   );
   
-  const isGenerated = !!request.generatedDocuments?.length || !!fileUrl;
-  const docDate = request.generatedDocuments?.length ? formatDate(request.generatedDocuments[0].generatedAt) : null;
+  const generatedDocs = request.generated_documents || request.generatedDocuments || [];
+  const isGenerated = !!generatedDocs.length || !!fileUrl;
+  const docDate = generatedDocs.length ? formatDate(generatedDocs[0].generatedAt || generatedDocs[0].generated_at || request.updated_at || request.updatedAt) : null;
   
   const handleConfirmSendWA = () => {
     setShowWADialog(false);
@@ -73,15 +95,16 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
     });
   };
 
-  const statusColor = request.status === "completed" 
+  const currentStatus = (request.status || "").toLowerCase();
+  const statusColor = currentStatus === "completed" || currentStatus === "selesai"
     ? "bg-emerald-100 text-emerald-700" 
-    : request.status === "under_review"
+    : currentStatus === "under_review" || currentStatus === "sedang ditinjau"
       ? "bg-blue-100 text-blue-700"
-      : request.status === "rejected"
+      : currentStatus === "rejected" || currentStatus === "ditolak"
         ? "bg-red-100 text-red-700"
         : "bg-amber-100 text-amber-700";
         
-  const statusLabel = request.status.replace(/_/g, " ");
+  const statusLabel = request.status ? request.status.replace(/_/g, " ").toUpperCase() : "SELESAI";
 
   return (
     <>
@@ -105,7 +128,7 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
           <div className="min-w-0 space-y-2">
             <div>
               <h3 className="font-bold text-slate-900 text-base truncate flex items-center gap-2">
-                {request.profiles?.fullName || "Pemohon Tanpa Nama"}
+                {applicantName}
                 {isGenerated && (
                   <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
                     Tersedia
@@ -113,13 +136,13 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
                 )}
               </h3>
               <p className="text-sm font-medium text-slate-500 truncate mt-0.5">
-                {request.services?.name || "Layanan PTSP"}
+                {serviceName}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
               <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md" title="Nomor Tiket">
-                <span className="font-semibold font-mono text-slate-700">{request.request_number}</span>
+                <span className="font-semibold font-mono text-slate-700">{reqNum}</span>
               </div>
               
               <div className="flex items-center gap-1.5">
@@ -131,7 +154,7 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
               {isGenerated ? (
                 <div className="flex items-center gap-1.5 text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Diunggah: {docDate}
+                  {docDate ? `Diunggah: ${docDate}` : "Dokumen Hasil Siap"}
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5 text-amber-600 font-semibold bg-amber-50 px-2.5 py-1 rounded-md border border-amber-100">
@@ -154,20 +177,16 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
         <div className="flex flex-wrap items-center gap-2 shrink-0 ml-[4.5rem] lg:ml-0">
           <UploadResultButton requestId={request.id} hasFile={isGenerated} />
           
-          {request.generatedDocuments?.[0]?.filePath === "EXPIRED" ? (
-            <span className="flex items-center justify-center p-2 rounded-xl bg-red-50 text-red-600 border border-red-200" title="Dokumen Kadaluarsa">
-              <AlertCircle className="h-4 w-4" />
-            </span>
-          ) : fileUrl ? (
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Lihat File"
-              className="flex items-center justify-center p-2 rounded-xl transition-all shadow-sm active:scale-95 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300"
+          {fileUrl ? (
+            <button
+              type="button"
+              onClick={() => setIsDocModalOpen(true)}
+              title="Lihat Dokumen Hasil"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
             >
               <Eye className="h-4 w-4" />
-            </a>
+              <span>Buka File</span>
+            </button>
           ) : null}
 
           {isGenerated && (
@@ -187,12 +206,20 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
         open={showWADialog}
         onOpenChange={setShowWADialog}
         title="Kirim Dokumen via WhatsApp"
-        description={`Apakah Anda yakin ingin mengirim dokumen hasil ke nomor WA pemohon (${request.profiles?.fullName || "Pemohon"})?`}
+        description={`Apakah Anda yakin ingin mengirim dokumen hasil ke nomor WA pemohon (${applicantName})?`}
         onConfirm={handleConfirmSendWA}
         loading={isPending}
         confirmText="Kirim Sekarang"
         cancelText="Batal"
         variant="info"
+      />
+
+      <FloatingDocViewerModal
+        isOpen={isDocModalOpen}
+        onClose={() => setIsDocModalOpen(false)}
+        title={serviceName}
+        url={fileUrl}
+        fileName={`Dokumen_Hasil_${reqNum}.pdf`}
       />
     </>
   );

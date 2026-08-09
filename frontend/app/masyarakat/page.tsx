@@ -8,15 +8,18 @@ import { ServiceFlowGuide } from "./_components/service-flow-guide";
 
 export default async function DashboardHomePage() {
   const profile = await requireAuth();
+  const userId = profile?.id || "";
 
   let requests: any[] = [];
-  try {
-    const res = await fetchAPI<any>(`/requests?userId=${encodeURIComponent(profile.id)}`);
-    if (res && res.data && Array.isArray(res.data)) {
-      requests = res.data;
+  if (userId) {
+    try {
+      const res = await fetchAPI<any>(`/requests?userId=${encodeURIComponent(userId)}`);
+      if (res && res.data && Array.isArray(res.data)) {
+        requests = res.data;
+      }
+    } catch (err) {
+      console.error("Failed to fetch user requests:", err);
     }
-  } catch (err) {
-    console.error("Failed to fetch user requests:", err);
   }
 
   const stats = {

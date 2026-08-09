@@ -14,9 +14,12 @@ interface WizardItemListProps {
 export function WizardItemList({ service, isSuperAdmin, wizard, onOpenFloatingManage }: WizardItemListProps) {
   const { modals, ui, forms, handlers } = wizard;
 
+  const parentIsActive = service.is_active !== undefined ? Boolean(service.is_active) : (service.isActive !== undefined ? Boolean(service.isActive) : true);
+
   // Items sorted by sort_order
+  const itemsList = service.serviceItems || service.items || [];
   const sortedItems =
-    [...(service.serviceItems || [])].sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)) || [];
+    [...itemsList].sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)) || [];
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
@@ -57,7 +60,7 @@ export function WizardItemList({ service, isSuperAdmin, wizard, onOpenFloatingMa
         </div>
         <div className="flex items-center gap-6">
           <span className="w-24 text-center shrink-0">Status</span>
-          <span className="w-[305px] text-center shrink-0">Tindakan Admin</span>
+          <span className="w-32 text-center shrink-0">Tindakan Admin</span>
         </div>
       </div>
 
@@ -71,6 +74,7 @@ export function WizardItemList({ service, isSuperAdmin, wizard, onOpenFloatingMa
           <WizardItemRow
             key={item.id}
             item={item}
+            parentIsActive={parentIsActive}
             isSuperAdmin={isSuperAdmin}
             expandedItemId={ui.expandedItemId}
             setExpandedItemId={ui.setExpandedItemId}

@@ -84,15 +84,46 @@ func (s *ServiceService) GetServiceBySlug(ctx context.Context, slug string) (*mo
 	return res, nil
 }
 
+func (s *ServiceService) clearCache() {
+	s.cacheMutex.Lock()
+	s.cache = make(map[string]cacheEntry)
+	s.cacheMutex.Unlock()
+}
+
 func (s *ServiceService) GetMasterOptions(ctx context.Context) ([]models.MasterOption, error) {
-	return s.repo.FindMasterOptions(ctx)
+	cacheKey := "master_options"
+	s.cacheMutex.RLock()
+	entry, exists := s.cache[cacheKey]
+	s.cacheMutex.RUnlock()
+
+	if exists && time.Now().Before(entry.expiresAt) {
+		if res, ok := entry.data.([]models.MasterOption); ok {
+			return res, nil
+		}
+	}
+
+	res, err := s.repo.FindMasterOptions(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s.cacheMutex.Lock()
+	s.cache[cacheKey] = cacheEntry{
+		data:      res,
+		expiresAt: time.Now().Add(15 * time.Minute),
+	}
+	s.cacheMutex.Unlock()
+
+	return res, nil
 }
 
 func (s *ServiceService) UpsertMasterOption(ctx context.Context, req models.UpsertMasterOptionRequest) (*models.MasterOption, error) {
+	s.clearCache()
 	return s.repo.UpsertMasterOption(ctx, req)
 }
 
 func (s *ServiceService) DeleteMasterOption(ctx context.Context, id string) error {
+	s.clearCache()
 	return s.repo.DeleteMasterOption(ctx, id)
 }
 
@@ -108,36 +139,44 @@ func (s *ServiceService) GetFormFields(ctx context.Context, itemID string) ([]mo
 // --- Admin: CRUD Services ---
 
 func (s *ServiceService) CreateService(ctx context.Context, req models.CreateServiceRequest) (*models.Service, error) {
+	s.clearCache()
 	return s.repo.CreateService(ctx, req)
 }
 
 func (s *ServiceService) UpdateService(ctx context.Context, id int64, req models.UpdateServiceRequest) (*models.Service, error) {
+	s.clearCache()
 	return s.repo.UpdateService(ctx, id, req)
 }
 
 func (s *ServiceService) DeleteService(ctx context.Context, id int64) error {
+	s.clearCache()
 	return s.repo.DeleteService(ctx, id)
 }
 
 func (s *ServiceService) ReorderServices(ctx context.Context, ids []int64) error {
+	s.clearCache()
 	return s.repo.ReorderServices(ctx, ids)
 }
 
 // --- Admin: CRUD Service Items ---
 
 func (s *ServiceService) CreateServiceItem(ctx context.Context, serviceID int64, req models.CreateServiceItemRequest) (*models.ServiceItem, error) {
+	s.clearCache()
 	return s.repo.CreateServiceItem(ctx, serviceID, req)
 }
 
 func (s *ServiceService) UpdateServiceItem(ctx context.Context, id int64, req models.UpdateServiceItemRequest) (*models.ServiceItem, error) {
+	s.clearCache()
 	return s.repo.UpdateServiceItem(ctx, id, req)
 }
 
 func (s *ServiceService) DeleteServiceItem(ctx context.Context, id int64) error {
+	s.clearCache()
 	return s.repo.DeleteServiceItem(ctx, id)
 }
 
 func (s *ServiceService) ReorderServiceItems(ctx context.Context, ids []int64) error {
+	s.clearCache()
 	return s.repo.ReorderServiceItems(ctx, ids)
 }
 

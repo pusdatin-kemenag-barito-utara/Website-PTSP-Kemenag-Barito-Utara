@@ -68,13 +68,13 @@ export function LayananTable({
                 Bidang Pengelola
               </div>
             )}
-            <div className="w-32 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+            <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
               Jumlah Item
             </div>
-            <div className="w-28 shrink-0 text-left text-xs font-black uppercase tracking-wider text-slate-400">
+            <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
               Status
             </div>
-            <div className="w-56 shrink-0 text-right text-xs font-black uppercase tracking-wider text-slate-400 pr-4">
+            <div className="w-32 shrink-0 text-right text-xs font-black uppercase tracking-wider text-slate-400 pr-4">
               Aksi
             </div>
           </div>
@@ -141,7 +141,10 @@ function ServiceRow({
 }) {
   const dragControls = useDragControls();
 
-  const itemCounts = service.serviceItems?.length || 0;
+  const roleOwner = service.role_owner !== undefined ? service.role_owner : service.roleOwner;
+  const items = service.serviceItems || service.items || [];
+  const itemCounts = items.length;
+  const isActive = service.is_active !== undefined ? Boolean(service.is_active) : (service.isActive !== undefined ? Boolean(service.isActive) : true);
 
   return (
     <Reorder.Item
@@ -171,51 +174,51 @@ function ServiceRow({
       </div>
       {showBidangColumn && (
         <div className="w-44 shrink-0 flex items-center">
-          <BidangBadge roleOwner={service.roleOwner} />
+          <BidangBadge roleOwner={roleOwner} />
         </div>
       )}
-      <div className="w-32 shrink-0 flex items-center justify-center">
+      <div className="w-28 shrink-0 flex items-center justify-center">
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80">
           {itemCounts} Layanan
         </span>
       </div>
-      <div className="w-28 shrink-0 flex items-center">
+      <div className="w-28 shrink-0 flex items-center justify-center">
         <span
           className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
-            service.isActive
+            isActive
               ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60"
               : "bg-rose-50 text-rose-700 ring-1 ring-rose-200/60"
           }`}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${service.isActive ? "bg-emerald-500" : "bg-rose-500"}`}
+            className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-rose-500"}`}
           />
-          {service.isActive ? "AKTIF" : "NONAKTIF"}
+          {isActive ? "AKTIF" : "NONAKTIF"}
         </span>
       </div>
-      <div className="w-56 shrink-0 flex justify-end gap-2 pr-4">
+      <div className="w-32 shrink-0 flex justify-end items-center gap-1.5 pr-4">
         {service.id && category !== "asn" ? (
           <Link
             href={`/admin/layanan/${service.id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:shadow-md hover:shadow-emerald-500/25 transition-all duration-200"
+            title="Kelola Sub-Layanan"
+            className="p-2 rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-200/80 transition-all duration-200 shadow-2xs"
           >
-            <FolderOpen className="h-3.5 w-3.5" />
-            Kelola
+            <FolderOpen className="h-4 w-4" />
           </Link>
         ) : null}
         <button
           onClick={() => onEdit(service)}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-slate-700 bg-white border border-slate-200/80 hover:bg-emerald-50 hover:text-[#059669] hover:border-emerald-200 transition-all duration-200 shadow-sm"
+          title="Edit Layanan"
+          className="p-2 rounded-xl text-slate-600 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200/80 hover:border-emerald-200 transition-all duration-200 shadow-2xs"
         >
-          <Pencil className="h-3.5 w-3.5" />
-          Edit
+          <Pencil className="h-4 w-4" />
         </button>
         <button
           onClick={() => onDelete(service)}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-rose-600 bg-white border border-rose-200/60 hover:bg-rose-50 hover:border-rose-300 transition-all duration-200 shadow-sm"
+          title="Hapus Layanan"
+          className="p-2 rounded-xl text-rose-600 bg-rose-50/60 hover:bg-rose-600 hover:text-white border border-rose-200/60 hover:border-rose-600 transition-all duration-200 shadow-2xs"
         >
-          <Trash2 className="h-3.5 w-3.5" />
-          Hapus
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </Reorder.Item>

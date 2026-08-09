@@ -27,32 +27,17 @@ export async function updatePegawaiAvatar(formData: FormData) {
 
     const fileExt = file.name.split(".").pop();
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const bucketName = "avatars";
+    const arrayBuffer = await file.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString("base64");
 
-    const adminSupabase = createAdminClient();
-
-    const { error: uploadError } = await adminSupabase.storage
-      .from(bucketName)
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
-
-    if (uploadError) {
-      console.error("Avatar upload error:", uploadError);
-      return { success: false, error: "Gagal mengunggah avatar" };
-    }
-
-    const {
-      data: { publicUrl },
-    } = adminSupabase.storage.from(bucketName).getPublicUrl(fileName);
-
-    await fetchAPI(`/admin/profile/${user.id}`, {
+    const res = await fetchAPI<any>(`/admin/profile/${user.id}`, {
       method: "PATCH",
       body: JSON.stringify({
-        avatar_url: publicUrl,
+        base64_image: `data:${file.type};base64,${base64Data}`,
       }),
     });
+
+    const publicUrl = res?.avatar_url || res?.data?.avatar_url;
 
     revalidatePath("/pegawai/profil");
     revalidatePath("/admin/kepegawaian/data");

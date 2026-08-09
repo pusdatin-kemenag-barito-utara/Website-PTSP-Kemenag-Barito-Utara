@@ -76,10 +76,12 @@ type UpdateServiceRequest struct {
 	Description      string `json:"description"`
 	Category         string `json:"category"`
 	RoleOwner        string `json:"roleOwner"`
+	RoleOwnerSnake   string `json:"role_owner"`
 	RequirementsText string `json:"requirementsText"`
 	SopURL           string `json:"sopUrl"`
 	SortOrder        int    `json:"sortOrder"`
-	IsActive         bool   `json:"isActive"`
+	IsActive         *bool  `json:"isActive"`
+	IsActiveSnake    *bool  `json:"is_active"`
 	RequestCode      string `json:"requestCode"`
 }
 
@@ -115,7 +117,8 @@ type ReorderServiceItemsRequest struct {
 type CreateRequirementRequest struct {
 	DocumentName      string `json:"documentName"`
 	Description       string `json:"description"`
-	IsRequired        bool   `json:"isRequired"`
+	IsRequired        *bool  `json:"isRequired"`
+	IsRequiredSnake   *bool  `json:"is_required"`
 	AllowedExtensions string `json:"allowedExtensions"`
 	MaxFileSizeMb     int    `json:"maxFileSizeMb"`
 	SortOrder         int    `json:"sortOrder"`
@@ -125,7 +128,8 @@ type CreateRequirementRequest struct {
 type UpdateRequirementRequest struct {
 	DocumentName      string `json:"documentName"`
 	Description       string `json:"description"`
-	IsRequired        bool   `json:"isRequired"`
+	IsRequired        *bool  `json:"isRequired"`
+	IsRequiredSnake   *bool  `json:"is_required"`
 	AllowedExtensions string `json:"allowedExtensions"`
 	MaxFileSizeMb     int    `json:"maxFileSizeMb"`
 }
@@ -137,23 +141,25 @@ type ReorderRequirementsRequest struct {
 
 // CreateFormFieldRequest DTO untuk membuat form field.
 type CreateFormFieldRequest struct {
-	Label       string `json:"label"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Placeholder string `json:"placeholder"`
-	IsRequired  bool   `json:"isRequired"`
-	Options     string `json:"options"`
-	SortOrder   int    `json:"sortOrder"`
+	Label           string `json:"label"`
+	Name            string `json:"name"`
+	Type            string `json:"type"`
+	Placeholder     string `json:"placeholder"`
+	IsRequired      *bool  `json:"isRequired"`
+	IsRequiredSnake *bool  `json:"is_required"`
+	Options         string `json:"options"`
+	SortOrder       int    `json:"sortOrder"`
 }
 
 // UpdateFormFieldRequest DTO untuk update form field.
 type UpdateFormFieldRequest struct {
-	Label       string `json:"label"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Placeholder string `json:"placeholder"`
-	IsRequired  bool   `json:"isRequired"`
-	Options     string `json:"options"`
+	Label           string `json:"label"`
+	Name            string `json:"name"`
+	Type            string `json:"type"`
+	Placeholder     string `json:"placeholder"`
+	IsRequired      *bool  `json:"isRequired"`
+	IsRequiredSnake *bool  `json:"is_required"`
+	Options         string `json:"options"`
 }
 
 // ReorderFormFieldsRequest DTO untuk reorder form fields.

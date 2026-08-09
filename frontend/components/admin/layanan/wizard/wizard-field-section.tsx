@@ -20,6 +20,8 @@ export function WizardFieldSection({
   deleteField,
   reorderFields,
 }: WizardFieldSectionProps) {
+  const fieldsList = item.serviceFormFields || item.formFields || item.form_fields || [];
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -43,7 +45,7 @@ export function WizardFieldSection({
         </button>
       </div>
 
-      {(!item.serviceFormFields || item.serviceFormFields.length === 0) ? (
+      {fieldsList.length === 0 ? (
         <div className="text-center py-8 bg-white rounded-xl border border-dashed border-slate-300">
           <p className="text-sm text-slate-500">Belum ada form input.</p>
         </div>
@@ -63,13 +65,13 @@ export function WizardFieldSection({
               {/* BODY */}
               <Reorder.Group
                 axis="y"
-                values={[...(item.serviceFormFields || [])].sort(
+                values={[...fieldsList].sort(
                   (a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
                 )}
                 onReorder={(newFields: any[]) => reorderFields(item.id, newFields)}
                 className="divide-y divide-slate-100 flex flex-col"
               >
-                {[...(item.serviceFormFields || [])]
+                {[...fieldsList]
                   .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
                   .map((field: any) => (
                     <FieldRow
@@ -93,6 +95,7 @@ export function WizardFieldSection({
 
 function FieldRow({ field, item, isSuperAdmin, fieldForms, fieldModals, deleteField }: any) {
   const dragControls = useDragControls();
+  const isRequired = field.is_required !== undefined ? Boolean(field.is_required) : (field.isRequired !== undefined ? Boolean(field.isRequired) : true);
 
   return (
     <Reorder.Item
@@ -118,7 +121,7 @@ function FieldRow({ field, item, isSuperAdmin, fieldForms, fieldModals, deleteFi
         </span>
       </div>
       <div className="w-24 shrink-0 px-4 text-center">
-        {field.isRequired ? "✅" : "-"}
+        {isRequired ? "✅" : "-"}
       </div>
       <div className="w-24 shrink-0 px-4 flex items-center justify-end gap-1">
         <button
@@ -130,7 +133,7 @@ function FieldRow({ field, item, isSuperAdmin, fieldForms, fieldModals, deleteFi
               name: field.name,
               type: field.type,
               placeholder: field.placeholder || "",
-              isRequired: field.isRequired,
+              isRequired: isRequired,
               options: field.options || "",
             });
             fieldModals.setOpen(true);

@@ -207,7 +207,7 @@ export function LoginFormByRole({
         return;
       }
 
-      await logLoginAction();
+      logLoginAction().catch((err) => console.warn("Failed to write login audit log:", err));
 
       const safeRedirect = callbackUrl && isSafeRedirect(callbackUrl) 
         ? callbackUrl 

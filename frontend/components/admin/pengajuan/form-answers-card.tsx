@@ -14,9 +14,9 @@ export function FormAnswersCard({ request }: { request: any }) {
           </div>
         )}
         <div className="grid gap-3 sm:grid-cols-2">
-          {(request.serviceRequestAnswers ?? []).map((answer: any) => (
+          {(request.serviceRequestAnswers ?? []).map((answer: any, index: number) => (
             <div
-              key={answer.id}
+              key={answer.id || answer.fieldName || `answer-${index}`}
               className="rounded-xl bg-slate-50 p-4 transition-colors hover:bg-slate-100/80"
             >
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">

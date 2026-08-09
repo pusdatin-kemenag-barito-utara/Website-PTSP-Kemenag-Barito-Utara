@@ -7,20 +7,29 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function getEmailByPhoneAction(phone: string) {
   if (!phone) throw new Error("Nomor WhatsApp wajib diisi.");
 
+  const cleanPhone = phone.replace(/\D/g, "");
+  const altPhone = cleanPhone.startsWith("0") 
+    ? "62" + cleanPhone.slice(1) 
+    : (cleanPhone.startsWith("62") ? "0" + cleanPhone.slice(2) : cleanPhone);
+
   try {
-    const res = await fetchAPI<any>(`/admin/search?q=${encodeURIComponent(phone)}`);
-    const profilesList = res?.data?.profiles || res?.profiles || [];
+    const res = await fetchAPI<any>(`/admin/search?q=${encodeURIComponent(cleanPhone)}`);
+    let profilesList = res?.data?.profiles || res?.profiles || [];
+
+    if (profilesList.length === 0 && altPhone) {
+      const resAlt = await fetchAPI<any>(`/admin/search?q=${encodeURIComponent(altPhone)}`);
+      profilesList = resAlt?.data?.profiles || resAlt?.profiles || [];
+    }
 
     if (profilesList.length > 0 && profilesList[0].email) {
       return { email: profilesList[0].email };
     }
 
-    return {
-      error: "Nomor WhatsApp tidak ditemukan. Pastikan sudah terdaftar.",
-    };
+    // Fallback pseudo-email jika user mendaftar menggunakan nomor WA
+    return { email: `${cleanPhone}@pemohon.ptsp` };
   } catch (err) {
     console.error("getEmailByPhoneAction error:", err);
-    return { error: "Sistem belum siap atau terjadi kesalahan saat mencari akun." };
+    return { error: "Terjadi kesalahan saat mencari akun WhatsApp." };
   }
 }
 

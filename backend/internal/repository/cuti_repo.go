@@ -31,9 +31,9 @@ func (r *CutiRepository) FindByNip(ctx context.Context, nip string) (map[string]
 	if err != nil {
 		// Fallback query to profiles_pegawai via profiles
 		err = r.db.QueryRow(ctx, `
-			SELECT pp.id::text, COALESCE(p.full_name, 'Pegawai'), COALESCE(pp.nip, ''), COALESCE(pp.jabatan, '-')
+			SELECT pp.id::text, COALESCE(p.name, 'Pegawai'), COALESCE(pp.nip, ''), COALESCE(pp.jabatan, '-')
 			FROM kemenag_ptsp.profiles_pegawai pp
-			JOIN kemenag_ptsp.profiles p ON p.id = pp.profile_id
+			JOIN kemenag_pusdatin.profiles p ON p.id = pp.profile_id
 			WHERE pp.nip = $1 LIMIT 1
 		`, nip).Scan(&pegawaiID, &nama, &pNip, &jabatan)
 		if err != nil {
@@ -90,15 +90,19 @@ func (r *CutiRepository) FindByNip(ctx context.Context, nip string) (map[string]
 
 func (r *CutiRepository) FindAll(ctx context.Context, userID string) ([]models.DataCutiPegawai, error) {
 	query := `
-		SELECT id, pegawai_id, jenis_cuti, tanggal_mulai, tanggal_selesai, alasan, status, created_at
-		FROM kemenag_ptsp.ptsp_permohonan_cuti WHERE 1=1
+		SELECT id::text, user_id::text, jenis_cuti, tanggal_mulai::text, tanggal_selesai::text, keterangan, status, created_at
+		FROM kemenag_ptsp.ptsp_data_cuti_pegawai WHERE 1=1
 	`
 	args := []interface{}{}
+	if userID != "" {
+		query += " AND user_id::text = $1"
+		args = append(args, userID)
+	}
 	query += " ORDER BY created_at DESC LIMIT 100"
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return []models.DataCutiPegawai{}, nil
 	}
 	defer rows.Close()
 
@@ -126,21 +130,21 @@ func (r *CutiRepository) UpdateStatus(ctx context.Context, id string, req models
 	switch req.Status {
 	case "approved_atasan":
 		_, err := r.db.Exec(ctx, `
-			UPDATE kemenag_ptsp.ptsp_pengajuan_cuti
+			UPDATE kemenag_ptsp.ptsp_data_cuti_pegawai
 			SET status_atasan = 'approved', catatan_atasan = NULLIF($1,''), ttd_atasan = NULLIF($2,''), updated_at = NOW()
-			WHERE id = $3::uuid
+			WHERE id::text = $3
 		`, req.Catatan, req.Signature, id)
 		return err
 	case "approved_kepala":
 		_, err := r.db.Exec(ctx, `
-			UPDATE kemenag_ptsp.ptsp_pengajuan_cuti
+			UPDATE kemenag_ptsp.ptsp_data_cuti_pegawai
 			SET status_kepala = 'approved', status = 'approved', catatan_kepala = NULLIF($1,''), ttd_kepala = NULLIF($2,''), updated_at = NOW()
-			WHERE id = $3::uuid
+			WHERE id::text = $3
 		`, req.Catatan, req.Signature, id)
 		return err
 	default:
 		_, err := r.db.Exec(ctx, `
-			UPDATE kemenag_ptsp.ptsp_pengajuan_cuti SET status = $1, komentar_pimpinan = NULLIF($2,''), updated_at = NOW() WHERE id = $3::uuid
+			UPDATE kemenag_ptsp.ptsp_data_cuti_pegawai SET status = $1, keterangan = NULLIF($2,''), updated_at = NOW() WHERE id::text = $3
 		`, req.Status, req.Catatan, id)
 		return err
 	}
@@ -152,10 +156,10 @@ func (r *CutiRepository) GetLKH(ctx context.Context, userID string) ([]models.La
 	rows, err := r.db.Query(ctx, `
 		SELECT id::text, user_id::text, tanggal::text, waktu_pelaksanaan, kegiatan_tugas_jabatan, hasil, bukti_dukung_url, status, created_at
 		FROM kemenag_ptsp.ptsp_laporan_kinerja
-		WHERE user_id = $1::uuid ORDER BY tanggal DESC, created_at DESC LIMIT 100
+		WHERE user_id::text = $1 ORDER BY tanggal DESC, created_at DESC LIMIT 100
 	`, userID)
 	if err != nil {
-		return nil, err
+		return []models.LaporanKinerja{}, nil
 	}
 	defer rows.Close()
 
@@ -179,7 +183,7 @@ func (r *CutiRepository) CreateLKH(ctx context.Context, req models.CreateLaporan
 }
 
 func (r *CutiRepository) DeleteLKH(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_laporan_kinerja WHERE id = $1::uuid`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_laporan_kinerja WHERE id::text = $1`, id)
 	return err
 }
 
@@ -187,7 +191,7 @@ func (r *CutiRepository) DeleteLKH(ctx context.Context, id string) error {
 // --- Admin: CRUD Data Master Pegawai ---
 
 func (r *CutiRepository) AdminListPegawai(ctx context.Context, search string) ([]models.CutiPegawaiMaster, error) {
-	query := `SELECT id::text, COALESCE(nama,''), COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), COALESCE(golongan,''), COALESCE(jenis_pegawai,'')
+	query := `SELECT id::text, COALESCE(nama,''), COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), '', COALESCE(jenis_pegawai,'')
 		FROM kemenag_ptsp.ptsp_data_cuti_pegawai WHERE 1=1`
 	args := []interface{}{}
 	if search != "" {
@@ -197,7 +201,7 @@ func (r *CutiRepository) AdminListPegawai(ctx context.Context, search string) ([
 	query += " ORDER BY nama ASC LIMIT 200"
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return []models.CutiPegawaiMaster{}, nil
 	}
 	defer rows.Close()
 	var result []models.CutiPegawaiMaster
@@ -213,10 +217,10 @@ func (r *CutiRepository) AdminListPegawai(ctx context.Context, search string) ([
 func (r *CutiRepository) AdminCreatePegawai(ctx context.Context, req models.CreateCutiPegawaiRequest) (*models.CutiPegawaiMaster, error) {
 	var p models.CutiPegawaiMaster
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO kemenag_ptsp.ptsp_data_cuti_pegawai (nama, nip, jabatan, unit_kerja, golongan, jenis_pegawai)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id::text, nama, COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), COALESCE(golongan,''), COALESCE(jenis_pegawai,'')
-	`, req.Nama, req.Nip, req.Jabatan, req.UnitKerja, req.Golongan, req.JenisPegawai).
+		INSERT INTO kemenag_ptsp.ptsp_data_cuti_pegawai (nama, nip, jabatan, unit_kerja, jenis_pegawai)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id::text, nama, COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), '', COALESCE(jenis_pegawai,'')
+	`, req.Nama, req.Nip, req.Jabatan, req.UnitKerja, req.JenisPegawai).
 		Scan(&p.ID, &p.Nama, &p.Nip, &p.Jabatan, &p.UnitKerja, &p.Golongan, &p.JenisPegawai)
 	if err != nil {
 		return nil, err
@@ -228,10 +232,10 @@ func (r *CutiRepository) AdminUpdatePegawai(ctx context.Context, id string, req 
 	var p models.CutiPegawaiMaster
 	err := r.db.QueryRow(ctx, `
 		UPDATE kemenag_ptsp.ptsp_data_cuti_pegawai
-		SET nama=$1, jabatan=$2, unit_kerja=$3, golongan=$4, jenis_pegawai=$5, updated_at=NOW()
-		WHERE id=$6
-		RETURNING id::text, nama, COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), COALESCE(golongan,''), COALESCE(jenis_pegawai,'')
-	`, req.Nama, req.Jabatan, req.UnitKerja, req.Golongan, req.JenisPegawai, id).
+		SET nama=$1, jabatan=$2, unit_kerja=$3, jenis_pegawai=$4, updated_at=NOW()
+		WHERE id::text=$5
+		RETURNING id::text, nama, COALESCE(nip,''), COALESCE(jabatan,''), COALESCE(unit_kerja,''), '', COALESCE(jenis_pegawai,'')
+	`, req.Nama, req.Jabatan, req.UnitKerja, req.JenisPegawai, id).
 		Scan(&p.ID, &p.Nama, &p.Nip, &p.Jabatan, &p.UnitKerja, &p.Golongan, &p.JenisPegawai)
 	if err != nil {
 		return nil, err

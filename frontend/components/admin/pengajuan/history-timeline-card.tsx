@@ -40,7 +40,8 @@ export function HistoryTimelineCard({ request }: { request: any }) {
     })),
   ].sort(
     (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      new Date(b.createdAt || b.created_at || 0).getTime() -
+      new Date(a.createdAt || a.created_at || 0).getTime(),
   );
 
   return (
@@ -81,7 +82,7 @@ export function HistoryTimelineCard({ request }: { request: any }) {
                       </span>
                     )}
                     <span className="text-[10px] font-bold text-slate-400">
-                      {formatDate(item.createdAt)}
+                      {formatDate(item.createdAt || item.created_at)}
                     </span>
                   </div>
 

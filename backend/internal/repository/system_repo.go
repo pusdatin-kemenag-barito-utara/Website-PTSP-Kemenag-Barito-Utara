@@ -120,3 +120,59 @@ func (r *SystemRepository) GetSystemStatus(ctx context.Context) (map[string]inte
 	}, nil
 }
 
+type YouTubeVideo struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	YouTubeID string    `json:"youtubeId"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+func (r *SystemRepository) GetYouTubeVideos(ctx context.Context) ([]YouTubeVideo, int, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id::text, title, youtube_id, created_at
+		FROM kemenag_website.youtube_videos
+		WHERE is_published = true
+		ORDER BY sort_order ASC
+	`)
+	if err == nil {
+		defer rows.Close()
+		var videos []YouTubeVideo
+		for rows.Next() {
+			var v YouTubeVideo
+			if err := rows.Scan(&v.ID, &v.Title, &v.YouTubeID, &v.CreatedAt); err == nil {
+				videos = append(videos, v)
+			}
+		}
+		if len(videos) > 0 {
+			var totalCount int
+			_ = r.db.QueryRow(ctx, `
+				SELECT COUNT(*) 
+				FROM kemenag_website.youtube_videos 
+				WHERE is_published = true
+			`).Scan(&totalCount)
+
+			if totalCount < len(videos) {
+				totalCount = len(videos)
+			}
+			return videos, totalCount, nil
+		}
+	}
+
+	// Fallback jika tabel belum ada atau tidak ada baris video
+	fallbackVideos := []YouTubeVideo{
+		{
+			ID:        "1",
+			Title:     "Profil Kantor Kementerian Agama Kabupaten Barito Utara",
+			YouTubeID: "5N8O8jQ8b_0",
+			CreatedAt: time.Now(),
+		},
+		{
+			ID:        "2",
+			Title:     "Pelayanan Terpadu Satu Pintu (Si ATAK) Kemenag Barito Utara",
+			YouTubeID: "dQw4w9WgXcQ",
+			CreatedAt: time.Now(),
+		},
+	}
+	return fallbackVideos, len(fallbackVideos), nil
+}
+

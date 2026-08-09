@@ -21,8 +21,9 @@ export default async function TrackPage({
   searchParams: Promise<{ q?: string; token?: string }>;
 }) {
   const { q = "", token = "" } = await searchParams;
-  // Hanya lakukan pencarian jika ada query (q) DAN token turnstile
-  const result = q && token ? await getPublicRequestStatus(q, token) : null;
+  const isDev = process.env.NODE_ENV === "development";
+  // Lakukan pencarian jika ada query (q) DAN (token turnstile ATAU mode dev)
+  const result = q && (token || isDev) ? await getPublicRequestStatus(q, token) : null;
 
   return (
     <main className="relative min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-20 overflow-hidden">

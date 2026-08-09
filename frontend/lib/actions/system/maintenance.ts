@@ -13,7 +13,7 @@ export type MaintenanceStatus = {
 
 export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
   try {
-    const res = await fetchAPI<any>("/admin/system/status");
+    const res = await fetchAPI<any>("/admin/system/status", { next: { revalidate: 60 } });
     if (res && res.data) {
       return {
         enabled: res.data.maintenanceMode ?? false,

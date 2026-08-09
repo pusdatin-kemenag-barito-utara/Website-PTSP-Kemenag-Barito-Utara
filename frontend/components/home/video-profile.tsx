@@ -50,6 +50,7 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
   if (validVideos.length === 0) return null;
 
   const otherVideos = validVideos.filter((v) => v.id !== activeVideo.id);
+  const displayPlaylist = otherVideos.slice(0, 5);
   const displayCount = totalCount !== undefined ? totalCount : validVideos.length;
 
   return (
@@ -152,7 +153,7 @@ export function HomeVideoProfile({ videos = [], totalCount }: HomeVideoProfilePr
             </div>
 
             <div className="flex flex-col gap-4">
-              {otherVideos.map((vid) => (
+              {displayPlaylist.map((vid) => (
                 <button
                   key={vid.id}
                   onClick={() => setActiveVideo(vid)}

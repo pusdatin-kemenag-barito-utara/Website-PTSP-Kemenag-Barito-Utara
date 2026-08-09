@@ -29,14 +29,21 @@ export function AddEditServiceModal({
 }) {
   const [bannerError, setBannerError] = useState(false);
   const [bannerUrl, setBannerUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // Update banner URL when slug changes to force reload (with timestamp to bust cache)
+  // Update banner URL when modal opens or editingService is set
   useEffect(() => {
-    if (formData.slug) {
+    setPreviewUrl(null);
+    setBannerError(false);
+    if (editingService) {
+      const initialSlug = editingService.slug || formData.slug;
+      if (initialSlug) {
+        setBannerUrl(`/banners/${initialSlug}.png?t=${Date.now()}`);
+      }
+    } else if (formData.slug) {
       setBannerUrl(`/banners/${formData.slug}.png?t=${Date.now()}`);
-      setBannerError(false);
     }
-  }, [formData.slug, isOpen]);
+  }, [editingService, isOpen]);
 
   return (
     <AnimatePresence>
@@ -55,7 +62,7 @@ export function AddEditServiceModal({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full ${editingService ? 'max-w-4xl' : 'max-w-lg'} max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-50 border border-slate-200/60`}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50 sticky top-0 z-20">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-30 shadow-xs">
               <h3 className="text-lg font-black text-slate-800">
                 {editingService ? "Edit Layanan" : "Tambah Layanan Baru"}
               </h3>
@@ -164,9 +171,15 @@ export function AddEditServiceModal({
                         name="banner"
                         accept="image/png, image/jpeg, image/webp"
                         className="font-medium cursor-pointer"
-                        onChange={() => {
-                          // When user selects a new file, we don't preview it immediately here to keep it simple,
-                          // but the user's intent is to upload a new one.
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setPreviewUrl(url);
+                            setBannerError(false);
+                          } else {
+                            setPreviewUrl(null);
+                          }
                         }}
                       />
                       {editingService && !bannerError && (
@@ -182,7 +195,7 @@ export function AddEditServiceModal({
                       <div className="flex items-center justify-center">
                         <input
                           type="checkbox"
-                          checked={formData.isActive}
+                          checked={Boolean(formData.isActive)}
                           onChange={(e) =>
                             onChangeFormData({ isActive: e.target.checked })
                           }
@@ -233,9 +246,9 @@ export function AddEditServiceModal({
                   </h4>
                   
                   <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 bg-white shadow-inner group">
-                    {!bannerError && formData.slug && bannerUrl ? (
+                    {!bannerError && (previewUrl || bannerUrl) ? (
                       <Image
-                        src={bannerUrl}
+                        src={previewUrl || bannerUrl}
                         alt="Banner Preview"
                         fill
                         className="object-cover"

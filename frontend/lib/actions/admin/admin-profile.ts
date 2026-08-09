@@ -50,28 +50,15 @@ export async function uploadAvatarAction(
   }
 
   try {
-    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
-
-    const admin = createAdminClient();
-    const { error: uploadError } = await admin.storage
-      .from("avatars")
-      .upload(fileName, buffer, {
-        contentType: "image/jpeg",
-        upsert: true,
-      });
-
-    if (uploadError) throw new Error(uploadError.message);
-
-    const { data: urlData } = admin.storage.from("avatars").getPublicUrl(fileName);
-
-    await fetchAPI(`/admin/profile/${profile.id}`, {
+    const res = await fetchAPI<any>(`/admin/profile/${profile.id}`, {
       method: "PATCH",
-      body: JSON.stringify({ avatar_url: urlData.publicUrl }),
+      body: JSON.stringify({ base64_image: base64Image }),
     });
 
+    const newAvatarUrl = res?.avatar_url || res?.data?.avatar_url;
+
     revalidatePath("/admin");
-    return { success: true, avatarUrl: urlData.publicUrl, message: "Foto profil berhasil diperbarui" };
+    return { success: true, avatarUrl: newAvatarUrl, message: "Foto profil berhasil diperbarui" };
   } catch (error: any) {
     console.error("Error uploading avatar:", error);
     return { success: false, error: error.message || "Gagal mengupload foto profil" };

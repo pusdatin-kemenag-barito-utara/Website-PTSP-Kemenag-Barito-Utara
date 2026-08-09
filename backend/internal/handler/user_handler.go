@@ -8,11 +8,12 @@ import (
 )
 
 type UserHandler struct {
-	svc *service.UserService
+	svc     *service.UserService
+	fileSvc *service.FileService
 }
 
-func NewUserHandler(svc *service.UserService) *UserHandler {
-	return &UserHandler{svc: svc}
+func NewUserHandler(svc *service.UserService, fileSvc *service.FileService) *UserHandler {
+	return &UserHandler{svc: svc, fileSvc: fileSvc}
 }
 
 func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
@@ -56,15 +57,29 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req models.UpdateProfileRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
+		// BodyParser error ignore if multipart
 	}
+
+	// Cek jika ada unggahan avatar multipart atau base64
+	if fileHeader, err := c.FormFile("avatar"); err == nil && fileHeader != nil && h.fileSvc != nil {
+		avatarURL, uploadErr := h.fileSvc.UploadAvatar(c.Context(), fileHeader, id)
+		if uploadErr == nil && avatarURL != "" {
+			req.AvatarURL = avatarURL
+		}
+	} else if req.Base64Image != "" && h.fileSvc != nil {
+		avatarURL, uploadErr := h.fileSvc.UploadBase64Avatar(c.Context(), req.Base64Image, id)
+		if uploadErr == nil && avatarURL != "" {
+			req.AvatarURL = avatarURL
+		}
+	}
+
 	if req.FullName == "" && req.AvatarURL == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Tidak ada data yang diperbarui"})
 	}
 	if err := h.svc.UpdateProfile(c.Context(), id, req); err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
-	return c.JSON(fiber.Map{"success": true, "message": "Profil berhasil diperbarui"})
+	return c.JSON(fiber.Map{"success": true, "avatar_url": req.AvatarURL, "message": "Profil berhasil diperbarui"})
 }
 
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {

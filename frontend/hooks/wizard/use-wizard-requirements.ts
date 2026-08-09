@@ -34,14 +34,19 @@ export function useWizardRequirements(startTransition: any) {
       sortOrder: index,
     }));
 
-    setService((prev: any) => ({
-      ...prev,
-      serviceItems: prev.serviceItems.map((item: any) =>
+    setService((prev: any) => {
+      const currentItems = prev.items || prev.serviceItems || [];
+      const updatedServiceItems = currentItems.map((item: any) =>
         item.id === itemId
-          ? { ...item, serviceRequirements: updatedReqs }
+          ? { ...item, serviceRequirements: updatedReqs, requirements: updatedReqs }
           : item,
-      ),
-    }));
+      );
+      return {
+        ...prev,
+        serviceItems: updatedServiceItems,
+        items: updatedServiceItems,
+      };
+    });
     if (reorderTimeout.current[itemId])
       clearTimeout(reorderTimeout.current[itemId]!);
     reorderTimeout.current[itemId] = setTimeout(() => {

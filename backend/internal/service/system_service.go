@@ -43,3 +43,7 @@ func (s *SystemService) GetSystemStatus(ctx context.Context) (map[string]interfa
 	return s.repo.GetSystemStatus(ctx)
 }
 
+func (s *SystemService) GetYouTubeVideos(ctx context.Context) ([]repository.YouTubeVideo, int, error) {
+	return s.repo.GetYouTubeVideos(ctx)
+}
+

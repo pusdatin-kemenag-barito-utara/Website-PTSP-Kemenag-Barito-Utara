@@ -45,6 +45,7 @@ export default async function AdminRequestsPage({
       page: currentPage,
       pageSize,
       status,
+      type,
     }),
   ]);
 

@@ -2,26 +2,35 @@ package service
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"ptsp-kemenag-backend/internal/config"
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/repository"
 )
 
+type statsCacheEntry struct {
+	stats     *models.DashboardStats
+	expiresAt time.Time
+}
+
 type RequestService struct {
-	repo *repository.RequestRepository
-	cfg  *config.Config
+	repo       *repository.RequestRepository
+	cfg        *config.Config
+	statsCache *statsCacheEntry
+	statsMutex sync.RWMutex
 }
 
 func NewRequestService(repo *repository.RequestRepository, cfg *config.Config) *RequestService {
 	return &RequestService{repo: repo, cfg: cfg}
 }
 
-func (s *RequestService) GetAll(ctx context.Context, userID, status string, limit int) ([]models.ServiceRequest, error) {
+func (s *RequestService) GetAll(ctx context.Context, userID, status, category string, limit int) ([]models.ServiceRequest, error) {
 	if limit <= 0 {
 		limit = 100
 	}
-	return s.repo.FindAll(ctx, userID, status, limit)
+	return s.repo.FindAll(ctx, userID, status, category, limit)
 }
 
 func (s *RequestService) Track(ctx context.Context, requestNumber string) (*models.TrackRequestResponse, error) {
@@ -59,13 +68,39 @@ func (s *RequestService) GetByID(ctx context.Context, id string) (*models.Servic
 }
 
 func (s *RequestService) UpdateStatus(ctx context.Context, id string, req models.UpdateRequestStatusRequest) error {
+	s.statsMutex.Lock()
+	s.statsCache = nil
+	s.statsMutex.Unlock()
 	return s.repo.UpdateStatus(ctx, id, req)
 }
 
 func (s *RequestService) Delete(ctx context.Context, id string) error {
+	s.statsMutex.Lock()
+	s.statsCache = nil
+	s.statsMutex.Unlock()
 	return s.repo.Delete(ctx, id)
 }
 
 func (s *RequestService) GetDashboardStats(ctx context.Context) (*models.DashboardStats, error) {
-	return s.repo.GetDashboardStats(ctx)
+	s.statsMutex.RLock()
+	if s.statsCache != nil && time.Now().Before(s.statsCache.expiresAt) {
+		stats := s.statsCache.stats
+		s.statsMutex.RUnlock()
+		return stats, nil
+	}
+	s.statsMutex.RUnlock()
+
+	stats, err := s.repo.GetDashboardStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s.statsMutex.Lock()
+	s.statsCache = &statsCacheEntry{
+		stats:     stats,
+		expiresAt: time.Now().Add(30 * time.Second),
+	}
+	s.statsMutex.Unlock()
+
+	return stats, nil
 }

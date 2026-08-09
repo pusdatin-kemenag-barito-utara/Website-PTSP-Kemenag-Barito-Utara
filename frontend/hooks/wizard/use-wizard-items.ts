@@ -32,7 +32,7 @@ export function useWizardItems(serviceId: any, startTransition: any) {
       sortOrder: index,
     }));
 
-    setService((prev: any) => ({ ...prev, serviceItems: updatedItems }));
+    setService((prev: any) => ({ ...prev, serviceItems: updatedItems, items: updatedItems }));
     
     if (reorderTimeout.current) clearTimeout(reorderTimeout.current);
     reorderTimeout.current = setTimeout(() => {

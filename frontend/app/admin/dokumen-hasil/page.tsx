@@ -1,4 +1,4 @@
-import { requirePermission } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { fetchAPI } from "@/lib/api";
 import { DokumenHasilClient } from "@/components/admin/dokumen-hasil/dokumen-hasil-client";
 import { AdminPagination } from "@/components/admin/pengajuan/admin-pagination";
@@ -23,12 +23,14 @@ async function getSignedUrl(path?: string | null) {
   return path;
 }
 
+export const revalidate = 0;
+
 export default async function AdminGeneratedDocumentsPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; serviceId?: string; page?: string; type?: string }>;
 }) {
-  const profile = await requirePermission("dokumen_hasil");
+  const profile = await requireAdmin();
   const isSuper = isSuperAdmin(profile.email);
   const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
   const isGeneralAdmin = specificRole === "admin_ptsp";
@@ -63,10 +65,18 @@ export default async function AdminGeneratedDocumentsPage({
 
   // Generate signed URLs for existing documents
   const urlEntries = await Promise.all(
-    requests.map(async (request: any) => ({
-      id: request.id,
-      url: await getSignedUrl(request.generatedDocuments?.[0]?.filePath),
-    })),
+    requests.map(async (request: any) => {
+      const docPath =
+        request.generated_documents?.[0]?.file_path ||
+        request.generatedDocuments?.[0]?.filePath ||
+        request.documents?.[0]?.file_path ||
+        request.documents?.[0]?.filePath ||
+        null;
+      return {
+        id: request.id,
+        url: await getSignedUrl(docPath),
+      };
+    }),
   );
 
   const urlMap = Object.fromEntries(

@@ -75,3 +75,15 @@ func (h *CronHandler) ToggleGuestBookMode(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Pengaturan sistem berhasil diperbarui"})
 }
 
+func (h *CronHandler) GetVideos(c *fiber.Ctx) error {
+	videos, totalCount, err := h.svc.GetYouTubeVideos(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{
+		"success":    true,
+		"videos":     videos,
+		"totalCount": totalCount,
+	})
+}
+

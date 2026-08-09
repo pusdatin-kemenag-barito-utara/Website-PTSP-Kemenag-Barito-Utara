@@ -8,18 +8,37 @@ export async function getProfileAfterLoginAction(userId: string) {
 
   try {
     const res = await fetchAPI<{ success: boolean; data: any }>(`/admin/users/${userId}`);
-    if (res.data) {
-      return { data: res.data };
+    if (res && res.data) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+      const { data: authUserData } = await admin.auth.admin.getUserById(userId);
+      const email = res.data.email || authUserData?.user?.email || "";
+      const isSuper = isSuperAdmin(email);
+      const role = isSuper ? "super_admin" : (res.data.role && res.data.role !== "user" ? res.data.role : (authUserData?.user?.user_metadata?.role || res.data.role || "user"));
+      return {
+        data: {
+          ...res.data,
+          email,
+          role,
+          isVerified: isSuper ? true : (res.data.isVerified ?? true),
+        }
+      };
     }
     
-    // Fallback jika profile belum ter-sync tapi super_admin
-    if (isSuperAdmin(userId)) {
-      return { data: { role: "super_admin" as const, isVerified: true } };
+    // Check if user is super admin by checking email
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const admin = createAdminClient();
+    const { data: authUserData } = await admin.auth.admin.getUserById(userId);
+    const email = authUserData?.user?.email || "";
+
+    if (email && isSuperAdmin(email)) {
+      return { data: { id: userId, email, role: "super_admin" as const, isVerified: true } };
     }
 
-    return { error: "Profil tidak ditemukan." };
+    const metadataRole = authUserData?.user?.user_metadata?.role || "user";
+    return { data: { id: userId, email, role: metadataRole, isVerified: true } };
   } catch (err: any) {
-    return { data: { role: "user" as const, isVerified: true } };
+    return { data: { id: userId, role: "user" as const, isVerified: true } };
   }
 }
 

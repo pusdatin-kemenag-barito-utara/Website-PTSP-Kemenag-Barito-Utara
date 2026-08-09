@@ -37,11 +37,14 @@ export async function createRequirementAction(
 ): Promise<ActionResult> {
   const profile = await requirePermission("layanan");
   try {
+    const rawIsRequired = String(formData.get("isRequired") ?? "");
+    const isReq = rawIsRequired === "on" || rawIsRequired === "true" || rawIsRequired === "1";
+
     const validated = reqSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
       documentName: formData.get("documentName"),
       description: formData.get("description") || "",
-      isRequired: formData.get("isRequired") === "on",
+      isRequired: isReq,
       allowedExtensions:
         formData.get("allowedExtensions") || "pdf,jpg,jpeg,png",
       maxFileSizeMb: formData.get("maxFileSizeMb") || 5,
@@ -59,6 +62,7 @@ export async function createRequirementAction(
         documentName: body.documentName,
         description: body.description ?? "",
         isRequired: body.isRequired ?? false,
+        is_required: body.isRequired ?? false,
         allowedExtensions: body.allowedExtensions,
         maxFileSizeMb: body.maxFileSizeMb,
       }),
@@ -90,11 +94,14 @@ export async function updateRequirementAction(
 ): Promise<ActionResult> {
   const profile = await requirePermission("layanan");
   try {
+    const rawIsRequired = String(formData.get("isRequired") ?? "");
+    const isReq = rawIsRequired === "on" || rawIsRequired === "true" || rawIsRequired === "1";
+
     const validated = updateReqSchema.safeParse({
       id: formData.get("id"),
       documentName: formData.get("documentName"),
       description: formData.get("description") || "",
-      isRequired: formData.get("isRequired") === "on",
+      isRequired: isReq,
       allowedExtensions:
         formData.get("allowedExtensions") || "pdf,jpg,jpeg,png",
       maxFileSizeMb: formData.get("maxFileSizeMb") || 5,
@@ -112,6 +119,7 @@ export async function updateRequirementAction(
         documentName: body.documentName,
         description: body.description ?? "",
         isRequired: body.isRequired ?? false,
+        is_required: body.isRequired ?? false,
         allowedExtensions: body.allowedExtensions,
         maxFileSizeMb: body.maxFileSizeMb,
       }),

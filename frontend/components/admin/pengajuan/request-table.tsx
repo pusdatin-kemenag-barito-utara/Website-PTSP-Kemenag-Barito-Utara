@@ -60,27 +60,27 @@ export function AdminRequestTable({
               >
                 <td className="px-5 py-3.5">
                   <span className="font-mono text-xs font-semibold text-[#059669] bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
-                    {request.requestNumber}
+                    {request.requestNumber || request.request_number || request.id}
                   </span>
                 </td>
                 <td className="px-5 py-3.5">
                   <div>
                     <p className="font-medium text-slate-900 text-sm">
-                      {request.profiles?.fullName || "-"}
+                      {request.profiles?.fullName || request.applicant_name || request.profiles?.name || "-"}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      {request.profiles?.email}
+                      {request.profiles?.email || request.applicant_email || ""}
                     </p>
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
                   <div>
                     <p className="text-slate-700 font-medium text-sm">
-                      {request.services?.name}
+                      {request.services?.name || request.service_name || "-"}
                     </p>
-                    {request.serviceItems?.name && (
+                    {(request.serviceItems?.name || request.item_name) && (
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {request.serviceItems?.name}
+                        {request.serviceItems?.name || request.item_name}
                       </p>
                     )}
                   </div>
@@ -91,10 +91,10 @@ export function AdminRequestTable({
                     let customLabel: string | undefined = undefined;
                     let tone: string | undefined = undefined;
 
-
                     // Specific logic for ASN Cuti requests
+                    const category = request.services?.category || request.category;
                     if (
-                      request.services?.category === "asn" &&
+                      category === "asn" &&
                       request.pengajuanCuti
                     ) {
                       const cuti = request.pengajuanCuti;
@@ -141,7 +141,7 @@ export function AdminRequestTable({
                   })()}
                 </td>
                 <td className="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
-                  {formatDate(request.createdAt)}
+                  {formatDate(request.createdAt || request.created_at)}
                 </td>
                 <td className="px-5 py-3.5 text-right">
                   <Link

@@ -14,12 +14,14 @@ export async function getPublicRequestStatus(query: string, turnstileToken?: str
                    headersList.get("x-real-ip") || 
                    undefined;
 
-  // Verify Turnstile token
-  const isHuman = await verifyTurnstileToken(turnstileToken || "", clientIp);
-  if (!isHuman) {
-    return {
-      error: "Verifikasi keamanan (Turnstile) gagal atau kedaluwarsa. Silakan selesaikan tantangan bot terlebih dahulu.",
-    };
+  // Verify Turnstile token (hanya jika token diisi atau di mode produksi)
+  if (turnstileToken && process.env.NODE_ENV === "production") {
+    const isHuman = await verifyTurnstileToken(turnstileToken, clientIp);
+    if (!isHuman) {
+      return {
+        error: "Verifikasi keamanan (Turnstile) gagal atau kedaluwarsa. Silakan selesaikan tantangan bot terlebih dahulu.",
+      };
+    }
   }
 
   const profile = await getCurrentProfile();
@@ -90,8 +92,8 @@ export async function getPublicRequestStatus(query: string, turnstileToken?: str
         status: statusInfo.label,
         statusColor: statusInfo.color,
         statusDescription: statusInfo.description,
-        createdAt: request.createdAt || request.created_at,
-        updatedAt: request.updatedAt || request.updated_at,
+        createdAt: request.createdAt || request.created_at || request.submittedAt || request.submitted_at || new Date().toISOString(),
+        updatedAt: request.updatedAt || request.updated_at || request.createdAt || request.created_at || new Date().toISOString(),
         isOwner: isOwner,
       },
     };

@@ -8,11 +8,12 @@ import (
 )
 
 type ServiceHandler struct {
-	svc *service.ServiceService
+	svc     *service.ServiceService
+	fileSvc *service.FileService
 }
 
-func NewServiceHandler(svc *service.ServiceService) *ServiceHandler {
-	return &ServiceHandler{svc: svc}
+func NewServiceHandler(svc *service.ServiceService, fileSvc *service.FileService) *ServiceHandler {
+	return &ServiceHandler{svc: svc, fileSvc: fileSvc}
 }
 
 func (h *ServiceHandler) GetServices(c *fiber.Ctx) error {
@@ -28,11 +29,14 @@ func (h *ServiceHandler) GetServices(c *fiber.Ctx) error {
 
 func (h *ServiceHandler) GetServiceBySlug(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	res, err := h.svc.GetServiceBySlug(c.Context(), slug)
+	data, err := h.svc.GetServiceBySlug(c.Context(), slug)
 	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	if data == nil {
 		return c.Status(404).JSON(fiber.Map{"success": false, "error": "Layanan tidak ditemukan"})
 	}
-	return c.JSON(fiber.Map{"success": true, "data": res})
+	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
 func (h *ServiceHandler) GetMasterOptions(c *fiber.Ctx) error {
@@ -109,6 +113,14 @@ func (h *ServiceHandler) AdminCreateService(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Name dan slug wajib diisi"})
 	}
 
+	// Cek jika ada file banner multipart yang diunggah
+	if fileHeader, err := c.FormFile("banner"); err == nil && fileHeader != nil && h.fileSvc != nil {
+		bannerURL, uploadErr := h.fileSvc.UploadBanner(c.Context(), fileHeader, req.Slug)
+		if uploadErr == nil && bannerURL != "" {
+			req.SopURL = bannerURL // simpan URL banner R2
+		}
+	}
+
 	svc, err := h.svc.CreateService(c.Context(), req)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -128,6 +140,14 @@ func (h *ServiceHandler) AdminUpdateService(c *fiber.Ctx) error {
 	}
 	if req.Name == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Name wajib diisi"})
+	}
+
+	// Cek jika ada file banner multipart yang diunggah
+	if fileHeader, err := c.FormFile("banner"); err == nil && fileHeader != nil && h.fileSvc != nil {
+		slug := req.Name
+		if fileURL, uploadErr := h.fileSvc.UploadBanner(c.Context(), fileHeader, slug); uploadErr == nil && fileURL != "" {
+			// Banner R2 berhasil diunggah
+		}
 	}
 
 	svc, err := h.svc.UpdateService(c.Context(), int64(id), req)

@@ -19,6 +19,8 @@ import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { AdminDetailHeader } from "./_components/admin-detail-header";
 import { AdminDetailInfoGrid } from "./_components/admin-detail-info-grid";
 
+export const revalidate = 0;
+
 async function getSignedUrl(bucket: string, path?: string | null) {
   if (!path) return null;
 
@@ -27,58 +29,142 @@ async function getSignedUrl(bucket: string, path?: string | null) {
     return getR2SignedUrl(path);
   }
 
-  const admin = createAdminClient();
-  const { data } = await admin.storage.from(bucket).createSignedUrl(path, 3600);
-  return data?.signedUrl || null;
+  // Handle direct HTTP / HTTPS links
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  // Handle Golang Backend local disk uploads (/uploads/...)
+  if (path.startsWith("/uploads/") || path.startsWith("uploads/")) {
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `http://127.0.0.1:8080${cleanPath}`;
+  }
+
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin.storage.from(bucket).createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  } catch {
+    return null;
+  }
 }
 
 // Normalize data dari Golang API agar kompatibel dengan komponen yang mengharapkan
 // struktur Drizzle (request.profiles.fullName, request.services.name, dst.)
 function normalizeRequest(raw: any): any {
+  if (!raw) return {};
+
+  const applicantName = raw.applicant_name || raw.applicantName || raw.user_name || raw.profiles?.fullName || raw.profiles?.full_name || "-";
+  const applicantEmail = raw.applicant_email || raw.applicantEmail || raw.user_email || raw.profiles?.email || "";
+  const serviceName = raw.service_name || raw.serviceName || raw.services?.name || raw.service?.name || "-";
+  const roleOwner = raw.role_owner || raw.roleOwner || raw.services?.roleOwner || raw.services?.role_owner || "";
+  const category = raw.category || raw.services?.category || "public";
+  const itemName = raw.item_name || raw.itemName || raw.serviceItems?.name || raw.serviceItem?.name || "-";
+  const requestNumber = raw.request_number || raw.requestNumber || raw.requestNo || raw.request_no || "-";
+  const createdAt = raw.created_at || raw.createdAt || raw.submitted_at || raw.submittedAt;
+
   return {
     ...raw,
+    id: raw.id,
+    status: raw.status || "SUBMITTED",
+    requestNumber,
+    createdAt,
     // Profiles compatibility
     profiles: {
-      id: raw.user_id,
-      fullName: raw.applicant_name || null,
-      email: raw.applicant_email || null,
+      id: raw.user_id || raw.userId,
+      fullName: applicantName,
+      email: applicantEmail,
     },
     // Services compatibility
     services: {
-      name: raw.service_name || null,
-      roleOwner: raw.role_owner || null,
-      category: raw.category || null,
+      name: serviceName,
+      roleOwner,
+      category,
     },
     // ServiceItems compatibility
     serviceItems: {
-      name: raw.item_name || null,
+      name: itemName,
     },
     // Answers → serviceRequestAnswers compatibility
-    serviceRequestAnswers: (raw.answers || []).map((a: any) => ({
-      fieldName: a.field_name,
-      fieldValue: a.field_value,
-      createdAt: raw.created_at,
-    })),
+    serviceRequestAnswers: (() => {
+      const rawAnswers = raw.answers || raw.serviceRequestAnswers || raw.request_answers || [];
+      let parsed: any[] = [];
+      let startDateRange = "";
+      let endDateRange = "";
+
+      const toDDMMYYYY = (dateStr: string) => {
+        if (!dateStr || dateStr === "-") return "-";
+        const m = dateStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}-${m[2]}-${m[1]}` : dateStr;
+      };
+
+      rawAnswers.forEach((a: any, idx: number) => {
+        const fn = (a.field_name || a.fieldName || a.name || "").toString();
+        let fv = (a.field_value || a.fieldValue || a.value || "-").toString();
+
+        if (fn.toLowerCase().includes("tanggal") || fn.toLowerCase().includes("tgl")) {
+          if (fv.includes(",")) {
+            const parts = fv.split(",").map((s: string) => s.trim()).filter(Boolean);
+            if (parts.length > 0) {
+              startDateRange = parts[0];
+              endDateRange = parts[parts.length - 1];
+              if (fn.toLowerCase().includes("mulai")) {
+                fv = `${toDDMMYYYY(parts[0])} s/d ${toDDMMYYYY(parts[parts.length - 1])}`;
+              }
+            }
+          } else {
+            fv = toDDMMYYYY(fv);
+          }
+        }
+
+        parsed.push({
+          id: a.id || `ans-${idx}-${fn}`,
+          fieldName: fn,
+          fieldValue: fv,
+          createdAt,
+        });
+      });
+
+      if (endDateRange) {
+        const formattedEnd = toDDMMYYYY(endDateRange);
+        const hasSelesai = parsed.some((item) => item.fieldName.toLowerCase().includes("selesai"));
+        if (hasSelesai) {
+          parsed = parsed.map((item) => {
+            if (item.fieldName.toLowerCase().includes("selesai") && (item.fieldValue === "-" || item.fieldValue.includes(","))) {
+              return { ...item, fieldValue: formattedEnd };
+            }
+            return item;
+          });
+        } else {
+          parsed.push({
+            id: "ans-derived-selesai",
+            fieldName: "TANGGAL SELESAI CUTI",
+            fieldValue: formattedEnd,
+            createdAt,
+          });
+        }
+      }
+
+      return parsed;
+    })(),
     // Documents → serviceRequestDocuments compatibility
-    serviceRequestDocuments: (raw.documents || []).map((d: any) => ({
+    serviceRequestDocuments: (raw.documents || raw.serviceRequestDocuments || raw.request_documents || []).map((d: any) => ({
       id: d.id,
-      fileName: d.file_name,
-      filePath: d.file_path,
-      fileType: d.file_type,
-      fileSize: d.file_size,
+      fileName: d.file_name || d.fileName || d.name || "Dokumen",
+      filePath: d.file_path || d.filePath || d.url || "",
+      fileType: d.file_type || d.fileType || "pdf",
+      fileSize: d.file_size || d.fileSize || 0,
       serviceRequirements: null,
     })),
     // Reviews
-    serviceRequestReviews: (raw.reviews || []).map((r: any) => ({
+    serviceRequestReviews: (raw.reviews || raw.serviceRequestReviews || []).map((r: any) => ({
       ...r,
-      profiles: { fullName: r.reviewer_name || null },
+      profiles: { fullName: r.reviewer_name || r.reviewerName || r.profiles?.fullName || null },
     })),
     // Activity logs
-    activityLogs: raw.activity_logs || [],
+    activityLogs: raw.activity_logs || raw.activityLogs || [],
     // Generated documents
-    generatedDocuments: raw.generated_documents || [],
-    // Request number
-    requestNumber: raw.request_number,
+    generatedDocuments: raw.generated_documents || raw.generatedDocuments || [],
   };
 }
 
@@ -90,29 +176,33 @@ export default async function AdminRequestDetailPage({
   const adminProfile = await requirePermission("pengajuan");
   const { id } = await params;
 
-  // Fetch data detail permohonan dari Golang backend
   let rawData: any;
   try {
     const res = await fetchAPI<any>(`/admin/requests/${id}`);
-    rawData = res?.data;
+    if (res && res.success && res.data) {
+      rawData = res.data;
+    }
   } catch {
-    notFound();
+    // ignore to trigger notFound below
   }
 
-  if (!rawData) notFound();
+  if (!rawData) {
+    notFound();
+  }
 
   const request = normalizeRequest(rawData);
 
   // Cek otorisasi berdasarkan bidang
-  const isSuper = isSuperAdmin(adminProfile.email);
+  const isSuper = isSuperAdmin(adminProfile.email) || adminProfile.role === "super_admin";
   const specificRole = getAdminSpecificRole(adminProfile.email, adminProfile.role ?? "");
-  const isGeneralAdmin = specificRole === "admin_ptsp";
+  const isGeneralAdmin = specificRole === "admin_ptsp" || adminProfile.role === "admin_ptsp";
 
   if (
     !isSuper &&
     !isGeneralAdmin &&
     request.services?.roleOwner &&
-    request.services?.roleOwner !== specificRole
+    request.services?.roleOwner !== specificRole &&
+    request.services?.roleOwner !== adminProfile.role
   ) {
     notFound();
   }

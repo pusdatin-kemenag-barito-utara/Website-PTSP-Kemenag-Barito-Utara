@@ -4,6 +4,7 @@ import (
 	"ptsp-kemenag-backend/internal/config"
 	"ptsp-kemenag-backend/internal/repository"
 	"ptsp-kemenag-backend/internal/service"
+	"ptsp-kemenag-backend/internal/storage"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,6 +12,10 @@ import (
 
 // RegisterRoutes mendaftarkan seluruh endpoint aplikasi secara terpusat & modular.
 func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
+	// --- Storage & File Services ---
+	r2Storage := storage.NewR2Storage(cfg)
+	fileSvc := service.NewFileService(cfg, r2Storage)
+
 	// --- Repositories ---
 	guestBookRepo := repository.NewGuestBookRepository(db)
 	appointmentRepo := repository.NewAppointmentRepository(db)
@@ -32,11 +37,14 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 	// --- Handlers ---
 	guestBookHdl := NewGuestBookHandler(guestBookSvc)
 	appointmentHdl := NewAppointmentHandler(appointmentSvc)
-	serviceHdl := NewServiceHandler(serviceSvc)
-	requestHdl := NewRequestHandler(requestSvc)
-	userHdl := NewUserHandler(userSvc)
+	serviceHdl := NewServiceHandler(serviceSvc, fileSvc)
+	requestHdl := NewRequestHandler(requestSvc, fileSvc)
+	userHdl := NewUserHandler(userSvc, fileSvc)
 	cutiHdl := NewCutiHandler(cutiSvc)
 	cronHdl := NewCronHandler(systemSvc)
+
+	// Static route fallback untuk file uploads lokal
+	app.Static("/uploads", "./uploads")
 
 	// ─────────────────────────────────────────────────────────
 	// HEALTH CHECK
@@ -57,6 +65,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		api.Get("/services", serviceHdl.GetServices)
 		api.Get("/services/:slug", serviceHdl.GetServiceBySlug)
 		api.Get("/master-options", serviceHdl.GetMasterOptions)
+		api.Get("/videos", cronHdl.GetVideos)
 		api.Get("/service-items/:serviceItemId/requirements", serviceHdl.GetRequirements)
 		api.Get("/service-items/:serviceItemId/form-fields", serviceHdl.GetFormFields)
 
@@ -69,6 +78,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		api.Get("/requests/track/:requestNumber", requestHdl.TrackRequest)
 		api.Get("/requests", requestHdl.GetRequests)
 		api.Get("/requests/:id", requestHdl.GetRequestByID)
+		api.Post("/upload-document", requestHdl.UploadDocument)
 
 
 		// Admin Routes

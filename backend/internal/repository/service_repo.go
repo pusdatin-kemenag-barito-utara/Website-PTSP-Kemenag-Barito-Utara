@@ -19,8 +19,9 @@ func NewServiceRepository(db *pgxpool.Pool) *ServiceRepository {
 
 func (r *ServiceRepository) FindAllWithItems(ctx context.Context) ([]models.Service, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT s.id, s.name, s.slug, s.description, s.category, s.role_owner, s.requirements_text, s.sop_url, s.sort_order,
-		       si.id AS item_id, si.name AS item_name, si.slug AS item_slug, si.description AS item_desc, si.estimated_time
+		SELECT s.id, s.name, s.slug, s.description, s.category, s.role_owner, s.requirements_text, s.sop_url, s.sort_order, s.is_active,
+		       si.id AS item_id, si.name AS item_name, si.slug AS item_slug, si.description AS item_desc, si.estimated_time,
+		       CASE WHEN s.is_active = false THEN false ELSE COALESCE(si.is_active, true) END AS item_is_active
 		FROM kemenag_ptsp.ptsp_services s
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.service_id = s.id
 		ORDER BY s.sort_order ASC, si.sort_order ASC
@@ -38,12 +39,14 @@ func (r *ServiceRepository) FindAllWithItems(ctx context.Context) ([]models.Serv
 		var sName, sSlug, sCategory string
 		var sDesc, sRoleOwner, sReqText, sSopURL *string
 		var sSortOrder int
+		var sIsActive bool
 		var itemID *int64
 		var itemName, itemSlug *string
 		var itemDesc, itemEstTime *string
+		var itemIsActive *bool
 
-		if err := rows.Scan(&sID, &sName, &sSlug, &sDesc, &sCategory, &sRoleOwner, &sReqText, &sSopURL, &sSortOrder,
-			&itemID, &itemName, &itemSlug, &itemDesc, &itemEstTime); err != nil {
+		if err := rows.Scan(&sID, &sName, &sSlug, &sDesc, &sCategory, &sRoleOwner, &sReqText, &sSopURL, &sSortOrder, &sIsActive,
+			&itemID, &itemName, &itemSlug, &itemDesc, &itemEstTime, &itemIsActive); err != nil {
 			continue
 		}
 
@@ -58,7 +61,7 @@ func (r *ServiceRepository) FindAllWithItems(ctx context.Context) ([]models.Serv
 				RequirementsText: sReqText,
 				SopURL:           sSopURL,
 				SortOrder:        sSortOrder,
-				IsActive:         true,
+				IsActive:         sIsActive,
 				Items:            []models.ServiceItem{},
 			}
 			servicesMap[sID] = svc
@@ -66,15 +69,70 @@ func (r *ServiceRepository) FindAllWithItems(ctx context.Context) ([]models.Serv
 		}
 
 		if itemID != nil && itemName != nil {
+			itemActiveState := true
+			if itemIsActive != nil {
+				itemActiveState = *itemIsActive
+			}
 			servicesMap[sID].Items = append(servicesMap[sID].Items, models.ServiceItem{
 				ID:            *itemID,
 				ServiceID:     sID,
 				Name:          *itemName,
 				Slug:          *itemSlug,
 				Description:   itemDesc,
-				IsActive:      true,
+				IsActive:      itemActiveState,
 				EstimatedTime: itemEstTime,
+				Requirements:  []models.ServiceRequirement{},
+				FormFields:    []models.ServiceFormField{},
 			})
+		}
+	}
+
+	// Populasikan Requirements dan FormFields secara terintegrasi untuk seluruh item
+	reqRows, err := r.db.Query(ctx, `
+		SELECT id, service_item_id, document_name, description, is_required, allowed_extensions, max_file_size_mb, sort_order
+		FROM kemenag_ptsp.ptsp_service_requirements
+		ORDER BY sort_order ASC
+	`)
+	if err == nil {
+		reqsMap := map[int64][]models.ServiceRequirement{}
+		for reqRows.Next() {
+			var req models.ServiceRequirement
+			if err := reqRows.Scan(&req.ID, &req.ServiceItemID, &req.DocumentName, &req.Description, &req.IsRequired, &req.AllowedExtensions, &req.MaxFileSizeMb, &req.SortOrder); err == nil {
+				reqsMap[req.ServiceItemID] = append(reqsMap[req.ServiceItemID], req)
+			}
+		}
+		reqRows.Close()
+
+		for _, svc := range servicesMap {
+			for i := range svc.Items {
+				if reqs, ok := reqsMap[svc.Items[i].ID]; ok {
+					svc.Items[i].Requirements = reqs
+				}
+			}
+		}
+	}
+
+	ffRows, err := r.db.Query(ctx, `
+		SELECT id, service_item_id, label, name, type, placeholder, is_required, options, sort_order
+		FROM kemenag_ptsp.ptsp_service_form_fields
+		ORDER BY sort_order ASC
+	`)
+	if err == nil {
+		ffMap := map[int64][]models.ServiceFormField{}
+		for ffRows.Next() {
+			var ff models.ServiceFormField
+			if err := ffRows.Scan(&ff.ID, &ff.ServiceItemID, &ff.Label, &ff.Name, &ff.Type, &ff.Placeholder, &ff.IsRequired, &ff.Options, &ff.SortOrder); err == nil {
+				ffMap[ff.ServiceItemID] = append(ffMap[ff.ServiceItemID], ff)
+			}
+		}
+		ffRows.Close()
+
+		for _, svc := range servicesMap {
+			for i := range svc.Items {
+				if ffs, ok := ffMap[svc.Items[i].ID]; ok {
+					svc.Items[i].FormFields = ffs
+				}
+			}
 		}
 	}
 
@@ -278,6 +336,17 @@ func (r *ServiceRepository) CreateService(ctx context.Context, req models.Create
 }
 
 func (r *ServiceRepository) UpdateService(ctx context.Context, id int64, req models.UpdateServiceRequest) (*models.Service, error) {
+	roleOwnerVal := req.RoleOwner
+	if roleOwnerVal == "" && req.RoleOwnerSnake != "" {
+		roleOwnerVal = req.RoleOwnerSnake
+	}
+	isActiveVal := true
+	if req.IsActive != nil {
+		isActiveVal = *req.IsActive
+	} else if req.IsActiveSnake != nil {
+		isActiveVal = *req.IsActiveSnake
+	}
+
 	var s models.Service
 	err := r.db.QueryRow(ctx, `
 		UPDATE kemenag_ptsp.ptsp_services
@@ -286,11 +355,15 @@ func (r *ServiceRepository) UpdateService(ctx context.Context, id int64, req mod
 		    is_active=$8, updated_at=NOW()
 		WHERE id=$9
 		RETURNING id, name, slug, description, category, role_owner, requirements_text, sop_url, sort_order, is_active, request_code
-	`, req.Name, req.Description, req.Category, req.RoleOwner, req.RequirementsText, req.SopURL, req.RequestCode, req.IsActive, id).
+	`, req.Name, req.Description, req.Category, roleOwnerVal, req.RequirementsText, req.SopURL, req.RequestCode, isActiveVal, id).
 		Scan(&s.ID, &s.Name, &s.Slug, &s.Description, &s.Category, &s.RoleOwner, &s.RequirementsText, &s.SopURL, &s.SortOrder, &s.IsActive, &s.RequestCode)
 	if err != nil {
 		return nil, err
 	}
+
+	// Sinkronkan status is_active ke seluruh item layanan turunan di database
+	_, _ = r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_service_items SET is_active = $1 WHERE service_id = $2`, isActiveVal, id)
+
 	return &s, nil
 }
 
@@ -367,6 +440,13 @@ func (r *ServiceRepository) ReorderServiceItems(ctx context.Context, ids []int64
 // --- Admin: CRUD Requirements ---
 
 func (r *ServiceRepository) CreateRequirement(ctx context.Context, serviceItemID int64, req models.CreateRequirementRequest) (*models.ServiceRequirement, error) {
+	isRequiredVal := true
+	if req.IsRequired != nil {
+		isRequiredVal = *req.IsRequired
+	} else if req.IsRequiredSnake != nil {
+		isRequiredVal = *req.IsRequiredSnake
+	}
+
 	var rq models.ServiceRequirement
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO kemenag_ptsp.ptsp_service_requirements
@@ -375,7 +455,7 @@ func (r *ServiceRepository) CreateRequirement(ctx context.Context, serviceItemID
 			(SELECT COALESCE(MAX(sort_order),0)+1 FROM kemenag_ptsp.ptsp_service_requirements WHERE service_item_id=$1), 1
 		))
 		RETURNING id, service_item_id, document_name, description, is_required, allowed_extensions, max_file_size_mb, sort_order
-	`, serviceItemID, req.DocumentName, req.Description, req.IsRequired, req.AllowedExtensions, req.MaxFileSizeMb).
+	`, serviceItemID, req.DocumentName, req.Description, isRequiredVal, req.AllowedExtensions, req.MaxFileSizeMb).
 		Scan(&rq.ID, &rq.ServiceItemID, &rq.DocumentName, &rq.Description, &rq.IsRequired, &rq.AllowedExtensions, &rq.MaxFileSizeMb, &rq.SortOrder)
 	if err != nil {
 		return nil, err
@@ -384,13 +464,20 @@ func (r *ServiceRepository) CreateRequirement(ctx context.Context, serviceItemID
 }
 
 func (r *ServiceRepository) UpdateRequirement(ctx context.Context, id int64, req models.UpdateRequirementRequest) (*models.ServiceRequirement, error) {
+	isRequiredVal := true
+	if req.IsRequired != nil {
+		isRequiredVal = *req.IsRequired
+	} else if req.IsRequiredSnake != nil {
+		isRequiredVal = *req.IsRequiredSnake
+	}
+
 	var rq models.ServiceRequirement
 	err := r.db.QueryRow(ctx, `
 		UPDATE kemenag_ptsp.ptsp_service_requirements
 		SET document_name=$1, description=NULLIF($2,''), is_required=$3, allowed_extensions=$4, max_file_size_mb=$5, updated_at=NOW()
 		WHERE id=$6
 		RETURNING id, service_item_id, document_name, description, is_required, allowed_extensions, max_file_size_mb, sort_order
-	`, req.DocumentName, req.Description, req.IsRequired, req.AllowedExtensions, req.MaxFileSizeMb, id).
+	`, req.DocumentName, req.Description, isRequiredVal, req.AllowedExtensions, req.MaxFileSizeMb, id).
 		Scan(&rq.ID, &rq.ServiceItemID, &rq.DocumentName, &rq.Description, &rq.IsRequired, &rq.AllowedExtensions, &rq.MaxFileSizeMb, &rq.SortOrder)
 	if err != nil {
 		return nil, err
@@ -418,8 +505,14 @@ func (r *ServiceRepository) ReorderRequirements(ctx context.Context, ids []int64
 
 // --- Admin: CRUD Form Fields ---
 
-
 func (r *ServiceRepository) CreateFormField(ctx context.Context, serviceItemID int64, req models.CreateFormFieldRequest) (*models.ServiceFormField, error) {
+	isRequiredVal := true
+	if req.IsRequired != nil {
+		isRequiredVal = *req.IsRequired
+	} else if req.IsRequiredSnake != nil {
+		isRequiredVal = *req.IsRequiredSnake
+	}
+
 	var ff models.ServiceFormField
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO kemenag_ptsp.ptsp_service_form_fields
@@ -428,7 +521,7 @@ func (r *ServiceRepository) CreateFormField(ctx context.Context, serviceItemID i
 			(SELECT COALESCE(MAX(sort_order),0)+1 FROM kemenag_ptsp.ptsp_service_form_fields WHERE service_item_id=$1), 1
 		))
 		RETURNING id, service_item_id, label, name, type, placeholder, is_required, options, sort_order
-	`, serviceItemID, req.Label, req.Name, req.Type, req.Placeholder, req.IsRequired, req.Options).
+	`, serviceItemID, req.Label, req.Name, req.Type, req.Placeholder, isRequiredVal, req.Options).
 		Scan(&ff.ID, &ff.ServiceItemID, &ff.Label, &ff.Name, &ff.Type, &ff.Placeholder, &ff.IsRequired, &ff.Options, &ff.SortOrder)
 	if err != nil {
 		return nil, err
@@ -437,13 +530,20 @@ func (r *ServiceRepository) CreateFormField(ctx context.Context, serviceItemID i
 }
 
 func (r *ServiceRepository) UpdateFormField(ctx context.Context, id int64, req models.UpdateFormFieldRequest) (*models.ServiceFormField, error) {
+	isRequiredVal := true
+	if req.IsRequired != nil {
+		isRequiredVal = *req.IsRequired
+	} else if req.IsRequiredSnake != nil {
+		isRequiredVal = *req.IsRequiredSnake
+	}
+
 	var ff models.ServiceFormField
 	err := r.db.QueryRow(ctx, `
 		UPDATE kemenag_ptsp.ptsp_service_form_fields
 		SET label=$1, name=$2, type=$3, placeholder=NULLIF($4,''), is_required=$5, options=NULLIF($6,''), updated_at=NOW()
 		WHERE id=$7
 		RETURNING id, service_item_id, label, name, type, placeholder, is_required, options, sort_order
-	`, req.Label, req.Name, req.Type, req.Placeholder, req.IsRequired, req.Options, id).
+	`, req.Label, req.Name, req.Type, req.Placeholder, isRequiredVal, req.Options, id).
 		Scan(&ff.ID, &ff.ServiceItemID, &ff.Label, &ff.Name, &ff.Type, &ff.Placeholder, &ff.IsRequired, &ff.Options, &ff.SortOrder)
 	if err != nil {
 		return nil, err

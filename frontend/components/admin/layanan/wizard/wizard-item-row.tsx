@@ -7,6 +7,7 @@ import { WizardRequirementSection } from "./wizard-requirement-section";
 
 interface WizardItemRowProps {
   item: any;
+  parentIsActive?: boolean;
   isSuperAdmin: boolean;
   expandedItemId: number | null;
   setExpandedItemId: (id: number | null) => void;
@@ -25,6 +26,7 @@ interface WizardItemRowProps {
 
 export function WizardItemRow({
   item,
+  parentIsActive = true,
   isSuperAdmin,
   expandedItemId,
   setExpandedItemId,
@@ -42,6 +44,8 @@ export function WizardItemRow({
 }: WizardItemRowProps) {
   const isExpanded = expandedItemId === item.id;
   const dragControls = useDragControls();
+  const rawItemActive = item.is_active !== undefined ? Boolean(item.is_active) : (item.isActive !== undefined ? Boolean(item.isActive) : true);
+  const itemIsActive = parentIsActive === false ? false : rawItemActive;
 
   return (
     <Reorder.Item
@@ -75,26 +79,35 @@ export function WizardItemRow({
           <div className="w-24 text-center shrink-0">
             <span
               className={`inline-block w-full py-1 rounded-full text-[10px] font-extrabold tracking-wider ${
-                item.isActive 
+                itemIsActive 
                   ? "bg-emerald-50 text-emerald-700 border border-emerald-200/80" 
                   : "bg-rose-50 text-rose-700 border border-rose-200/80"
               }`}
             >
-              {item.isActive ? "AKTIF" : "NONAKTIF"}
+              {itemIsActive ? "AKTIF" : "NONAKTIF"}
             </span>
           </div>
 
-          {/* Kolom 2: Tindakan Admin (Posisi Center di antara 3 Fitur) */}
-          <div className="flex items-center justify-center gap-2">
-            {/* Fitur 1: Kelola Field (Modal Floating) */}
-            <button
-              onClick={() => onOpenFloatingManage(item)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white text-xs font-bold shadow-xs hover:from-emerald-700 hover:to-teal-800 transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
-              title="Kelola Formulir & Persyaratan Dokumen (Modal Floating)"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span>Kelola Field ({ (item.serviceFormFields?.length || 0) + (item.serviceRequirements?.length || 0) })</span>
-            </button>
+          {/* Kolom 2: Tindakan Admin (3 Ikon Ramping) */}
+          <div className="w-32 flex items-center justify-center gap-1.5 shrink-0">
+            {/* Fitur 1: Kelola Field & Persyaratan (Ikon + Badge Count) */}
+            {(() => {
+              const fieldReqCount = (item.serviceFormFields || item.formFields || item.form_fields || []).length + (item.serviceRequirements || item.requirements || item.requirements_list || []).length;
+              return (
+                <button
+                  onClick={() => onOpenFloatingManage(item)}
+                  className="relative p-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-2xs hover:from-emerald-700 hover:to-teal-800 transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
+                  title={`Kelola Formulir & Persyaratan Dokumen (${fieldReqCount} Item)`}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  {fieldReqCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.2 text-[9px] font-black bg-amber-400 text-amber-950 rounded-full border border-amber-300 shadow-2xs leading-tight">
+                      {fieldReqCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })()}
 
             {/* Fitur 2: Edit Layanan */}
             <button
@@ -105,21 +118,20 @@ export function WizardItemRow({
                   name: item.name,
                   slug: item.slug,
                   estimatedTime: item.estimatedTime || "1-3 Hari Kerja",
-                  isActive: item.isActive,
+                  isActive: itemIsActive,
                 });
                 itemModals.setOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl border border-slate-200/80 text-xs font-bold transition-all cursor-pointer shrink-0"
+              className="p-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl border border-slate-200/80 transition-all cursor-pointer shrink-0 hover:scale-105 active:scale-95"
               title="Edit Detail Layanan (Nama, Slug, Estimasi Waktu)"
             >
-              <Pencil className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Edit Layanan</span>
+              <Pencil className="h-4 w-4 text-emerald-600" />
             </button>
 
             {/* Fitur 3: Hapus Item Layanan */}
             <button
               onClick={() => handlers.deleteItem(item.id)}
-              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-slate-200/80 transition-all cursor-pointer shrink-0"
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-slate-200/80 transition-all cursor-pointer shrink-0 hover:scale-105 active:scale-95"
               title="Hapus Item Layanan Ini"
             >
               <Trash2 className="h-4 w-4" />

@@ -21,32 +21,43 @@ export const getCurrentProfile = cache(async () => {
   const user = await getCurrentUser();
   if (!user) return null;
 
+  const userEmail = user.email ?? "";
+  const isSuper = isSuperAdmin(userEmail);
+
   try {
     const res = await fetchAPI<{ success: boolean; data: any }>(`/admin/users/${user.id}`);
     if (res && res.data) {
-      return res.data;
+      const profileData = res.data;
+      const email = profileData.email || userEmail;
+      const role = isSuper ? "super_admin" : (profileData.role && profileData.role !== "user" ? profileData.role : (user.user_metadata?.role || profileData.role || "user"));
+      return {
+        ...profileData,
+        email,
+        role,
+        isVerified: isSuper ? true : (profileData.isVerified ?? true),
+      };
     }
   } catch (e) {
     // Fallback jika API backend offline
   }
 
   // Fallback profile object jika belum ada
-  const userEmail = user.email ?? "";
-  const isSuper = isSuperAdmin(userEmail);
+  const metadataRole = user.user_metadata?.role || (isSuper ? "super_admin" : "user");
+  const isInternal = isAdminRole(metadataRole) || isSuper;
 
   return {
     id: user.id,
     email: userEmail || null,
-    role: isSuper ? "super_admin" : "user",
-    name: user.user_metadata?.full_name ?? "User",
-    fullName: user.user_metadata?.full_name ?? "User",
+    role: isSuper ? "super_admin" : metadataRole,
+    name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "User",
+    fullName: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "User",
     phone: isSuper ? "000000000" : null,
     address: isSuper ? "-" : null,
     createdAt: new Date().toISOString(),
     isVerified: true,
     permissions: ["ringkasan", "pengajuan", "dokumen_hasil"],
     status: "active",
-    userType: isSuper ? "internal_admin" : "pemohon",
+    userType: isInternal ? "internal_admin" : "pemohon",
   };
 });
 
@@ -115,7 +126,7 @@ export async function requireRequestOwnership(
 
 export function hasPermission(profile: any, permission: string): boolean {
   if (!profile) return false;
-  if (isSuperAdmin(profile.email)) return true;
+  if (isSuperAdmin(profile.email) || isAdminRole(profile.role) || profile.role === "super_admin") return true;
 
   if (profile.role === permission) return true;
   const permissions = (profile.permissions as string[]) || [];

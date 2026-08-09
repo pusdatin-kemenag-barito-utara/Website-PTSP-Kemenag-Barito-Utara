@@ -53,13 +53,16 @@ export async function createFieldAction(
 ): Promise<ActionResult> {
   const profile = await requirePermission("layanan");
   try {
+    const rawIsRequired = String(formData.get("isRequired") ?? "");
+    const isReq = rawIsRequired === "on" || rawIsRequired === "true" || rawIsRequired === "1";
+
     const validated = fieldSchema.safeParse({
       serviceItemId: formData.get("serviceItemId"),
       label: formData.get("label"),
       name: formData.get("name"),
       type: formData.get("type"),
       placeholder: formData.get("placeholder"),
-      isRequired: formData.get("isRequired") === "on",
+      isRequired: isReq,
       options: formData.get("options"),
     });
 
@@ -77,6 +80,7 @@ export async function createFieldAction(
         type: body.type,
         placeholder: body.placeholder ?? "",
         isRequired: body.isRequired ?? false,
+        is_required: body.isRequired ?? false,
         options: body.options ?? "",
       }),
     });
@@ -104,6 +108,9 @@ export async function updateFieldAction(
 ): Promise<ActionResult> {
   const profile = await requirePermission("layanan");
   try {
+    const rawIsRequired = String(formData.get("isRequired") ?? "");
+    const isReq = rawIsRequired === "on" || rawIsRequired === "true" || rawIsRequired === "1";
+
     const validated = updateFieldSchema.safeParse({
       id: formData.get("id"),
       serviceItemId: formData.get("serviceItemId"),
@@ -111,7 +118,7 @@ export async function updateFieldAction(
       name: formData.get("name"),
       type: formData.get("type"),
       placeholder: formData.get("placeholder"),
-      isRequired: formData.get("isRequired") === "on",
+      isRequired: isReq,
       options: formData.get("options"),
     });
 
@@ -129,6 +136,7 @@ export async function updateFieldAction(
         type: body.type,
         placeholder: body.placeholder ?? "",
         isRequired: body.isRequired ?? false,
+        is_required: body.isRequired ?? false,
         options: body.options ?? "",
       }),
     });

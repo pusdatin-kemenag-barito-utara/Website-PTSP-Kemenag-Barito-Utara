@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,6 +31,11 @@ func ConnectDB() {
 
 	// Nonaktifkan prepared statement caching untuk Supabase Transaction Pooler (PgBouncer)
 	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+
+	// Optimasi koneksi pool Supabase
+	config.MaxConns = 25
+	config.MinConns = 3
+	config.MaxConnIdleTime = 5 * time.Minute
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {

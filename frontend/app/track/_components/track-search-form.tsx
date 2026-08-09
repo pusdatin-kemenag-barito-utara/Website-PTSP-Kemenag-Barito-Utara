@@ -62,7 +62,7 @@ export function TrackSearchForm({ initialQuery }: TrackSearchFormProps) {
 
         <button
           type="submit"
-          disabled={loading || !turnstileToken}
+          disabled={loading || (process.env.NODE_ENV === "production" && !turnstileToken)}
           className="inline-flex h-12 sm:h-16 items-center justify-center rounded-2xl sm:rounded-[1.25rem] bg-gradient-to-r from-[#059669] to-[#047857] px-6 sm:px-8 text-sm font-bold text-white shadow-[0_10px_20px_-5px_rgba(5,150,105,0.3)] hover:shadow-[0_12px_24px_-5px_rgba(5,150,105,0.4)] hover:-translate-y-0.5 hover:from-[#047857] hover:to-[#03543f] active:scale-95 disabled:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-300 shrink-0 gap-2"
         >
           {loading ? (

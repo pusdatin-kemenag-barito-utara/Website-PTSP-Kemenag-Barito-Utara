@@ -81,7 +81,7 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
               containerRef.current.innerHTML = "";
             }
 
-            const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+            const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
             const widgetId = window.turnstile.render(containerRef.current, {
               sitekey: siteKey,
               theme: "light",

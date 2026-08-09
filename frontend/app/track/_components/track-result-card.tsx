@@ -118,7 +118,9 @@ export function TrackResultCard({ data }: TrackResultCardProps) {
                   <Calendar className="h-3.5 w-3.5" /> Diajukan
                 </span>
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  {format(new Date(data.createdAt), "dd MMM yyyy", { locale: localeId })}
+                  {data.createdAt && !isNaN(new Date(data.createdAt).getTime())
+                    ? format(new Date(data.createdAt), "dd MMM yyyy", { locale: localeId })
+                    : "-"}
                 </p>
               </div>
               <div className="space-y-1">
@@ -126,7 +128,9 @@ export function TrackResultCard({ data }: TrackResultCardProps) {
                   <Clock className="h-3.5 w-3.5" /> Diperbarui
                 </span>
                 <p className="text-[12px] font-medium text-slate-600 dark:text-slate-400">
-                  {format(new Date(data.updatedAt), "dd MMM yyyy, HH:mm", { locale: localeId })}
+                  {data.updatedAt && !isNaN(new Date(data.updatedAt).getTime())
+                    ? format(new Date(data.updatedAt), "dd MMM yyyy, HH:mm", { locale: localeId })
+                    : "-"}
                 </p>
               </div>
             </div>

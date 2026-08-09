@@ -1,9 +1,14 @@
 import { fetchAPI } from "@/lib/api";
 
 export class RequestService {
-  static async getPaginatedRequests(params: { page: number; pageSize: number; status?: string }) {
-    const statusQuery = params.status ? `?status=${params.status}` : "";
-    const res = await fetchAPI<{ success: boolean; data: any[] }>(`/admin/requests${statusQuery}`);
+  static async getPaginatedRequests(params: { page: number; pageSize: number; status?: string; type?: string; category?: string }) {
+    const queryParts: string[] = [];
+    if (params.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    const reqType = params.type || params.category;
+    if (reqType) queryParts.push(`type=${encodeURIComponent(reqType)}`);
+
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+    const res = await fetchAPI<{ success: boolean; data: any[] }>(`/admin/requests${queryString}`);
     const data = res.data || [];
     return {
       data,

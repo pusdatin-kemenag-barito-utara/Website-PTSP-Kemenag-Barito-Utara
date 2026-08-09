@@ -21,12 +21,14 @@ export function ServiceWizardClient({
   const wizard = useServiceWizard(initialService);
   const { service, isPending, modals, forms } = wizard;
 
+  const itemsList = service.serviceItems || service.items || [];
+
   // Items sorted by sort_order for modals
   const sortedItems = useMemo(
-    () => [...(service.serviceItems || [])].sort(
+    () => [...itemsList].sort(
       (a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
     ) || [],
-    [service.serviceItems],
+    [service.serviceItems, service.items],
   );
 
   const [floatingManageItem, setFloatingManageItem] = useState<any | null>(null);
@@ -34,8 +36,8 @@ export function ServiceWizardClient({
   // Synchronize item data if updated while floating modal is open
   const currentFloatingItem = useMemo(() => {
     if (!floatingManageItem) return null;
-    return (service.serviceItems || []).find((i: any) => i.id === floatingManageItem.id) || floatingManageItem;
-  }, [service.serviceItems, floatingManageItem]);
+    return itemsList.find((i: any) => i.id === floatingManageItem.id) || floatingManageItem;
+  }, [itemsList, floatingManageItem]);
 
   return (
     <div className="space-y-8">

@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/admin/page-header";
 import { isSuperAdmin, getAdminSpecificRole } from "@/lib/constants";
 import { LayananClient } from "@/components/admin/layanan/layanan-client";
 
+export const revalidate = 0;
+
 export default async function AdminServicesPage() {
   const profile = await requirePermission("layanan");
 
@@ -14,7 +16,7 @@ export default async function AdminServicesPage() {
 
   let services: any[] = [];
   try {
-    const res = await fetchAPI<any>("/services");
+    const res = await fetchAPI<any>("/services", { cache: "no-store" });
     if (res && res.data && Array.isArray(res.data)) {
       services = res.data.filter((s: any) => s.category === "public" || !s.category);
     }

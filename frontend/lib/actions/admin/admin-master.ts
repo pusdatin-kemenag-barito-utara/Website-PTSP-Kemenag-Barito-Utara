@@ -8,6 +8,7 @@ import { emitRefreshSignal } from "@/lib/supabase/broadcast";
 import { createAuditLog } from "@/lib/audit";
 import { fetchAPI } from "@/lib/api";
 import { promises as fs } from "fs";
+import fsSync from "fs";
 import path from "path";
 
 const serviceSchema = z.object({
@@ -31,11 +32,15 @@ export type ActionResult = {
 
 async function handleBannerUpload(file: File | null, slug: string) {
   if (!file || file.size === 0) return;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const bannerDir = path.join(process.cwd(), "public", "banners");
-  await fs.mkdir(bannerDir, { recursive: true });
-  const filePath = path.join(bannerDir, `${slug}.png`);
-  await fs.writeFile(filePath, buffer);
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const bannerDir = path.join(process.cwd(), "public", "banners");
+    await fs.mkdir(bannerDir, { recursive: true });
+    const filePath = path.join(bannerDir, `${slug}.png`);
+    await fs.writeFile(filePath, buffer);
+  } catch (err) {
+    console.error("Banner upload handling warning:", err);
+  }
 }
 
 // --- SERVICES ---
@@ -152,16 +157,34 @@ export async function updateServiceAction(
         description: validated.data.description ?? "",
         category: validated.data.category ?? "public",
         roleOwner: validated.data.roleOwner ?? "",
+        role_owner: validated.data.roleOwner ?? "",
         requirementsText: validated.data.requirementsText ?? "",
         sopUrl: validated.data.sopUrl ?? "",
         requestCode: validated.data.requestCode ?? "",
         isActive: validated.data.isActive,
+        is_active: validated.data.isActive,
       }),
     });
 
-    // Handle Banner Upload
+    // Handle Banner Upload & Slug Rename File Copy
     const bannerFile = formData.get("banner") as File | null;
-    await handleBannerUpload(bannerFile, validated.data.slug);
+    const oldSlug = formData.get("oldSlug") as string | null;
+    const newSlug = validated.data.slug;
+
+    if (bannerFile && bannerFile.size > 0) {
+      await handleBannerUpload(bannerFile, newSlug);
+    } else if (oldSlug && oldSlug !== newSlug) {
+      const bannerDir = path.join(process.cwd(), "public", "banners");
+      const oldPath = path.join(bannerDir, `${oldSlug}.png`);
+      const newPath = path.join(bannerDir, `${newSlug}.png`);
+      try {
+        if (fsSync.existsSync(oldPath)) {
+          await fs.copyFile(oldPath, newPath);
+        }
+      } catch (err) {
+        console.error("Failed to copy banner file for renamed slug:", err);
+      }
+    }
 
     await createAuditLog({
       adminId: profile.id,

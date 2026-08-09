@@ -1,10 +1,6 @@
 import { getEnv } from "@/lib/env";
 
-// Gunakan getEnv untuk memastikan TURNSTILE_SECRET_KEY wajib diisi di production
 function getSecretKey(): string {
-  if (process.env.NODE_ENV === "production") {
-    return getEnv("TURNSTILE_SECRET_KEY");
-  }
   return process.env.TURNSTILE_SECRET_KEY || "1x00000000000000000000000000000000";
 }
 

@@ -31,29 +31,39 @@ function isSameOrigin(request: NextRequest): boolean {
   return true;
 }
 
+let maintenanceCache: { isMaintenance: boolean; expiresAt: number } | null = null;
+
 async function checkMaintenanceStatus(): Promise<boolean> {
   if (process.env.NODE_ENV === "development") {
     return false;
+  }
+
+  const now = Date.now();
+  if (maintenanceCache && now < maintenanceCache.expiresAt) {
+    return maintenanceCache.isMaintenance;
   }
 
   try {
     const pusdatinUrl = process.env.NEXT_PUBLIC_PUSDATIN_URL || "https://pusdatin.kemenag-baritoutara.com";
     const appId = "ptsp-kemenag"; 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    const timeoutId = setTimeout(() => controller.abort(), 600);
 
     const response = await fetch(
       `${pusdatinUrl}/api/public/apps/${appId}/status`,
-      {
-        signal: controller.signal,
-        next: { revalidate: 30 },
-      }
+      { signal: controller.signal }
     );
     clearTimeout(timeoutId);
-    if (!response.ok) return false;
+    if (!response.ok) {
+      maintenanceCache = { isMaintenance: false, expiresAt: now + 60000 };
+      return false;
+    }
     const data = await response.json();
-    return data?.status === "maintenance";
+    const isMaintenance = data?.status === "maintenance";
+    maintenanceCache = { isMaintenance, expiresAt: now + 60000 };
+    return isMaintenance;
   } catch (error) {
+    maintenanceCache = { isMaintenance: false, expiresAt: now + 30000 };
     return false;
   }
 }
@@ -127,7 +137,7 @@ export async function proxy(request: NextRequest) {
   }
 
   response.headers.set("X-RateLimit-Limit", "60");
-  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 

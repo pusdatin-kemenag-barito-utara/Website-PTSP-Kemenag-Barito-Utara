@@ -17,6 +17,7 @@ const LayananTable = dynamic(() => import("./layanan-table").then((mod) => mod.L
   ssr: false,
 });
 
+import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/utils";
 
 export function LayananClient({
@@ -30,6 +31,7 @@ export function LayananClient({
   isSuperAdmin?: boolean;
   category?: string;
 }) {
+  const router = useRouter();
   const [services, setServices] = useState(initialServices);
   const [isPending, startTransition] = useTransition();
 
@@ -64,12 +66,12 @@ export function LayananClient({
   const openEdit = (service: any) => {
     setEditingService(service);
     setFormData({
-      name: service.name,
-      slug: service.slug,
-      isActive: service.isActive,
-      roleOwner: service.roleOwner || "",
-      requirementsText: service.requirementsText || "",
-      sopUrl: service.sopUrl || "",
+      name: service.name || "",
+      slug: service.slug || "",
+      isActive: Boolean(service.isActive ?? service.is_active ?? true),
+      roleOwner: service.roleOwner || service.role_owner || "",
+      requirementsText: service.requirementsText || service.requirements_text || "",
+      sopUrl: service.sopUrl || service.sop_url || "",
     });
   };
 
@@ -81,7 +83,7 @@ export function LayananClient({
     const data = new FormData();
     data.append("name", formData.name);
     data.append("slug", formData.slug);
-    if (formData.isActive) data.append("isActive", "on");
+    data.append("isActive", formData.isActive ? "on" : "off");
     if (formData.roleOwner) data.append("roleOwner", formData.roleOwner);
     if (formData.requirementsText) data.append("requirementsText", formData.requirementsText);
     if (formData.sopUrl) data.append("sopUrl", formData.sopUrl);
@@ -92,6 +94,7 @@ export function LayananClient({
       let result;
       if (editingService) {
         data.append("id", editingService.id.toString());
+        if (editingService.slug) data.append("oldSlug", editingService.slug);
         result = await updateServiceAction(data);
       } else {
         result = await createServiceAction(data);
@@ -101,9 +104,30 @@ export function LayananClient({
         toast.success(editingService ? "Berhasil Memperbarui" : "Berhasil Menambahkan", {
           description: result.message || (editingService ? "Layanan telah diperbarui." : "Layanan baru telah ditambahkan."),
         });
+
+        // Update local state immediately for instant UI reactivity
+        if (editingService) {
+          setServices((prev) =>
+            prev.map((s) =>
+              s.id === editingService.id
+                ? {
+                    ...s,
+                    name: formData.name,
+                    slug: formData.slug,
+                    isActive: formData.isActive,
+                    is_active: formData.isActive,
+                    roleOwner: formData.roleOwner,
+                    role_owner: formData.roleOwner,
+                  }
+                : s,
+            ),
+          );
+        }
+
         setIsAddOpen(false);
         setEditingService(null);
         setFormData({ name: "", slug: "", isActive: true, roleOwner: "", requirementsText: "", sopUrl: "" });
+        router.refresh();
       } else {
         toast.error(result.error || "Gagal menyimpan data.");
       }
@@ -146,14 +170,19 @@ export function LayananClient({
     });
   };
 
-  const totalMainServices = initialServices.length;
-  const activeMainServices = initialServices.filter((s: any) => s.isActive).length;
+  const checkActive = (s: any) => s.is_active !== undefined ? Boolean(s.is_active) : (s.isActive !== undefined ? Boolean(s.isActive) : true);
+
+  const totalMainServices = services.length;
+  const activeMainServices = services.filter((s: any) => checkActive(s) === true).length;
   const inactiveMainServices = totalMainServices - activeMainServices;
 
-  // Hitung total sub-layanan turunan (serviceItems)
-  const totalSubItems = initialServices.reduce((acc: number, s: any) => acc + (s.serviceItems?.length || 0), 0);
-  const activeSubItems = initialServices.reduce((acc: number, s: any) => {
-    return acc + (s.serviceItems?.filter((item: any) => item.isActive !== false)?.length || 0);
+  // Hitung total sub-layanan turunan (serviceItems / items)
+  const getItems = (s: any) => s.serviceItems || s.items || [];
+  const totalSubItems = services.reduce((acc: number, s: any) => acc + getItems(s).length, 0);
+  const activeSubItems = services.reduce((acc: number, s: any) => {
+    const isParentActive = checkActive(s);
+    if (!isParentActive) return acc; // Jika layanan utama nonaktif, seluruh sub-item didalamnya dianggap nonaktif
+    return acc + getItems(s).filter((item: any) => checkActive(item) === true).length;
   }, 0);
   const inactiveSubItems = totalSubItems - activeSubItems;
 

@@ -83,8 +83,10 @@ export function FloatingManageFieldsModal({
 
   if (!item || !mounted) return null;
 
-  const formCount = item.serviceFormFields?.length || 0;
-  const reqCount = item.serviceRequirements?.length || 0;
+  const formFieldsList = item.serviceFormFields || item.formFields || item.form_fields || [];
+  const reqsList = item.serviceRequirements || item.requirements || item.requirements_list || [];
+  const formCount = formFieldsList.length;
+  const reqCount = reqsList.length;
 
   const isFieldFormActive = fieldModals.isOpen || fieldModals.editing;
   const isReqFormActive = reqModals.isOpen || reqModals.editing;

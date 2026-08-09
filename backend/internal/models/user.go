@@ -26,8 +26,9 @@ type UpdateUserRequest struct {
 
 // UpdateProfileRequest DTO untuk self-update profil (nama, avatar).
 type UpdateProfileRequest struct {
-	FullName  string `json:"full_name"`
-	AvatarURL string `json:"avatar_url"`
+	FullName    string `json:"full_name"`
+	AvatarURL   string `json:"avatar_url"`
+	Base64Image string `json:"base64_image"`
 }
 
 // AuditLog merepresentasikan log aktivitas admin.

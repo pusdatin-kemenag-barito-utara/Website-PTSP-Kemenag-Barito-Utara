@@ -29,6 +29,7 @@ RUN apk add --no-cache ca-certificates tzdata bash curl
 
 COPY --from=backend-builder /app/backend/api-ptsp /app/api-ptsp
 COPY --from=frontend-builder /app/frontend/public /app/public
+COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 COPY --from=frontend-builder /app/frontend/.next/standalone /app/
 COPY --from=frontend-builder /app/frontend/.next/static /app/frontend/.next/static
 

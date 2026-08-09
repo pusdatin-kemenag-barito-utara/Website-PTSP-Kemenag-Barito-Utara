@@ -20,6 +20,8 @@ export function WizardRequirementSection({
   deleteReq,
   reorderReqs,
 }: WizardRequirementSectionProps) {
+  const reqsList = item.serviceRequirements || item.requirements || item.requirements_list || [];
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
@@ -29,6 +31,7 @@ export function WizardRequirementSection({
             reqForms.setData({
               serviceItemId: item.id.toString(),
               documentName: "",
+              description: "",
               isRequired: true,
               allowedExtensions: "pdf,jpg,jpeg,png",
               maxFileSizeMb: 5,
@@ -41,7 +44,7 @@ export function WizardRequirementSection({
         </button>
       </div>
 
-      {(!item.serviceRequirements || item.serviceRequirements.length === 0) ? (
+      {reqsList.length === 0 ? (
         <div className="text-center py-8 bg-white rounded-xl border border-dashed border-slate-300">
           <p className="text-sm text-slate-500">Belum ada persyaratan dokumen.</p>
         </div>
@@ -61,13 +64,13 @@ export function WizardRequirementSection({
               {/* BODY */}
               <Reorder.Group
                 axis="y"
-                values={[...(item.serviceRequirements || [])].sort(
+                values={[...reqsList].sort(
                   (a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
                 )}
                 onReorder={(newReqs: any[]) => reorderReqs(item.id, newReqs)}
                 className="divide-y divide-slate-100 flex flex-col"
               >
-                {[...(item.serviceRequirements || [])]
+                {[...reqsList]
                   .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
                   .map((req: any) => (
                     <ReqRow
@@ -91,6 +94,7 @@ export function WizardRequirementSection({
 
 function ReqRow({ req, item, isSuperAdmin, reqForms, reqModals, deleteReq }: any) {
   const dragControls = useDragControls();
+  const isRequired = req.is_required !== undefined ? Boolean(req.is_required) : (req.isRequired !== undefined ? Boolean(req.isRequired) : true);
 
   return (
     <Reorder.Item
@@ -108,15 +112,15 @@ function ReqRow({ req, item, isSuperAdmin, reqForms, reqModals, deleteReq }: any
         </div>
       </div>
       <div className="flex-1 px-4 font-medium text-slate-900">
-        {req.documentName}
+        {req.documentName || req.document_name}
       </div>
       <div className="w-48 shrink-0 px-4 text-slate-600">
         <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-mono">
-          {req.allowedExtensions}
+          {req.allowedExtensions || req.allowed_extensions}
         </span>
       </div>
       <div className="w-24 shrink-0 px-4 text-center">
-        {req.isRequired ? "✅" : "-"}
+        {isRequired ? "✅" : "-"}
       </div>
       <div className="w-24 shrink-0 px-4 flex items-center justify-end gap-1">
         <button
@@ -124,11 +128,11 @@ function ReqRow({ req, item, isSuperAdmin, reqForms, reqModals, deleteReq }: any
             reqModals.setEditing(req);
             reqForms.setData({
               serviceItemId: item.id.toString(),
-              documentName: req.documentName,
+              documentName: req.documentName || req.document_name,
               description: req.description || "",
-              isRequired: req.isRequired,
-              allowedExtensions: req.allowedExtensions,
-              maxFileSizeMb: req.maxFileSizeMb || 5,
+              isRequired: isRequired,
+              allowedExtensions: req.allowedExtensions || req.allowed_extensions,
+              maxFileSizeMb: req.maxFileSizeMb || req.max_file_size_mb || 5,
             });
             reqModals.setOpen(true);
           }}

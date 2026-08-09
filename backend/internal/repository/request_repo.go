@@ -3,10 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"ptsp-kemenag-backend/internal/models"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RequestRepository menangani operasi DB permohonan layanan (ptsp_service_requests) dan dashboard statistics.
@@ -18,28 +20,52 @@ func NewRequestRepository(db *pgxpool.Pool) *RequestRepository {
 	return &RequestRepository{db: db}
 }
 
-func (r *RequestRepository) FindAll(ctx context.Context, userID, status string, limit int) ([]models.ServiceRequest, error) {
+func (r *RequestRepository) FindAll(ctx context.Context, userID, status, category string, limit int) ([]models.ServiceRequest, error) {
 	query := `
 		SELECT r.id, r.user_id, r.service_id, r.service_item_id, r.request_number, r.status,
 		       r.submitted_at, r.approved_at, r.rejected_at, r.completed_at, r.created_at,
-		       s.name AS service_name, si.name AS item_name
+		       COALESCE(s.name, ''), COALESCE(si.name, ''),
+		       COALESCE(p.name, 'Pemohon'), COALESCE(p.email, '')
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
+		LEFT JOIN kemenag_pusdatin.profiles p ON p.id = r.user_id
 		WHERE 1=1
 	`
 	args := []interface{}{}
 	argIdx := 1
 
-	if userID != "" {
+	if userID != "" && userID != "undefined" {
 		query += fmt.Sprintf(" AND r.user_id = $%d", argIdx)
 		args = append(args, userID)
 		argIdx++
 	}
 	if status != "" {
-		query += fmt.Sprintf(" AND r.status = $%d", argIdx)
-		args = append(args, status)
-		argIdx++
+		statuses := strings.Split(status, ",")
+		if len(statuses) == 1 {
+			query += fmt.Sprintf(" AND r.status = $%d", argIdx)
+			args = append(args, strings.TrimSpace(statuses[0]))
+			argIdx++
+		} else {
+			placeholders := []string{}
+			for _, st := range statuses {
+				stTrimmed := strings.TrimSpace(st)
+				if stTrimmed != "" {
+					placeholders = append(placeholders, fmt.Sprintf("$%d", argIdx))
+					args = append(args, stTrimmed)
+					argIdx++
+				}
+			}
+			if len(placeholders) > 0 {
+				query += fmt.Sprintf(" AND r.status::text IN (%s)", strings.Join(placeholders, ", "))
+			}
+		}
+	}
+	switch category {
+	case "public":
+		query += " AND (s.category != 'asn' OR s.category IS NULL)"
+	case "pegawai", "asn":
+		query += " AND s.category = 'asn'"
 	}
 	query += fmt.Sprintf(" ORDER BY r.created_at DESC LIMIT $%d", argIdx)
 	args = append(args, limit)
@@ -53,8 +79,14 @@ func (r *RequestRepository) FindAll(ctx context.Context, userID, status string, 
 	var result []models.ServiceRequest
 	for rows.Next() {
 		var req models.ServiceRequest
+		var sName, iName, aName, aEmail string
 		if err := rows.Scan(&req.ID, &req.UserID, &req.ServiceID, &req.ServiceItemID, &req.RequestNumber, &req.Status,
-			&req.SubmittedAt, &req.ApprovedAt, &req.RejectedAt, &req.CompletedAt, &req.CreatedAt, &req.ServiceName, &req.ItemName); err == nil {
+			&req.SubmittedAt, &req.ApprovedAt, &req.RejectedAt, &req.CompletedAt, &req.CreatedAt, &sName, &iName,
+			&aName, &aEmail); err == nil {
+			req.ServiceName = &sName
+			req.ItemName = &iName
+			req.ApplicantName = &aName
+			req.ApplicantEmail = &aEmail
 			result = append(result, req)
 		}
 	}
@@ -82,31 +114,41 @@ func (r *RequestRepository) FindByNumber(ctx context.Context, requestNumber stri
 
 func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.ServiceRequestDetail, error) {
 	var detail models.ServiceRequestDetail
+	var serviceName, roleOwner, category, itemName, applicantName, applicantEmail string
+
 	err := r.db.QueryRow(ctx, `
 		SELECT r.id, r.user_id, r.service_id, r.service_item_id, r.request_number, r.status,
 		       r.submitted_at, r.approved_at, r.rejected_at, r.completed_at, r.created_at,
 		       r.revision_note, r.rejection_reason,
-		       s.name, COALESCE(s.role_owner, ''), COALESCE(s.category, 'public'),
-		       si.name,
-		       COALESCE(p.full_name, ''), COALESCE(p.email, '')
+		       COALESCE(s.name, ''), COALESCE(s.role_owner, ''), COALESCE(s.category, 'public'),
+		       COALESCE(si.name, ''),
+		       COALESCE(p.name, ''), COALESCE(p.email, '')
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
-		LEFT JOIN kemenag_ptsp.profiles p ON p.id = r.user_id
-		WHERE r.id = $1
+		LEFT JOIN kemenag_pusdatin.profiles p ON p.id = r.user_id
+		WHERE r.id::text = $1 OR UPPER(r.request_number) = UPPER($1)
+		LIMIT 1
 	`, id).Scan(&detail.ID, &detail.UserID, &detail.ServiceID, &detail.ServiceItemID, &detail.RequestNumber, &detail.Status,
 		&detail.SubmittedAt, &detail.ApprovedAt, &detail.RejectedAt, &detail.CompletedAt, &detail.CreatedAt,
 		&detail.RevisionNote, &detail.RejectionReason,
-		&detail.ServiceName, &detail.RoleOwner, &detail.Category,
-		&detail.ItemName,
-		&detail.ApplicantName, &detail.ApplicantEmail)
+		&serviceName, &roleOwner, &category,
+		&itemName,
+		&applicantName, &applicantEmail)
 
 	if err != nil {
 		return nil, err
 	}
 
+	detail.ServiceName = &serviceName
+	detail.RoleOwner = roleOwner
+	detail.Category = category
+	detail.ItemName = &itemName
+	detail.ApplicantName = &applicantName
+	detail.ApplicantEmail = &applicantEmail
+
 	// Fetch answers
-	answerRows, _ := r.db.Query(ctx, `SELECT field_name, COALESCE(field_value, '') FROM kemenag_ptsp.ptsp_service_request_answers WHERE request_id = $1 ORDER BY created_at ASC`, id)
+	answerRows, _ := r.db.Query(ctx, `SELECT field_name, COALESCE(field_value, '') FROM kemenag_ptsp.ptsp_service_request_answers WHERE request_id::text = $1 ORDER BY created_at ASC`, id)
 	if answerRows != nil {
 		defer answerRows.Close()
 		for answerRows.Next() {
@@ -118,7 +160,7 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 	}
 
 	// Fetch documents
-	docRows, _ := r.db.Query(ctx, `SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0) FROM kemenag_ptsp.ptsp_service_request_documents WHERE request_id = $1`, id)
+	docRows, _ := r.db.Query(ctx, `SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0) FROM kemenag_ptsp.ptsp_service_request_documents WHERE request_id::text = $1`, id)
 	if docRows != nil {
 		defer docRows.Close()
 		for docRows.Next() {
@@ -131,10 +173,10 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 
 	// Fetch reviews
 	reviewRows, _ := r.db.Query(ctx, `
-		SELECT rr.id::text, rr.action, COALESCE(rr.note, ''), rr.created_at, COALESCE(p.full_name, '')
+		SELECT rr.id::text, rr.action, COALESCE(rr.note, ''), rr.created_at, COALESCE(p.name, '')
 		FROM kemenag_ptsp.ptsp_service_request_reviews rr
-		LEFT JOIN kemenag_ptsp.profiles p ON p.id = rr.reviewer_id
-		WHERE rr.request_id = $1 ORDER BY rr.created_at DESC
+		LEFT JOIN kemenag_pusdatin.profiles p ON p.id = rr.reviewer_id
+		WHERE rr.request_id::text = $1 ORDER BY rr.created_at DESC
 	`, id)
 	if reviewRows != nil {
 		defer reviewRows.Close()
@@ -150,7 +192,7 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 	logRows, _ := r.db.Query(ctx, `
 		SELECT id::text, COALESCE(action, ''), COALESCE(actor_name, ''), created_at
 		FROM kemenag_ptsp.ptsp_service_request_activity_logs
-		WHERE request_id = $1 ORDER BY created_at DESC LIMIT 50
+		WHERE request_id::text = $1 ORDER BY created_at DESC LIMIT 50
 	`, id)
 	if logRows != nil {
 		defer logRows.Close()
@@ -162,37 +204,164 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 		}
 	}
 
+	// Synthesize milestone activity logs from database timestamps if not already present
+	hasSubmitted := false
+	hasApproved := false
+	hasRejected := false
+	hasCompleted := false
+
+	for _, l := range detail.ActivityLogs {
+		actLower := strings.ToLower(l.Action)
+		if strings.Contains(actLower, "submit") || strings.Contains(actLower, "dikirim") {
+			hasSubmitted = true
+		}
+		if strings.Contains(actLower, "approve") || strings.Contains(actLower, "disetujui") {
+			hasApproved = true
+		}
+		if strings.Contains(actLower, "reject") || strings.Contains(actLower, "ditolak") {
+			hasRejected = true
+		}
+		if strings.Contains(actLower, "complete") || strings.Contains(actLower, "selesai") {
+			hasCompleted = true
+		}
+	}
+
+	actor := "Admin PTSP"
+	applicantActor := "Pemohon"
+	if detail.ApplicantName != nil && *detail.ApplicantName != "" {
+		applicantActor = *detail.ApplicantName
+	}
+
+	if !hasSubmitted {
+		subTime := detail.CreatedAt
+		if detail.SubmittedAt != nil {
+			subTime = *detail.SubmittedAt
+		}
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-submitted-" + detail.ID,
+			Action:    "submitted",
+			ActorName: applicantActor,
+			CreatedAt: subTime,
+		})
+	}
+
+	if !hasApproved && detail.ApprovedAt != nil {
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-approved-" + detail.ID,
+			Action:    "status:approved",
+			ActorName: actor,
+			CreatedAt: *detail.ApprovedAt,
+		})
+	}
+
+	if !hasRejected && detail.RejectedAt != nil {
+		actionText := "status:rejected"
+		if detail.RejectionReason != nil && *detail.RejectionReason != "" {
+			actionText = fmt.Sprintf("status:rejected (Alasan: %s)", *detail.RejectionReason)
+		}
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-rejected-" + detail.ID,
+			Action:    actionText,
+			ActorName: actor,
+			CreatedAt: *detail.RejectedAt,
+		})
+	}
+
+	if !hasCompleted && detail.CompletedAt != nil {
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-completed-" + detail.ID,
+			Action:    "status:completed",
+			ActorName: actor,
+			CreatedAt: *detail.CompletedAt,
+		})
+	}
+
+	// Also check if current status is "completed" or "approved" or "rejected" but timestamp wasn't set, use CreatedAt
+	currentStatus := strings.ToLower(detail.Status)
+	if (currentStatus == "completed" || currentStatus == "selesai") && !hasCompleted && detail.CompletedAt == nil {
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-status-completed-" + detail.ID,
+			Action:    "status:completed",
+			ActorName: actor,
+			CreatedAt: detail.CreatedAt,
+		})
+	}
+	if (currentStatus == "approved" || currentStatus == "disetujui") && !hasApproved && detail.ApprovedAt == nil {
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-status-approved-" + detail.ID,
+			Action:    "status:approved",
+			ActorName: actor,
+			CreatedAt: detail.CreatedAt,
+		})
+	}
+	if (currentStatus == "rejected" || currentStatus == "ditolak") && !hasRejected && detail.RejectedAt == nil {
+		detail.ActivityLogs = append(detail.ActivityLogs, models.ActivityLog{
+			ID:        "milestone-status-rejected-" + detail.ID,
+			Action:    "status:rejected",
+			ActorName: actor,
+			CreatedAt: detail.CreatedAt,
+		})
+	}
+
 	return &detail, nil
 }
 
 func (r *RequestRepository) UpdateStatus(ctx context.Context, id string, req models.UpdateRequestStatusRequest) error {
 	now := time.Now()
-	var query string
-	var args []interface{}
-
-	switch req.Status {
-	case "approved":
-		query = `UPDATE kemenag_ptsp.ptsp_service_requests SET status = 'approved', approved_at = $1, updated_at = $2 WHERE id = $3`
-		args = []interface{}{now, now, id}
-	case "rejected":
-		query = `UPDATE kemenag_ptsp.ptsp_service_requests SET status = 'rejected', rejected_at = $1, rejection_reason = $2, updated_at = $3 WHERE id = $4`
-		args = []interface{}{now, req.RejectionReason, now, id}
-	case "completed":
-		query = `UPDATE kemenag_ptsp.ptsp_service_requests SET status = 'completed', completed_at = $1, updated_at = $2 WHERE id = $3`
-		args = []interface{}{now, now, id}
-	case "revision":
-		query = `UPDATE kemenag_ptsp.ptsp_service_requests SET status = 'revision', revision_note = $1, updated_at = $2 WHERE id = $3`
-		args = []interface{}{req.RevisionNote, now, id}
-	default:
-		return fmt.Errorf("invalid status")
+	note := strings.TrimSpace(req.RevisionNote)
+	if note == "" {
+		note = strings.TrimSpace(req.RejectionReason)
 	}
 
-	_, err := r.db.Exec(ctx, query, args...)
-	return err
+	status := strings.TrimSpace(req.Status)
+	if status == "" {
+		return fmt.Errorf("status tidak boleh kosong")
+	}
+
+	var approvedAt, rejectedAt, completedAt *time.Time
+	switch status {
+	case "approved":
+		approvedAt = &now
+	case "rejected":
+		rejectedAt = &now
+	case "completed":
+		completedAt = &now
+	}
+
+	_, err := r.db.Exec(ctx, `
+		UPDATE kemenag_ptsp.ptsp_service_requests
+		SET status = $1,
+		    revision_note = CASE WHEN $2 <> '' THEN $2 ELSE revision_note END,
+		    rejection_reason = CASE WHEN $3 <> '' THEN $3 ELSE rejection_reason END,
+		    approved_at = COALESCE($4, approved_at),
+		    rejected_at = COALESCE($5, rejected_at),
+		    completed_at = COALESCE($6, completed_at),
+		    updated_at = $7
+		WHERE id::text = $8 OR request_number = $8
+	`, status, note, note, approvedAt, rejectedAt, completedAt, now, id)
+
+	if err != nil {
+		return err
+	}
+
+	// Insert Activity Log for timeline history
+	logAction := fmt.Sprintf("Status permohonan diubah menjadi %s", strings.ToUpper(status))
+	if note != "" {
+		logAction += fmt.Sprintf(" (Catatan: %s)", note)
+	}
+	r.db.Exec(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_service_request_activity_logs (request_id, action, actor_name, created_at)
+		SELECT r.id, $1, 'Admin PTSP', $2
+		FROM kemenag_ptsp.ptsp_service_requests r
+		WHERE r.id::text = $3 OR r.request_number = $3
+		LIMIT 1
+	`, logAction, now, id)
+
+	return nil
 }
 
 func (r *RequestRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_requests WHERE id = $1`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_requests WHERE id::text = $1 OR request_number = $1`, id)
 	return err
 }
 

@@ -1,17 +1,19 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type RequestHandler struct {
-	svc *service.RequestService
+	svc     *service.RequestService
+	fileSvc *service.FileService
 }
 
-func NewRequestHandler(svc *service.RequestService) *RequestHandler {
-	return &RequestHandler{svc: svc}
+func NewRequestHandler(svc *service.RequestService, fileSvc *service.FileService) *RequestHandler {
+	return &RequestHandler{svc: svc, fileSvc: fileSvc}
 }
 
 func (h *RequestHandler) GetRequests(c *fiber.Ctx) error {
@@ -20,10 +22,13 @@ func (h *RequestHandler) GetRequests(c *fiber.Ctx) error {
 		userID = c.Query("userId")
 	}
 	status := c.Query("status")
+	category := c.Query("category")
+	if category == "" {
+		category = c.Query("type")
+	}
 	limit := c.QueryInt("limit", 100)
 
-
-	data, err := h.svc.GetAll(c.Context(), userID, status, limit)
+	data, err := h.svc.GetAll(c.Context(), userID, status, category, limit)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
@@ -70,6 +75,21 @@ func (h *RequestHandler) Delete(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"success": true, "message": "Permohonan berhasil dihapus"})
+}
+
+func (h *RequestHandler) UploadDocument(c *fiber.Ctx) error {
+	fileHeader, err := c.FormFile("document")
+	if err != nil || fileHeader == nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "File dokumen tidak ditemukan"})
+	}
+
+	category := c.FormValue("category", "umum")
+	url, uploadErr := h.fileSvc.UploadDocument(c.Context(), fileHeader, category)
+	if uploadErr != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": uploadErr.Error()})
+	}
+
+	return c.JSON(fiber.Map{"success": true, "url": url, "data": fiber.Map{"url": url}})
 }
 
 func (h *RequestHandler) GetDashboardStats(c *fiber.Ctx) error {
