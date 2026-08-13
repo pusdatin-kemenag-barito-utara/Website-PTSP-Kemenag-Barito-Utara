@@ -71,7 +71,7 @@ export default defineConfig({
         "next/font/google": path.resolve(__dirname, "./src/lib/next-compat/font-google.ts"),
         "next/server": path.resolve(__dirname, "./src/lib/next-compat/server.ts"),
         // pdfjs-dist needs canvas=false alias when rendering in browser
-        canvas: false,
+        canvas: path.resolve(__dirname, "./src/lib/next-compat/canvas-mock.js"),
       },
     },
     optimizeDeps: {
