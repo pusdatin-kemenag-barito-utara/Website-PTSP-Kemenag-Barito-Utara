@@ -1,0 +1,26 @@
+---
+import Base from "@/layouts/Base.astro";
+import PageBanner from "@/components/common/PageBanner";
+import AppointmentClient from "@/pages/janji-temu/_components/appointment-client";
+---
+
+<Base
+  title="Janji Temu Online - PTSP Kemenag Barito Utara"
+  description="Buat janji temu online secara resmi dengan Kepala Kantor, Kasubag TU, atau Kepala Seksi/Kasi Kemenag Barito Utara."
+>
+  <main class="min-h-screen bg-slate-50/50 pb-16">
+    <PageBanner
+      client:load
+      title="Janji Temu Online"
+      description="Buat janji temu secara terencana dengan pejabat atau pegawai di Kantor Kementerian Agama Kabupaten Barito Utara."
+      breadcrumb={[
+        { label: "Beranda", href: "/" },
+        { label: "Janji Temu" },
+      ]}
+      eyebrow="PTSP KEMENAG BARITO UTARA"
+    />
+    <div class="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8">
+      <AppointmentClient client:load />
+    </div>
+  </main>
+</Base>

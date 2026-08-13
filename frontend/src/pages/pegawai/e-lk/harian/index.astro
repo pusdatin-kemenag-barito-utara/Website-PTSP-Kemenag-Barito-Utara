@@ -1,0 +1,27 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
+import { getLaporanKinerjaAction } from "@/lib/actions/pegawai/e-lk";
+import { ElkhHarianClient } from "./_components/elkh-harian-client";
+
+const user = await getCurrentUser();
+
+let recentLkh: any[] = [];
+if (user) {
+  // Get recent 5 LKH
+  const { data } = await getLaporanKinerjaAction(user.id, 5);
+  recentLkh = data || [];
+}
+
+const profile = await getCurrentProfile();
+const userNip = profile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title="Laporan Kinerja Harian"
+  description="Rekap laporan kinerja harian Anda"
+  mode="pegawai"
+  userNip={userNip}
+>
+  <ElkhHarianClient client:load recentLkh={recentLkh} />
+</DashboardShell>

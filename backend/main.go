@@ -19,9 +19,17 @@ import (
 )
 
 func main() {
-	// Load environment variables dari root .env.local atau .env
-	_ = godotenv.Load("../.env.local")
-	_ = godotenv.Load("../.env")
+	// Load environment variables dari root .env.local atau .env (CWD-independent)
+	envFiles := []string{
+		".env.local", ".env",
+		"../.env.local", "../.env",
+		"../../.env.local", "../../.env",
+	}
+	for _, f := range envFiles {
+		if _, err := os.Stat(f); err == nil {
+			_ = godotenv.Load(f);
+		}
+	}
 
 	// Load centralized configuration
 	cfg := config.Load()

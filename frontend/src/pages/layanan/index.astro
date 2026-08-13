@@ -1,0 +1,19 @@
+---
+import Base from "@/layouts/Base.astro";
+import { ServicesCatalogView } from "@/views/services-catalog";
+import { getPublicServices } from "@/lib/queries";
+
+const services = await getPublicServices();
+const totalItems = services.reduce(
+  (acc: number, service: any) =>
+    acc + ((service.items ?? service.serviceItems)?.length ?? 0),
+  0,
+);
+---
+
+<Base
+  title="Katalog Jenis Layanan"
+  description="Cari tahu jenis layanan publik, persyaratan, biaya, dan estimasi waktu proses dokumen di PTSP Kemenag Barito Utara."
+>
+  <ServicesCatalogView client:load services={services} totalItems={totalItems} />
+</Base>

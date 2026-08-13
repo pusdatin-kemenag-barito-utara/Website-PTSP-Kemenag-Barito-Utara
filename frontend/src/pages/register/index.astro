@@ -1,0 +1,14 @@
+---
+import Base from "@/layouts/Base.astro";
+import { RegisterView } from "@/views/register";
+
+const q = Astro.url.searchParams;
+const callbackUrl = q.get("callbackUrl") ?? undefined;
+---
+
+<Base
+  title="Buat Akun Pemohon"
+  description="Daftarkan diri Anda untuk mengakses layanan administrasi PTSP online."
+>
+  <RegisterView client:load callbackUrl={callbackUrl} />
+</Base>

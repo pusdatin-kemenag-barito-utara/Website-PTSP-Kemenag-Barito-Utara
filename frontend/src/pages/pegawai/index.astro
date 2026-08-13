@@ -1,0 +1,93 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { getCurrentProfile } from "@/lib/auth";
+import { getPegawaiDashboardData } from "./_lib/dashboard-data";
+import { PegawaiElkSummaryCard } from "@/components/pegawai/dashboard/pegawai-elk-summary";
+import { PegawaiApprovalAlert } from "@/components/pegawai/dashboard/pegawai-approval-alert";
+import { PegawaiRecentActivity } from "@/components/pegawai/dashboard/pegawai-recent-activity";
+
+const profile = await getCurrentProfile();
+const data = await getPegawaiDashboardData();
+const showRecentActivity = data.recentCuti.length > 0;
+const showApprovalAlert = data.isPejabat && (data.pendingAtasanCount > 0 || data.pendingKepalaCount > 0);
+
+const userNip = profile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title="Dashboard Pegawai | PTSP Kemenag Barito Utara"
+  description="Dashboard panel untuk pegawai PTSP Kemenag Barito Utara"
+  mode="pegawai"
+  userNip={userNip}
+>
+  <div class="space-y-4 sm:space-y-6">
+    <!-- Modern Welcome Banner -->
+    <div class="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950 p-5 sm:p-8 lg:p-10 text-white shadow-xl border border-emerald-700/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3">
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 lg:gap-8">
+        <!-- Left Content -->
+        <div class="flex-1 space-y-2.5 sm:space-y-4">
+          <div class="inline-flex items-center gap-2 rounded-full bg-white/10 dark:bg-emerald-950/80 border border-white/20 dark:border-emerald-800/60 px-3 py-1 backdrop-blur-md">
+            <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-200 dark:text-emerald-300">
+              Portal Mandiri Pegawai
+            </span>
+          </div>
+
+          <h1 class="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white leading-snug">
+            <span class="block sm:inline">Selamat Datang, </span>
+            <span class="text-emerald-300 block sm:inline">
+              {(profile?.fullName || "Pegawai") as string} 👋
+            </span>
+          </h1>
+
+          <p class="max-w-xl text-[11px] sm:text-sm font-medium text-emerald-100/90 dark:text-slate-300 leading-relaxed">
+            Selamat datang di portal kepegawaian. Kelola layanan ASN, permohonan cuti, dan laporan E-LK Harian Anda secara mandiri di satu tempat.
+          </p>
+        </div>
+
+        <!-- Right Action / Info Card -->
+        <div class="hidden lg:flex flex-col gap-3 bg-white/10 dark:bg-slate-800/60 backdrop-blur-md border border-white/15 dark:border-slate-700/50 p-5 rounded-2xl shrink-0 min-w-[240px]">
+          <div class="text-xs font-bold uppercase tracking-wider text-emerald-200">
+            Tahun Anggaran {new Date().getFullYear()}
+          </div>
+          <div class="text-2xl font-black text-white">
+            {data.sisaCuti !== null ? `${data.sisaCuti} Hari` : "—"}
+          </div>
+          <div class="text-xs text-emerald-100/80 font-medium">
+            Sisa Kuota Cuti Tahunan Anda
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative Background Glows -->
+      <div class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
+      <div class="absolute -bottom-32 left-10 h-64 w-64 rounded-full bg-teal-500/20 blur-3xl pointer-events-none" />
+    </div>
+
+    <!-- Approval Alert for Pejabat -->
+    {showApprovalAlert && (
+      <PegawaiApprovalAlert
+        client:load
+        isPejabat={data.isPejabat}
+        pendingAtasanCount={data.pendingAtasanCount}
+        pendingKepalaCount={data.pendingKepalaCount}
+      />
+    )}
+
+    <!-- Rekap E-LK & Ringkasan Status Cuti ASN -->
+    <PegawaiElkSummaryCard
+      client:load
+      sisaCuti={data.sisaCuti}
+      pengajuanPending={data.pengajuanPending}
+      pengajuanDisetujuiBulanIni={data.pengajuanDisetujuiBulanIni}
+      totalPengajuan={data.totalPengajuanCuti}
+    />
+
+    <!-- Recent Activity -->
+    {showRecentActivity && (
+      <div class="w-full">
+        <PegawaiRecentActivity client:load items={data.recentCuti} />
+      </div>
+    )}
+  </div>
+</DashboardShell>

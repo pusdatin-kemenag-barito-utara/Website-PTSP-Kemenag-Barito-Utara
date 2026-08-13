@@ -1,0 +1,12 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { requireAuth } from "@/lib/auth";
+import { redirect } from "@/lib/next-compat/navigation";
+
+const profile = await requireAuth(false, Astro);
+redirect("/masyarakat");
+---
+
+<DashboardShell title="Dashboard" description="Dashboard PTSP Kemenag Barito Utara">
+  <div />
+</DashboardShell>

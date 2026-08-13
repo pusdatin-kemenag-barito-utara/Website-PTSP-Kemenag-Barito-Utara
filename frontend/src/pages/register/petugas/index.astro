@@ -1,0 +1,65 @@
+---
+import Base from "@/layouts/Base.astro";
+import { RegisterPetugasForm } from "@/components/auth/register-petugas-form";
+---
+
+<Base
+  title="Buat Akun Petugas"
+  description="Pendaftaran akun internal hanya untuk pegawai/staff Kemenag yang berwenang."
+>
+  <div class="relative flex min-h-[calc(100dvh-72px)] md:min-h-[calc(100dvh-80px)] items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
+    {/* Background with pattern/image */}
+    <div class="absolute inset-0 z-0">
+      <img
+        src="/kantor-kemenag.jpg"
+        alt="Kantor Kemenag Barito Utara"
+        class="object-cover object-center opacity-20 grayscale w-full h-full"
+      />
+      <div class="absolute inset-0 bg-gradient-to-br from-[#0f8a54]/95 via-[#0b7446]/95 to-[#054125]/95" />
+      {/* Subtle grid */}
+      <div
+        class="absolute inset-0 opacity-[0.05]"
+        style="background-image: linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px); background-size: 40px 40px;"
+      />
+    </div>
+
+    {/* Card container */}
+    <div class="relative z-10 w-full max-w-[600px]">
+      <div class="overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] ring-1 ring-slate-200/50">
+        {/* Header area */}
+        <div class="relative bg-slate-50 px-8 pt-10 pb-8 text-center">
+          <div class="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-[#0f8a54] to-[#14b870]" />
+          <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100/50 text-[#0f8a54] ring-8 ring-white">
+            <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-12v0m0 4h.01" />
+            </svg>
+          </div>
+          <p class="mb-2 text-[10.5px] font-black uppercase tracking-[0.2em] text-[#0f8a54]">
+            Portal Internal
+          </p>
+          <h1 class="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            Buat Akun Petugas
+          </h1>
+          <p class="mt-2 text-sm text-slate-500">
+            Pendaftaran akun internal hanya untuk pegawai/staff Kemenag yang berwenang.
+          </p>
+        </div>
+
+        {/* Form area */}
+        <div class="px-8 py-8">
+          <RegisterPetugasForm client:load />
+        </div>
+
+        {/* Footer links */}
+        <div class="bg-slate-50 px-8 py-5 text-center text-sm border-t border-slate-100">
+          <p class="text-slate-500 font-medium">
+            Sudah memiliki akun petugas?{" "}
+            <a href="/login/petugas" class="text-[#0f8a54] hover:underline font-bold transition-colors">
+              Masuk di sini
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Base>

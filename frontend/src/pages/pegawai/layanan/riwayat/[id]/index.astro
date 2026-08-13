@@ -1,0 +1,37 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import RiwayatDetailView from "@/views/pegawai/riwayat-detail";
+import { requireAuth } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { notFound, redirect } from "@/lib/next-compat/navigation";
+
+const user = await requireAuth(false, Astro);
+const { id } = Astro.params;
+
+let request: any = null;
+try {
+  const res = await fetchAPI<any>(`/requests/track/${id}`);
+  request = res?.data || null;
+} catch {
+  request = null;
+}
+
+if (!request) {
+  notFound();
+}
+
+if (request.userId !== user.id && request.user_id !== user.id) {
+  redirect("/pegawai/layanan/ajukan");
+}
+
+const userNip = user.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title="Detail Pengajuan"
+  description="Detail pengajuan layanan ASN"
+  mode="pegawai"
+  userNip={userNip}
+>
+  <RiwayatDetailView client:load request={request} />
+</DashboardShell>

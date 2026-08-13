@@ -1,0 +1,66 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { AdminRequestsView } from "@/views/admin/pengajuan";
+import { requirePermission } from "@/lib/auth";
+import { RequestService } from "@/lib/services/request-service";
+import { LayananService } from "@/lib/services/layanan-service";
+import { isSuperAdmin, getAdminSpecificRole, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("pengajuan", Astro);
+const isSuper = isSuperAdmin(profile.email);
+const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+const isGeneralAdmin = specificRole === "admin_ptsp";
+
+const roleOwnerFilter = isSuper || isGeneralAdmin ? undefined : specificRole;
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuper) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const q = Astro.url.searchParams;
+const status = q.get("status") || "";
+const query = q.get("q") || "";
+const serviceId = q.get("serviceId") || "";
+const page = q.get("page") || "1";
+const type = q.get("type") || "public";
+
+const currentPage = Math.max(1, parseInt(page) || 1);
+const pageSize = 20;
+
+const [services, ptspData] = await Promise.all([
+  LayananService.getAllServicesBrief(roleOwnerFilter, type),
+  RequestService.getPaginatedRequests({
+    page: currentPage,
+    pageSize,
+    status,
+    type,
+  }),
+]);
+
+const rawRequests = ptspData.data;
+const totalCount = ptspData.totalCount;
+const totalPages = ptspData.totalPages;
+---
+
+<AdminShell
+  title={type === "public" ? "Pengajuan Masyarakat | PTSP Kemenag Barito Utara" : "Pengajuan Pegawai | PTSP Kemenag Barito Utara"}
+  description={`Tinjau dan proses pengajuan layanan dari ${type === "public" ? "pemohon" : "pegawai"}. Menampilkan ${rawRequests.length} dari ${totalCount} pengajuan.`}
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <AdminRequestsView
+    client:load
+    requests={rawRequests}
+    services={services}
+    status={status}
+    q={query}
+    serviceId={serviceId}
+    type={type}
+    currentPage={currentPage}
+    totalPages={totalPages}
+    totalCount={Number(totalCount)}
+  />
+</AdminShell>

@@ -1,14 +1,26 @@
 version: '3.8'
 
 services:
-  ptsp-app:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: ptsp-kemenag-app
+    container_name: ptsp-kemenag-backend
     restart: always
     ports:
-      - "3000:3000"
       - "8080:8080"
     env_file:
       - .env.local
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ptsp-kemenag-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    depends_on:
+      - backend

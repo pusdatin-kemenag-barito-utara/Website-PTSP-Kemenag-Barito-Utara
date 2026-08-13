@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"strings"
 	"time"
@@ -470,5 +471,130 @@ func (r *RequestRepository) GetDashboardStats(ctx context.Context) (*models.Dash
 	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_guest_book`).Scan(&stats.GuestBook.Total)
 
 	return &stats, nil
+}
+
+
+// InsertDocument menyimpan record dokumen unggahan revisi pada sebuah permohonan.
+func (r *RequestRepository) InsertDocument(ctx context.Context, requestID, requirementID, fileName, filePath, fileType string, fileSize int64) error {
+	_, err := r.db.Exec(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_service_request_documents (request_id, requirement_id, file_name, file_path, file_type, file_size)
+		VALUES ($1::uuid, NULLIF($2, '')::uuid, $3, $4, $5, $6)
+	`, requestID, requirementID, fileName, filePath, fileType, fileSize)
+	return err
+}
+
+// Create membuat permohonan baru beserta jawaban form-nya, mengembalikan ID & nomor permohonan.
+func (r *RequestRepository) Create(ctx context.Context, userID string, serviceID, serviceItemID int64, answers []models.RequestAnswer) (*models.ServiceRequest, error) {
+	requestNumber := generateRequestNumber()
+
+	var id string
+	err := r.db.QueryRow(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_service_requests (user_id, service_id, service_item_id, request_number, status)
+		VALUES ($1::uuid, $2, $3, $4, 'submitted')
+		RETURNING id::text
+	`, userID, serviceID, serviceItemID, requestNumber).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ans := range answers {
+		if ans.FieldName == "" {
+			continue
+		}
+		if _, err := r.db.Exec(ctx, `
+			INSERT INTO kemenag_ptsp.ptsp_service_request_answers (request_id, field_name, field_value)
+			VALUES ($1::uuid, $2, $3)
+		`, id, ans.FieldName, ans.FieldValue); err != nil {
+			return nil, err
+		}
+	}
+
+	return &models.ServiceRequest{
+		ID:            id,
+		UserID:        userID,
+		ServiceID:     serviceID,
+		ServiceItemID: serviceItemID,
+		RequestNumber: requestNumber,
+		Status:        "submitted",
+	}, nil
+}
+
+// UpdateByApplicant memperbarui jawaban form & mengembalikan status ke submitted (edit oleh pemohon).
+func (r *RequestRepository) UpdateByApplicant(ctx context.Context, id, userID string, answers []models.RequestAnswer) error {
+	var exists bool
+	err := r.db.QueryRow(ctx, `
+		SELECT EXISTS(SELECT 1 FROM kemenag_ptsp.ptsp_service_requests WHERE id::text = $1 AND user_id::text = $2)
+	`, id, userID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("permohonan tidak ditemukan")
+	}
+
+	if _, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_request_answers WHERE request_id::text = $1`, id); err != nil {
+		return err
+	}
+	for _, ans := range answers {
+		if ans.FieldName == "" {
+			continue
+		}
+		if _, err := r.db.Exec(ctx, `
+			INSERT INTO kemenag_ptsp.ptsp_service_request_answers (request_id, field_name, field_value)
+			VALUES ($1::uuid, $2, $3)
+		`, id, ans.FieldName, ans.FieldValue); err != nil {
+			return err
+		}
+	}
+
+	_, err = r.db.Exec(ctx, `
+		UPDATE kemenag_ptsp.ptsp_service_requests SET status = 'submitted', submitted_at = NOW()
+		WHERE id::text = $1 AND user_id::text = $2
+	`, id, userID)
+	return err
+}
+
+// DeleteByApplicant menghapus permohonan milik pemohon (beserta jawaban & dokumen terkait).
+func (r *RequestRepository) DeleteByApplicant(ctx context.Context, id, userID string) error {
+	var exists bool
+	err := r.db.QueryRow(ctx, `
+		SELECT EXISTS(SELECT 1 FROM kemenag_ptsp.ptsp_service_requests WHERE id::text = $1 AND user_id::text = $2)
+	`, id, userID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("permohonan tidak ditemukan")
+	}
+
+	if _, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_request_answers WHERE request_id::text = $1`, id); err != nil {
+		return err
+	}
+	if _, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_request_documents WHERE request_id::text = $1`, id); err != nil {
+		return err
+	}
+	_, err = r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_requests WHERE id::text = $1 AND user_id::text = $2`, id, userID)
+	return err
+}
+
+// generateRequestNumber membuat nomor permohonan unik: REQ-YYYYMMDD-XXXXXX
+func generateRequestNumber() string {
+	now := time.Now()
+	return fmt.Sprintf("REQ-%s-%s", now.Format("20060102"), strings.ToUpper(randomHex(6)))
+}
+
+func randomHex(n int) string {
+	const hexChars = "0123456789ABCDEF"
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err == nil {
+		for i := range b {
+			b[i] = hexChars[int(b[i])%len(hexChars)]
+		}
+		return string(b)
+	}
+	for i := range b {
+		b[i] = hexChars[time.Now().UnixNano()%int64(len(hexChars))]
+	}
+	return string(b)
 }
 

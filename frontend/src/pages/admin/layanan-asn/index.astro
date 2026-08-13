@@ -1,0 +1,42 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { LayananASNView } from "@/views/admin/layanan-asn";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, getAdminSpecificRole, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("layanan", Astro);
+const isSuper = isSuperAdmin(profile.email);
+const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuper) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let services: any[] = [];
+try {
+  const res = await fetchAPI<any>("/services");
+  if (res && res.data && Array.isArray(res.data)) {
+    services = res.data.filter((s: any) => s.category === "asn");
+  }
+} catch (err) {
+  console.error("Failed to fetch services ASN from Golang API:", err);
+}
+---
+
+<AdminShell
+  title="Kelola Layanan ASN | PTSP Kemenag Barito Utara"
+  description="Manajemen layanan internal ASN seperti cuti"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <LayananASNView
+    client:load
+    services={services}
+    currentUserRole={specificRole ?? ""}
+    isSuper={isSuper}
+  />
+</AdminShell>

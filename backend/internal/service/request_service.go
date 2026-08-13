@@ -81,6 +81,26 @@ func (s *RequestService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
+// AttachDocument menyimpan record dokumen unggahan (revisi) ke sebuah permohonan.
+func (s *RequestService) AttachDocument(ctx context.Context, requestID, requirementID, fileName, filePath, fileType string, fileSize int64) error {
+	return s.repo.InsertDocument(ctx, requestID, requirementID, fileName, filePath, fileType, fileSize)
+}
+
+// CreateByApplicant membuat permohonan baru oleh pemohon.
+func (s *RequestService) CreateByApplicant(ctx context.Context, userID string, serviceID, serviceItemID int64, answers []models.RequestAnswer) (*models.ServiceRequest, error) {
+	return s.repo.Create(ctx, userID, serviceID, serviceItemID, answers)
+}
+
+// UpdateByApplicant memperbarui permohonan milik pemohon.
+func (s *RequestService) UpdateByApplicant(ctx context.Context, id, userID string, answers []models.RequestAnswer) error {
+	return s.repo.UpdateByApplicant(ctx, id, userID, answers)
+}
+
+// DeleteByApplicant menghapus permohonan milik pemohon.
+func (s *RequestService) DeleteByApplicant(ctx context.Context, id, userID string) error {
+	return s.repo.DeleteByApplicant(ctx, id, userID)
+}
+
 func (s *RequestService) GetDashboardStats(ctx context.Context) (*models.DashboardStats, error) {
 	s.statsMutex.RLock()
 	if s.statsCache != nil && time.Now().Before(s.statsCache.expiresAt) {

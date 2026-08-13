@@ -1,0 +1,35 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { ManajemenCutiView } from "@/views/admin/kepegawaian-pegawai";
+import { requireAuth } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requireAuth(false, Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let dataCuti: any[] = [];
+try {
+  const res = await fetchAPI<any>("/admin/cuti/pegawai");
+  if (res && res.data && Array.isArray(res.data)) {
+    dataCuti = res.data;
+  }
+} catch (err) {
+  console.error("Failed to fetch data cuti from Golang API:", err);
+}
+---
+
+<AdminShell
+  title="Manajemen Cuti | PTSP Kemenag Barito Utara"
+  description="Kelola hak cuti dan saldo cuti tahunan pegawai"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <ManajemenCutiView client:load dataCuti={dataCuti} />
+</AdminShell>

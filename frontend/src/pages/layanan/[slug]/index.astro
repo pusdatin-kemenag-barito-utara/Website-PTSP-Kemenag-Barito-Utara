@@ -1,0 +1,20 @@
+---
+import Base from "@/layouts/Base.astro";
+import { ServiceDetailView } from "@/views/service-detail";
+import { getServiceBySlug } from "@/lib/queries";
+import { notFound } from "@/lib/next-compat/navigation";
+
+const { slug } = Astro.params;
+const q = Astro.url.searchParams;
+const initialItemId = q.get("item") ?? undefined;
+
+const service = await getServiceBySlug(slug ?? "");
+
+if (!service) {
+  notFound();
+}
+---
+
+<Base title={service.name} description={service.description || "Detail layanan PTSP Kemenag Barito Utara"}>
+  <ServiceDetailView client:load service={service} initialItemId={initialItemId} />
+</Base>

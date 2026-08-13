@@ -1,0 +1,11 @@
+---
+import Base from "@/layouts/Base.astro";
+import { LoginPetugasView } from "@/views/login-petugas";
+
+const q = Astro.url.searchParams;
+const callbackUrl = q.get("callbackUrl") ?? undefined;
+---
+
+<Base title="Masuk Petugas" description="Akses khusus petugas, admin, dan pimpinan PTSP Kemenag Barito Utara.">
+  <LoginPetugasView client:load callbackUrl={callbackUrl} />
+</Base>

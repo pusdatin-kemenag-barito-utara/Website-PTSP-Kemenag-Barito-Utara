@@ -1,0 +1,21 @@
+---
+import Base from "@/layouts/Base.astro";
+import { TrackView } from "@/views/track";
+import { getPublicRequestStatus } from "@/actions-handlers/public/public-track";
+
+const q = Astro.url.searchParams;
+const query = q.get("q") ?? "";
+const token = q.get("token") ?? "";
+const isDev = import.meta.env.DEV;
+const result =
+  query && (token || isDev)
+    ? await getPublicRequestStatus(query, token)
+    : null;
+---
+
+<Base
+  title="Lacak Permohonan Layanan"
+  description="Lacak status permohonan dokumen administrasi keagamaan Anda secara real-time dan transparan di Kemenag Barito Utara."
+>
+  <TrackView client:load q={query} token={token} result={result} />
+</Base>

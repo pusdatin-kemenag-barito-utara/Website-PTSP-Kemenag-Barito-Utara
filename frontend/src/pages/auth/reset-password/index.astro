@@ -1,0 +1,19 @@
+---
+import Base from "@/layouts/Base.astro";
+import { ResetPasswordView } from "@/views/reset-password";
+
+const q = Astro.url.searchParams;
+const isError = !!(
+  q.get("error") ||
+  q.get("error_code") ||
+  q.get("error_description") ||
+  q.get("error-access_denied")
+);
+---
+
+<Base
+  title="Atur Ulang Password"
+  description="Buat password baru untuk mengamankan akses Anda ke portal administrasi PTSP Kemenag."
+>
+  <ResetPasswordView client:load isError={isError} />
+</Base>

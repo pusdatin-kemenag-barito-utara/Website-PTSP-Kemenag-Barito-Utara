@@ -1,0 +1,8 @@
+---
+const q = Astro.url.searchParams;
+const callbackUrl = q.get("callbackUrl");
+const cbQuery = callbackUrl
+  ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+  : "";
+return Astro.redirect(`/login/masyarakat${cbQuery}`);
+---

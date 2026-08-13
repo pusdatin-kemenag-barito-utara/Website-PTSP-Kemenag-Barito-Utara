@@ -1,0 +1,19 @@
+---
+import Base from "@/layouts/Base.astro";
+import { AdminShell } from "@/components/admin/admin-shell";
+
+interface Props {
+  title: string;
+  description?: string;
+  profile: any;
+  allowedMenus: string[];
+}
+
+const { title, description, profile, allowedMenus } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <AdminShell client:load profile={profile} allowedMenus={allowedMenus}>
+    <slot />
+  </AdminShell>
+</Base>

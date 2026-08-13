@@ -1,0 +1,28 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { PejabatView } from "@/views/admin/pejabat";
+import { requirePermission } from "@/lib/auth";
+import { getPejabatList } from "@/lib/actions/admin/pejabat-actions";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("kepegawaian", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const res = await getPejabatList();
+const initialData = res.success ? res.data ?? [] : [];
+---
+
+<AdminShell
+  title="Manajemen Atasan & Pejabat | PTSP Kemenag Barito Utara"
+  description="Kelola data Atasan Langsung dan Pejabat Berwenang untuk formulir Cuti"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <PejabatView client:load initialData={initialData} />
+</AdminShell>

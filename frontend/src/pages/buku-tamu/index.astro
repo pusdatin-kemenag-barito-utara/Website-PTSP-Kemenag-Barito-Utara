@@ -1,0 +1,57 @@
+---
+import Base from "@/layouts/Base.astro";
+import { fetchAPI } from "@/lib/api";
+import PageBanner from "@/components/common/PageBanner";
+import GuestBookClient from "@/pages/buku-tamu/_components/guest-book-client";
+import { RealtimeSync } from "@/components/ui/realtime-sync";
+
+let entries: any[] = [];
+try {
+  const res = await fetchAPI<any>("/guest-book");
+  if (res && res.data && Array.isArray(res.data)) {
+    entries = res.data;
+  }
+} catch (err) {
+  console.error("Failed to query guestBook from Golang API:", err);
+}
+
+let allowManualGuestBookDate = false;
+try {
+  const sysRes = await fetchAPI<any>("/admin/system/status");
+  if (
+    sysRes &&
+    sysRes.data &&
+    typeof sysRes.data.allowManualGuestBook === "boolean"
+  ) {
+    allowManualGuestBookDate = sysRes.data.allowManualGuestBook;
+  }
+} catch (sysErr) {
+  console.error("Failed to query system status from Golang API:", sysErr);
+}
+---
+
+<Base
+  title="Buku Tamu Elektronik"
+  description="Daftar kunjungan tamu dan publik ke Kantor Kementerian Agama Kabupaten Barito Utara."
+>
+  <main class="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 pb-16">
+    <PageBanner
+      client:load
+      title="Buku Tamu Elektronik"
+      description="Selamat datang di Kantor Kementerian Agama Kabupaten Barito Utara. Silakan isi daftar kunjungan Anda di bawah ini secara mandiri, aman, dan mudah."
+      breadcrumb={[
+        { label: "Beranda", href: "/" },
+        { label: "Buku Tamu" },
+      ]}
+      eyebrow="PTSP KEMENAG BARITO UTARA"
+    />
+    <div class="w-full px-6 sm:px-10 lg:px-16 xl:px-20 py-8">
+      <GuestBookClient
+        client:load
+        initialEntries={entries}
+        isManualMode={allowManualGuestBookDate}
+      />
+    </div>
+    <RealtimeSync client:load />
+  </main>
+</Base>

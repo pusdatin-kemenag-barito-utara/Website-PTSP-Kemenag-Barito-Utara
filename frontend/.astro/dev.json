@@ -1,0 +1,20 @@
+{
+	"pid": 25528,
+	"port": 3000,
+	"url": "http://localhost:3000",
+	"urls": {
+		"local": [
+			"http://localhost:3000/"
+		],
+		"network": [
+			"http://192.168.137.1:3000/",
+			"http://10.76.186.212:3000/"
+		],
+		"networkInterfaceNames": [
+			"Local Area Connection* 2",
+			"Wi-Fi"
+		]
+	},
+	"background": false,
+	"startedAt": "2026-08-13T07:55:55.894Z"
+}

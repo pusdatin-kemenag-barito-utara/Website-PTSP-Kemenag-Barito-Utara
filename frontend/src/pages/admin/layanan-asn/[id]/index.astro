@@ -1,0 +1,48 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { ServiceWizardASNView } from "@/views/admin/layanan-asn-detail";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, getAdminSpecificRole, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const { id } = Astro.params;
+
+const profile = await requirePermission("layanan", Astro);
+const isSuper = isSuperAdmin(profile.email);
+const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+const isGeneralAdmin = specificRole === "admin_ptsp";
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuper) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let service: any = null;
+try {
+  const res = await fetchAPI<any>("/services");
+  if (res && res.data && Array.isArray(res.data)) {
+    service = res.data.find((s: any) => String(s.id) === String(id));
+  }
+} catch (err) {
+  console.error("Failed to fetch service ASN data from Golang API:", err);
+}
+
+if (!service) {
+  return Astro.redirect("/admin/layanan-asn");
+}
+
+if (!isSuper && !isGeneralAdmin && service.roleOwner !== specificRole) {
+  return Astro.redirect("/admin/layanan-asn");
+}
+---
+
+<AdminShell
+  title="Detail Layanan ASN | PTSP Kemenag Barito Utara"
+  description="Pengaturan detail layanan ASN"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <ServiceWizardASNView client:load service={service} />
+</AdminShell>

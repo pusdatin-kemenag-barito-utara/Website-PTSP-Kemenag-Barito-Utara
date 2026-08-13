@@ -2,24 +2,31 @@
   "name": "ptsp-kemenag-barito-utara-frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "22.x || 24.x"
   },
   "scripts": {
-    "dev": "next dev --turbo",
-    "build": "next build",
-    "start": "next start",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "start": "node ./dist/server/entry.mjs",
+    "check": "astro check",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "sync:pegawai": "dotenv -e ../.env.local -- tsx scripts/sync-pegawai-mass.ts"
   },
   "dependencies": {
+    "@astrojs/node": "latest",
+    "@astrojs/react": "latest",
+    "@astrojs/sitemap": "latest",
     "@aws-sdk/client-s3": "^3.1046.0",
     "@aws-sdk/s3-request-presigner": "^3.1046.0",
-    "@ducanh2912/next-pwa": "^10.2.9",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.6",
     "@hookform/resolvers": "^3.9.0",
     "@ilovepdf/ilovepdf-nodejs": "^0.3.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.56.1",
+    "@vite-pwa/astro": "^1.0.0",
     "browser-image-compression": "^2.0.2",
     "cloudconvert": "^3.0.0",
     "clsx": "^2.1.1",
@@ -33,7 +40,6 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.547.0",
-    "next": "^16.2.2",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.2.108",
     "perfect-freehand": "^1.2.3",
@@ -48,23 +54,18 @@
     "zod": "^4.1.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.13",
+    "@tailwindcss/vite": "^4.1.13",
     "@types/estree": "^1.0.6",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^24.13.3",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@types/react-signature-canvas": "^1.0.7",
+    "astro": "latest",
     "dotenv": "^16.4.7",
-    "postcss": "^8.5.14",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5.9.2"
-  },
-  "overrides": {
-    "glob": "^13.0.0",
-    "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
-    "postcss": "^8.5.14",
-    "serialize-javascript": "^7.0.5",
-    "esbuild": "^0.28.0"
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.2",
+    "vite-plugin-pwa": "^1.0.0"
   }
 }

@@ -1,0 +1,53 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
+import { getLaporanKinerjaBulananAction } from "@/lib/actions/pegawai/e-lk";
+import { UploadFinalForm } from "@/components/pegawai/e-lk/upload-form";
+import { RekapFilter } from "@/components/pegawai/e-lk/rekap-filter";
+
+const user = await getCurrentUser();
+
+const q = Astro.url.searchParams;
+const month = q.get("month");
+const year = q.get("year");
+
+const currentDate = new Date();
+const selectedMonth = month ? parseInt(month) : currentDate.getMonth() + 1;
+const selectedYear = year ? parseInt(year) : currentDate.getFullYear();
+
+let existingData: any = null;
+if (user) {
+  const { data } = await getLaporanKinerjaBulananAction(user.id, selectedMonth, selectedYear);
+  existingData = data;
+}
+
+const profile = await getCurrentProfile();
+const userNip = profile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title="Upload Final LKH"
+  description="Unggah dokumen rekap laporan kinerja bulanan yang telah ditandatangani."
+  mode="pegawai"
+  userNip={userNip}
+>
+  <div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Upload Final LKH</h1>
+        <p class="text-slate-500 mt-1">Unggah dokumen rekap laporan kinerja bulanan yang telah ditandatangani.</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <RekapFilter client:load initialMonth={selectedMonth} initialYear={selectedYear} />
+      </div>
+    </div>
+
+    <UploadFinalForm
+      client:load
+      currentMonth={selectedMonth}
+      currentYear={selectedYear}
+      existingData={existingData}
+    />
+  </div>
+</DashboardShell>

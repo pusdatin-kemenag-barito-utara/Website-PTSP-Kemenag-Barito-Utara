@@ -1,0 +1,29 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { requireAuth, getCurrentProfile } from "@/lib/auth";
+import { ProfileClient } from "./_profile-client";
+import PageBanner from "@/components/common/PageBanner";
+
+await requireAuth(false, Astro);
+const profile = await getCurrentProfile();
+const userNip = profile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title="Profil Pegawai | PTSP Kemenag Barito Utara"
+  description="Kelola informasi data diri, avatar, dan keamanan akun Anda."
+  mode="pegawai"
+  userNip={userNip}
+>
+  <div class="w-full">
+    <PageBanner
+      client:load
+      title="Profil Pegawai"
+      description="Kelola informasi data diri, avatar, dan keamanan akun Anda."
+    />
+
+    <div class="mt-6">
+      <ProfileClient client:load profile={profile} />
+    </div>
+  </div>
+</DashboardShell>

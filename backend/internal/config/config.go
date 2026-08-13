@@ -18,10 +18,20 @@ type Config struct {
 	FrontendOrigin string
 
 	// Security
-	CronSecret       string
-	TurnstileSecret  string
-	JWTSecret        string
+	CronSecret        string
+	TurnstileSecret   string
+	JWTSecret         string
 	SupabaseJWTSecret string
+
+	// Supabase (Auth admin / service role)
+	SupabaseURL        string
+	SupabaseServiceRole string
+
+	// AI Chat Providers
+	GroqAPIKey       string
+	GeminiAPIKey     string
+	MistralAPIKey    string
+	OpenRouterAPIKey string
 
 	// External Services
 	WaBotURL   string
@@ -45,7 +55,10 @@ func Load() *Config {
 		port = "8080"
 	}
 
-	frontendOrigin := os.Getenv("NEXT_PUBLIC_APP_URL")
+	frontendOrigin := os.Getenv("PUBLIC_APP_URL")
+	if frontendOrigin == "" {
+		frontendOrigin = os.Getenv("NEXT_PUBLIC_APP_URL")
+	}
 	if frontendOrigin == "" {
 		frontendOrigin = "http://localhost:3000"
 	}
@@ -75,6 +88,12 @@ func Load() *Config {
 		TurnstileSecret:   os.Getenv("TURNSTILE_SECRET_KEY"),
 		JWTSecret:         os.Getenv("JWT_SECRET"),
 		SupabaseJWTSecret: os.Getenv("SUPABASE_JWT_SECRET"),
+		SupabaseURL:        os.Getenv("SUPABASE_URL"),
+		SupabaseServiceRole: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
+		GroqAPIKey:        os.Getenv("GROQ_API_KEY"),
+		GeminiAPIKey:      os.Getenv("GEMINI_API_KEY"),
+		MistralAPIKey:     os.Getenv("MISTRAL_API_KEY"),
+		OpenRouterAPIKey:  os.Getenv("OPENROUTER_API_KEY"),
 		WaBotURL:          os.Getenv("WA_BOT_URL"),
 		WaBotAPIKey:       os.Getenv("WA_BOT_API_KEY"),
 		R2AccountId:       r2AccountId,

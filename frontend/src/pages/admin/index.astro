@@ -1,0 +1,55 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { AdminDashboardView } from "@/views/admin/dashboard";
+import { requireAdmin } from "@/lib/auth";
+import {
+  isSuperAdmin,
+  ALL_ADMIN_MENUS,
+  DEFAULT_ADMIN_PERMISSIONS,
+  getAdminSpecificRole,
+} from "@/lib/constants";
+
+import {
+  getAdminDashboardStats,
+  getAdminDashboardAnalytics,
+} from "./_lib/dashboard-data";
+
+const profile = await requireAdmin(Astro);
+const isSuper = isSuperAdmin(profile.email);
+const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+const isGeneralAdmin = specificRole === "admin_ptsp";
+
+const roleOwnerFilter = isSuper || isGeneralAdmin ? undefined : specificRole;
+
+// Fetch permissions for this user
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuper) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus =
+    (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const { masyarakat, pegawai } = await getAdminDashboardStats(roleOwnerFilter);
+
+const {
+  serviceAnalytics,
+  trendAnalytics,
+} = await getAdminDashboardAnalytics(roleOwnerFilter);
+---
+
+<AdminShell
+  title="Dashboard Admin | PTSP Kemenag Barito Utara"
+  description="Ringkasan dashboard admin"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <AdminDashboardView
+    client:load
+    masyarakat={masyarakat}
+    pegawai={pegawai}
+    serviceAnalytics={serviceAnalytics}
+    trendAnalytics={trendAnalytics}
+    allowedMenus={allowedMenus}
+  />
+</AdminShell>

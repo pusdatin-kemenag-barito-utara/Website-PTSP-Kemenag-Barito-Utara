@@ -2,6 +2,7 @@ package handler
 
 import (
 	"ptsp-kemenag-backend/internal/config"
+	"ptsp-kemenag-backend/internal/middleware"
 	"ptsp-kemenag-backend/internal/repository"
 	"ptsp-kemenag-backend/internal/service"
 	"ptsp-kemenag-backend/internal/storage"
@@ -42,6 +43,9 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 	userHdl := NewUserHandler(userSvc, fileSvc)
 	cutiHdl := NewCutiHandler(cutiSvc)
 	cronHdl := NewCronHandler(systemSvc)
+	chatHdl := NewChatHandler(cfg, serviceSvc)
+	filesHdl := NewFilesHandler(r2Storage)
+	impersonateHdl := NewImpersonateHandler(cfg, cutiSvc)
 
 	// Static route fallback untuk file uploads lokal
 	app.Static("/uploads", "./uploads")
@@ -78,11 +82,24 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		api.Get("/requests/track/:requestNumber", requestHdl.TrackRequest)
 		api.Get("/requests", requestHdl.GetRequests)
 		api.Get("/requests/:id", requestHdl.GetRequestByID)
+		api.Post("/requests", requestHdl.CreateByApplicant)
+		api.Put("/requests/:id", requestHdl.UpdateByApplicant)
+		api.Delete("/requests/:id", requestHdl.DeleteByApplicant)
 		api.Post("/upload-document", requestHdl.UploadDocument)
 
+		// Chat AI & File Utilities
+		api.Post("/chat", chatHdl.Chat)
+		api.Get("/files/resolve", filesHdl.ResolveFile)
+		api.Get("/files/proxy", filesHdl.ProxyFile)
+		api.Get("/files/stats", filesHdl.Stats)
+		api.Get("/system/status", cronHdl.GetSystemStatus)
+		api.Get("/admin/system/status", cronHdl.GetSystemStatus)
+		api.Get("/users/:id", userHdl.GetUserByID)
+		api.Patch("/users/:id/profile", userHdl.UpdateProfile)
 
-		// Admin Routes
-		admin := api.Group("/admin")
+
+		// Admin Routes (wajib autentikasi JWT Supabase)
+		admin := api.Group("/admin", middleware.RequireJWT(cfg))
 		admin.Get("/stats", requestHdl.GetDashboardStats)
 		admin.Get("/search", userHdl.Search)
 
@@ -90,6 +107,8 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		admin.Get("/requests/:id", requestHdl.GetRequestByID)
 		admin.Patch("/requests/:id/status", requestHdl.UpdateStatus)
 		admin.Delete("/requests/:id", requestHdl.Delete)
+		admin.Post("/requests/:id/documents", requestHdl.AttachDocument)
+		admin.Post("/impersonate", impersonateHdl.GenerateImpersonateLink)
 
 		admin.Get("/users", userHdl.GetUsers)
 		admin.Get("/users/:id", userHdl.GetUserByID)
@@ -108,7 +127,6 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		admin.Get("/audit-logs", userHdl.GetAuditLogs)
 
 		// Admin System Settings
-		admin.Get("/system/status", cronHdl.GetSystemStatus)
 		admin.Patch("/system/guest-book-mode", cronHdl.ToggleGuestBookMode)
 
 		// Admin Master Options

@@ -1,0 +1,19 @@
+---
+import Base from "@/layouts/Base.astro";
+import { LoginMasyarakatView } from "@/views/login-masyarakat";
+
+const q = Astro.url.searchParams;
+const callbackUrl = q.get("callbackUrl") ?? "/masyarakat";
+const error = q.get("error") ?? "";
+---
+
+<Base
+  title="Masuk Portal Pemohon Masyarakat"
+  description="Masuk ke portal layanan PTSP Kemenag Barito Utara untuk masyarakat umum."
+>
+  <LoginMasyarakatView
+    client:load
+    callbackUrl={callbackUrl}
+    initialError={error}
+  />
+</Base>

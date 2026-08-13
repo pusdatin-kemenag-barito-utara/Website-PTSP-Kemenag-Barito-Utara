@@ -1,0 +1,256 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { AdminRequestDetailView } from "@/views/admin/pengajuan-detail";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { getPejabatList } from "@/lib/actions/admin/pejabat-actions";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getR2SignedUrl, isR2Path } from "@/lib/r2";
+import { isSuperAdmin, getAdminSpecificRole, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const { id } = Astro.params;
+
+const profile = await requirePermission("pengajuan", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+async function getSignedUrl(bucket: string, path?: string | null) {
+  if (!path) return null;
+
+  if (isR2Path(path)) {
+    return getR2SignedUrl(path);
+  }
+
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  if (path.startsWith("/uploads/") || path.startsWith("uploads/")) {
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `http://127.0.0.1:8080${cleanPath}`;
+  }
+
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin.storage.from(bucket).createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeRequest(raw: any): any {
+  if (!raw) return {};
+
+  const applicantName = raw.applicant_name || raw.applicantName || raw.user_name || raw.profiles?.fullName || raw.profiles?.full_name || "-";
+  const applicantEmail = raw.applicant_email || raw.applicantEmail || raw.user_email || raw.profiles?.email || "";
+  const serviceName = raw.service_name || raw.serviceName || raw.services?.name || raw.service?.name || "-";
+  const roleOwner = raw.role_owner || raw.roleOwner || raw.services?.roleOwner || raw.services?.role_owner || "";
+  const category = raw.category || raw.services?.category || "public";
+  const itemName = raw.item_name || raw.itemName || raw.serviceItems?.name || raw.serviceItem?.name || "-";
+  const requestNumber = raw.request_number || raw.requestNumber || raw.requestNo || raw.request_no || "-";
+  const createdAt = raw.created_at || raw.createdAt || raw.submitted_at || raw.submittedAt;
+
+  return {
+    ...raw,
+    id: raw.id,
+    status: raw.status || "SUBMITTED",
+    requestNumber,
+    createdAt,
+    profiles: {
+      id: raw.user_id || raw.userId,
+      fullName: applicantName,
+      email: applicantEmail,
+    },
+    services: {
+      name: serviceName,
+      roleOwner,
+      category,
+    },
+    serviceItems: {
+      name: itemName,
+    },
+    serviceRequestAnswers: (() => {
+      const rawAnswers = raw.answers || raw.serviceRequestAnswers || raw.request_answers || [];
+      let parsed: any[] = [];
+      let startDateRange = "";
+      let endDateRange = "";
+
+      const toDDMMYYYY = (dateStr: string) => {
+        if (!dateStr || dateStr === "-") return "-";
+        const m = dateStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? `${m[3]}-${m[2]}-${m[1]}` : dateStr;
+      };
+
+      rawAnswers.forEach((a: any, idx: number) => {
+        const fn = (a.field_name || a.fieldName || a.name || "").toString();
+        let fv = (a.field_value || a.fieldValue || a.value || "-").toString();
+
+        if (fn.toLowerCase().includes("tanggal") || fn.toLowerCase().includes("tgl")) {
+          if (fv.includes(",")) {
+            const parts = fv.split(",").map((s: string) => s.trim()).filter(Boolean);
+            if (parts.length > 0) {
+              startDateRange = parts[0];
+              endDateRange = parts[parts.length - 1];
+              if (fn.toLowerCase().includes("mulai")) {
+                fv = `${toDDMMYYYY(parts[0])} s/d ${toDDMMYYYY(parts[parts.length - 1])}`;
+              }
+            }
+          } else {
+            fv = toDDMMYYYY(fv);
+          }
+        }
+
+        parsed.push({
+          id: a.id || `ans-${idx}-${fn}`,
+          fieldName: fn,
+          fieldValue: fv,
+          createdAt,
+        });
+      });
+
+      if (endDateRange) {
+        const formattedEnd = toDDMMYYYY(endDateRange);
+        const hasSelesai = parsed.some((item: any) => item.fieldName.toLowerCase().includes("selesai"));
+        if (hasSelesai) {
+          parsed = parsed.map((item: any) => {
+            if (item.fieldName.toLowerCase().includes("selesai") && (item.fieldValue === "-" || item.fieldValue.includes(","))) {
+              return { ...item, fieldValue: formattedEnd };
+            }
+            return item;
+          });
+        } else {
+          parsed.push({
+            id: "ans-derived-selesai",
+            fieldName: "TANGGAL SELESAI CUTI",
+            fieldValue: formattedEnd,
+            createdAt,
+          });
+        }
+      }
+
+      return parsed;
+    })(),
+    serviceRequestDocuments: (raw.documents || raw.serviceRequestDocuments || raw.request_documents || []).map((d: any) => ({
+      id: d.id,
+      requirementName: d.requirement_name || d.requirementName || d.serviceRequirements?.documentName || d.service_requirements?.document_name,
+      fileName: d.file_name || d.fileName || d.name || "Dokumen",
+      filePath: d.file_path || d.filePath || d.url || "",
+      fileType: d.file_type || d.fileType || "pdf",
+      fileSize: d.file_size || d.fileSize || 0,
+      serviceRequirements: d.serviceRequirements || d.service_requirements || (d.requirement_name ? { documentName: d.requirement_name } : null),
+    })),
+    serviceRequestReviews: (raw.reviews || raw.serviceRequestReviews || []).map((r: any) => ({
+      ...r,
+      profiles: { fullName: r.reviewer_name || r.reviewerName || r.profiles?.fullName || null },
+    })),
+    activityLogs: raw.activity_logs || raw.activityLogs || [],
+    generatedDocuments: raw.generated_documents || raw.generatedDocuments || [],
+  };
+}
+
+let rawData: any;
+try {
+  const res = await fetchAPI<any>(`/admin/requests/${id}`);
+  if (res && res.success && res.data) {
+    rawData = res.data;
+  }
+} catch {
+  // ignore to trigger redirect below
+}
+
+if (!rawData) {
+  return Astro.redirect("/admin/pengajuan");
+}
+
+const request = normalizeRequest(rawData);
+
+const isSuper = isSuperAdmin(profile.email) || profile.role === "super_admin";
+const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+const isGeneralAdmin = specificRole === "admin_ptsp" || profile.role === "admin_ptsp";
+
+if (
+  !isSuper &&
+  !isGeneralAdmin &&
+  request.services?.roleOwner &&
+  request.services?.roleOwner !== specificRole &&
+  request.services?.roleOwner !== profile.role
+) {
+  return Astro.redirect("/admin/pengajuan");
+}
+
+let cutiData: any = null;
+let pejabatList: any[] = [];
+if (request.services?.name?.toLowerCase().includes("cuti")) {
+  try {
+    const cutiRes = await fetchAPI<any>(`/pegawai/cuti?request_id=${id}`);
+    if (cutiRes?.data) {
+      cutiData = cutiRes.data;
+    }
+  } catch {
+    // Data cuti tidak wajib ada, abaikan error
+  }
+
+  const pejabatRes = await getPejabatList();
+  if (pejabatRes.success) {
+    pejabatList = pejabatRes.data || [];
+  }
+}
+
+const docUrls = await Promise.all(
+  (request.serviceRequestDocuments ?? []).map(async (doc: any) => ({
+    id: doc.id,
+    url: await getSignedUrl("request-documents", doc.filePath),
+  })),
+);
+
+const allGeneratedDocs: any[] = Array.isArray(request.generatedDocuments)
+  ? request.generatedDocuments
+  : request.generatedDocuments
+    ? [request.generatedDocuments]
+    : [];
+
+const generatedDoc =
+  allGeneratedDocs.length > 0
+    ? allGeneratedDocs[allGeneratedDocs.length - 1]
+    : null;
+
+const generatedUrl = generatedDoc?.filePath
+  ? await getSignedUrl("generated-documents", generatedDoc.filePath)
+  : null;
+
+const signedUrlMap: Record<string, string | null> = {};
+for (const item of docUrls) {
+  signedUrlMap[item.id] = item.url;
+}
+if (generatedUrl) {
+  signedUrlMap["generated"] = generatedUrl;
+}
+
+const isAsn =
+  request.services?.category === "asn" ||
+  request.requestNumber?.startsWith("ASN");
+const backUrl = isAsn ? "/admin/pengajuan?type=asn" : "/admin/pengajuan";
+---
+
+<AdminShell
+  title="Detail Pengajuan | PTSP Kemenag Barito Utara"
+  description="Review dokumen dan tindak lanjut permohonan"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <AdminRequestDetailView
+    client:load
+    request={request}
+    adminProfile={profile}
+    cutiData={cutiData}
+    pejabatList={pejabatList}
+    signedUrlMap={signedUrlMap}
+    backUrl={backUrl}
+  />
+</AdminShell>

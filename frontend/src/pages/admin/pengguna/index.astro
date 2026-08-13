@@ -1,0 +1,28 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { PenggunaView } from "@/views/admin/pengguna";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("pengguna", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const res = await fetchAPI<{ data: any[] }>("/admin/users");
+const users = res?.data ?? [];
+---
+
+<AdminShell
+  title="Manajemen Petugas & Pengguna | PTSP Kemenag Barito Utara"
+  description="Kelola role dan akses pengguna sistem"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <PenggunaView client:load initialUsers={users} currentEmail={profile.email ?? undefined} />
+</AdminShell>

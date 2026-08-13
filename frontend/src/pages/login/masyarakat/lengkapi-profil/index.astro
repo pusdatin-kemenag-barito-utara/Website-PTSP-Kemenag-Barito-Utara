@@ -1,0 +1,27 @@
+---
+import Base from "@/layouts/Base.astro";
+import { LengkapiProfilPemohonView } from "@/views/lengkapi-profil-pemohon";
+import { createClient } from "@/lib/supabase/server";
+
+const supabase = await createClient({ cookies: Astro.cookies, request: Astro.request });
+let { data: { user } } = await supabase.auth.getUser();
+
+if (!user) {
+  const accessToken = Astro.cookies.get("ptsp-auth-access-token")?.value;
+  if (accessToken) {
+    const { data } = await supabase.auth.getUser(accessToken);
+    user = data?.user ?? null;
+  }
+}
+
+if (!user) {
+  return Astro.redirect("/login/masyarakat");
+}
+---
+
+<Base
+  title="Lengkapi Data Pemohon"
+  description="Lengkapi data profil pemohon untuk masuk ke portal layanan PTSP."
+>
+  <LengkapiProfilPemohonView client:load />
+</Base>

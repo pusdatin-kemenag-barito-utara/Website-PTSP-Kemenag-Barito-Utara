@@ -1,0 +1,15 @@
+---
+import Base from "@/layouts/Base.astro";
+import { ServicesCatalogPegawaiView } from "@/views/services-catalog-pegawai";
+import { getEmployeeServices } from "@/lib/queries";
+
+const services = await getEmployeeServices();
+const totalItems = services.length;
+---
+
+<Base
+  title="Katalog Layanan Pegawai"
+  description="Cari tahu jenis layanan pegawai, persyaratan, dan estimasi waktu proses dokumen di PTSP Kemenag Barito Utara."
+>
+  <ServicesCatalogPegawaiView client:load services={services} totalItems={totalItems} />
+</Base>

@@ -1,0 +1,30 @@
+---
+import Base from "@/layouts/Base.astro";
+import { BarcodeDisplay } from "@/components/barcode/barcode-display";
+import { getServiceBySlug } from "@/lib/queries";
+import { notFound } from "@/lib/next-compat/navigation";
+
+const { slug } = Astro.params;
+const service = await getServiceBySlug(slug ?? "");
+
+if (!service) {
+  notFound();
+}
+---
+
+<Base title={`Barcode ${service.name}`}>
+  <BarcodeDisplay
+    client:load
+    qrUrl={`https://ptsp.kemenag-baritoutara.com/layanan-pegawai/${slug}`}
+    title={service.name}
+    subtitle="PTSP Kemenag Barito Utara"
+    backHref="/layanan-pegawai"
+    backLabel="Kembali ke Layanan Pegawai"
+    scanText="Scan untuk Melihat Detail Layanan"
+    description={`Arahkan kamera HP Anda ke QR Code di atas untuk melihat detail layanan ${service.name} PTSP Kemenag Barito Utara.`}
+    downloadFilename={`barcode-layanan-pegawai-${slug}-ptsp-kemenag.png`}
+    footerTitle="Pelayanan Terpadu Satu Pintu (PTSP)"
+    footerSubtitle="Kementerian Agama Kabupaten Barito Utara"
+    footerUrl={`https://ptsp.kemenag-baritoutara.com/layanan-pegawai/${slug}`}
+  />
+</Base>

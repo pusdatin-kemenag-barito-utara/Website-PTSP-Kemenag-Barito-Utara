@@ -5,8 +5,8 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = ".\\tmp\\main.exe"
   cmd = "go build -o .\\tmp\\main.exe main.go"
+  entrypoint = ".\\tmp\\main.exe"
   delay = 500
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
@@ -20,8 +20,8 @@ tmp_dir = "tmp"
   include_file = []
   kill_delay = "0s"
   log = "build-errors.log"
-  poll = false
-  poll_interval = 0
+  poll = true
+  poll_interval = 500
   post_cmd = []
   pre_cmd = []
   rerun = false

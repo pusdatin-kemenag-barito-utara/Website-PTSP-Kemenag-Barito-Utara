@@ -1,0 +1,28 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { StorageMaintenanceView } from "@/views/admin/pemeliharaan-storage";
+import { requirePermission } from "@/lib/auth";
+import { getMaintenanceStatus } from "@/lib/actions/admin/system/maintenance";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("pemeliharaan_storage", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const status = await getMaintenanceStatus();
+const aiChatEnabled = status.success ? Boolean(status.enabled) : true;
+---
+
+<AdminShell
+  title="Pemeliharaan Storage | PTSP Kemenag Barito Utara"
+  description="Pemantauan dan pemeliharaan kapasitas penyimpanan dokumen"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <StorageMaintenanceView client:load aiChatEnabled={aiChatEnabled} />
+</AdminShell>

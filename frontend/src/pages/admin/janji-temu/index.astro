@@ -1,0 +1,40 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { JanjiTemuView } from "@/views/admin/janji-temu";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("janji_temu", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let entries: any[] = [];
+try {
+  const res = await fetchAPI<any>("/appointments");
+  if (res && res.data && Array.isArray(res.data)) {
+    entries = res.data.map((entry: any) => ({
+      ...entry,
+      appointmentDate: entry.appointmentDate || entry.appointment_date ? new Date(entry.appointmentDate || entry.appointment_date).toISOString().split('T')[0] : "",
+      createdAt: entry.createdAt || entry.created_at ? new Date(entry.createdAt || entry.created_at).toISOString() : new Date().toISOString(),
+      updatedAt: entry.updatedAt || entry.updated_at ? new Date(entry.updatedAt || entry.updated_at).toISOString() : new Date().toISOString(),
+    }));
+  }
+} catch (err) {
+  console.error("Failed to fetch appointments from Golang API:", err);
+}
+---
+
+<AdminShell
+  title="Monitoring Janji Temu | PTSP Kemenag Barito Utara"
+  description="Pantau dan kelola jadwal janji temu serta pertemuan tatap muka"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <JanjiTemuView client:load entries={entries} />
+</AdminShell>

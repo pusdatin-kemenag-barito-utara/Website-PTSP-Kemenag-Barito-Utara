@@ -33,11 +33,11 @@ func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 
 func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	id := c.Params("id")
-	res, err := h.svc.GetByID(c.Context(), id)
+	user, err := h.svc.GetByID(c.Context(), id)
 	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"success": false, "error": "User tidak ditemukan"})
+		return c.Status(404).JSON(fiber.Map{"error": "User tidak ditemukan", "details": err.Error()})
 	}
-	return c.JSON(fiber.Map{"success": true, "data": res})
+	return c.JSON(fiber.Map{"success": true, "data": user})
 }
 
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {

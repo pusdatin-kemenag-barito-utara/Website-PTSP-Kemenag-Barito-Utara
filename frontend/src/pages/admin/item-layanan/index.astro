@@ -1,0 +1,48 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { ItemLayananView } from "@/views/admin/item-layanan";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("layanan", Astro);
+const isSuper = isSuperAdmin(profile.email);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuper) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let services: any[] = [];
+let items: any[] = [];
+
+try {
+  const res = await fetchAPI<any>("/services");
+  if (res && res.data && Array.isArray(res.data)) {
+    services = res.data;
+    services.forEach((s: any) => {
+      if (s.items && Array.isArray(s.items)) {
+        s.items.forEach((item: any) => {
+          items.push({
+            ...item,
+            service: { name: s.name },
+          });
+        });
+      }
+    });
+  }
+} catch (err) {
+  console.error("Failed to fetch service items from Golang API:", err);
+}
+---
+
+<AdminShell
+  title="Kelola Item Layanan | PTSP Kemenag Barito Utara"
+  description="Kelola daftar sub-layanan, formulir, dan persyaratan untuk setiap induk layanan"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <ItemLayananView client:load items={items ?? []} services={services ?? []} isSuper={isSuper} />
+</AdminShell>

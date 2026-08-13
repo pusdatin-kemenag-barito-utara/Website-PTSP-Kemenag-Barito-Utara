@@ -1,0 +1,51 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { FormLayananView } from "@/views/admin/form-layanan";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("layanan", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let items: any[] = [];
+let fields: any[] = [];
+
+try {
+  const servicesRes = await fetchAPI<any>("/services");
+  if (servicesRes && servicesRes.data && Array.isArray(servicesRes.data)) {
+    servicesRes.data.forEach((s: any) => {
+      if (s.items && Array.isArray(s.items)) {
+        items.push(...s.items);
+        s.items.forEach((item: any) => {
+          if (item.formFields && Array.isArray(item.formFields)) {
+            item.formFields.forEach((f: any) => {
+              fields.push({
+                ...f,
+                serviceItem: { name: item.name },
+              });
+            });
+          }
+        });
+      }
+    });
+  }
+} catch (err) {
+  console.error("Failed to fetch form fields from Golang API:", err);
+}
+---
+
+<AdminShell
+  title="Kelola Form Layanan | PTSP Kemenag Barito Utara"
+  description="Atur field form dinamis yang digunakan oleh tiap item layanan"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <FormLayananView client:load fields={fields ?? []} items={items ?? []} />
+</AdminShell>

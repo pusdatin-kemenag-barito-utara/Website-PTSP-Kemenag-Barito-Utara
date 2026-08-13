@@ -22,7 +22,9 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 
 func (r *UserRepository) FindAll(ctx context.Context, role, status string, limit int) ([]models.User, error) {
 	query := `
-		SELECT id, name, email, phone, role, user_type, status, is_verified, avatar_url, created_at
+		SELECT id, COALESCE(name, 'Pemohon'), COALESCE(email, ''), COALESCE(phone, ''), 
+			COALESCE(role, 'user'), COALESCE(user_type, 'pemohon'), COALESCE(status, 'aktif'), 
+			COALESCE(is_verified, false), COALESCE(avatar_url, ''), created_at
 		FROM kemenag_pusdatin.profiles WHERE 1=1
 	`
 	args := []interface{}{}
@@ -63,26 +65,26 @@ func (r *UserRepository) FindByID(ctx context.Context, id string) (*models.User,
 		SELECT 
 			p.id, 
 			COALESCE(
-				NULLIF(NULLIF(NULLIF(p.name, 'Pegawai'), 'Pemohon'), 'Pusdatin Kemenag Barito Utara'),
+				NULLIF(NULLIF(NULLIF(NULLIF(p.name, 'Pegawai'), 'Pemohon'), 'Pusdatin Kemenag Barito Utara'), 'pusdatinkemenagbaritoutara'),
 				dcp.nama,
 				p.name,
 				'Pemohon'
 			) AS name, 
-			p.email, 
-			p.phone, 
-			p.role, 
-			p.user_type, 
-			p.status, 
-			p.is_verified, 
-			p.avatar_url, 
+			COALESCE(p.email, ''), 
+			COALESCE(p.phone, ''), 
+			COALESCE(p.role, 'user'), 
+			COALESCE(p.user_type, 'pemohon'), 
+			COALESCE(p.status, 'aktif'), 
+			COALESCE(p.is_verified, false), 
+			COALESCE(p.avatar_url, ''), 
 			p.created_at
 		FROM kemenag_pusdatin.profiles p
-		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.profile_id = p.id
-		LEFT JOIN kemenag_ptsp.ptsp_data_cuti_pegawai dcp ON dcp.nip = pp.nip OR dcp.nip = SPLIT_PART(p.email, '@', 1)
+		LEFT JOIN kemenag_ptsp.ptsp_data_cuti_pegawai dcp ON dcp.nip = SPLIT_PART(p.email, '@', 1)
 		WHERE p.id = $1 LIMIT 1
 	`, id).Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Role, &u.UserType, &u.Status, &u.IsVerified, &u.AvatarURL, &u.CreatedAt)
 
 	if err != nil {
+		fmt.Printf("[DEBUG] FindByID error for id %s: %v\n", id, err)
 		return nil, err
 	}
 	return &u, nil
@@ -243,7 +245,7 @@ func (r *UserRepository) GlobalSearch(ctx context.Context, q string) (*models.Se
 	}
 
 	profRows, _ := r.db.Query(ctx, `
-		SELECT id, name, email, role, phone FROM kemenag_pusdatin.profiles
+		SELECT id, COALESCE(name, 'Pemohon'), COALESCE(email, ''), COALESCE(role, 'user'), COALESCE(phone, '') FROM kemenag_pusdatin.profiles
 		WHERE name ILIKE $1 OR email ILIKE $1 OR phone ILIKE $1 LIMIT 5
 	`, searchStr)
 	if profRows != nil {

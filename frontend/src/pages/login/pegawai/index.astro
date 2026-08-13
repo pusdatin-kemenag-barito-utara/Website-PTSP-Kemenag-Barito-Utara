@@ -1,0 +1,12 @@
+---
+import Base from "@/layouts/Base.astro";
+import { LoginPegawaiView } from "@/views/login-pegawai";
+
+const q = Astro.url.searchParams;
+const callbackUrl = q.get("callbackUrl") ?? undefined;
+const nip = q.get("nip") ?? undefined;
+---
+
+<Base title="Masuk Pegawai" description="Masuk portal pegawai PTSP Kemenag Barito Utara.">
+  <LoginPegawaiView client:load callbackUrl={callbackUrl} nip={nip} />
+</Base>

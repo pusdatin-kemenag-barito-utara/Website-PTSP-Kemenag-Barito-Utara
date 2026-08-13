@@ -1,0 +1,58 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { LkhForm } from "@/components/pegawai/e-lk/lkh-form";
+import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { redirect } from "@/lib/next-compat/navigation";
+import { FormInput, FileCheck2 } from "lucide-react";
+
+const user = await getCurrentUser();
+if (!user) {
+  redirect("/login");
+}
+
+const id = Astro.url.searchParams.get("id");
+let initialData = null;
+
+if (id) {
+  try {
+    const res = await fetchAPI<any>(`/pegawai/lkh?userId=${user.id}`);
+    const lkhList = res?.data || [];
+    initialData = lkhList.find((item: any) => item.id === id) || null;
+  } catch {
+    initialData = null;
+  }
+}
+
+const profile = await getCurrentProfile();
+const userNip = profile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title="Isi Laporan Kinerja Harian"
+  description="Catat aktivitas kerja harian Anda"
+  mode="pegawai"
+  userNip={userNip}
+>
+  <div class="container max-w-4xl py-6 space-y-6">
+    <div class="flex items-center gap-3 border-b pb-4">
+      <div class="p-2 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg text-emerald-600 dark:text-emerald-400">
+        {initialData ? (
+          <FileCheck2 client:load class="h-6 w-6" />
+        ) : (
+          <FormInput client:load class="h-6 w-6" />
+        )}
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          {initialData ? "Edit Laporan Kinerja Harian" : "Isi Laporan Kinerja Harian"}
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Catat aktivitas kerja harian Anda untuk penilaian kinerja bulanan.
+        </p>
+      </div>
+    </div>
+
+    <LkhForm client:load initialData={initialData} />
+  </div>
+</DashboardShell>

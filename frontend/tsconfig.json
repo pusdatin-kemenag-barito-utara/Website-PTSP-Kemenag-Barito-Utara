@@ -1,7 +1,19 @@
 {
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "es2022"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "next/link": ["./src/lib/next-compat/link"],
+      "next/image": ["./src/lib/next-compat/image"],
+      "next/navigation": ["./src/lib/next-compat/navigation"],
+      "next/cache": ["./src/lib/next-compat/cache"],
+      "next/dynamic": ["./src/lib/next-compat/dynamic"],
+      "next/font/google": ["./src/lib/next-compat/font-google"],
+      "next/server": ["./src/lib/next-compat/server"]
+    },
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -12,24 +24,14 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-
+    "lib": ["dom", "dom.iterable", "es2022"],
+    "target": "ES2022",
+    "types": ["astro/client", "vite/client", "node", "vite-plugin-pwa/client"],
     "plugins": [
       {
-        "name": "next"
+        "name": "@astrojs/ts-plugin"
       }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    ]
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["src/env.d.ts", "src/**/*", "astro.config.mjs"]
 }

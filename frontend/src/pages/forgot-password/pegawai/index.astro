@@ -1,0 +1,15 @@
+---
+import Base from "@/layouts/Base.astro";
+import { ForgotPegawaiView } from "@/views/forgot-pegawai";
+
+const q = Astro.url.searchParams;
+const cb = q.get("callbackUrl");
+const cbQuery = cb ? `?callbackUrl=${encodeURIComponent(cb)}` : "";
+---
+
+<Base
+  title="Lupa Password Pegawai"
+  description="Pemulihan password untuk pegawai PTSP Kemenag Barito Utara."
+>
+  <ForgotPegawaiView client:load cbQuery={cbQuery} />
+</Base>

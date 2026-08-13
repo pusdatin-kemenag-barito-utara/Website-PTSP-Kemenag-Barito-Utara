@@ -1,0 +1,57 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import RequestDetailView from "@/views/request-detail";
+import { requireAuth } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getR2SignedUrl, isR2Path } from "@/lib/r2";
+import { notFound, redirect } from "@/lib/next-compat/navigation";
+
+async function getSignedUrl(bucket: string, path?: string | null) {
+  if (!path) return null;
+  if (isR2Path(path)) return getR2SignedUrl(path);
+  const admin = createAdminClient();
+  const { data } = await admin.storage.from(bucket).createSignedUrl(path, 3600);
+  return data?.signedUrl || null;
+}
+
+const profile = await requireAuth(false, Astro);
+const { id } = Astro.params;
+
+let request: any = null;
+try {
+  const res = await fetchAPI<any>(`/requests/${id}`);
+
+  if (res && res.data) {
+    request = res.data;
+  }
+} catch (err) {
+  console.error("Failed to fetch request detail from Golang API:", err);
+}
+
+if (!request) notFound();
+if (request.userId !== profile.id && request.user_id !== profile.id) redirect("/dashboard");
+
+const docUrls = (await Promise.allSettled(
+  (request.serviceRequestDocuments ?? request.documents ?? []).map(async (doc: any) => ({
+    id: doc.id,
+    url: await getSignedUrl("request-documents", doc.filePath || doc.file_path),
+  })),
+)).filter((r) => r.status === "fulfilled").map((r: any) => r.value);
+
+const generatedDoc = Array.isArray(request.generatedDocuments) && request.generatedDocuments.length > 0
+  ? request.generatedDocuments[0]
+  : request.generatedDocuments;
+
+const generatedUrl =
+  generatedDoc?.filePath && request.status === "completed"
+    ? await getSignedUrl("generated-documents", generatedDoc.filePath)
+    : null;
+---
+
+<DashboardShell
+  title={`Detail Pengajuan ${request?.requestNumber || request?.request_number || ""}`}
+  description={`Detail pengajuan ${request?.serviceName || request?.service_name || ""}`}
+>
+  <RequestDetailView client:load request={request} docUrls={docUrls} generatedUrl={generatedUrl} />
+</DashboardShell>

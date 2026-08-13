@@ -1,0 +1,19 @@
+---
+import Base from "@/layouts/Base.astro";
+import { LengkapiWaPegawaiView } from "@/views/lengkapi-wa-pegawai";
+import { requireAuth } from "@/lib/auth";
+
+const profile = await requireAuth(true, Astro);
+
+if (profile.role === "user") {
+  return Astro.redirect("/lengkapi-profil");
+}
+
+if (profile.phone) {
+  return Astro.redirect("/admin");
+}
+---
+
+<Base title="Lengkapi Profil Pegawai" description="Lengkapi nomor WhatsApp profil pegawai">
+  <LengkapiWaPegawaiView client:load />
+</Base>

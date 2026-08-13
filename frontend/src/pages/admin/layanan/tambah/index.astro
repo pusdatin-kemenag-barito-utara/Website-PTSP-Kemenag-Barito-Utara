@@ -1,0 +1,24 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { AddServiceView } from "@/views/admin/layanan-tambah";
+import { requirePermission } from "@/lib/auth";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("layanan", Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+---
+
+<AdminShell
+  title="Tambah Layanan Baru | PTSP Kemenag Barito Utara"
+  description="Buat layanan baru beserta konfigurasi item, form, dan persyaratannya"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <AddServiceView client:load />
+</AdminShell>

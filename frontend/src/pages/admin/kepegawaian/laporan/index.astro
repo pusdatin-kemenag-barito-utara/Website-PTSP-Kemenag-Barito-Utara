@@ -1,0 +1,27 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { ELaporanKinerjaView } from "@/views/admin/kepegawaian-laporan";
+import { requireAuth } from "@/lib/auth";
+import { getLaporanKinerjaAction } from "@/lib/actions/admin/kepegawaian";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requireAuth(false, Astro);
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const result = await getLaporanKinerjaAction();
+---
+
+<AdminShell
+  title="E-Laporan Kinerja Harian | PTSP Kemenag Barito Utara"
+  description="Pantau dan kelola laporan kinerja harian pegawai"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <ELaporanKinerjaView client:load result={result} />
+</AdminShell>

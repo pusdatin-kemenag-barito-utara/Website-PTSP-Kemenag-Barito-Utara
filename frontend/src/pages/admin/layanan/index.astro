@@ -1,0 +1,51 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { LayananView } from "@/views/admin/layanan";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, getAdminSpecificRole, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+const profile = await requirePermission("layanan", Astro);
+
+const isSuper = isSuperAdmin(profile.email);
+const specificRole = getAdminSpecificRole(profile.email, profile.role ?? "");
+const isGeneralAdmin = specificRole === "admin_ptsp";
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuper) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+let services: any[] = [];
+try {
+  const res = await fetchAPI<any>("/services");
+  if (res && res.data && Array.isArray(res.data)) {
+    services = res.data.filter((s: any) => s.category === "public" || !s.category);
+  }
+} catch (err) {
+  console.error("Failed to fetch services from Golang API:", err);
+}
+
+const bidangLabel = specificRole
+  ?.replace("admin_", "")
+  .replace(/_/g, " ")
+  .replace(/\b\w/g, (c: string) => c.toUpperCase());
+---
+
+<AdminShell
+  title="Kelola Layanan | PTSP Kemenag Barito Utara"
+  description="Manajemen data layanan utama"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <LayananView
+    client:load
+    services={services}
+    currentUserRole={specificRole ?? ""}
+    isSuper={isSuper}
+    isGeneralAdmin={isGeneralAdmin}
+    bidangLabel={bidangLabel}
+  />
+</AdminShell>

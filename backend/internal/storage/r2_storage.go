@@ -14,6 +14,10 @@ import (
 	"strings"
 	"time"
 
+	"net/url"
+
+	"encoding/xml"
+
 	"ptsp-kemenag-backend/internal/config"
 )
 
@@ -44,6 +48,106 @@ func (s *R2Storage) GetURL(key string) string {
 	}
 	// Fallback ke server lokal
 	return fmt.Sprintf("/uploads/%s", strings.TrimLeft(key, "/"))
+}
+
+// GetStats menghitung jumlah file dan total volume data di bucket.
+// Jika R2 belum dikonfigurasi, menghitung dari folder uploads/ lokal.
+func (s *R2Storage) GetStats(ctx context.Context) (fileCount int64, usage int64, err error) {
+	if s.cfg.R2AccountId == "" || s.cfg.R2AccessKeyId == "" || s.cfg.R2SecretAccessKey == "" || s.cfg.R2BucketName == "" {
+		return s.localStats()
+	}
+
+	host := fmt.Sprintf("%s.r2.cloudflarestorage.com", s.cfg.R2AccountId)
+	client := &http.Client{Timeout: 30 * time.Second}
+
+	continuation := ""
+	for {
+		query := "list-type=2&max-keys=1000"
+		if continuation != "" {
+			query += "&continuation-token=" + url.QueryEscape(continuation)
+		}
+
+		endpoint := fmt.Sprintf("https://%s/%s?%s", host, s.cfg.R2BucketName, query)
+		req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
+		if err != nil {
+			return fileCount, usage, err
+		}
+		req.Header.Set("Host", host)
+
+		now := time.Now().UTC()
+		amzDate := now.Format("20060102T150405Z")
+		dateStamp := now.Format("20060102")
+		region := "auto"
+		service := "s3"
+
+		req.Header.Set("x-amz-date", amzDate)
+		req.Header.Set("x-amz-content-sha256", "UNSIGNED-PAYLOAD")
+
+		canonicalURI := fmt.Sprintf("/%s", s.cfg.R2BucketName)
+		canonicalQuery := strings.ReplaceAll(query, "=", "%3D")
+		canonicalQuery = strings.ReplaceAll(canonicalQuery, "&", "%26")
+		canonicalHeaders := fmt.Sprintf("host:%s\nx-amz-content-sha256:UNSIGNED-PAYLOAD\nx-amz-date:%s\n", host, amzDate)
+		signedHeaders := "host;x-amz-content-sha256;x-amz-date"
+		canonicalRequest := fmt.Sprintf("GET\n%s\n%s\n%s\n%s\nUNSIGNED-PAYLOAD", canonicalURI, canonicalQuery, canonicalHeaders, signedHeaders)
+
+		credentialScope := fmt.Sprintf("%s/%s/%s/aws4_request", dateStamp, region, service)
+		stringToSign := fmt.Sprintf("AWS4-HMAC-SHA256\n%s\n%s\n%s", amzDate, credentialScope, sha256Hash([]byte(canonicalRequest)))
+
+		signingKey := getSignatureKey(s.cfg.R2SecretAccessKey, dateStamp, region, service)
+		signature := hex.EncodeToString(hmacSHA256(signingKey, []byte(stringToSign)))
+
+		req.Header.Set("Authorization", fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s",
+			s.cfg.R2AccessKeyId, credentialScope, signedHeaders, signature))
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return fileCount, usage, err
+		}
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return fileCount, usage, fmt.Errorf("R2 list response %d: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		var parsed struct {
+			Contents []struct {
+				Size int64 `xml:"Size"`
+			} `xml:"Contents"`
+			IsTruncated       bool   `xml:"IsTruncated"`
+			NextContinuation  string `xml:"NextContinuationToken"`
+		}
+		if err := xml.Unmarshal(bodyBytes, &parsed); err != nil {
+			return fileCount, usage, fmt.Errorf("gagal parse respon R2 list: %w", err)
+		}
+
+		for _, obj := range parsed.Contents {
+			fileCount++
+			usage += obj.Size
+		}
+
+		if !parsed.IsTruncated {
+			break
+		}
+		continuation = parsed.NextContinuation
+	}
+
+	return fileCount, usage, nil
+}
+
+func (s *R2Storage) localStats() (fileCount int64, usage int64, err error) {
+	err = filepath.Walk("uploads", func(_ string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if info.IsDir() {
+			return nil
+		}
+		fileCount++
+		usage += info.Size()
+		return nil
+	})
+	return fileCount, usage, err
 }
 
 // Upload mengunggah file ke Cloudflare R2 (atau ke folder lokal backend/uploads/ jika R2 belum dikonfigurasi).

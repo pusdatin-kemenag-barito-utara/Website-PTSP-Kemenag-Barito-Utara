@@ -9,13 +9,11 @@ Dokumen ini berisi pemetaan arsitektur modular lengkap proyek **PTSP Kemenag Bar
 ```text
 ptsp-kemenag/
 │
-├── 📁 app/                                                # NEXT.JS 16 APP ROUTER (Page Routes & Server Entrypoints)
-│   ├── 📄 layout.tsx                                      # RootLayout: Provider Theme, Fonts, & Toaster sonner
-│   ├── 📄 globals.css                                     # Tailwind CSS v4 Styles, HSL Variables, Custom Scrollbar
-│   ├── 📄 page.tsx                                        # HomePage: Landing Page Utama Publik (Hero, Catalog, Video)
-│   ├── 📄 not-found.tsx                                   # NotFound: Tampilan Kustom 404 Halaman Tidak Ditemukan
-│   ├── 📄 manifest.ts                                     # Manifest Generator: PWA Web App Manifest Configuration
-│   ├── 📄 robots.ts                                       # Robots Generator: Pengaturan Crawling Search Engine SEO
+├── 📁 src/                                                # ASTRO V7 (Pages, Components & Layouts)
+│   ├── 📁 layouts/                                        # Layouts: BaseLayout, DashboardShell, dll
+│   ├── 📁 pages/                                          # Pages: Routing halaman menggunakan file-based routing Astro
+│   ├── 📄 env.d.ts                                        # Deklarasi tipe TypeScript untuk klien
+│   ├── 📄 middleware.ts                                   # Edge Middleware (Auth, CSRF, dll)
 │   ├── 📄 sitemap.ts                                      # Sitemap Generator: Generasi XML Sitemap Otomatis
 │   │
 │   ├── 📁 admin/                                          # PANEL DASHBOARD ADMINISTRATOR & PETUGAS PTSP

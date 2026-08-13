@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "postinstall": "cd frontend && npm install",
-    "dev": "npx -y concurrently \"cd backend && %USERPROFILE%\\go\\bin\\air.exe\" \"cd frontend && npm run dev\"",
-    "dev:no-air": "npx -y concurrently \"cd backend && go run main.go\" \"cd frontend && npm run dev\"",
+    "dev": "npx -y concurrently -k -p \"[{name}]\" -c \"cyan,magenta\" -n \"backend,frontend\" \"cd backend && air\" \"cd frontend && npm run dev\"",
+    "dev:air": "npx -y concurrently -k -p \"[{name}]\" -c \"cyan,magenta\" -n \"backend,frontend\" \"cd backend && air\" \"cd frontend && npm run dev\"",
+    "dev:no-air": "npx -y concurrently -k -p \"[{name}]\" -c \"cyan,magenta\" -n \"backend,frontend\" \"cd backend && go run main.go\" \"cd frontend && npm run dev\"",
     "dev:backend": "cd backend && go run main.go",
     "dev:frontend": "cd frontend && npm run dev",
     "build:frontend": "cd frontend && npm run build",
@@ -13,5 +14,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
   }
 }

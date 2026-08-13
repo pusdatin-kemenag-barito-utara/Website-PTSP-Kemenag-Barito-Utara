@@ -4,7 +4,7 @@
 
 Aplikasi PTSP (Pelayanan Terpadu Satu Pintu) Kemenag Barito Utara adalah sistem pelayanan publik digital berbasis web yang terdiri dari dua komponen terpisah:
 
-1. **Frontend** — Next.js App Router (berjalan di port `3000`)
+1. **Frontend** — Astro v7 (berjalan di port `4321` atau `3000`)
 2. **Backend** — Golang Fiber REST API (berjalan di port `8080`)
 
 Database PostgreSQL dikelola sepenuhnya oleh Supabase (cloud). **Tidak ada ORM** — seluruh query ditulis native SQL langsung via `pgx/v5`.
@@ -15,9 +15,10 @@ Database PostgreSQL dikelola sepenuhnya oleh Supabase (cloud). **Tidak ada ORM**
 
 ```
 ptsp-kemenag/
-├── frontend/          # Next.js App (v15+, App Router, Turbopack)
-│   ├── app/           # Routes & Pages
-│   ├── components/    # UI Components
+├── frontend/          # Astro App (v7, file-based routing)
+│   ├── src/
+│   │   ├── pages/     # Routes & Pages (.astro atau .tsx)
+│   │   ├── components/# UI Components
 │   ├── lib/
 │   │   ├── actions/   # Server Actions (admin/, auth/, pegawai/, public/, system/, user/)
 │   │   ├── api.ts     # fetchAPI() — HTTP client ke backend Golang
@@ -46,8 +47,8 @@ ptsp-kemenag/
 
 | Command             | Keterangan                                           |
 | ------------------- | ---------------------------------------------------- |
-| `npm run dev`       | Jalankan frontend (Next.js + Turbopack) di port 3000 |
-| `npm run build`     | Build produksi Next.js                               |
+| `npm run dev`       | Jalankan frontend (Astro) di port 3000 / 4321        |
+| `npm run build`     | Build produksi Astro                                 |
 | `npm run typecheck` | `tsc --noEmit` — jalankan sebelum selesai task       |
 | `air` / `go run .`  | Jalankan backend Golang (dari folder `backend/`)     |
 | `go build ./...`    | Build & verifikasi backend Golang                    |
@@ -56,10 +57,10 @@ ptsp-kemenag/
 
 ---
 
-## Arsitektur Frontend (Next.js)
+## Arsitektur Frontend (Astro)
 
-- **Framework**: Next.js 15+ App Router, React 19, TypeScript, Tailwind CSS v4
-- **Turbopack**: aktif untuk dev mode
+- **Framework**: Astro v7, React 19, TypeScript, Tailwind CSS v4
+- **Routing**: File-based routing di `src/pages/`
 - **Tidak ada Drizzle ORM** — frontend TIDAK boleh terhubung langsung ke PostgreSQL
 - **Semua data fetching** dilakukan via `fetchAPI()` dari `lib/api.ts` yang memanggil Backend Golang
 - **Auth**: Supabase Auth (JWT). Session dikelola oleh `proxy.ts` edge middleware via `updateSession`
@@ -71,7 +72,7 @@ ptsp-kemenag/
 - **Auth helpers** (`lib/auth.ts`): `getCurrentUser`, `getCurrentProfile`, `requireAuth`, `requireAdmin`, `hasPermission`, `requirePermission`
 - **Roles** (`lib/constants.ts`): `SUPER_ADMIN_EMAIL` (hardcoded), `ADMIN_ROLES`, `getRoleLabel()`, `isSuperAdmin()`, `isAdminRole()`
 - **Edge Middleware**: `proxy.ts` (named export `proxy` + `config` matcher) — JANGAN rename ke `middleware.ts`
-- **Navigasi**: Gunakan `window.location.href` untuk hard navigation (Turbopack tidak mendukung router.push untuk perubahan layout besar)
+- **Navigasi**: Gunakan tag `<a>` biasa atau `window.location.href` untuk navigasi antar halaman Astro. Komponen `<ClientRouter />` digunakan untuk view transitions.
 
 ### Server Actions (`lib/actions/`)
 
@@ -159,7 +160,7 @@ Handler → Service → Repository → Database (pgx)
 ## Hal yang DILARANG KERAS
 
 1. **JANGAN** import `@/lib/db`, `drizzle-orm`, atau apapun dari `lib/db/schema` di frontend
-2. **JANGAN** query PostgreSQL langsung dari Next.js server actions/components
+2. **JANGAN** query PostgreSQL langsung dari komponen Astro/React di frontend
 3. **JANGAN** jalankan command terminal sendiri (npm run dev, go build, dll) — minta user
 4. **JANGAN** rename `proxy.ts` atau export `proxy`-nya
 5. **JANGAN** query DB dari client-side code — gunakan server actions atau API routes
@@ -184,9 +185,9 @@ Handler → Service → Repository → Database (pgx)
 
 ## Alur Penambahan Fitur Baru
 
-### Frontend (Next.js)
-1. Buat/edit page di `frontend/app/`
-2. Buat server action di `frontend/lib/actions/` yang memanggil `fetchAPI()`
+### Frontend (Astro)
+1. Buat/edit page di `frontend/src/pages/`
+2. Panggil API Golang via `fetchAPI()` dari `frontend/lib/api.ts` atau endpoint yang sesuai
 3. Gunakan `requirePermission()` atau `requireAdmin()` untuk proteksi halaman admin
 4. Gunakan `revalidatePath()` setelah mutasi data
 

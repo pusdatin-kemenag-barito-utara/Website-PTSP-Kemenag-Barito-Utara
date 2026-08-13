@@ -1,0 +1,11 @@
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+/* PTSP Modular Design System */
+@import "./theme.css";
+@import "./base.css";
+@import "./components.css";
+@import "./animations.css";
+@import "./utilities.css";
+@import "../components/features/accessibility/AccessibilityWidget.css";

@@ -1,0 +1,153 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { ArrowLeft } from "lucide-react";
+import { getServiceBySlug, getServiceCatalog } from "@/lib/queries";
+import { ServiceItemsAccordion } from "@/components/services/service-items-accordion";
+import { PegawaiUsulCutiForm } from "@/components/forms/pegawai/pegawai-usul-cuti-form";
+import { PegawaiUsulPensiunForm } from "@/components/forms/pegawai/pegawai-usul-pensiun-form";
+import { requireAuth, getCurrentProfile } from "@/lib/auth";
+import { getSisaCutiByNip } from "@/lib/actions/pegawai/cuti";
+import { getPejabatList } from "@/lib/actions/admin/pejabat-actions";
+import { notFound } from "@/lib/next-compat/navigation";
+
+await requireAuth(false, Astro);
+
+const { slug } = Astro.params;
+const initialItemId = Astro.url.searchParams.get("item") ?? undefined;
+const service = await getServiceBySlug(slug ?? "");
+
+if (!service) {
+  notFound();
+}
+
+const items = service.serviceItems || (service as any).service_items || [];
+const serviceName = service.name?.toLowerCase() || "";
+const isCutiService = serviceName.includes("cuti");
+const isPensiunService = serviceName.includes("pensiun");
+
+let cutiForm: any = null;
+let pensiunForm: any = null;
+
+if (isPensiunService) {
+  const catalog = await getServiceCatalog();
+  const profile = await getCurrentProfile();
+  pensiunForm = { catalog, profile };
+}
+
+if (isCutiService) {
+  const catalog = await getServiceCatalog();
+  const profile = await getCurrentProfile();
+
+  let pejabatList: any[] = [];
+  try {
+    const resPejabat = await getPejabatList();
+    if (resPejabat.success) {
+      pejabatList = resPejabat.data || [];
+    }
+  } catch {
+    pejabatList = [];
+  }
+
+  let sisaCutiData = { n: "0", n1: "0", n2: "0" };
+  const nip = profile?.email ? profile.email.split("@")[0] : null;
+  if (nip) {
+    try {
+      sisaCutiData = await getSisaCutiByNip(nip);
+    } catch (error) {
+      console.error("Gagal mengambil data cuti:", error);
+    }
+  }
+
+  cutiForm = { catalog, profile, pejabatList, sisaCutiData };
+}
+
+const currentProfile = await getCurrentProfile();
+const userNip = currentProfile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title={service.name}
+  description={service.description || "Detail layanan pegawai"}
+  mode="pegawai"
+  userNip={userNip}
+>
+  {isPensiunService && pensiunForm && (
+    <div class="w-full space-y-4">
+      <div>
+        <a
+          href="/pegawai/layanan/ajukan"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Kembali ke Daftar Layanan
+        </a>
+      </div>
+
+      <PegawaiUsulPensiunForm
+        client:load
+        catalog={pensiunForm.catalog}
+        profile={pensiunForm.profile}
+        redirectPathPrefix="/pegawai/layanan/riwayat"
+        lockedServiceId={String(service.id)}
+      />
+    </div>
+  )}
+
+  {isCutiService && cutiForm && (
+    <div class="w-full space-y-4">
+      <div>
+        <a
+          href="/pegawai/layanan/ajukan"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Kembali ke Daftar Layanan
+        </a>
+      </div>
+
+      <PegawaiUsulCutiForm
+        client:load
+        catalog={cutiForm.catalog}
+        profile={cutiForm.profile}
+        pejabatList={cutiForm.pejabatList}
+        sisaCutiData={cutiForm.sisaCutiData}
+        redirectPathPrefix="/pegawai/layanan/riwayat"
+        lockedServiceId={String(service.id)}
+      />
+    </div>
+  )}
+
+  {!isCutiService && !isPensiunService && (
+    <div class="w-full space-y-6">
+      <div>
+        <a
+          href="/pegawai/layanan/ajukan"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
+        >
+          <ArrowLeft class="h-4 w-4" />
+          Kembali ke Daftar Layanan
+        </a>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          {service.name}
+        </h1>
+        {service.description && (
+          <p class="text-slate-500 dark:text-slate-400 mt-1">
+            {service.description}
+          </p>
+        )}
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          Pilih Sub-Layanan
+        </h2>
+        <ServiceItemsAccordion
+          client:load
+          items={items}
+          initialOpenId={initialItemId ? String(initialItemId) : undefined}
+          basePath="/pegawai/layanan/riwayat"
+        />
+      </div>
+    </div>
+  )}
+</DashboardShell>

@@ -1,0 +1,197 @@
+---
+import "@/styles/globals.css";
+import { getMaintenanceStatus } from "@/actions-handlers/system/maintenance";
+import { getCurrentProfile } from "@/lib/auth";
+import { SiteHeaderClient } from "@/components/site-header-client";
+import { SiteFooter } from "@/components/layout/footer";
+import { Toaster } from "sonner";
+import { CombinedWidgetClient } from "@/components/features/combined/CombinedWidgetClient";
+import { AccessibilityWidget } from "@/components/features/accessibility/AccessibilityWidget";
+import { ScrollToTopButton } from "@/components/common/scroll-to-top";
+import { AuthRedirectListener } from "@/components/auth/auth-redirect-listener";
+import { ClientRouter } from "astro:transitions";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const appUrl = "https://ptsp.kemenag-baritoutara.com";
+const {
+  title = "PTSP Kemenag Barito Utara",
+  description = "Portal resmi layanan administrasi keagamaan (PTSP) Kantor Kementerian Agama Kabupaten Barito Utara. Proses mudah, transparan, dan akuntabel.",
+} = Astro.props;
+
+const url = Astro.url;
+const pathname = url.pathname;
+
+const maintenance = await getMaintenanceStatus();
+
+let profile: any = null;
+try {
+  profile = await getCurrentProfile();
+} catch {
+  profile = null;
+}
+
+// ConditionalShell logic (dari Next.js conditional-shell.tsx)
+const isAdmin = pathname.startsWith("/admin");
+const isLengkapiProfil = pathname.startsWith("/lengkapi-profil");
+const isLengkapiWaPegawai = pathname.startsWith("/lengkapi-wa-pegawai");
+const isBarcode = pathname === "/barcode" || pathname.endsWith("/barcode");
+const isBareRoute = isAdmin || isLengkapiProfil || isLengkapiWaPegawai || isBarcode;
+
+const isDashboard =
+  pathname.startsWith("/dashboard") ||
+  pathname.startsWith("/pegawai") ||
+  pathname.startsWith("/masyarakat");
+const isMaintenance = pathname === "/maintenance";
+const isAuthPage =
+  pathname.startsWith("/login") ||
+  pathname.startsWith("/register") ||
+  pathname.startsWith("/forgot-password");
+
+const showHeader = !isBareRoute && !isDashboard && !isMaintenance && !isAuthPage;
+const showFooter = !isBareRoute && !isAuthPage && !isMaintenance;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${appUrl}/#website`,
+      url: appUrl,
+      name: "PTSP Kemenag Barito Utara",
+      alternateName: ["PTSP Barito Utara", "Kemenag Barito Utara"],
+      publisher: {
+        "@id": `${appUrl}/#organization`,
+      },
+    },
+    {
+      "@type": "GovernmentOrganization",
+      "@id": `${appUrl}/#organization`,
+      name: "Kantor Kementerian Agama Kabupaten Barito Utara",
+      url: appUrl,
+      logo: `${appUrl}/kemenag-512.png`,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Jl. Ahmad Yani No. 126",
+        addressLocality: "Muara Teweh",
+        addressRegion: "Kalimantan Tengah",
+        postalCode: "73811",
+        addressCountry: "ID",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+6251921269",
+        contactType: "customer service",
+      },
+    },
+  ],
+};
+
+const pageTitle =
+  title === "PTSP Kemenag Barito Utara"
+    ? title
+    : `${title} | PTSP Kemenag Barito Utara`;
+---
+
+<!doctype html>
+<html
+  lang="id"
+  style={{ "--font-jakarta": "'Plus Jakarta Sans Variable', sans-serif" } as any}
+  class="dark:bg-slate-950"
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    <ClientRouter />
+    <meta name="description" content={description} />
+    <meta name="application-name" content="PTSP Kemenag Barito Utara" />
+    <meta name="keywords" content="Kemenag Barito Utara, PTSP Kemenag, Layanan Agama Barut, Pelayanan Satu Pintu, Muara Teweh, Administrasi Keagamaan" />
+    <meta name="author" content="Kemenag Barito Utara" />
+    <meta name="creator" content="Kemenag Barito Utara" />
+    <meta name="publisher" content="Kemenag Barito Utara" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="PTSP Kemenag Barito Utara" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="canonical" href={`${appUrl}${pathname}`} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PTSP Kemenag Barito Utara" />
+    <meta property="og:title" content="Pelayanan Terpadu Satu Pintu (PTSP) - Kemenag Barito Utara" />
+    <meta property="og:description" content="Portal resmi layanan administrasi keagamaan (PTSP) Kantor Kementerian Agama Kabupaten Barito Utara." />
+    <meta property="og:url" content={url.href} />
+    <meta property="og:locale" content="id_ID" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PTSP Kemenag Barito Utara" />
+    <meta name="twitter:description" content="Portal resmi layanan administrasi keagamaan Kantor Kementerian Agama Kabupaten Barito Utara." />
+    <meta name="twitter:creator" content="@kemenag_barut" />
+    <meta name="robots" content="index, follow" />
+    <link rel="icon" type="image/svg+xml" href="/kemenag.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/kemenag-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/kemenag-512.png" />
+    <link rel="shortcut icon" href="/kemenag-192.png" />
+    <link rel="apple-touch-icon" href="/kemenag-512.png" />
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem("theme");
+          if (t === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+  </head>
+  <body class="text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+    <div class="flex min-h-dvh flex-col">
+      {
+        showHeader && (
+          <SiteHeaderClient client:load profile={profile} />
+        )
+      }
+      <main class="relative flex w-full flex-1 flex-col">
+        <slot />
+      </main>
+      {
+        showFooter &&
+          (isDashboard ? (
+            <footer class="border-t border-slate-200 bg-white py-4 text-center text-[11px] font-medium text-slate-400">
+              © {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab. Barito Utara
+            </footer>
+          ) : (
+            <SiteFooter client:load />
+          ))
+      }
+      <Toaster
+        client:load
+        position="top-center"
+        richColors
+        duration={3500}
+        closeButton
+        toastOptions={{
+          style: {
+            borderRadius: "14px",
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            padding: "16px",
+            fontWeight: "500",
+          },
+          className: "text-[14px]",
+        }}
+      />
+      <CombinedWidgetClient client:load initialEnabled={maintenance.aiChatEnabled} />
+      <AccessibilityWidget client:load />
+      <ScrollToTopButton client:load />
+      <AuthRedirectListener client:load />
+    </div>
+  </body>
+</html>
