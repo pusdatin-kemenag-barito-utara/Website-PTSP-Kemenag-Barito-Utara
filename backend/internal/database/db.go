@@ -19,14 +19,12 @@ func ConnectDB() {
 	}
 
 	if dbURL == "" {
-		log.Println("WARNING: DATABASE_URL / DIRECT_URL tidak ditemukan di .env")
-		return
+		log.Fatal("FATAL: DATABASE_URL / DIRECT_URL tidak ditemukan di environment variables")
 	}
 
 	config, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
-		log.Printf("Gagal parse config database: %v\n", err)
-		return
+		log.Fatalf("FATAL: Gagal parse config database: %v\n", err)
 	}
 
 	// Nonaktifkan prepared statement caching untuk Supabase Transaction Pooler (PgBouncer)
@@ -37,16 +35,22 @@ func ConnectDB() {
 	config.MinConns = 3
 	config.MaxConnIdleTime = 5 * time.Minute
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
-	if err != nil {
-		log.Printf("Gagal mengkoneksikan pgxpool: %v\n", err)
-		return
+	var pool *pgxpool.Pool
+
+	for i := 1; i <= 5; i++ {
+		pool, err = pgxpool.NewWithConfig(context.Background(), config)
+		if err == nil {
+			err = pool.Ping(context.Background())
+			if err == nil {
+				break
+			}
+		}
+		log.Printf("Percobaan koneksi database ke-%d gagal: %v. Retrying in 3 seconds...\n", i, err)
+		time.Sleep(3 * time.Second)
 	}
 
-	err = pool.Ping(context.Background())
 	if err != nil {
-		log.Printf("Gagal ping database PostgreSQL: %v\n", err)
-		return
+		log.Fatalf("FATAL: Gagal mengkoneksikan ke database PostgreSQL setelah 5 percobaan: %v\n", err)
 	}
 
 	DB = pool
