@@ -14,8 +14,8 @@ FROM node:22-alpine AS frontend-builder
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json* ./frontend/
 WORKDIR /app/frontend
-# Gunakan --legacy-peer-deps untuk mengabaikan ERESOLVE dari versi Astro
-RUN npm install --legacy-peer-deps
+# Gunakan --legacy-peer-deps dan --include=dev agar devDependencies (termasuk Astro) diinstall walau di NODE_ENV=production
+RUN npm install --include=dev --legacy-peer-deps
 
 COPY frontend/ ./
 RUN npm run build
