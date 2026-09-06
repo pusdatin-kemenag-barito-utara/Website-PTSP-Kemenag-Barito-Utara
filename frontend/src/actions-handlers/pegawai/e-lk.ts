@@ -1,23 +1,25 @@
-﻿import { fetchAPI } from "@/lib/api";
+import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "@/lib/next-compat/cache";
 
 export async function getLaporanKinerjaAction(
   userId: string,
   _limit?: number,
-  _month?: number,
-  _year?: number,
+  month?: number,
+  year?: number,
 ) {
   try {
-    const res = await fetchAPI<any>(
-      `/pegawai/lkh?userId=${encodeURIComponent(userId)}`,
-    );
+    let url = `/pegawai/lkh?userId=${encodeURIComponent(userId)}`;
+    if (month !== undefined && month !== null) url += `&month=${month}`;
+    if (year !== undefined && year !== null) url += `&year=${year}`;
+    const res = await fetchAPI<any>(url);
     return { data: res?.data || [], error: null };
   } catch (error: any) {
     console.error("Error fetching LKH:", error);
     return { data: [], error: error.message || "Gagal mengambil data LKH." };
   }
 }
+
 
 export async function getLaporanKinerjaBulananAction(
   userId: string,

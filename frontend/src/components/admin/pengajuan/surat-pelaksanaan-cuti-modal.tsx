@@ -68,7 +68,8 @@ export function SuratPelaksanaanCutiModal({ isOpen, onClose, data, pejabatList =
         Document, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell,
         WidthType, BorderStyle, Packer, VerticalAlign, TableBorders,
       } = await import("docx");
-      const { saveAs } = await import("file-saver");
+      const fsModule = await import("file-saver");
+      const saveAs = fsModule.default?.saveAs || fsModule.saveAs || fsModule.default;
       const { countDaysBetween, terbilang } = await import("@/lib/utils");
 
       const lamaCuti = countDaysBetween(data.tanggalMulai, data.tanggalSelesai);

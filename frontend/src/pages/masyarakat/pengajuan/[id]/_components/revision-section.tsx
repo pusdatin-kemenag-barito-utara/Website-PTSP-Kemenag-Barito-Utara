@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-import { UploadRevisionForm } from "@/components/forms/upload-revision-form";
+import { UploadRevisionForm } from "@/components/forms/masyarakat/upload-revision-form";
 
 interface RevisionSectionProps {
   request: any;

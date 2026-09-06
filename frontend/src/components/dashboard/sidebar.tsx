@@ -65,6 +65,18 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   // Otomatis buka accordion grup menu yang mencakup pathname aktif
   useEffect(() => {
     if (!pathname || currentMode === "user") return;
@@ -100,7 +112,7 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
   return (
     <>
       {/* Mobile Top Bar (Full Width Top Bar) */}
-      <div className="md:hidden sticky top-0 z-[90] -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-xs mb-4 transition-all duration-300">
+      <div className="md:hidden fixed top-0 inset-x-0 z-[90] px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-xs transition-all duration-300">
         <div className="flex items-center gap-3">
           <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${currentMode === "admin" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : (currentMode === "pegawai" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-teal-500/10 text-teal-600 dark:text-teal-400")}`}>
             {currentMode === "admin" ? (
@@ -139,11 +151,11 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
           fixed inset-y-0 right-0 z-[110] bg-transparent shadow-2xl transition-transform duration-300 cubic-bezier(0.16, 1, 0.3, 1) 
           ${isOpen ? "translate-x-0" : "translate-x-full"}
           md:static md:translate-x-0 md:bg-transparent md:shadow-none md:z-0
-          md:w-full md:max-h-[calc(100vh-7rem)] shrink-0
+          md:w-full md:h-screen shrink-0
         `}
       >
         {/* Navigation */}
-        <nav className="h-full md:h-auto rounded-l-3xl md:rounded-3xl border-l border-y md:border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl md:shadow-xs overflow-hidden flex flex-col transition-colors duration-300">
+        <nav className="h-full md:h-screen rounded-l-3xl md:rounded-none border-l border-y md:border-y-0 md:border-l-0 md:border-r border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl md:shadow-none overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom)] transition-colors duration-300">
           {/* Header */}
           <div
             className="flex w-full items-center justify-between border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/70 px-5 py-4 transition-colors"

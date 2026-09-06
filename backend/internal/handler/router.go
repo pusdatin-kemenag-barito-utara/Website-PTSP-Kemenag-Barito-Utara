@@ -164,6 +164,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 
 		// Pegawai / Cuti / LKH
 		pegawai := api.Group("/pegawai")
+		pegawai.Get("/pejabat-nips", cutiHdl.GetPejabatNIPs)
 		pegawai.Get("/cuti", cutiHdl.GetCuti)
 		pegawai.Post("/cuti", cutiHdl.CreateCuti)
 		pegawai.Patch("/cuti/:id", cutiHdl.UpdateStatus)

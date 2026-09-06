@@ -1,0 +1,61 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { ArrowLeft } from "lucide-react";
+import { getServiceBySlug } from "@/lib/queries";
+import { ServiceItemsAccordion } from "@/components/services/service-items-accordion";
+import { requireAuth, getCurrentProfile } from "@/lib/auth";
+import { notFound } from "@/lib/next-compat/navigation";
+
+await requireAuth(false, Astro);
+
+const slug = "permohonan-pemberhentian-pengunduran-diri";
+const service = await getServiceBySlug(slug);
+
+if (!service) {
+  notFound();
+}
+
+const initialItemId = Astro.url.searchParams.get("item") ?? undefined;
+const items = service.serviceItems || (service as any).service_items || [];
+const currentProfile = await getCurrentProfile(Astro);
+const userNip = currentProfile?.email?.split("@")[0] || "";
+---
+
+<DashboardShell
+  title={service.name}
+  description={service.description || "Layanan Pegawai"}
+  mode="pegawai"
+  userNip={userNip}
+>
+  <div class="w-full space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+    <div>
+      <a
+        href="/pegawai/layanan/ajukan"
+        class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Kembali ke Daftar Layanan
+      </a>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-4">
+        {service.name}
+      </h1>
+      {service.description && (
+        <p class="text-slate-500 dark:text-slate-400 mt-1">
+          {service.description}
+        </p>
+      )}
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+        Pilih Sub-Layanan
+      </h2>
+      <ServiceItemsAccordion
+        client:load
+        items={items}
+        initialOpenId={initialItemId ? String(initialItemId) : undefined}
+        basePath="/pegawai/layanan/riwayat"
+      />
+    </div>
+  </div>
+</DashboardShell>

@@ -12,7 +12,8 @@ import { toast } from "sonner";
 import { Loader2, X, CheckCircle2, ClipboardList, Download, FileSpreadsheet, UploadCloud, FileText } from "lucide-react";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import fileSaver from "file-saver";
+const { saveAs } = fileSaver;
 
 interface LkhModalProps {
   isOpen: boolean;

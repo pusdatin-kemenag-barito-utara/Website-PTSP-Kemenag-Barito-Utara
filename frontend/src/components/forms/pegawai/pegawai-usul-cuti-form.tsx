@@ -3,13 +3,17 @@ import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "@/lib/next-compat/navigation";
 import { toast } from "sonner";
 import { Calendar, FileText, Send, ScrollText, ChevronDown } from "lucide-react";
-import { RequestServiceSelection } from "../request-service-selection";
-import { RequestFormFields } from "../request-form-fields";
-import { RequestRequirementUpload } from "../request-requirement-upload";
+import { RequestServiceSelection } from "../masyarakat/request-service-selection";
+import { RequestFormFields } from "../masyarakat/request-form-fields";
+import { RequestRequirementUpload } from "../masyarakat/request-requirement-upload";
 import { PegawaiRequestConfirmation } from "../_components/pegawai-request-confirmation";
 import { RealtimeSync } from "@/components/ui/realtime-sync";
 import { DraftCutiModal } from "@/components/ui/draft-cuti-modal";
 import { ModernSelect } from "@/components/ui/modern-select";
+import { ModernMultiDatePicker } from "@/components/ui/modern-multi-date-picker";
+
+const MASA_KERJA_TAHUN_OPTIONS = Array.from({ length: 41 }, (_, i) => ({ value: String(i), label: `${i} Tahun` }));
+const MASA_KERJA_BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: String(i), label: `${i} Bulan` }));
 
 import { UNIT_KERJA_OPTIONS } from "@/lib/constants";
 import { getSisaCutiByNip } from "@/lib/actions/pegawai/cuti";
@@ -62,8 +66,9 @@ export function PegawaiUsulCutiForm({
   const [masaKerjaTahun, setMasaKerjaTahun] = useState(profile?.masaKerjaTahun || "0");
   const [masaKerjaBulan, setMasaKerjaBulan] = useState(profile?.masaKerjaBulan || "0");
 
-  const [alamatCuti, setAlamatCuti] = useState("");
   const [alasanCutiText, setAlasanCutiText] = useState("");
+  const [alamatCuti, setAlamatCuti] = useState("");
+  const [selectedCutiDates, setSelectedCutiDates] = useState("");
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalSelesai, setTanggalSelesai] = useState("");
 
@@ -94,45 +99,41 @@ export function PegawaiUsulCutiForm({
     const norm = (s: string) => s.toLowerCase().trim();
     const userUk = norm(unitKerja);
 
-    // Filter pejabat untuk unit kerja yang sama (Atasan Langsung)
+    const kakankemenag = pejabatList.find((p) => 
+      p.tipePejabat && p.tipePejabat.toLowerCase() === "pejabat berwenang"
+    );
+    const kasubagTu = pejabatList.find((p) => 
+      p.jabatan && p.jabatan.toLowerCase().includes("tata usaha")
+    );
+
     const atasanMatches = pejabatList.filter((p) => p.unitKerja && norm(p.unitKerja) === userUk);
 
     if (atasanMatches.length > 0) {
-      const head = atasanMatches.find(
-        (p) =>
-          p.tipePejabat === "kasubag_tu" ||
-          p.jabatan.toLowerCase().includes("kepala kua") ||
-          p.jabatan.toLowerCase().includes("kepala madrasah") ||
-          p.jabatan.toLowerCase().includes("kepala min") ||
-          p.jabatan.toLowerCase().includes("kepala mtsn") ||
-          p.jabatan.toLowerCase().includes("kepala man")
-      ) || atasanMatches[0];
+      // Pilih Atasan Langsung dari Unit Kerja tersebut
+      const head = atasanMatches.find((p) => p.tipePejabat && p.tipePejabat.toLowerCase() === "atasan langsung") || atasanMatches[0];
 
       setSelectedAtasanId(head.nip);
       setAtasanLangsungNama(head.nama);
       setAtasanLangsungNip(head.nip);
       setAtasanLangsungJabatan(head.jabatan);
-    } else if (pejabatList.length > 0) {
-      const fallbackHead = pejabatList[0];
-      setSelectedAtasanId(fallbackHead.nip);
-      setAtasanLangsungNama(fallbackHead.nama);
-      setAtasanLangsungNip(fallbackHead.nip);
-      setAtasanLangsungJabatan(fallbackHead.jabatan);
+    } else {
+      // Tidak ada atasan langsung untuk unit kerja yang dipilih (misal Pejabat Utama)
+      setSelectedAtasanId("");
+      setAtasanLangsungNama("");
+      setAtasanLangsungNip("");
+      setAtasanLangsungJabatan("");
     }
 
-    // Pejabat Berwenang Memberikan Cuti (biasanya Kepala Kantor Kemenag)
-    const kakankemenag = pejabatList.find((p) => p.tipePejabat === "kepala_kantor");
+    // Pejabat Berwenang Memberikan Cuti (selalu Kepala Kantor Kemenag / Arbaja)
     if (kakankemenag) {
       setPejabatCutiNama(kakankemenag.nama);
       setPejabatCutiNip(kakankemenag.nip);
       setPejabatCutiJabatan(kakankemenag.jabatan);
-    } else {
-      const anyHead = pejabatList.find((p) => p.tipePejabat === "kasubag_tu") || pejabatList[0];
-      if (anyHead) {
-        setPejabatCutiNama(anyHead.nama);
-        setPejabatCutiNip(anyHead.nip);
-        setPejabatCutiJabatan(anyHead.jabatan);
-      }
+    } else if (pejabatList.length > 0) {
+      // Fallback in case "Pejabat Berwenang" is missing (should not happen)
+      setPejabatCutiNama(pejabatList[0].nama);
+      setPejabatCutiNip(pejabatList[0].nip);
+      setPejabatCutiJabatan(pejabatList[0].jabatan);
     }
   }, [unitKerja, pejabatList]);
 
@@ -156,27 +157,25 @@ export function PegawaiUsulCutiForm({
     }
   }, [urlServiceItemId, catalog, lockedServiceId]);
 
-  // Hitung durasi hari kerja (Excluding Sabtu & Minggu)
+  // Hitung durasi hari cuti berdasarkan tanggal yang dipilih pada multi-date picker
   useEffect(() => {
-    if (tanggalMulai && tanggalSelesai) {
-      const start = new Date(tanggalMulai);
-      const end = new Date(tanggalSelesai);
-      if (start <= end) {
-        let count = 0;
-        const cur = new Date(start);
-        while (cur <= end) {
-          const day = cur.getDay();
-          if (day !== 0 && day !== 6) count++;
-          cur.setDate(cur.getDate() + 1);
-        }
-        setDurasiHari(count);
+    if (selectedCutiDates) {
+      const datesArray = selectedCutiDates.split(",").filter(Boolean).sort();
+      if (datesArray.length > 0) {
+        setTanggalMulai(datesArray[0]);
+        setTanggalSelesai(datesArray[datesArray.length - 1]);
+        setDurasiHari(datesArray.length);
       } else {
+        setTanggalMulai("");
+        setTanggalSelesai("");
         setDurasiHari(0);
       }
     } else {
+      setTanggalMulai("");
+      setTanggalSelesai("");
       setDurasiHari(0);
     }
-  }, [tanggalMulai, tanggalSelesai]);
+  }, [selectedCutiDates]);
 
   const [requirementFiles, setRequirementFiles] = useState<Record<string, File>>({});
   const [error, setError] = useState("");
@@ -368,9 +367,9 @@ export function PegawaiUsulCutiForm({
       <input type="hidden" name="serviceId" value={serviceId} />
       <input type="hidden" name="serviceItemId" value={serviceItemId} />
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         {!lockedService && (
-          <div className="bg-[#059669] px-6 py-4 sm:px-8 sm:py-5 relative overflow-hidden text-white rounded-t-3xl">
+          <div className="bg-[#059669] px-4 py-4 sm:px-8 sm:py-5 relative text-white">
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 shrink-0 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
@@ -392,17 +391,17 @@ export function PegawaiUsulCutiForm({
         )}
 
         {lockedService && isCutiService && (
-          <div className="bg-[#059669] px-6 py-4 sm:px-8 sm:py-5 relative overflow-hidden text-white rounded-t-3xl">
+          <div className="bg-[#059669] px-4 py-4 sm:px-8 sm:py-5 relative text-white">
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 shrink-0 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
                   <Calendar className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-base sm:text-lg font-bold tracking-tight leading-tight">
+                  <h1 className="text-sm sm:text-lg font-bold tracking-tight leading-tight">
                     Formulir Pengajuan Cuti ASN
                   </h1>
-                  <p className="text-emerald-100 text-xs mt-0.5 leading-relaxed hidden sm:block">
+                  <p className="text-emerald-100 text-[10px] sm:text-xs mt-0.5 leading-relaxed hidden sm:block">
                     Isi formulir cuti sesuai ketentuan Perka BKN No. 24 Tahun 2017.
                   </p>
                 </div>
@@ -412,10 +411,10 @@ export function PegawaiUsulCutiForm({
               <button
                 type="button"
                 onClick={() => setIsDraftModalOpen(true)}
-                className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold transition-all border border-white/20 shadow-xs active:scale-95 cursor-pointer shrink-0"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 mt-1 sm:mt-0 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer shrink-0 group"
               >
-                <ScrollText className="h-4 w-4 text-emerald-200" />
-                <span>Pratinjau / Cetak Blangko Cuti</span>
+                <ScrollText className="h-4 w-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span>Pratinjau / Cetak Blangko</span>
               </button>
             </div>
             <div className="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
@@ -423,7 +422,7 @@ export function PegawaiUsulCutiForm({
           </div>
         )}
 
-        <div className="p-6 sm:p-8 space-y-6 sm:space-y-8">
+        <div className="p-4 sm:p-8 space-y-5 sm:space-y-8">
           {/* TAB / SERVIS SELECTION - Hide if locked */}
           {!lockedServiceId && (
             <RequestServiceSelection
@@ -437,30 +436,20 @@ export function PegawaiUsulCutiForm({
 
           {/* Sub-Pilihan Jenis Cuti (Item Layanan) jika Service dikunci */}
           {lockedService && (lockedService.items || lockedService.serviceItems)?.length > 1 && (
-            <div className="space-y-3 bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200/80">
+            <div className="space-y-1.5 bg-slate-50/80 p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/80">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
                 Pilih Jenis {lockedService.name} <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                {(lockedService.items || lockedService.serviceItems).map((item: any) => {
-                  const isSelected = String(item.id) === serviceItemId;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setServiceItemId(String(item.id))}
-                      className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left flex items-center justify-between border ${
-                        isSelected
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-100/50"
-                      }`}
-                    >
-                      <span className="truncate">{item.name}</span>
-                      {isSelected && <span className="h-2 w-2 rounded-full bg-white shrink-0 ml-1.5" />}
-                    </button>
-                  );
-                })}
-              </div>
+              <ModernSelect
+                value={serviceItemId}
+                onChange={setServiceItemId}
+                options={(lockedService.items || lockedService.serviceItems).map((item: any) => ({
+                  value: String(item.id),
+                  label: item.name
+                }))}
+                placeholder={`Pilih Jenis ${lockedService.name}...`}
+                enableSearch={false}
+              />
             </div>
           )}
 
@@ -490,30 +479,16 @@ export function PegawaiUsulCutiForm({
                   <label className="text-xs font-semibold text-slate-600 block">
                     Status Kepegawaian <span className="text-rose-500">*</span>
                   </label>
-                  <div className="flex items-center gap-4">
-                    <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors">
-                      <input
-                        type="radio"
-                        name="jenisPegawai"
-                        value="PNS"
-                        checked={jenisPegawai === "PNS"}
-                        onChange={() => setJenisPegawai("PNS")}
-                        className="text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                      />
-                      <span>PNS (Pegawai Negeri Sipil)</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors">
-                      <input
-                        type="radio"
-                        name="jenisPegawai"
-                        value="PPPK"
-                        checked={jenisPegawai === "PPPK"}
-                        onChange={() => setJenisPegawai("PPPK")}
-                        className="text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                      />
-                      <span>PPPK (Pegawai Pemerintah dengan Perjanjian Kerja)</span>
-                    </label>
-                  </div>
+                  <ModernSelect
+                    value={jenisPegawai}
+                    onChange={(val) => setJenisPegawai(val as "PNS" | "PPPK")}
+                    options={[
+                      { value: "PNS", label: "PNS (Pegawai Negeri Sipil)" },
+                      { value: "PPPK", label: "PPPK (Pegawai Pemerintah dengan Perjanjian Kerja)" }
+                    ]}
+                    enableSearch={false}
+                  />
+                  <input type="hidden" name="jenisPegawai" value={jenisPegawai} />
                 </div>
 
                 {/* Jabatan Pegawai */}
@@ -537,15 +512,12 @@ export function PegawaiUsulCutiForm({
                   <label className="text-xs font-semibold text-slate-600">
                     Masa Kerja (Tahun) <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    name="masaKerjaTahun"
-                    min="0"
-                    required
+                  <ModernSelect
+                    options={MASA_KERJA_TAHUN_OPTIONS}
                     value={masaKerjaTahun}
-                    onChange={(e) => setMasaKerjaTahun(e.target.value)}
-                    placeholder="Contoh: 5"
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    onChange={setMasaKerjaTahun}
+                    placeholder="Pilih Tahun"
+                    enableSearch={true}
                   />
                 </div>
 
@@ -553,44 +525,23 @@ export function PegawaiUsulCutiForm({
                   <label className="text-xs font-semibold text-slate-600">
                     Masa Kerja (Bulan) <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    name="masaKerjaBulan"
-                    min="0"
-                    max="11"
-                    required
+                  <ModernSelect
+                    options={MASA_KERJA_BULAN_OPTIONS}
                     value={masaKerjaBulan}
-                    onChange={(e) => setMasaKerjaBulan(e.target.value)}
-                    placeholder="Contoh: 6"
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    onChange={setMasaKerjaBulan}
+                    placeholder="Pilih Bulan"
+                    enableSearch={true}
                   />
                 </div>
 
-                {/* Tanggal Mulai Cuti */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">
-                    Tanggal Mulai Cuti <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
+                {/* Tanggal Mulai & Selesai Cuti (Combined Multi-Date Picker) */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <ModernMultiDatePicker
+                    label="Pilih Tanggal Cuti (Bisa lebih dari 1 hari)"
                     required
-                    value={tanggalMulai}
-                    onChange={(e) => setTanggalMulai(e.target.value)}
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
-                </div>
-
-                {/* Tanggal Selesai Cuti */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">
-                    Tanggal Selesai Cuti <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={tanggalSelesai}
-                    onChange={(e) => setTanggalSelesai(e.target.value)}
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    value={selectedCutiDates}
+                    onChange={setSelectedCutiDates}
+                    placeholder="Klik untuk memilih tanggal..."
                   />
                 </div>
 
@@ -632,7 +583,21 @@ export function PegawaiUsulCutiForm({
                   />
                 </div>
 
-                {/* Unit Kerja & No HP */}
+                {/* No HP & Unit Kerja */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">
+                    No. HP / WhatsApp (Aktif) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={noHpAktif}
+                    onChange={(e) => setNoHpAktif(e.target.value.replace(/\D/g, ""))}
+                    placeholder="08123456789"
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-600">
                     Unit Kerja <span className="text-rose-500">*</span>
@@ -647,20 +612,9 @@ export function PegawaiUsulCutiForm({
                       searchPlaceholder="Cari unit kerja..."
                     />
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600">
-                    No. HP / WhatsApp (Aktif) <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={noHpAktif}
-                    onChange={(e) => setNoHpAktif(e.target.value.replace(/\D/g, ""))}
-                    placeholder="08123456789"
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
+                  <p className="text-[10px] text-slate-500 italic mt-1">
+                    * Atasan Langsung akan ditentukan secara otomatis berdasarkan Unit Kerja yang Anda pilih.
+                  </p>
                 </div>
               </div>
 
@@ -670,92 +624,61 @@ export function PegawaiUsulCutiForm({
                   Atasan Langsung & Pejabat Berwenang
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={`grid grid-cols-1 ${pejabatList.some(p => p.unitKerja && p.unitKerja.toLowerCase().trim() === unitKerja.toLowerCase().trim()) ? "sm:grid-cols-2" : ""} gap-4`}>
                   {/* Pemilihan Atasan Langsung Berdasarkan Unit Kerja */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800">Atasan Langsung</span>
-                      <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                        {pejabatList.filter((p) => p.unitKerja && p.unitKerja.toLowerCase().trim() === unitKerja.toLowerCase().trim()).length} Ditemukan
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-semibold text-slate-600 block">
-                        Pilih Atasan Langsung di Unit Kerja ({unitKerja || "Default"}):
-                      </label>
-                      <select
-                        value={selectedAtasanId}
-                        onChange={(e) => {
-                          const nipSel = e.target.value;
-                          setSelectedAtasanId(nipSel);
-                          const p = pejabatList.find((item) => item.nip === nipSel);
-                          if (p) {
-                            setAtasanLangsungNama(p.nama);
-                            setAtasanLangsungNip(p.nip);
-                            setAtasanLangsungJabatan(p.jabatan);
-                          }
-                        }}
-                        className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                      >
-                        {pejabatList.length === 0 && <option value="">Belum ada master data atasan</option>}
-                        {pejabatList.map((p) => (
-                          <option key={p.nip} value={p.nip}>
-                            {p.nama} ({p.jabatan}) {p.unitKerja ? `- ${p.unitKerja}` : ""}
-                          </option>
-                        ))}
-                      </select>
-
-                      <div className="pt-2 space-y-1.5 border-t border-slate-200/60">
+                  {pejabatList.some(p => p.unitKerja && p.unitKerja.toLowerCase().trim() === unitKerja.toLowerCase().trim()) && (
+                    <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 sm:space-y-3">
+                      <span className="text-[11px] sm:text-xs font-bold text-slate-800 block">Atasan Langsung</span>
+                      <div className="space-y-2">
                         <input
                           type="text"
                           placeholder="Nama Atasan Langsung"
                           value={atasanLangsungNama}
-                          onChange={(e) => setAtasanLangsungNama(e.target.value)}
-                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          readOnly
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-100 text-xs text-slate-600 focus:outline-none cursor-not-allowed"
                         />
                         <input
                           type="text"
                           placeholder="NIP Atasan Langsung"
                           value={atasanLangsungNip}
-                          onChange={(e) => setAtasanLangsungNip(e.target.value)}
-                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          readOnly
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-100 text-xs text-slate-600 focus:outline-none cursor-not-allowed"
                         />
                         <input
                           type="text"
                           placeholder="Jabatan Atasan Langsung"
                           value={atasanLangsungJabatan}
-                          onChange={(e) => setAtasanLangsungJabatan(e.target.value)}
-                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          readOnly
+                          className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-100 text-xs text-slate-600 focus:outline-none cursor-not-allowed"
                         />
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Pejabat Berwenang Memberikan Cuti */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                    <span className="text-xs font-bold text-slate-800 block">Pejabat Berwenang Memberikan Cuti</span>
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 sm:space-y-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-800 block">Pejabat Berwenang Memberikan Cuti</span>
                     <div className="space-y-2">
                       <input
                         type="text"
                         placeholder="Nama Pejabat Cuti"
                         value={pejabatCutiNama}
-                        onChange={(e) => setPejabatCutiNama(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        readOnly
+                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-100 text-xs text-slate-600 focus:outline-none cursor-not-allowed"
                       />
                       <input
                         type="text"
                         placeholder="NIP Pejabat Cuti"
                         value={pejabatCutiNip}
-                        onChange={(e) => setPejabatCutiNip(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        readOnly
+                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-100 text-xs text-slate-600 focus:outline-none cursor-not-allowed"
                       />
                       <input
                         type="text"
                         placeholder="Jabatan Pejabat Cuti"
                         value={pejabatCutiJabatan}
-                        onChange={(e) => setPejabatCutiJabatan(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                        readOnly
+                        className="w-full h-9 px-3 rounded-lg border border-slate-200 bg-slate-100 text-xs text-slate-600 focus:outline-none cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -768,11 +691,14 @@ export function PegawaiUsulCutiForm({
           )}
 
           {/* DOKUMEN PERSYARATAN UPLOAD */}
-          {selectedItem?.requirements?.length ? (
+          {selectedItem?.requirements?.length && !selectedItem?.name?.toLowerCase().includes("tahunan") ? (
             <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="border-t border-slate-100 pt-6">
                 <RequestRequirementUpload
-                  requirements={selectedItem.requirements}
+                  requirements={selectedItem.requirements.filter((req: any) => {
+                    const name = req.name || req.documentName || req.document_name || "";
+                    return !name.toLowerCase().includes("formulir");
+                  }).slice(0, 1)}
                   onFilesChange={setRequirementFiles}
                 />
               </div>
@@ -810,7 +736,11 @@ export function PegawaiUsulCutiForm({
             tanggalMulai,
             tanggalSelesai,
             noHp: noHpAktif,
-            signature: profile?.signature || "",
+            atasanLangsungNama,
+            atasanLangsungNip,
+            pejabatBerwenangNama: pejabatCutiNama,
+            pejabatBerwenangNip: pejabatCutiNip,
+            signature: profile?.signature || "TTE_VERIFIED",
           }}
         />
       )}

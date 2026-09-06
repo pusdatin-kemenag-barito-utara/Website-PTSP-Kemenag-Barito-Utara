@@ -1,10 +1,7 @@
 import { getClientApiBase } from "@/lib/client-api";
 import { useEffect, useRef, useState } from "react";
-import * as pdfjs from "pdfjs-dist";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-
-// Set worker source to local public file matching mandau-kemenag pattern (100% offline & CORS-free)
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
 interface PDFJsViewerProps {
   url: string;
@@ -14,7 +11,7 @@ interface PDFJsViewerProps {
 
 export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [pdfDoc, setPdfDoc] = useState<pdfjs.PDFDocumentProxy | null>(null);
+  const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
@@ -28,8 +25,16 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
 
     (async () => {
       try {
-        const streamUrl = `${getClientApiBase()}/files/proxy?url=${encodeURIComponent(url)}`;
-        const res = await fetch(streamUrl);
+        const pdfjs = await import("pdfjs-dist");
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+
+        let res: Response;
+        if (url.startsWith("blob:") || url.startsWith("data:")) {
+          res = await fetch(url);
+        } else {
+          const streamUrl = `${getClientApiBase()}/files/proxy?url=${encodeURIComponent(url)}`;
+          res = await fetch(streamUrl);
+        }
         if (isCancelled) return;
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 

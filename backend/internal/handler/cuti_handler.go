@@ -16,6 +16,17 @@ func NewCutiHandler(svc *service.CutiService) *CutiHandler {
 	return &CutiHandler{svc: svc}
 }
 
+func (h *CutiHandler) GetPejabatNIPs(c *fiber.Ctx) error {
+	nips, err := h.svc.GetPejabatNIPs(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	if nips == nil {
+		nips = []string{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": nips})
+}
+
 func (h *CutiHandler) GetCuti(c *fiber.Ctx) error {
 	nip := c.Query("nip")
 	if nip != "" {
@@ -70,7 +81,16 @@ func (h *CutiHandler) GetLKH(c *fiber.Ctx) error {
 	if userID == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "userId wajib diisi"})
 	}
-	data, err := h.svc.GetLKH(c.Context(), userID)
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+	var month, year int
+	if monthStr != "" {
+		fmt.Sscanf(monthStr, "%d", &month)
+	}
+	if yearStr != "" {
+		fmt.Sscanf(yearStr, "%d", &year)
+	}
+	data, err := h.svc.GetLKH(c.Context(), userID, month, year)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}

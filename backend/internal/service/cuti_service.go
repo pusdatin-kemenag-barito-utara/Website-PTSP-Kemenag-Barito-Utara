@@ -17,6 +17,10 @@ func NewCutiService(repo *repository.CutiRepository, cfg *config.Config) *CutiSe
 	return &CutiService{repo: repo, cfg: cfg}
 }
 
+func (s *CutiService) GetPejabatNIPs(ctx context.Context) ([]string, error) {
+	return s.repo.GetPejabatNIPs(ctx)
+}
+
 func (s *CutiService) GetByNip(ctx context.Context, nip string) (map[string]interface{}, error) {
 	return s.repo.FindByNip(ctx, nip)
 }
@@ -33,8 +37,8 @@ func (s *CutiService) UpdateStatus(ctx context.Context, id string, req models.Up
 	return s.repo.UpdateStatus(ctx, id, req)
 }
 
-func (s *CutiService) GetLKH(ctx context.Context, userID string) ([]models.LaporanKinerja, error) {
-	return s.repo.GetLKH(ctx, userID)
+func (s *CutiService) GetLKH(ctx context.Context, userID string, month, year int) ([]models.LaporanKinerja, error) {
+	return s.repo.GetLKH(ctx, userID, month, year)
 }
 
 func (s *CutiService) CreateLKH(ctx context.Context, req models.CreateLaporanKinerjaRequest) error {

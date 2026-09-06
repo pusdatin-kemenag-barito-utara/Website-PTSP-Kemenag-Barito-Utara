@@ -1,13 +1,34 @@
 ---
 import DashboardShell from "@/layouts/DashboardShell.astro";
-import { getMyRequests } from "@/lib/actions/pegawai/requests";
+import { fetchAPI } from "@/lib/api";
 import { RiwayatTable } from "./_components/riwayat-table";
 import { ScrollText } from "lucide-react";
 import { getCurrentProfile } from "@/lib/auth";
 
-const requests = await getMyRequests();
-const profile = await getCurrentProfile();
+const profile = await getCurrentProfile(Astro);
 const userNip = profile?.email?.split("@")[0] || "";
+
+let requests: any[] = [];
+if (profile?.id) {
+  try {
+    const token = Astro.cookies.get("ptsp-auth-access-token")?.value;
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const res = await fetchAPI<any>(`/requests?user_id=${profile.id}`, {
+      headers: { ...authHeaders }
+    });
+    
+    // Parse date strings to Date objects for the UI table
+    requests = (res?.data || []).map((req: any) => ({
+      ...req,
+      submittedAt: req.submittedAt ? new Date(req.submittedAt) : null,
+      createdAt: req.createdAt ? new Date(req.createdAt) : new Date(),
+      updatedAt: req.updatedAt ? new Date(req.updatedAt) : new Date(),
+    }));
+  } catch (e) {
+    console.error("Failed to fetch requests:", e);
+  }
+}
 ---
 
 <DashboardShell
@@ -21,7 +42,7 @@ const userNip = profile?.email?.split("@")[0] || "";
     <div class="border-b border-slate-200/80 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
       <div>
         <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/50 px-3 py-0.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 mb-2">
-          <ScrollText client:load class="h-3.5 w-3.5" />
+          <ScrollText client:load className="h-3.5 w-3.5" />
           <span>Arsip & Tracking Layanan</span>
         </div>
         <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">

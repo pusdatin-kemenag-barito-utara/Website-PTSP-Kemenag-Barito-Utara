@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { FileCheck2, Eye, X, FileText, Image as ImageIcon, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { compressImageToUnder } from "@/lib/image-compression";
- 
+import { PDFJsViewer } from "@/components/ui/pdf-js-viewer";
+
 type UploadedFile = {
   reqId: string;
   file: File;
@@ -219,7 +220,7 @@ export function RequestRequirementUpload({
 
   return (
     <>
-      <section className={hideHeader ? "w-full" : "rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-2xs transition-colors duration-300"}>
+      <section className={hideHeader ? "w-full" : "rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-2xs transition-colors duration-300"}>
         {!hideHeader && (
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
             Upload Dokumen Persyaratan
@@ -238,7 +239,7 @@ export function RequestRequirementUpload({
               return (
                 <div
                   key={requirement.id}
-                  className={`group rounded-2xl border-2 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between ${
+                  className={`group rounded-xl sm:rounded-2xl border-2 transition-all duration-300 p-3 sm:p-5 flex flex-col justify-between ${
                     uploaded
                       ? "border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/30 shadow-xs"
                       : isDragActive
@@ -248,7 +249,7 @@ export function RequestRequirementUpload({
                 >
                   <div>
                     <label className="mb-3 block text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
-                      {requirement.documentName}
+                      {requirement.name || requirement.documentName || requirement.document_name || "Dokumen Persyaratan"}
                       {requirement.isRequired && <span className="ml-1 text-rose-500 font-extrabold">*</span>}
                       {requirement.templateUrl && (
                         <a href={requirement.templateUrl} download className="ml-2 text-xs font-semibold text-emerald-600 hover:underline">
@@ -294,8 +295,8 @@ export function RequestRequirementUpload({
                             {uploaded.previewUrl && (
                               <button
                                 type="button"
-                                onClick={() => setPreviewModal({ url: uploaded.previewUrl!, name: requirement.documentName, type: uploaded.file.type })}
-                                className="p-1.5 sm:p-2 text-slate-400 hover:text-[#059669] hover:bg-emerald-50 rounded-lg sm:rounded-xl transition-all"
+                                onClick={() => setPreviewModal({ url: uploaded.previewUrl!, name: requirement.name || requirement.documentName || requirement.document_name || "Dokumen Persyaratan", type: uploaded.file.type })}
+                                className="p-1.5 sm:p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 rounded-lg sm:rounded-xl transition-all shadow-sm"
                                 title="Lihat Berkas"
                               >
                                 <Eye className="h-4 w-4" />
@@ -304,7 +305,7 @@ export function RequestRequirementUpload({
                             <button
                               type="button"
                               onClick={() => removeFile(reqId)}
-                              className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg sm:rounded-xl transition-all"
+                              className="p-1.5 sm:p-2 text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 rounded-lg sm:rounded-xl transition-all shadow-sm"
                               title="Hapus Berkas"
                             >
                               <X className="h-4 w-4" />
@@ -390,7 +391,9 @@ export function RequestRequirementUpload({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5 py-3.5 bg-slate-50/80 dark:bg-slate-900">
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{previewModal.name}</h4>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate flex items-center">
+                Pratinjau Dokumen <span className="text-slate-400 font-normal mx-2">/</span> <span className="text-emerald-600">{previewModal.name}</span>
+              </h4>
               <button
                 type="button"
                 onClick={() => setPreviewModal(null)}
@@ -410,11 +413,9 @@ export function RequestRequirementUpload({
                   />
                 </div>
               ) : (
-                <iframe
-                  src={previewModal.url}
-                  className="w-full h-full min-h-[75vh] border-0 rounded-lg bg-white"
-                  title={previewModal.name}
-                />
+                <div className="w-full h-full min-h-[75vh] bg-white rounded-lg overflow-hidden relative">
+                  <PDFJsViewer url={previewModal.url} />
+                </div>
               )}
             </div>
           </div>

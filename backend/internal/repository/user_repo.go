@@ -65,23 +65,35 @@ func (r *UserRepository) FindByID(ctx context.Context, id string) (*models.User,
 		SELECT 
 			p.id, 
 			COALESCE(
+				pa.full_name,
+				pm.full_name,
 				NULLIF(NULLIF(NULLIF(NULLIF(p.name, 'Pegawai'), 'Pemohon'), 'Pusdatin Kemenag Barito Utara'), 'pusdatinkemenagbaritoutara'),
-				dcp.nama,
 				p.name,
 				'Pemohon'
 			) AS name, 
 			COALESCE(p.email, ''), 
-			COALESCE(p.phone, ''), 
+			COALESCE(pm.no_hp, p.phone, ''), 
 			COALESCE(p.role, 'user'), 
 			COALESCE(p.user_type, 'pemohon'), 
 			COALESCE(p.status, 'aktif'), 
 			COALESCE(p.is_verified, false), 
 			COALESCE(p.avatar_url, ''), 
-			p.created_at
+			p.created_at,
+			pp.nip,
+			pp.jabatan,
+			pp.pangkat_golongan,
+			pp.unit_kerja,
+			pm.alamat
 		FROM kemenag_pusdatin.profiles p
-		LEFT JOIN kemenag_ptsp.ptsp_data_cuti_pegawai dcp ON dcp.nip = SPLIT_PART(p.email, '@', 1)
+		LEFT JOIN kemenag_pusdatin.profiles_pegawai pp ON pp.user_id = p.id
+		LEFT JOIN kemenag_pusdatin.profiles_pemohon pm ON pm.user_id = p.id
+		LEFT JOIN kemenag_pusdatin.profiles_admin pa ON pa.user_id = p.id
 		WHERE p.id = $1 LIMIT 1
-	`, id).Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Role, &u.UserType, &u.Status, &u.IsVerified, &u.AvatarURL, &u.CreatedAt)
+	`, id).Scan(
+		&u.ID, &u.Name, &u.Email, &u.Phone, &u.Role, &u.UserType, &u.Status, &u.IsVerified, &u.AvatarURL, &u.CreatedAt,
+		&u.Nip, &u.Jabatan, &u.PangkatGolongan, &u.UnitKerja,
+		&u.Address,
+	)
 
 	if err != nil {
 		fmt.Printf("[DEBUG] FindByID error for id %s: %v\n", id, err)
@@ -175,12 +187,37 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, id string, req model
 		args = append(args, req.AvatarURL)
 		argIdx++
 	}
+	if req.UserType != "" {
+		query += fmt.Sprintf(", user_type = $%d", argIdx)
+		args = append(args, req.UserType)
+		argIdx++
+	}
 
 	query += fmt.Sprintf(" WHERE id = $%d", argIdx)
 	args = append(args, id)
 
 	_, err := r.db.Exec(ctx, query, args...)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Sinkronisasi ke tabel profiles_pemohon jika user adalah masyarakat umum
+	var uType string
+	_ = r.db.QueryRow(ctx, `SELECT COALESCE(user_type, 'pemohon') FROM kemenag_pusdatin.profiles WHERE id = $1`, id).Scan(&uType)
+	
+	if uType == "eksternal_masyarakat" || uType == "pemohon" {
+		_, _ = r.db.Exec(ctx, `
+			INSERT INTO kemenag_pusdatin.profiles_pemohon (user_id, full_name, no_hp, alamat, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $5)
+			ON CONFLICT (user_id) DO UPDATE SET
+				full_name = EXCLUDED.full_name,
+				no_hp = EXCLUDED.no_hp,
+				alamat = EXCLUDED.alamat,
+				updated_at = EXCLUDED.updated_at
+		`, id, nameInput, req.Phone, req.Address, time.Now())
+	}
+
+	return nil
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id string) error {

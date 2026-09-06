@@ -1,24 +1,53 @@
-﻿import { fetchAPI } from "@/lib/api";
+import { fetchAPI } from "@/lib/api";
 import { revalidatePath } from "@/lib/next-compat/cache";
+
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getPejabatList() {
   try {
-    const res = await fetchAPI<any>("/admin/cuti/pegawai");
-    if (res && res.data && Array.isArray(res.data)) {
-      const rawData = res.data.filter(
-        (u: any) =>
-          u.jenisPegawai === "Pejabat" ||
-          u.jenis_pegawai === "Pejabat" ||
-          ["Atasan Langsung", "Kepala Kantor", "Pejabat Berwenang"].includes(
-            u.tipePejabat || u.tipe_pejabat || u.jabatan,
-          ),
-      );
-      return { success: true, data: rawData };
+    const supabase = createAdminClient();
+    
+    // Ambil data pejabat dari schema kemenag_pusdatin
+    const { data: pegawai, error: errPegawai } = await supabase
+      .schema("kemenag_pusdatin")
+      .from("profiles_pegawai")
+      .select("nip, jabatan, unit_kerja, tipe_pejabat, user_id")
+      .not("tipe_pejabat", "is", null);
+
+    if (errPegawai || !pegawai) {
+      throw errPegawai || new Error("Gagal mengambil data profiles_pegawai");
     }
-    return { success: true, data: [] };
+
+    const userIds = pegawai.map((p) => p.user_id).filter(Boolean);
+    let profilesMap: Record<string, string> = {};
+
+    if (userIds.length > 0) {
+      const { data: profiles, error: errProfiles } = await supabase
+        .schema("kemenag_pusdatin")
+        .from("profiles")
+        .select("id, name")
+        .in("id", userIds);
+
+      if (!errProfiles && profiles) {
+        profilesMap = profiles.reduce((acc: any, p: any) => {
+          acc[p.id] = p.name;
+          return acc;
+        }, {});
+      }
+    }
+
+    const rawData = pegawai.map((u: any) => ({
+      nip: u.nip,
+      nama: profilesMap[u.user_id] || "Pegawai Kemenag",
+      jabatan: u.jabatan || "",
+      unitKerja: u.unit_kerja || "",
+      tipePejabat: u.tipe_pejabat || "",
+    }));
+
+    return { success: true, data: rawData };
   } catch (error) {
     console.error("Error getPejabatList:", error);
-    return { success: false, error: "Gagal mengambil data pejabat." };
+    return { success: false, error: "Gagal mengambil data pejabat dari database." };
   }
 }
 

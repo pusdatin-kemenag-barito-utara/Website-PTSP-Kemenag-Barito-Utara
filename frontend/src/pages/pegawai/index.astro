@@ -6,8 +6,8 @@ import { PegawaiElkSummaryCard } from "@/components/pegawai/dashboard/pegawai-el
 import { PegawaiApprovalAlert } from "@/components/pegawai/dashboard/pegawai-approval-alert";
 import { PegawaiRecentActivity } from "@/components/pegawai/dashboard/pegawai-recent-activity";
 
-const profile = await getCurrentProfile();
-const data = await getPegawaiDashboardData();
+const profile = await getCurrentProfile(Astro);
+const data = await getPegawaiDashboardData(Astro);
 const showRecentActivity = data.recentCuti.length > 0;
 const showApprovalAlert = data.isPejabat && (data.pendingAtasanCount > 0 || data.pendingKepalaCount > 0);
 

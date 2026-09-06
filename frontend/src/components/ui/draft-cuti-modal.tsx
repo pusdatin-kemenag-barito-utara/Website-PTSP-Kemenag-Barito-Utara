@@ -1,4 +1,4 @@
-import { X, ZoomIn, ZoomOut, Maximize, Printer, Download } from "lucide-react";
+import { X, ZoomIn, ZoomOut, Maximize, Printer, Download, ScrollText } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion as m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -24,6 +24,10 @@ interface DraftCutiModalProps {
     noHp: string;
     jenisPegawai?: string;
     tanggalPilihan?: string;
+    atasanLangsungNama?: string;
+    atasanLangsungNip?: string;
+    pejabatBerwenangNama?: string;
+    pejabatBerwenangNip?: string;
     signature: string;
     atasanSignature?: string;
     kepalaSignature?: string;
@@ -205,6 +209,13 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
   };
 
   const getAtasanInfo = (unitKerja: string) => {
+    if (data.atasanLangsungNama && data.atasanLangsungNama !== "") {
+      return {
+        nama: data.atasanLangsungNama,
+        nip: data.atasanLangsungNip || "...............................................",
+      };
+    }
+
     if (!unitKerja) return {
       nama: ".....................................................",
       nip: "...............................................",
@@ -237,6 +248,13 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
   };
 
   const getPejabatBerwenang = () => {
+    if (data.pejabatBerwenangNama && data.pejabatBerwenangNama !== "") {
+      return {
+        nama: data.pejabatBerwenangNama,
+        nip: data.pejabatBerwenangNip || "...............................................",
+      };
+    }
+
     const pejabat = pejabatList.find(
       (p: any) => p.tipePejabat === "Pejabat Berwenang"
     );
@@ -318,7 +336,7 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
           />
           <div
             id="modal-overlay"
-            className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-[110] flex items-start justify-center pt-4 sm:pt-10 pb-4 px-4 pointer-events-none"
           >
             <m.div
               id="modal-content-wrapper"
@@ -326,56 +344,67 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden"
+              className="relative w-full max-w-6xl max-h-full bg-white rounded-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden"
             >
-              <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-slate-100 shrink-0 relative z-10">
-                <h2 className="text-lg font-bold text-slate-800">
-                  Draft Permohonan Cuti
-                </h2>
-                <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center gap-2 bg-slate-100 rounded-lg p-1 mr-2">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-[#059669] text-white shrink-0 relative z-10 overflow-hidden rounded-t-2xl">
+                <div className="absolute right-0 top-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+                <div className="relative z-10 flex items-center gap-3 shrink-0">
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white/20 flex items-center justify-center border border-white/20 backdrop-blur-sm shrink-0">
+                    <ScrollText className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold tracking-tight whitespace-nowrap">
+                    Draft Permohonan Cuti
+                  </h2>
+                </div>
+                
+                <div className="relative z-10 flex items-center justify-end flex-1 min-w-0 pl-4 gap-2 sm:gap-3">
+                  <div className="hidden lg:flex items-center gap-1 bg-white/10 p-1.5 rounded-xl backdrop-blur-md border border-white/10 shrink-0">
                     {!hideActions && (
                       <>
                         <button
                           onClick={executePrint}
-                          className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-emerald-600 text-white rounded shadow-sm transition-all hover:bg-emerald-700 font-medium text-xs"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-emerald-700 rounded-lg shadow-sm hover:shadow transition-all font-bold text-xs"
                           title="Cetak Dokumen"
                         >
-                          <Printer className="w-4 h-4" />
-                          <span className="hidden md:inline">Cetak</span>
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Cetak</span>
                         </button>
                         <button
                           onClick={handleDownloadPDF}
                           disabled={isDownloading}
-                          className="flex items-center gap-1.5 p-1.5 px-2 md:px-3 bg-blue-600 text-white rounded shadow-sm transition-all hover:bg-blue-700 font-medium text-xs disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white rounded-lg shadow-sm hover:bg-blue-600 transition-all font-bold text-xs disabled:opacity-50 ml-1"
                           title="Unduh sebagai PDF"
                         >
-                          <Download className="w-4 h-4" />
-                          <span className="hidden md:inline">{isDownloading ? "Mengunduh..." : "Unduh PDF"}</span>
+                          {isDownloading ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <Download className="w-3.5 h-3.5" />
+                          )}
+                          <span>{isDownloading ? "Mengunduh..." : "Unduh PDF"}</span>
                         </button>
-                        <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                        <div className="w-px h-5 bg-white/20 mx-2"></div>
                       </>
                     )}
                     <button
                       onClick={handleZoomOut}
-                      className="p-1.5 hover:bg-white rounded shadow-sm transition-all text-slate-600 hover:text-slate-900"
+                      className="p-1.5 text-white/80 hover:bg-white/20 hover:text-white rounded-lg transition-colors"
                       title="Perkecil"
                     >
                       <ZoomOut className="w-4 h-4" />
                     </button>
-                    <span className="text-xs font-bold text-slate-700 w-12 text-center">
+                    <span className="text-xs font-bold text-white w-10 text-center">
                       {Math.round(zoom * 100)}%
                     </span>
                     <button
                       onClick={handleZoomIn}
-                      className="p-1.5 hover:bg-white rounded shadow-sm transition-all text-slate-600 hover:text-slate-900"
+                      className="p-1.5 text-white/80 hover:bg-white/20 hover:text-white rounded-lg transition-colors"
                       title="Perbesar"
                     >
                       <ZoomIn className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleFit}
-                      className="p-1.5 hover:bg-white rounded shadow-sm transition-all text-slate-600 hover:text-slate-900 ml-1"
+                      className="p-1.5 text-white/80 hover:bg-white/20 hover:text-white rounded-lg transition-colors"
                       title="Sesuaikan Layar"
                     >
                       <Maximize className="w-4 h-4" />
@@ -383,9 +412,9 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
                   </div>
                   <button
                     onClick={onClose}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                    className="p-2 bg-white/10 hover:bg-rose-500 text-white rounded-full transition-colors border border-white/10 shrink-0"
                   >
-                    <X className="w-5 h-5 text-slate-500" />
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>

@@ -9,7 +9,7 @@ import { RealtimeSync } from "@/components/ui/realtime-sync";
 import { getClientApiBase, getClientAuthToken, getSessionUserId } from "@/lib/client-api";
 
 // Local Components
-import { MasyarakatRequestConfirmation } from "./_components/masyarakat-request-confirmation";
+import { MasyarakatRequestConfirmation } from "@/components/forms/_components/masyarakat-request-confirmation";
 
 type Catalog = any[];
 

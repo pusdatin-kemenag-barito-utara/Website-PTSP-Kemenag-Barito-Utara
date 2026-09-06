@@ -8,7 +8,7 @@ import { FormInput, FileCheck2 } from "lucide-react";
 
 const user = await getCurrentUser();
 if (!user) {
-  redirect("/login");
+  redirect("/login/pegawai");
 }
 
 const id = Astro.url.searchParams.get("id");
@@ -38,9 +38,9 @@ const userNip = profile?.email?.split("@")[0] || "";
     <div class="flex items-center gap-3 border-b pb-4">
       <div class="p-2 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg text-emerald-600 dark:text-emerald-400">
         {initialData ? (
-          <FileCheck2 client:load class="h-6 w-6" />
+          <FileCheck2 className="h-6 w-6" />
         ) : (
-          <FormInput client:load class="h-6 w-6" />
+          <FormInput className="h-6 w-6" />
         )}
       </div>
       <div>

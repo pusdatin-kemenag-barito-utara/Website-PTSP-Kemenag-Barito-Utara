@@ -126,7 +126,8 @@ export function ChatWidget() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${getClientApiBase()}/chat`, {
+      // Changed to proxy through Astro API route to fix CORS/Production issues
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -193,8 +194,9 @@ export function ChatWidget() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 4px 24px rgba(5, 150, 105, 0.45)",
-          animation: isOpen ? "none" : "pulseGreen 3s infinite",
+          boxShadow: "0 4px 16px rgba(5, 150, 105, 0.4)",
+          willChange: "transform, opacity",
+          animation: isOpen ? "none" : "pulseGreenLight 3s infinite",
         }}
         className={`ai-fab-button ${isOpen ? "hidden" : "visible"}`}
         aria-label="Tanya Asisten AI"
@@ -225,8 +227,7 @@ export function ChatWidget() {
               position: "absolute",
               inset: 0,
               zIndex: 100,
-              background: "rgba(0,0,0,0.8)",
-              backdropFilter: "blur(4px)",
+              background: "rgba(17, 24, 39, 0.9)", // Solid enough color instead of blur
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -567,21 +568,17 @@ export function ChatWidget() {
             transform: translateY(0);
           }
         }
-        @keyframes pulseGreen {
-          0%,
-          100% {
-            box-shadow:
-              0 4px 24px rgba(5, 150, 105, 0.45),
-              0 2px 8px rgba(0, 0, 0, 0.2);
+        @keyframes pulseGreenLight {
+          0%, 100% {
+            transform: scale(1);
           }
           50% {
-            box-shadow:
-              0 4px 32px rgba(5, 150, 105, 0.7),
-              0 2px 12px rgba(0, 0, 0, 0.25);
+            transform: scale(1.05);
           }
         }
 
         .ai-chat-window {
+          will-change: transform, opacity;
           transition:
             opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
             transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -589,16 +586,17 @@ export function ChatWidget() {
           width: 440px;
           height: 700px;
           opacity: 0;
-          transform: scale(0.8) translateY(20px);
+          transform: scale(0.9) translateY(10px) translateZ(0); /* translateZ for hardware accel */
           pointer-events: none;
         }
         .ai-chat-window.open {
           opacity: 1 !important;
-          transform: scale(1) translateY(0) !important;
+          transform: scale(1) translateY(0) translateZ(0) !important;
           pointer-events: auto !important;
         }
 
         .ai-fab-button {
+          will-change: transform, opacity;
           transition:
             opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
             transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);

@@ -202,11 +202,11 @@ export function ModernMultiDatePicker({
         {isOpen && (
           <m.div
             key="datepicker-popup"
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[100] w-[90vw] max-w-[320px] sm:absolute sm:left-0 sm:translate-x-0 sm:bottom-full sm:mb-3 sm:w-[340px] sm:max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 border border-slate-100 dark:border-slate-700 overflow-hidden"
+            className="fixed left-1/2 -translate-x-1/2 bottom-6 z-[100] w-[90vw] max-w-[320px] sm:absolute sm:left-0 sm:translate-x-0 sm:top-full sm:mt-3 sm:bottom-auto sm:mb-0 sm:w-[340px] sm:max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-3xl shadow-2xl shadow-slate-300/80 dark:shadow-slate-950/80 ring-1 ring-slate-200 dark:ring-slate-700 border border-slate-100 dark:border-slate-700 overflow-hidden"
             onClick={(e) => e.preventDefault()}
           >
             {/* Header */}

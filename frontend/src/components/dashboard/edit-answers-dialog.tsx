@@ -8,7 +8,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Edit } from "lucide-react";
-import { EditRequestForm } from "../forms/edit-request-form";
+import { EditRequestForm } from "../forms/masyarakat/edit-request-form";
 
 export function EditAnswersDialog({
   requestId,

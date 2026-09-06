@@ -1,0 +1,68 @@
+---
+import DashboardShell from "@/layouts/DashboardShell.astro";
+import { ArrowLeft } from "lucide-react";
+import { getServiceBySlug, getServiceCatalog } from "@/lib/queries";
+import { PegawaiUsulCutiForm } from "@/components/forms/pegawai/pegawai-usul-cuti-form";
+import { requireAuth, getCurrentProfile } from "@/lib/auth";
+import { getSisaCutiByNip } from "@/actions-handlers/pegawai/cuti";
+import { getPejabatList } from "@/actions-handlers/admin/pejabat-actions";
+import { notFound } from "@/lib/next-compat/navigation";
+
+await requireAuth(false, Astro);
+
+const slug = "permohonan-cuti-asn";
+const service = await getServiceBySlug(slug);
+
+if (!service) {
+  notFound();
+}
+
+const currentProfile = await getCurrentProfile(Astro);
+const userNip = currentProfile?.email?.split("@")[0] || "";
+const catalog = await getServiceCatalog();
+
+// Ambil data spesifik Cuti
+let pejabatList: any[] = [];
+try {
+  const resPejabat = await getPejabatList();
+  if (resPejabat.success) pejabatList = resPejabat.data || [];
+} catch {}
+
+let sisaCutiData = { n: "0", n1: "0", n2: "0" };
+if (userNip) {
+  try {
+    sisaCutiData = await getSisaCutiByNip(userNip);
+  } catch (error) {
+    console.error("Gagal mengambil data cuti:", error);
+  }
+}
+---
+
+<DashboardShell
+  title={service.name}
+  description={service.description || "Formulir Pengajuan Cuti ASN"}
+  mode="pegawai"
+  userNip={userNip}
+>
+  <div class="w-full space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
+    <div>
+      <a
+        href="/pegawai/layanan/ajukan"
+        class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors mb-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Kembali ke Daftar Layanan
+      </a>
+    </div>
+
+    <PegawaiUsulCutiForm
+      client:load
+      catalog={catalog}
+      profile={currentProfile}
+      redirectPathPrefix="/pegawai/layanan/riwayat"
+      lockedServiceId={String(service.id)}
+      pejabatList={pejabatList}
+      sisaCutiData={sisaCutiData}
+    />
+  </div>
+</DashboardShell>

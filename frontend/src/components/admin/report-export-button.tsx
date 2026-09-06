@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { FileDown, FileText, Loader2 } from "lucide-react";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import fileSaver from "file-saver";
+const { saveAs } = fileSaver;
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";

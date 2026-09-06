@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import fileSaver from "file-saver";
+const { saveAs } = fileSaver;
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 

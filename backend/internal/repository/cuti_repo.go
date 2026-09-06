@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"ptsp-kemenag-backend/internal/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
 
 // CutiRepository menangani operasi DB untuk pengajuan cuti pegawai.
 type CutiRepository struct {
@@ -16,6 +18,26 @@ type CutiRepository struct {
 
 func NewCutiRepository(db *pgxpool.Pool) *CutiRepository {
 	return &CutiRepository{db: db}
+}
+
+func (r *CutiRepository) GetPejabatNIPs(ctx context.Context) ([]string, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT nip FROM kemenag_pusdatin.profiles_pegawai
+		WHERE tipe_pejabat IS NOT NULL AND nip IS NOT NULL
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var nips []string
+	for rows.Next() {
+		var nip string
+		if err := rows.Scan(&nip); err == nil {
+			nips = append(nips, nip)
+		}
+	}
+	return nips, nil
 }
 
 func (r *CutiRepository) FindByNip(ctx context.Context, nip string) (map[string]interface{}, error) {
@@ -152,12 +174,23 @@ func (r *CutiRepository) UpdateStatus(ctx context.Context, id string, req models
 
 // --- Laporan Kinerja Harian (LKH) ---
 
-func (r *CutiRepository) GetLKH(ctx context.Context, userID string) ([]models.LaporanKinerja, error) {
-	rows, err := r.db.Query(ctx, `
+func (r *CutiRepository) GetLKH(ctx context.Context, userID string, month, year int) ([]models.LaporanKinerja, error) {
+	query := `
 		SELECT id::text, user_id::text, tanggal::text, waktu_pelaksanaan, kegiatan_tugas_jabatan, hasil, bukti_dukung_url, status, created_at
 		FROM kemenag_ptsp.ptsp_laporan_kinerja
-		WHERE user_id::text = $1 ORDER BY tanggal DESC, created_at DESC LIMIT 100
-	`, userID)
+		WHERE user_id::text = $1`
+	args := []interface{}{userID}
+	if month > 0 {
+		args = append(args, month)
+		query += fmt.Sprintf(` AND EXTRACT(MONTH FROM tanggal) = $%d`, len(args))
+	}
+	if year > 0 {
+		args = append(args, year)
+		query += fmt.Sprintf(` AND EXTRACT(YEAR FROM tanggal) = $%d`, len(args))
+	}
+	query += ` ORDER BY tanggal ASC, created_at ASC LIMIT 200`
+
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return []models.LaporanKinerja{}, nil
 	}
@@ -172,6 +205,7 @@ func (r *CutiRepository) GetLKH(ctx context.Context, userID string) ([]models.La
 	}
 	return result, nil
 }
+
 
 func (r *CutiRepository) CreateLKH(ctx context.Context, req models.CreateLaporanKinerjaRequest) error {
 	_, err := r.db.Exec(ctx, `

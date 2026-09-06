@@ -2,11 +2,11 @@ import { getClientApiBase, getClientAuthToken, getSessionUserId } from "@/lib/cl
 import { useState, type FormEvent } from "react";
 import { useRouter } from "@/lib/next-compat/navigation";
 import { toast } from "sonner";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { compressImageToUnder } from "@/lib/image-compression";
-import { EditFormFields } from "./_components/edit-form-fields";
-import { EditFormDocuments } from "./_components/edit-form-documents";
+import { EditFormFields } from "@/components/forms/_components/edit-form-fields";
+import { EditFormDocuments } from "@/components/forms/_components/edit-form-documents";
 
 interface Answer {
   id: string;

@@ -25,20 +25,10 @@ export interface PegawaiDashboardData {
   pendingKepalaCount: number;
 }
 
-const PEJABAT_NIPS = [
-  "197809042007101005", // Sony
-  "198110082005011002", // Handayani
-  "197101231998031004", // Bakti
-  "197304062005011008", // Supian
-  "198002022005011008", // Almubasir
-  "197011032003121002", // Hasan
-  "198210022009011011", // Wandi
-  "197311212001121001"  // Arbaja
-];
 
-export async function getPegawaiDashboardData(): Promise<PegawaiDashboardData> {
-  const user = await getCurrentUser();
-  const profile = await getCurrentProfile();
+export async function getPegawaiDashboardData(AstroCtx?: any): Promise<PegawaiDashboardData> {
+  const user = await getCurrentUser(AstroCtx);
+  const profile = await getCurrentProfile(AstroCtx);
 
   const defaultData: PegawaiDashboardData = {
     sisaCuti: null,
@@ -56,13 +46,29 @@ export async function getPegawaiDashboardData(): Promise<PegawaiDashboardData> {
 
   const nip = profile.email ? profile.email.split("@")[0] : "";
   const superAdmin = isSuperAdmin(profile.email);
-  const isPejabat = superAdmin || PEJABAT_NIPS.includes(nip);
+  let isPejabat = superAdmin;
 
   try {
+    const token = AstroCtx?.cookies?.get("ptsp-auth-access-token")?.value;
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    if (!isPejabat) {
+      try {
+        const resPejabat = await fetchAPI<any>("/pegawai/pejabat-nips", {
+          headers: { ...authHeaders }
+        });
+        if (resPejabat?.data && Array.isArray(resPejabat.data)) {
+          isPejabat = resPejabat.data.includes(nip);
+        }
+      } catch (e) {}
+    }
+
     // 1. Fetch data rekap cuti pegawai berdasarkan NIP
     let sisaCuti = 12;
     if (nip) {
-      const resRekap = await fetchAPI<any>(`/pegawai/cuti?nip=${encodeURIComponent(nip)}`);
+      const resRekap = await fetchAPI<any>(`/pegawai/cuti?nip=${encodeURIComponent(nip)}`, {
+        headers: { ...authHeaders }
+      });
       if (resRekap?.data?.sisaCuti !== undefined) {
         sisaCuti = resRekap.data.sisaCuti;
       }
@@ -74,7 +80,9 @@ export async function getPegawaiDashboardData(): Promise<PegawaiDashboardData> {
     let pengajuanPending = 0;
     let pengajuanDisetujuiBulanIni = 0;
 
-    const resList = await fetchAPI<any>(`/pegawai/cuti?user_id=${encodeURIComponent(user.id)}`);
+    const resList = await fetchAPI<any>(`/pegawai/cuti?user_id=${encodeURIComponent(user.id)}`, {
+      headers: { ...authHeaders }
+    });
     const items = Array.isArray(resList?.data) ? resList.data : [];
 
     totalPengajuanCuti = items.length;
@@ -115,7 +123,9 @@ export async function getPegawaiDashboardData(): Promise<PegawaiDashboardData> {
     let pendingKepalaCount = 0;
     if (isPejabat) {
       try {
-        const resAll = await fetchAPI<any>(`/pegawai/cuti`);
+        const resAll = await fetchAPI<any>(`/pegawai/cuti`, {
+          headers: { ...authHeaders }
+        });
         const allItems = Array.isArray(resAll?.data) ? resAll.data : [];
         pendingAtasanCount = allItems.filter(
           (i: any) => i.status_atasan === "pending" && i.status !== "rejected"

@@ -87,6 +87,7 @@ export async function completeProfileAction(formData: FormData, injectedCtx?: an
           phone: cleanPhone,
           address: address,
           avatar_url: user.user_metadata?.avatar_url || undefined,
+          user_type: "eksternal_masyarakat",
         }),
       },
     );
@@ -101,6 +102,7 @@ export async function completeProfileAction(formData: FormData, injectedCtx?: an
           phone: cleanPhone,
           address: address,
           avatar_url: user.user_metadata?.avatar_url || undefined,
+          user_type: "eksternal_masyarakat",
         }),
       });
     }
