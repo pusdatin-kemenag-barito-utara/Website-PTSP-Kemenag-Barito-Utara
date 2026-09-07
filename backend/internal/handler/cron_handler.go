@@ -6,7 +6,7 @@ import (
 
 	"ptsp-kemenag-backend/internal/service"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type CronHandler struct {
@@ -17,7 +17,7 @@ func NewCronHandler(svc *service.SystemService) *CronHandler {
 	return &CronHandler{svc: svc}
 }
 
-func (h *CronHandler) CleanupDocuments(c *fiber.Ctx) error {
+func (h *CronHandler) CleanupDocuments(c fiber.Ctx) error {
 	secret := c.Query("secret")
 	if secret == "" {
 		secret = c.Get("Authorization")
@@ -45,7 +45,7 @@ func (h *CronHandler) CleanupDocuments(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CronHandler) KeepAlive(c *fiber.Ctx) error {
+func (h *CronHandler) KeepAlive(c fiber.Ctx) error {
 	if err := h.svc.KeepAlive(c.Context()); err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
@@ -56,7 +56,7 @@ func (h *CronHandler) KeepAlive(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CronHandler) GetSystemStatus(c *fiber.Ctx) error {
+func (h *CronHandler) GetSystemStatus(c fiber.Ctx) error {
 	status, err := h.svc.GetSystemStatus(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -64,9 +64,9 @@ func (h *CronHandler) GetSystemStatus(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": status})
 }
 
-func (h *CronHandler) ToggleGuestBookMode(c *fiber.Ctx) error {
+func (h *CronHandler) ToggleGuestBookMode(c fiber.Ctx) error {
 	var body map[string]interface{}
-	if err := c.BodyParser(&body); err != nil {
+	if err := c.Bind().Body(&body); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if err := h.svc.UpdateSystemSettings(c.Context(), body); err != nil {
@@ -75,7 +75,7 @@ func (h *CronHandler) ToggleGuestBookMode(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Pengaturan sistem berhasil diperbarui"})
 }
 
-func (h *CronHandler) GetVideos(c *fiber.Ctx) error {
+func (h *CronHandler) GetVideos(c fiber.Ctx) error {
 	videos, totalCount, err := h.svc.GetYouTubeVideos(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})

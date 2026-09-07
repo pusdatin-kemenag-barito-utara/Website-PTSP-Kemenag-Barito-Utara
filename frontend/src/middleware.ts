@@ -2,6 +2,7 @@ import { defineMiddleware } from "astro:middleware";
 import { runWithContext } from "@/lib/request-context";
 import { updateSession } from "@/lib/supabase/middleware";
 import { RedirectSignal, NotFoundSignal } from "@/lib/next-compat/navigation";
+import { checkMaintenanceStatus } from "@/lib/maintenance";
 
 function getIp(request: Request): string {
   return (
@@ -31,46 +32,6 @@ function isSameOrigin(request: Request): boolean {
     }
   }
   return true;
-}
-
-let maintenanceCache: { isMaintenance: boolean; expiresAt: number } | null = null;
-
-async function checkMaintenanceStatus(): Promise<boolean> {
-  if (import.meta.env.DEV) {
-    return false;
-  }
-
-  const now = Date.now();
-  if (maintenanceCache && now < maintenanceCache.expiresAt) {
-    return maintenanceCache.isMaintenance;
-  }
-
-  try {
-    const pusdatinUrl =
-      import.meta.env.PUBLIC_PUSDATIN_URL ||
-      process.env.PUBLIC_PUSDATIN_URL ||
-      "https://pusdatin.kemenag-baritoutara.com";
-    const appId = "ptsp-kemenag";
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 600);
-
-    const response = await fetch(
-      `${pusdatinUrl}/api/public/apps/${appId}/status`,
-      { signal: controller.signal },
-    );
-    clearTimeout(timeoutId);
-    if (!response.ok) {
-      maintenanceCache = { isMaintenance: false, expiresAt: now + 60000 };
-      return false;
-    }
-    const data = await response.json();
-    const isMaintenance = data?.status === "maintenance";
-    maintenanceCache = { isMaintenance, expiresAt: now + 60000 };
-    return isMaintenance;
-  } catch (error) {
-    maintenanceCache = { isMaintenance: false, expiresAt: now + 30000 };
-    return false;
-  }
 }
 
 const PUBLIC_PATHS = [
@@ -108,8 +69,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isPublicPage =
     path === "/" || PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
 
+  const isStaticOrAsset =
+    path.startsWith("/_astro") ||
+    path.startsWith("/_image") ||
+    path.startsWith("/@") ||
+    path.startsWith("/assets") ||
+    path.startsWith("/images") ||
+    path.startsWith("/icons") ||
+    path.includes(".") ||
+    path.startsWith("/api");
+
   const isExemptFromMaintenance =
-    path === "/maintenance" || path.startsWith("/api");
+    path === "/maintenance" ||
+    path === "/login/petugas" ||
+    path.startsWith("/admin") ||
+    isStaticOrAsset;
 
   let isMaintenanceMode = false;
   if (!isExemptFromMaintenance) {

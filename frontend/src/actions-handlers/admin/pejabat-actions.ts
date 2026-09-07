@@ -7,38 +7,22 @@ export async function getPejabatList() {
   try {
     const supabase = createAdminClient();
     
-    // Ambil data pejabat dari schema kemenag_pusdatin
-    const { data: pegawai, error: errPegawai } = await supabase
-      .schema("kemenag_pusdatin")
+    // Ambil data pejabat langsung dari schema kemenag_ptsp
+    const { data: pegawai, error: errPegawai } = await (supabase as any)
+      .schema("kemenag_ptsp")
       .from("profiles_pegawai")
-      .select("nip, jabatan, unit_kerja, tipe_pejabat, user_id")
-      .not("tipe_pejabat", "is", null);
+      .select("id, nip, nama, jabatan, unit_kerja, tipe_pejabat, order_index")
+      .not("tipe_pejabat", "is", null)
+      .order("order_index", { ascending: true });
 
     if (errPegawai || !pegawai) {
       throw errPegawai || new Error("Gagal mengambil data profiles_pegawai");
     }
 
-    const userIds = pegawai.map((p) => p.user_id).filter(Boolean);
-    let profilesMap: Record<string, string> = {};
-
-    if (userIds.length > 0) {
-      const { data: profiles, error: errProfiles } = await supabase
-        .schema("kemenag_pusdatin")
-        .from("profiles")
-        .select("id, name")
-        .in("id", userIds);
-
-      if (!errProfiles && profiles) {
-        profilesMap = profiles.reduce((acc: any, p: any) => {
-          acc[p.id] = p.name;
-          return acc;
-        }, {});
-      }
-    }
-
     const rawData = pegawai.map((u: any) => ({
+      id: u.id,
       nip: u.nip,
-      nama: profilesMap[u.user_id] || "Pegawai Kemenag",
+      nama: u.nama || "Pegawai Kemenag",
       jabatan: u.jabatan || "",
       unitKerja: u.unit_kerja || "",
       tipePejabat: u.tipe_pejabat || "",

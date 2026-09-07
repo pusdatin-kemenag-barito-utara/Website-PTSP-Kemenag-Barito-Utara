@@ -95,20 +95,23 @@ export async function registerPemohonAction(
 
     if (newAuthUser?.user) {
       try {
-        await (admin as any).schema("kemenag_pusdatin").from("profiles").upsert({
-          id: newAuthUser.user.id,
-          email: internalEmail,
-          name: validated.data.fullName,
-          phone: phone,
-          address: validated.data.address,
-          role: "user",
-          user_type: "eksternal_masyarakat",
-          status: "aktif",
-          is_verified: true,
-          updated_at: new Date().toISOString(),
-        });
+        await (admin as any).schema("kemenag_ptsp").from("profiles_pemohon").upsert(
+          {
+            user_id: newAuthUser.user.id,
+            email: internalEmail,
+            nama: validated.data.fullName,
+            no_hp: phone,
+            alamat: validated.data.address,
+            metode_login: "Email / Password",
+            role: "user",
+            status: "active",
+            is_verified: true,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
       } catch (profileErr) {
-        console.error("Gagal provisi profil ke kemenag_pusdatin.profiles:", profileErr);
+        console.error("Gagal provisi profil ke kemenag_ptsp.profiles_pemohon:", profileErr);
       }
     }
 

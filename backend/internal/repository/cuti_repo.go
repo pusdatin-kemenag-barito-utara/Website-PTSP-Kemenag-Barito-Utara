@@ -22,7 +22,7 @@ func NewCutiRepository(db *pgxpool.Pool) *CutiRepository {
 
 func (r *CutiRepository) GetPejabatNIPs(ctx context.Context) ([]string, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT nip FROM kemenag_pusdatin.profiles_pegawai
+		SELECT nip FROM kemenag_ptsp.profiles_pegawai
 		WHERE tipe_pejabat IS NOT NULL AND nip IS NOT NULL
 	`)
 	if err != nil {
@@ -41,7 +41,7 @@ func (r *CutiRepository) GetPejabatNIPs(ctx context.Context) ([]string, error) {
 }
 
 func (r *CutiRepository) FindByNip(ctx context.Context, nip string) (map[string]interface{}, error) {
-	// 1. Query pegawai by NIP from ptsp_data_cuti_pegawai (public schema / default search path)
+	// 1. Query pegawai by NIP from ptsp_data_cuti_pegawai
 	var pegawaiID string
 	var nama, pNip, jabatan string
 	err := r.db.QueryRow(ctx, `
@@ -51,11 +51,10 @@ func (r *CutiRepository) FindByNip(ctx context.Context, nip string) (map[string]
 	`, nip).Scan(&pegawaiID, &nama, &pNip, &jabatan)
 
 	if err != nil {
-		// Fallback query to profiles_pegawai via profiles
+		// Fallback query to profiles_pegawai
 		err = r.db.QueryRow(ctx, `
-			SELECT pp.id::text, COALESCE(p.name, 'Pegawai'), COALESCE(pp.nip, ''), COALESCE(pp.jabatan, '-')
+			SELECT pp.id::text, COALESCE(pp.nama, 'Pegawai'), COALESCE(pp.nip, ''), COALESCE(pp.jabatan, '-')
 			FROM kemenag_ptsp.profiles_pegawai pp
-			JOIN kemenag_pusdatin.profiles p ON p.id = pp.profile_id
 			WHERE pp.nip = $1 LIMIT 1
 		`, nip).Scan(&pegawaiID, &nama, &pNip, &jabatan)
 		if err != nil {
@@ -414,12 +413,11 @@ func (r *CutiRepository) AdminSyncPusdatin(ctx context.Context) (int, error) {
 	tag, err := r.db.Exec(ctx, `
 		INSERT INTO kemenag_ptsp.ptsp_data_cuti_pegawai (nama, nip, jabatan, unit_kerja)
 		SELECT 
-			COALESCE(p.name, 'Pegawai Kemenag'),
+			COALESCE(pp.nama, 'Pegawai Kemenag'),
 			pp.nip,
 			COALESCE(pp.jabatan, ''),
 			COALESCE(pp.unit_kerja, 'Kantor Kementerian Agama')
-		FROM kemenag_pusdatin.profiles_pegawai pp
-		JOIN kemenag_pusdatin.profiles p ON p.id = pp.user_id
+		FROM kemenag_ptsp.profiles_pegawai pp
 		WHERE pp.nip IS NOT NULL AND pp.nip != ''
 		ON CONFLICT (nip) DO UPDATE SET
 			nama = EXCLUDED.nama,

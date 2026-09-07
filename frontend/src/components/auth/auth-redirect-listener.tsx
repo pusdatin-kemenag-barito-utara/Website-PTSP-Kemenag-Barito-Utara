@@ -22,23 +22,24 @@ export function AuthRedirectListener() {
         if (isFromMagicLink) {
           hasRedirected.current = true;
           
-          // Ambil role user dari tabel profiles untuk menentukan arah redirect
-          const { data: profile } = await supabase
-            .from("ptsp_profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-            
-          if (profile) {
-            if (profile.role === "pegawai") {
-              router.push("/pegawai");
-            } else if (profile.role === "user") {
-              router.push("/dashboard");
-            } else {
-              router.push("/admin");
-            }
+          // Ambil role user dari metadata atau endpoint /api/v1/users/:id
+          let role = session.user.user_metadata?.role;
+          if (!role) {
+            try {
+              const res = await fetch(`/api/v1/users/${session.user.id}`).then((r) => r.json());
+              if (res?.data?.role) {
+                role = res.data.role;
+              }
+            } catch (e) {}
+          }
+
+          if (role === "pegawai") {
+            router.push("/pegawai");
+          } else if (role === "user") {
+            router.push("/dashboard");
+          } else if (role) {
+            router.push("/admin");
           } else {
-            // Fallback redirect jika profil tidak ditemukan
             router.push("/dashboard");
           }
         }

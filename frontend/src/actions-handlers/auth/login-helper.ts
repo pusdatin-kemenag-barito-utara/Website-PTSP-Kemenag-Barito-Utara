@@ -99,15 +99,24 @@ export async function handlePegawaiLoginAction(nip: string, password?: string, t
 
     if (newAuthUser?.user) {
       try {
-        await fetchAPI(`/admin/users/${newAuthUser.user.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({
+        await (adminClient as any).schema("kemenag_ptsp").from("profiles_pegawai").upsert(
+          {
+            user_id: newAuthUser.user.id,
+            email: pseudoEmail,
+            nama: `Pegawai ${nip}`,
+            nip: nip,
+            jabatan: "Pegawai",
+            unit_kerja: "Kantor Kementerian Agama Kabupaten Barito Utara",
             role: "pegawai",
+            status: "active",
+            is_verified: true,
             permissions: ["e_laporan_kinerja"],
-          }),
-        });
-      } catch (updateErr) {
-        console.error("Gagal update role pegawai:", updateErr);
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+      } catch (insertErr) {
+        console.error("Gagal provisi profiles_pegawai:", insertErr);
       }
     }
 

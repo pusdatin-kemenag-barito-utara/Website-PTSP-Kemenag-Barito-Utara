@@ -2,8 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/service"
 )
@@ -16,9 +17,12 @@ func NewAppointmentHandler(svc *service.AppointmentService) *AppointmentHandler 
 	return &AppointmentHandler{svc: svc}
 }
 
-func (h *AppointmentHandler) GetAppointments(c *fiber.Ctx) error {
+func (h *AppointmentHandler) GetAppointments(c fiber.Ctx) error {
 	status := c.Query("status")
-	limit := c.QueryInt("limit", 100)
+	limit := 100
+	if l, err := strconv.Atoi(c.Query("limit")); err == nil && l > 0 {
+		limit = l
+	}
 	data, err := h.svc.GetAll(c.Context(), status, limit)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -29,9 +33,9 @@ func (h *AppointmentHandler) GetAppointments(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *AppointmentHandler) CreateAppointment(c *fiber.Ctx) error {
+func (h *AppointmentHandler) CreateAppointment(c fiber.Ctx) error {
 	var req models.CreateAppointmentRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 
@@ -53,10 +57,10 @@ func (h *AppointmentHandler) CreateAppointment(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AppointmentHandler) UpdateStatus(c *fiber.Ctx) error {
+func (h *AppointmentHandler) UpdateStatus(c fiber.Ctx) error {
 	id := c.Params("id")
 	var req models.UpdateAppointmentStatusRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 
@@ -66,7 +70,7 @@ func (h *AppointmentHandler) UpdateStatus(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Status janji temu berhasil diperbarui"})
 }
 
-func (h *AppointmentHandler) Delete(c *fiber.Ctx) error {
+func (h *AppointmentHandler) Delete(c fiber.Ctx) error {
 	id := c.Params("id")
 	if err := h.svc.Delete(c.Context(), id); err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})

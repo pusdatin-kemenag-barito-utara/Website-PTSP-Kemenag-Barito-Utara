@@ -2,12 +2,13 @@ package handler
 
 import (
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/service"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type RequestHandler struct {
@@ -19,7 +20,7 @@ func NewRequestHandler(svc *service.RequestService, fileSvc *service.FileService
 	return &RequestHandler{svc: svc, fileSvc: fileSvc}
 }
 
-func (h *RequestHandler) GetRequests(c *fiber.Ctx) error {
+func (h *RequestHandler) GetRequests(c fiber.Ctx) error {
 	userID := c.Query("user_id")
 	if userID == "" {
 		userID = c.Query("userId")
@@ -29,7 +30,10 @@ func (h *RequestHandler) GetRequests(c *fiber.Ctx) error {
 	if category == "" {
 		category = c.Query("type")
 	}
-	limit := c.QueryInt("limit", 100)
+	limit := 100
+	if l, err := strconv.Atoi(c.Query("limit")); err == nil && l > 0 {
+		limit = l
+	}
 
 	data, err := h.svc.GetAll(c.Context(), userID, status, category, limit)
 	if err != nil {
@@ -41,7 +45,7 @@ func (h *RequestHandler) GetRequests(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *RequestHandler) TrackRequest(c *fiber.Ctx) error {
+func (h *RequestHandler) TrackRequest(c fiber.Ctx) error {
 	reqNum := c.Params("requestNumber")
 	res, err := h.svc.Track(c.Context(), reqNum)
 	if err != nil {
@@ -50,7 +54,7 @@ func (h *RequestHandler) TrackRequest(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": res})
 }
 
-func (h *RequestHandler) GetRequestByID(c *fiber.Ctx) error {
+func (h *RequestHandler) GetRequestByID(c fiber.Ctx) error {
 	id := c.Params("id")
 	res, err := h.svc.GetByID(c.Context(), id)
 	if err != nil {
@@ -59,10 +63,10 @@ func (h *RequestHandler) GetRequestByID(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": res})
 }
 
-func (h *RequestHandler) UpdateStatus(c *fiber.Ctx) error {
+func (h *RequestHandler) UpdateStatus(c fiber.Ctx) error {
 	id := c.Params("id")
 	var req models.UpdateRequestStatusRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 
@@ -72,7 +76,7 @@ func (h *RequestHandler) UpdateStatus(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Status pengajuan berhasil diperbarui"})
 }
 
-func (h *RequestHandler) Delete(c *fiber.Ctx) error {
+func (h *RequestHandler) Delete(c fiber.Ctx) error {
 	id := c.Params("id")
 	if err := h.svc.Delete(c.Context(), id); err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -80,7 +84,7 @@ func (h *RequestHandler) Delete(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Permohonan berhasil dihapus"})
 }
 
-func (h *RequestHandler) UploadDocument(c *fiber.Ctx) error {
+func (h *RequestHandler) UploadDocument(c fiber.Ctx) error {
 	fileHeader, err := c.FormFile("document")
 	if err != nil || fileHeader == nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "File dokumen tidak ditemukan"})
@@ -96,7 +100,7 @@ func (h *RequestHandler) UploadDocument(c *fiber.Ctx) error {
 }
 
 // AttachDocument mengunggah dokumen revisi & menyimpannya ke record dokumen permohonan.
-func (h *RequestHandler) AttachDocument(c *fiber.Ctx) error {
+func (h *RequestHandler) AttachDocument(c fiber.Ctx) error {
 	requestID := c.Params("id")
 
 	fileHeader, err := c.FormFile("document")
@@ -139,14 +143,14 @@ func (h *RequestHandler) AttachDocument(c *fiber.Ctx) error {
 }
 
 // CreateByApplicant membuat permohonan baru oleh pemohon (JSON: userId, serviceId, serviceItemId, answers[]).
-func (h *RequestHandler) CreateByApplicant(c *fiber.Ctx) error {
+func (h *RequestHandler) CreateByApplicant(c fiber.Ctx) error {
 	var req struct {
 		UserID        string                `json:"userId"`
 		ServiceID     int64                 `json:"serviceId"`
 		ServiceItemID int64                 `json:"serviceItemId"`
 		Answers       []models.RequestAnswer `json:"answers"`
 	}
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 	if req.UserID == "" || req.ServiceID == 0 {
@@ -161,13 +165,13 @@ func (h *RequestHandler) CreateByApplicant(c *fiber.Ctx) error {
 }
 
 // UpdateByApplicant memperbarui permohonan milik pemohon.
-func (h *RequestHandler) UpdateByApplicant(c *fiber.Ctx) error {
+func (h *RequestHandler) UpdateByApplicant(c fiber.Ctx) error {
 	id := c.Params("id")
 	var req struct {
 		UserID  string                `json:"userId"`
 		Answers []models.RequestAnswer `json:"answers"`
 	}
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 	if req.UserID == "" {
@@ -181,7 +185,7 @@ func (h *RequestHandler) UpdateByApplicant(c *fiber.Ctx) error {
 }
 
 // DeleteByApplicant menghapus permohonan milik pemohon (query: ?userId=).
-func (h *RequestHandler) DeleteByApplicant(c *fiber.Ctx) error {
+func (h *RequestHandler) DeleteByApplicant(c fiber.Ctx) error {
 	id := c.Params("id")
 	userID := c.Query("userId")
 	if userID == "" {
@@ -197,7 +201,7 @@ func (h *RequestHandler) DeleteByApplicant(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Permohonan berhasil dihapus"})
 }
 
-func (h *RequestHandler) GetDashboardStats(c *fiber.Ctx) error {
+func (h *RequestHandler) GetDashboardStats(c fiber.Ctx) error {
 	stats, err := h.svc.GetDashboardStats(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})

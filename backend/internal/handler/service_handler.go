@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"strconv"
+
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/service"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type ServiceHandler struct {
@@ -16,7 +18,7 @@ func NewServiceHandler(svc *service.ServiceService, fileSvc *service.FileService
 	return &ServiceHandler{svc: svc, fileSvc: fileSvc}
 }
 
-func (h *ServiceHandler) GetServices(c *fiber.Ctx) error {
+func (h *ServiceHandler) GetServices(c fiber.Ctx) error {
 	data, err := h.svc.GetServicesWithItems(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -27,7 +29,7 @@ func (h *ServiceHandler) GetServices(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *ServiceHandler) GetServiceBySlug(c *fiber.Ctx) error {
+func (h *ServiceHandler) GetServiceBySlug(c fiber.Ctx) error {
 	slug := c.Params("slug")
 	data, err := h.svc.GetServiceBySlug(c.Context(), slug)
 	if err != nil {
@@ -39,7 +41,7 @@ func (h *ServiceHandler) GetServiceBySlug(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *ServiceHandler) GetMasterOptions(c *fiber.Ctx) error {
+func (h *ServiceHandler) GetMasterOptions(c fiber.Ctx) error {
 	data, err := h.svc.GetMasterOptions(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -50,9 +52,9 @@ func (h *ServiceHandler) GetMasterOptions(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *ServiceHandler) AdminUpsertMasterOption(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminUpsertMasterOption(c fiber.Ctx) error {
 	var req models.UpsertMasterOptionRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Category == "" || req.Value == "" || req.Label == "" {
@@ -66,7 +68,7 @@ func (h *ServiceHandler) AdminUpsertMasterOption(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": opt, "message": "Master option berhasil disimpan"})
 }
 
-func (h *ServiceHandler) AdminDeleteMasterOption(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminDeleteMasterOption(c fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID wajib diisi"})
@@ -77,8 +79,7 @@ func (h *ServiceHandler) AdminDeleteMasterOption(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Master option berhasil dihapus"})
 }
 
-
-func (h *ServiceHandler) GetRequirements(c *fiber.Ctx) error {
+func (h *ServiceHandler) GetRequirements(c fiber.Ctx) error {
 	itemID := c.Params("serviceItemId")
 	data, err := h.svc.GetRequirements(c.Context(), itemID)
 	if err != nil {
@@ -90,7 +91,7 @@ func (h *ServiceHandler) GetRequirements(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *ServiceHandler) GetFormFields(c *fiber.Ctx) error {
+func (h *ServiceHandler) GetFormFields(c fiber.Ctx) error {
 	itemID := c.Params("serviceItemId")
 	data, err := h.svc.GetFormFields(c.Context(), itemID)
 	if err != nil {
@@ -104,9 +105,9 @@ func (h *ServiceHandler) GetFormFields(c *fiber.Ctx) error {
 
 // --- Admin: CRUD Services ---
 
-func (h *ServiceHandler) AdminCreateService(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminCreateService(c fiber.Ctx) error {
 	var req models.CreateServiceRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Name == "" || req.Slug == "" {
@@ -128,14 +129,14 @@ func (h *ServiceHandler) AdminCreateService(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"success": true, "data": svc})
 }
 
-func (h *ServiceHandler) AdminUpdateService(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminUpdateService(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
 
 	var req models.UpdateServiceRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Name == "" {
@@ -157,8 +158,8 @@ func (h *ServiceHandler) AdminUpdateService(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": svc})
 }
 
-func (h *ServiceHandler) AdminDeleteService(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminDeleteService(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
@@ -168,9 +169,9 @@ func (h *ServiceHandler) AdminDeleteService(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Layanan berhasil dihapus"})
 }
 
-func (h *ServiceHandler) AdminReorderServices(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminReorderServices(c fiber.Ctx) error {
 	var req models.ReorderServicesRequest
-	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+	if err := c.Bind().Body(&req); err != nil || len(req.IDs) == 0 {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid atau IDs kosong"})
 	}
 	if err := h.svc.ReorderServices(c.Context(), req.IDs); err != nil {
@@ -181,14 +182,14 @@ func (h *ServiceHandler) AdminReorderServices(c *fiber.Ctx) error {
 
 // --- Admin: CRUD Requirements ---
 
-func (h *ServiceHandler) AdminCreateRequirement(c *fiber.Ctx) error {
-	serviceItemID, err := c.ParamsInt("serviceItemId")
+func (h *ServiceHandler) AdminCreateRequirement(c fiber.Ctx) error {
+	serviceItemID, err := strconv.Atoi(c.Params("serviceItemId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID service item tidak valid"})
 	}
 
 	var req models.CreateRequirementRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.DocumentName == "" {
@@ -208,14 +209,14 @@ func (h *ServiceHandler) AdminCreateRequirement(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"success": true, "data": rq})
 }
 
-func (h *ServiceHandler) AdminUpdateRequirement(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminUpdateRequirement(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
 
 	var req models.UpdateRequirementRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.DocumentName == "" {
@@ -229,8 +230,8 @@ func (h *ServiceHandler) AdminUpdateRequirement(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": rq})
 }
 
-func (h *ServiceHandler) AdminDeleteRequirement(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminDeleteRequirement(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
@@ -240,9 +241,9 @@ func (h *ServiceHandler) AdminDeleteRequirement(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Persyaratan berhasil dihapus"})
 }
 
-func (h *ServiceHandler) AdminReorderRequirements(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminReorderRequirements(c fiber.Ctx) error {
 	var req models.ReorderRequirementsRequest
-	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+	if err := c.Bind().Body(&req); err != nil || len(req.IDs) == 0 {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid atau IDs kosong"})
 	}
 	if err := h.svc.ReorderRequirements(c.Context(), req.IDs); err != nil {
@@ -253,15 +254,14 @@ func (h *ServiceHandler) AdminReorderRequirements(c *fiber.Ctx) error {
 
 // --- Admin: CRUD Service Items ---
 
-
-func (h *ServiceHandler) AdminCreateServiceItem(c *fiber.Ctx) error {
-	serviceID, err := c.ParamsInt("serviceId")
+func (h *ServiceHandler) AdminCreateServiceItem(c fiber.Ctx) error {
+	serviceID, err := strconv.Atoi(c.Params("serviceId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID layanan tidak valid"})
 	}
 
 	var req models.CreateServiceItemRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Name == "" || req.Slug == "" {
@@ -275,14 +275,14 @@ func (h *ServiceHandler) AdminCreateServiceItem(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"success": true, "data": item})
 }
 
-func (h *ServiceHandler) AdminUpdateServiceItem(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminUpdateServiceItem(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
 
 	var req models.UpdateServiceItemRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Name == "" {
@@ -296,8 +296,8 @@ func (h *ServiceHandler) AdminUpdateServiceItem(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": item})
 }
 
-func (h *ServiceHandler) AdminDeleteServiceItem(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminDeleteServiceItem(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
@@ -307,9 +307,9 @@ func (h *ServiceHandler) AdminDeleteServiceItem(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Item layanan berhasil dihapus"})
 }
 
-func (h *ServiceHandler) AdminReorderServiceItems(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminReorderServiceItems(c fiber.Ctx) error {
 	var req models.ReorderServiceItemsRequest
-	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+	if err := c.Bind().Body(&req); err != nil || len(req.IDs) == 0 {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid atau IDs kosong"})
 	}
 	if err := h.svc.ReorderServiceItems(c.Context(), req.IDs); err != nil {
@@ -320,14 +320,14 @@ func (h *ServiceHandler) AdminReorderServiceItems(c *fiber.Ctx) error {
 
 // --- Admin: CRUD Form Fields ---
 
-func (h *ServiceHandler) AdminCreateFormField(c *fiber.Ctx) error {
-	serviceItemID, err := c.ParamsInt("serviceItemId")
+func (h *ServiceHandler) AdminCreateFormField(c fiber.Ctx) error {
+	serviceItemID, err := strconv.Atoi(c.Params("serviceItemId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID service item tidak valid"})
 	}
 
 	var req models.CreateFormFieldRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Label == "" || req.Name == "" {
@@ -341,14 +341,14 @@ func (h *ServiceHandler) AdminCreateFormField(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"success": true, "data": ff})
 }
 
-func (h *ServiceHandler) AdminUpdateFormField(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminUpdateFormField(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
 
 	var req models.UpdateFormFieldRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid"})
 	}
 	if req.Label == "" || req.Name == "" {
@@ -362,8 +362,8 @@ func (h *ServiceHandler) AdminUpdateFormField(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": ff})
 }
 
-func (h *ServiceHandler) AdminDeleteFormField(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+func (h *ServiceHandler) AdminDeleteFormField(c fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID tidak valid"})
 	}
@@ -373,9 +373,9 @@ func (h *ServiceHandler) AdminDeleteFormField(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "Field berhasil dihapus"})
 }
 
-func (h *ServiceHandler) AdminReorderFormFields(c *fiber.Ctx) error {
+func (h *ServiceHandler) AdminReorderFormFields(c fiber.Ctx) error {
 	var req models.ReorderFormFieldsRequest
-	if err := c.BodyParser(&req); err != nil || len(req.IDs) == 0 {
+	if err := c.Bind().Body(&req); err != nil || len(req.IDs) == 0 {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Format body tidak valid atau IDs kosong"})
 	}
 	if err := h.svc.ReorderFormFields(c.Context(), req.IDs); err != nil {

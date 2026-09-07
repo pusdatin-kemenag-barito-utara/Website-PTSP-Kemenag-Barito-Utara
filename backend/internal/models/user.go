@@ -4,25 +4,26 @@ import "time"
 
 // User / Profile merepresentasikan akun pengguna sistem PTSP.
 type User struct {
-	ID              string     `json:"id"`
-	Name            *string    `json:"name"`
-	Email           *string    `json:"email"`
-	Phone           *string    `json:"phone"`
-	Role            string     `json:"role"`
-	UserType        string     `json:"user_type"`
-	Status          *string    `json:"status"`
-	IsVerified      bool       `json:"is_verified"`
-	AvatarURL       *string    `json:"avatar_url"`
-	CreatedAt       time.Time  `json:"created_at"`
+	ID              string      `json:"id"`
+	Name            *string     `json:"name"`
+	Email           *string     `json:"email"`
+	Phone           *string     `json:"phone"`
+	Role            string      `json:"role"`
+	UserType        string      `json:"user_type"`
+	Status          *string     `json:"status"`
+	IsVerified      bool        `json:"is_verified"`
+	AvatarURL       *string     `json:"avatar_url"`
+	Permissions     interface{} `json:"permissions,omitempty"`
+	CreatedAt       time.Time   `json:"created_at"`
 	
-	// Tambahan untuk Pegawai dari skema pusdatin
-	Nip             *string    `json:"nip,omitempty"`
-	Jabatan         *string    `json:"jabatan,omitempty"`
-	PangkatGolongan *string    `json:"pangkat_golongan,omitempty"`
-	UnitKerja       *string    `json:"unit_kerja,omitempty"`
+	// Tambahan untuk Pegawai & Petugas dari skema kemenag_ptsp
+	Nip             *string     `json:"nip,omitempty"`
+	Jabatan         *string     `json:"jabatan,omitempty"`
+	PangkatGolongan *string     `json:"pangkat_golongan,omitempty"`
+	UnitKerja       *string     `json:"unit_kerja,omitempty"`
 	
-	// Tambahan untuk Pemohon dari skema pusdatin
-	Address         *string    `json:"address,omitempty"`
+	// Tambahan untuk Pemohon dari skema kemenag_ptsp
+	Address         *string     `json:"address,omitempty"`
 }
 
 // UpdateUserRequest DTO untuk admin update user (role/status/verifikasi).

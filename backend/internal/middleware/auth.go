@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 
 	"ptsp-kemenag-backend/internal/config"
 )
@@ -16,7 +16,7 @@ import (
 // RequireJWT memvalidasi access token Supabase (JWT HS256) pada header Authorization.
 // User identity (sub/email/role) disimpan di context locals untuk dipakai handler.
 func RequireJWT(cfg *config.Config) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
 			return c.Status(401).JSON(fiber.Map{"success": false, "error": "Token tidak ditemukan. Silakan login terlebih dahulu."})

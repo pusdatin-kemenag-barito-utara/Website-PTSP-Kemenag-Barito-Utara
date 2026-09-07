@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"strconv"
+
 	"ptsp-kemenag-backend/internal/models"
 	"ptsp-kemenag-backend/internal/service"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type UserHandler struct {
@@ -16,10 +18,13 @@ func NewUserHandler(svc *service.UserService, fileSvc *service.FileService) *Use
 	return &UserHandler{svc: svc, fileSvc: fileSvc}
 }
 
-func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
+func (h *UserHandler) GetUsers(c fiber.Ctx) error {
 	role := c.Query("role")
 	status := c.Query("status")
-	limit := c.QueryInt("limit", 100)
+	limit := 100
+	if l, err := strconv.Atoi(c.Query("limit")); err == nil && l > 0 {
+		limit = l
+	}
 
 	data, err := h.svc.GetAll(c.Context(), role, status, limit)
 	if err != nil {
@@ -31,7 +36,7 @@ func (h *UserHandler) GetUsers(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
+func (h *UserHandler) GetUserByID(c fiber.Ctx) error {
 	id := c.Params("id")
 	user, err := h.svc.GetByID(c.Context(), id)
 	if err != nil {
@@ -40,10 +45,10 @@ func (h *UserHandler) GetUserByID(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": user})
 }
 
-func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
+func (h *UserHandler) UpdateUser(c fiber.Ctx) error {
 	id := c.Params("id")
 	var req models.UpdateUserRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 
@@ -53,11 +58,11 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "User berhasil diperbarui"})
 }
 
-func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
+func (h *UserHandler) UpdateProfile(c fiber.Ctx) error {
 	id := c.Params("id")
 	var req models.UpdateProfileRequest
-	if err := c.BodyParser(&req); err != nil {
-		// BodyParser error ignore if multipart
+	if err := c.Bind().Body(&req); err != nil {
+		// Bind error ignore if multipart
 	}
 
 	// Cek jika ada unggahan avatar multipart atau base64
@@ -82,7 +87,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "avatar_url": req.AvatarURL, "message": "Profil berhasil diperbarui"})
 }
 
-func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
+func (h *UserHandler) DeleteUser(c fiber.Ctx) error {
 	id := c.Params("id")
 	if err := h.svc.Delete(c.Context(), id); err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -90,8 +95,11 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "message": "User berhasil dihapus"})
 }
 
-func (h *UserHandler) GetAuditLogs(c *fiber.Ctx) error {
-	limit := c.QueryInt("limit", 100)
+func (h *UserHandler) GetAuditLogs(c fiber.Ctx) error {
+	limit := 100
+	if l, err := strconv.Atoi(c.Query("limit")); err == nil && l > 0 {
+		limit = l
+	}
 	data, err := h.svc.GetAuditLogs(c.Context(), limit)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -102,7 +110,7 @@ func (h *UserHandler) GetAuditLogs(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-func (h *UserHandler) Search(c *fiber.Ctx) error {
+func (h *UserHandler) Search(c fiber.Ctx) error {
 	q := c.Query("q")
 	res, err := h.svc.Search(c.Context(), q)
 	if err != nil {

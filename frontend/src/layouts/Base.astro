@@ -9,6 +9,7 @@ import { CombinedWidgetClient } from "@/components/features/combined/CombinedWid
 import { AccessibilityWidget } from "@/components/features/accessibility/AccessibilityWidget";
 import { ScrollToTopButton } from "@/components/common/scroll-to-top";
 import { AuthRedirectListener } from "@/components/auth/auth-redirect-listener";
+import { MaintenanceSyncListener } from "@/components/layout/maintenance-sync-listener";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -188,10 +189,15 @@ const pageTitle =
           className: "text-[14px]",
         }}
       />
-      <CombinedWidgetClient client:load initialEnabled={maintenance.aiChatEnabled} />
-      <AccessibilityWidget client:load />
-      <ScrollToTopButton client:load />
+      {!isMaintenance && (
+        <>
+          <CombinedWidgetClient client:load initialEnabled={maintenance.aiChatEnabled} />
+          <AccessibilityWidget client:load />
+          <ScrollToTopButton client:load />
+        </>
+      )}
       <AuthRedirectListener client:load />
+      <MaintenanceSyncListener client:load />
     </div>
   </body>
 </html>

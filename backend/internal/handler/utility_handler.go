@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 
 	"ptsp-kemenag-backend/internal/config"
 	"ptsp-kemenag-backend/internal/service"
@@ -105,9 +105,9 @@ type chatRequestBody struct {
 	Messages []chatMessage `json:"messages"`
 }
 
-func (h *ChatHandler) Chat(c *fiber.Ctx) error {
+func (h *ChatHandler) Chat(c fiber.Ctx) error {
 	var body chatRequestBody
-	if err := c.BodyParser(&body); err != nil {
+	if err := c.Bind().Body(&body); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 
@@ -319,7 +319,7 @@ func NewFilesHandler(r2 *storage.R2Storage) *FilesHandler {
 }
 
 // ResolveFile menerjemahkan path (r2:...) lalu redirect ke URL file publik backend.
-func (h *FilesHandler) ResolveFile(c *fiber.Ctx) error {
+func (h *FilesHandler) ResolveFile(c fiber.Ctx) error {
 	path := c.Query("path")
 	if path == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Parameter path wajib diisi"})
@@ -327,11 +327,11 @@ func (h *FilesHandler) ResolveFile(c *fiber.Ctx) error {
 
 	key := strings.TrimPrefix(path, "r2:")
 	target := h.storage.GetURL(key)
-	return c.Redirect(target, fiber.StatusFound)
+	return c.Redirect().Status(fiber.StatusFound).To(target)
 }
 
 // Stats mengembalikan jumlah file & total volume data di penyimpanan.
-func (h *FilesHandler) Stats(c *fiber.Ctx) error {
+func (h *FilesHandler) Stats(c fiber.Ctx) error {
 	fileCount, usage, err := h.storage.GetStats(c.Context())
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
@@ -346,7 +346,7 @@ func (h *FilesHandler) Stats(c *fiber.Ctx) error {
 }
 
 // ProxyFile mengambil dokumen remote dan mengirimkannya inline (menghindari X-Frame-Options).
-func (h *FilesHandler) ProxyFile(c *fiber.Ctx) error {
+func (h *FilesHandler) ProxyFile(c fiber.Ctx) error {
 	fileUrlStr := c.Query("url")
 	if fileUrlStr == "" {
 		return c.Status(400).SendString("URL file tidak boleh kosong")
@@ -404,11 +404,11 @@ func NewImpersonateHandler(cfg *config.Config, cutiSvc *service.CutiService) *Im
 	return &ImpersonateHandler{cfg: cfg, cutiSvc: cutiSvc}
 }
 
-func (h *ImpersonateHandler) GenerateImpersonateLink(c *fiber.Ctx) error {
+func (h *ImpersonateHandler) GenerateImpersonateLink(c fiber.Ctx) error {
 	var req struct {
 		Nip string `json:"nip"`
 	}
-	if err := c.BodyParser(&req); err != nil {
+	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
 	}
 	nip := strings.TrimSpace(req.Nip)

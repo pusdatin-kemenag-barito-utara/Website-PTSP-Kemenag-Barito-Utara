@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "cd frontend && npm install",
+    "install:all": "npm install --legacy-peer-deps",
+    "install:frontend": "cd frontend && npm install --legacy-peer-deps",
+    "install:backend": "cd backend && go mod download",
+    "upgrade:frontend": "cd frontend && npm update astro @astrojs/node @astrojs/react @astrojs/sitemap --legacy-peer-deps",
+    "upgrade:backend": "cd backend && go get -u github.com/gofiber/fiber/v3@latest && go mod tidy",
+    "postinstall": "cd frontend && npm install --legacy-peer-deps",
     "dev": "npx -y concurrently -k -p \"[{name}]\" -c \"cyan,magenta\" -n \"backend,frontend\" \"cd backend && air\" \"cd frontend && npm run dev\"",
     "dev:air": "npx -y concurrently -k -p \"[{name}]\" -c \"cyan,magenta\" -n \"backend,frontend\" \"cd backend && air\" \"cd frontend && npm run dev\"",
     "dev:no-air": "npx -y concurrently -k -p \"[{name}]\" -c \"cyan,magenta\" -n \"backend,frontend\" \"cd backend && go run main.go\" \"cd frontend && npm run dev\"",

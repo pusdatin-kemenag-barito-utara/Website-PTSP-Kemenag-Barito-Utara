@@ -3,13 +3,14 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/etag"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/etag"
+	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/joho/godotenv"
 
 	"ptsp-kemenag-backend/internal/config"
@@ -27,7 +28,7 @@ func main() {
 	}
 	for _, f := range envFiles {
 		if _, err := os.Stat(f); err == nil {
-			_ = godotenv.Load(f);
+			_ = godotenv.Load(f)
 		}
 	}
 
@@ -39,7 +40,7 @@ func main() {
 
 	// Inisialisasi Fiber App dengan High Performance Settings
 	app := fiber.New(fiber.Config{
-		AppName:      "PTSP Kemenag Barito Utara API (Clean Architecture v2.0)",
+		AppName:      "PTSP Kemenag Barito Utara API (Clean Architecture v3.0)",
 		BodyLimit:    50 * 1024 * 1024, // 50MB
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -55,7 +56,7 @@ func main() {
 	}))
 
 	app.Use(logger.New(logger.Config{
-		Next: func(c *fiber.Ctx) bool {
+		Next: func(c fiber.Ctx) bool {
 			path := c.Path()
 			return path == "/api/health" || path == "/api/v1/admin/system/status"
 		},
@@ -69,10 +70,17 @@ func main() {
 		allowOrigins = origins
 	}
 
+	var originsList []string
+	for _, o := range strings.Split(allowOrigins, ",") {
+		if trimmed := strings.TrimSpace(o); trimmed != "" {
+			originsList = append(originsList, trimmed)
+		}
+	}
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     allowOrigins,
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+		AllowOrigins:     originsList,
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
 	}))
 

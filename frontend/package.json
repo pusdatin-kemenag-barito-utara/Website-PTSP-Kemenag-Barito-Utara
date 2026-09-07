@@ -68,5 +68,10 @@
     "tsx": "^4.19.0",
     "typescript": "^5.9.2",
     "vite-plugin-pwa": "^1.0.0"
+  },
+  "overrides": {
+    "@vite-pwa/astro": {
+      "astro": "$astro"
+    }
   }
 }

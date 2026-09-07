@@ -26,11 +26,12 @@ func (r *RequestRepository) FindAll(ctx context.Context, userID, status, categor
 		SELECT r.id, r.user_id, r.service_id, r.service_item_id, r.request_number, r.status,
 		       r.submitted_at, r.approved_at, r.rejected_at, r.completed_at, r.created_at,
 		       COALESCE(s.name, ''), COALESCE(si.name, ''),
-		       COALESCE(p.name, 'Pemohon'), COALESCE(p.email, '')
+		       COALESCE(pm.nama, pp.nama, 'Pemohon'), COALESCE(pm.email, pp.email, '')
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
-		LEFT JOIN kemenag_pusdatin.profiles p ON p.id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pemohon pm ON pm.user_id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.user_id = r.user_id
 		WHERE 1=1
 	`
 	args := []interface{}{}
@@ -142,11 +143,12 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 		       r.revision_note, r.rejection_reason,
 		       COALESCE(s.name, ''), COALESCE(s.role_owner, ''), COALESCE(s.category, 'public'),
 		       COALESCE(si.name, ''),
-		       COALESCE(p.name, ''), COALESCE(p.email, '')
+		       COALESCE(pm.nama, pp.nama, ''), COALESCE(pm.email, pp.email, '')
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
-		LEFT JOIN kemenag_pusdatin.profiles p ON p.id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pemohon pm ON pm.user_id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.user_id = r.user_id
 		WHERE r.id::text = $1 OR UPPER(r.request_number) = UPPER($1)
 		LIMIT 1
 	`, id).Scan(&detail.ID, &detail.UserID, &detail.ServiceID, &detail.ServiceItemID, &detail.RequestNumber, &detail.Status,
@@ -215,9 +217,9 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 
 	// Fetch reviews
 	reviewRows, _ := r.db.Query(ctx, `
-		SELECT rr.id::text, rr.action, COALESCE(rr.note, ''), rr.created_at, COALESCE(p.name, '')
+		SELECT rr.id::text, rr.action, COALESCE(rr.note, ''), rr.created_at, COALESCE(p.nama, '')
 		FROM kemenag_ptsp.ptsp_service_request_reviews rr
-		LEFT JOIN kemenag_pusdatin.profiles p ON p.id = rr.reviewer_id
+		LEFT JOIN kemenag_ptsp.profiles_pegawai p ON p.user_id = rr.reviewer_id
 		WHERE rr.request_id::text = $1 ORDER BY rr.created_at DESC
 	`, id)
 	if reviewRows != nil {
@@ -415,8 +417,8 @@ func (r *RequestRepository) GetDashboardStats(ctx context.Context) (*models.Dash
 	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_services WHERE is_active = true AND COALESCE(category, 'public') = 'asn'`).Scan(&stats.Pegawai.ServiceCount)
 
 	// 2. Total Akun Pengguna (Masyarakat vs Pegawai Internal)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_pusdatin.profiles WHERE COALESCE(user_type, 'eksternal_masyarakat') = 'eksternal_masyarakat'`).Scan(&stats.Masyarakat.UserCount)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_pusdatin.profiles WHERE COALESCE(user_type, 'eksternal_masyarakat') IN ('internal_pegawai', 'internal_admin')`).Scan(&stats.Pegawai.UserCount)
+	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.profiles_pemohon`).Scan(&stats.Masyarakat.UserCount)
+	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.profiles_pegawai`).Scan(&stats.Pegawai.UserCount)
 
 	// 3. Stat Pengajuan Masyarakat (category = 'public')
 	r.db.QueryRow(ctx, `

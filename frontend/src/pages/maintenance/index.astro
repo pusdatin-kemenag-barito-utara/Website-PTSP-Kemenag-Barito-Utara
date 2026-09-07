@@ -1,6 +1,12 @@
 ---
 import Base from "@/layouts/Base.astro";
 import { MaintenanceView } from "@/views/maintenance";
+import { checkMaintenanceStatus } from "@/lib/maintenance";
+
+const isMaintenance = await checkMaintenanceStatus();
+if (!isMaintenance) {
+  return Astro.redirect("/", 302);
+}
 ---
 
 <Base title="Pemeliharaan Sistem" description="Sistem sedang dalam pemeliharaan.">

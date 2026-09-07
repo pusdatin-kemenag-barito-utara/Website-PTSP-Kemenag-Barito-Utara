@@ -86,7 +86,7 @@ Semua server actions hanya boleh:
 
 ## Arsitektur Backend (Golang)
 
-- **Framework**: Fiber v2 (HTTP), berjalan di port `8080`
+- **Framework**: Fiber v3 (HTTP), berjalan di port `8080`
 - **Database**: PostgreSQL via `pgx/v5` connection pool (`pgxpool`)
 - **Schema database**: `kemenag_ptsp` — **selalu gunakan prefix schema** di setiap query SQL
 - **Hot reload**: `air` (`.air.toml` di root backend)
@@ -177,7 +177,7 @@ Handler → Service → Repository → Database (pgx)
 | `react-easy-crop`     | Avatar cropping (frontend)                    |
 | `lucide-react`        | Icon library (frontend)                       |
 | `Cloudflare Turnstile`| Bot protection login/register form            |
-| `fiber/v2`            | HTTP framework (backend)                      |
+| `fiber/v3`            | HTTP framework (backend)                      |
 | `pgx/v5`              | PostgreSQL driver (backend, tanpa ORM)         |
 | `air`                 | Hot reload untuk backend Golang               |
 

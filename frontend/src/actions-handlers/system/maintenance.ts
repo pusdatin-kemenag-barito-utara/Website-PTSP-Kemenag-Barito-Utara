@@ -1,5 +1,6 @@
-﻿import { revalidatePath } from "@/lib/next-compat/cache";
+import { revalidatePath } from "@/lib/next-compat/cache";
 import { fetchAPI } from "@/lib/api";
+import { checkMaintenanceStatus } from "@/lib/maintenance";
 
 export type MaintenanceStatus = {
   enabled: boolean;
@@ -10,14 +11,18 @@ export type MaintenanceStatus = {
 };
 
 export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
+  const isPusdatinMaintenance = await checkMaintenanceStatus();
+
   try {
     const res = await fetchAPI<any>("/admin/system/status", { cache: "no-store" });
     if (res && res.data) {
       return {
-        enabled: res.data.maintenanceMode ?? false,
-        message: res.data.maintenanceMessage || "Sistem sedang dalam pemeliharaan berkala.",
+        enabled: isPusdatinMaintenance || (res.data.maintenanceMode ?? false),
+        message: isPusdatinMaintenance
+          ? "Sistem sedang dalam mode pemeliharaan terpusat oleh Tim Pusdatin Kemenag Barito Utara."
+          : (res.data.maintenanceMessage || "Sistem sedang dalam pemeliharaan berkala."),
         startedAt: res.data.maintenanceStartedAt ? new Date(res.data.maintenanceStartedAt) : null,
-        startedBy: res.data.maintenanceStartedBy || null,
+        startedBy: res.data.maintenanceStartedBy || (isPusdatinMaintenance ? "Pusdatin" : null),
         aiChatEnabled: res.data.aiChatEnabled ?? true,
       };
     }
@@ -26,10 +31,12 @@ export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
   }
 
   return {
-    enabled: false,
-    message: "Sistem sedang dalam pemeliharaan berkala.",
+    enabled: isPusdatinMaintenance,
+    message: isPusdatinMaintenance
+      ? "Sistem sedang dalam mode pemeliharaan terpusat oleh Tim Pusdatin Kemenag Barito Utara."
+      : "Sistem sedang dalam pemeliharaan berkala.",
     startedAt: null,
-    startedBy: null,
+    startedBy: isPusdatinMaintenance ? "Pusdatin" : null,
     aiChatEnabled: true,
   };
 }

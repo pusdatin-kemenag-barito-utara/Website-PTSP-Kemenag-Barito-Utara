@@ -13,6 +13,7 @@ tmp_dir = "tmp"
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
+  bin = ".\\tmp\\main.exe"
   full_bin = ".\\tmp\\main.exe"
 
   include_dir = []

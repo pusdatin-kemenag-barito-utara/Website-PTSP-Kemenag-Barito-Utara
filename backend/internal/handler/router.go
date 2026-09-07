@@ -7,7 +7,8 @@ import (
 	"ptsp-kemenag-backend/internal/service"
 	"ptsp-kemenag-backend/internal/storage"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -48,16 +49,16 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 	impersonateHdl := NewImpersonateHandler(cfg, cutiSvc)
 
 	// Static route fallback untuk file uploads lokal
-	app.Static("/uploads", "./uploads")
+	app.Get("/uploads/*", static.New("./uploads"))
 
 	// ─────────────────────────────────────────────────────────
 	// HEALTH CHECK
 	// ─────────────────────────────────────────────────────────
-	app.Get("/api/health", func(c *fiber.Ctx) error {
+	app.Get("/api/health", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
-			"service": "PTSP Kemenag Backend (Clean Architecture v2.0)",
-			"version": "2.0.0",
+			"service": "PTSP Kemenag Backend (Clean Architecture v3.0)",
+			"version": "3.0.0",
 		})
 	})
 
