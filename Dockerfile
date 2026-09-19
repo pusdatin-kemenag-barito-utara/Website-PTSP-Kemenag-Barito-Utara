@@ -24,8 +24,8 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata bash curl && \
-    curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.alpine.sh' | bash && \
+RUN apk add --no-cache ca-certificates tzdata bash curl wget && \
+    wget -qO- 'https://artifacts-cli.infisical.com/setup.apk.sh' | sh && \
     apk add --no-cache infisical
 
 # Copy Backend
