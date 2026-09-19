@@ -16,9 +16,9 @@
     "sync:pegawai": "infisical run --env=dev --path=/ptsp-kemenag -- tsx scripts/sync-pegawai-mass.ts"
   },
   "dependencies": {
-    "@astrojs/node": "latest",
-    "@astrojs/react": "latest",
-    "@astrojs/sitemap": "latest",
+    "@astrojs/node": "^11.1.0",
+    "@astrojs/react": "^6.0.2",
+    "@astrojs/sitemap": "^6.3.0",
     "@aws-sdk/client-s3": "^3.1046.0",
     "@aws-sdk/s3-request-presigner": "^3.1046.0",
     "@fontsource-variable/plus-jakarta-sans": "^5.2.6",
@@ -62,7 +62,7 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@types/react-signature-canvas": "^1.0.7",
-    "astro": "latest",
+    "astro": "^7.3.3",
     "dotenv": "^16.4.7",
     "tailwindcss": "^4.1.13",
     "tsx": "^4.19.0",
