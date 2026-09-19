@@ -3,8 +3,10 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
 import { ModernSelect } from "@/components/ui/modern-select";
 import { UNIT_KERJA_OPTIONS } from "@/lib/constants";
+import { fetchAPI } from "@/lib/api";
 
 export function EditUserModal({
   editingUser,
@@ -26,6 +28,22 @@ export function EditUserModal({
   onSubmit: (e: React.FormEvent) => void;
 }) {
   if (!editingUser) return null;
+
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchAPI<any>("/master-options")
+      .then((res) => {
+        if (res?.success && Array.isArray(res?.data)) {
+          const uks = res.data
+            .filter((o: any) => o.category === "unit_kerja" && o.is_active !== false)
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((o: any) => o.label || o.value);
+          if (uks.length > 0) setUnitKerjaOptions(uks);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const getPasswordStrength = (pass: string) => {
     if (!pass) return 0;
@@ -53,7 +71,7 @@ export function EditUserModal({
       <m.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl border border-slate-100"
+        className="relative w-full max-w-2xl sm:max-w-3xl rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-100"
       >
         <div className="mb-6">
           <h3 className="text-xl font-black text-slate-900">Edit Profil</h3>
@@ -80,7 +98,7 @@ export function EditUserModal({
 
           <Field label="Unit Kerja / Jabatan">
             <ModernSelect
-              options={UNIT_KERJA_OPTIONS}
+              options={unitKerjaOptions.length > 0 ? unitKerjaOptions : UNIT_KERJA_OPTIONS}
               value={editForm.unitKerja || ""}
               onChange={(val) =>
                 onFormChange({ ...editForm, unitKerja: val })

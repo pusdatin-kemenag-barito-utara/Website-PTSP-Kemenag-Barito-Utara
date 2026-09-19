@@ -1,5 +1,3 @@
-import { Users } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
 import { LayananClient } from "@/components/admin/layanan/layanan-client";
 
 export function LayananASNView({
@@ -12,12 +10,7 @@ export function LayananASNView({
   isSuper: boolean;
 }) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Layanan Pegawai (ASN)"
-        description="Manajemen data layanan khusus kepegawaian (Mutasi, KGB, Pangkat, dll)."
-        icon={Users}
-      />
+    <div className="space-y-4 pb-6">
       <LayananClient
         initialServices={services}
         currentUserRole={currentUserRole ?? ""}

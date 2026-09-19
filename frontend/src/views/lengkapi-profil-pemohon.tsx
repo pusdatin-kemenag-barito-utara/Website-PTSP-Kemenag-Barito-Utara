@@ -5,7 +5,17 @@ import { Suspense } from "react";
 import { AuthCardMotion, AuthBgMotionPemohon, AuthPageSwipeMotion } from "@/components/auth/auth-motion-wrapper";
 import { PemohonLengkapiWaForm } from "@/components/auth/pemohon-lengkapi-wa-form";
 
-export function LengkapiProfilPemohonView() {
+interface LengkapiProfilPemohonViewProps {
+  initialUser?: {
+    id: string;
+    email?: string;
+    name?: string;
+    avatarUrl?: string;
+    token?: string;
+  };
+}
+
+export function LengkapiProfilPemohonView({ initialUser }: LengkapiProfilPemohonViewProps = {}) {
   return (
     <div className="relative flex min-h-screen w-full bg-slate-50 overflow-hidden">
       <AuthPageSwipeMotion direction="left">
@@ -79,7 +89,7 @@ export function LengkapiProfilPemohonView() {
               {/* Form area */}
               <div className="px-6 sm:px-10 pb-8 sm:pb-10">
                 <Suspense fallback={<div className="flex justify-center py-8"><div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600" /></div>}>
-                  <PemohonLengkapiWaForm />
+                  <PemohonLengkapiWaForm initialUser={initialUser} />
                 </Suspense>
               </div>
             </div>

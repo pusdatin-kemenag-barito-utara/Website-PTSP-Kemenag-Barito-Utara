@@ -112,6 +112,10 @@ export function SyaratKetentuanView() {
       <PageBanner
         title="Syarat dan Ketentuan"
         description="Aturan dan pedoman penggunaan layanan administrasi PTSP Kemenag Barito Utara."
+        breadcrumb={[
+          { label: "Beranda", href: "/" },
+          { label: "Syarat & Ketentuan" },
+        ]}
       />
 
       <div className="min-h-screen bg-slate-50/50 py-12 sm:py-16">

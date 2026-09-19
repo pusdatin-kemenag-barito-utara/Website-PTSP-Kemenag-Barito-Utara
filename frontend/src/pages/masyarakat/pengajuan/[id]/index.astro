@@ -30,7 +30,11 @@ try {
 }
 
 if (!request) notFound();
-if (request.userId !== profile.id && request.user_id !== profile.id) redirect("/dashboard");
+const reqUserId = String(request.userId || request.user_id || "");
+const currentUserId = String(profile.id || "");
+const isOwner = reqUserId === currentUserId;
+const isAdminOrStaff = profile.role && profile.role !== "user" && profile.role !== "pemohon";
+if (!isOwner && !isAdminOrStaff) redirect("/dashboard");
 
 const docUrls = (await Promise.allSettled(
   (request.serviceRequestDocuments ?? request.documents ?? []).map(async (doc: any) => ({

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Eye } from "lucide-react";
-import { DocumentPreviewModal } from "@/components/ui/document-preview-modal";
+import { FloatingDocViewerModal } from "@/components/ui/floating-doc-viewer-modal";
 
 export function PreviewButton({
   url,
@@ -21,7 +21,7 @@ export function PreviewButton({
         {label} <Eye className="ml-2 h-3 w-3" />
       </button>
 
-      <DocumentPreviewModal
+      <FloatingDocViewerModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         url={url}

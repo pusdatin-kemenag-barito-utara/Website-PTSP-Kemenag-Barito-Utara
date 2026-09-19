@@ -3,9 +3,14 @@ import { createClient } from "@/lib/supabase/client";
 
 /**
  * MaintenanceSyncListener:
- * Mendengarkan perubahan status maintenance/online secara REALTIME dan DINAMIS via WebSocket (Supabase Realtime)
- * serta visibility/focus event saat user kembali ke tab ini.
- * TIDAK MENGGUNAKAN interval polling (zero periodic loop).
+ * Mendengarkan perubahan status maintenance/online secara REALTIME via WebSocket (Supabase Realtime)
+ * langsung dari tabel database kemenag_pusdatin.satellite_apps (id = 'ptsp-kemenag').
+ *
+ * Sesuai arsitektur Pusdatin:
+ * - 100% event-driven trigger dari database Pusdatin.
+ * - ZERO periodic polling loop (tidak ada setInterval).
+ * - Saat Pusdatin mengubah status menjadi 'maintenance' -> browser langsung redirect ke /maintenance.
+ * - Saat Pusdatin mengembalikan status menjadi 'online' -> browser di halaman /maintenance langsung redirect kembali ke /.
  */
 export function MaintenanceSyncListener() {
   const isNavigatingRef = useRef(false);
@@ -30,9 +35,9 @@ export function MaintenanceSyncListener() {
       }
     };
 
-    // 1. REALTIME WEBSOCKET: Dengarkan CDC event langsung dari PostgreSQL via Supabase Realtime
+    // 1. REALTIME WEBSOCKET: Dengarkan CDC event langsung dari PostgreSQL tabel Pusdatin
     const channel = supabase
-      .channel("ptsp-realtime-maintenance-sync")
+      .channel("ptsp-realtime-pusdatin-sync")
       .on(
         "postgres_changes",
         {
@@ -45,20 +50,6 @@ export function MaintenanceSyncListener() {
           const newStatus = payload.new?.status;
           if (newStatus) {
             handleStatusTransition(newStatus === "maintenance");
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "kemenag_ptsp",
-          table: "ptsp_system_status",
-          filter: "id=eq.heartbeat",
-        },
-        (payload: any) => {
-          if (payload.new) {
-            handleStatusTransition(payload.new.maintenance_mode === true);
           }
         }
       )

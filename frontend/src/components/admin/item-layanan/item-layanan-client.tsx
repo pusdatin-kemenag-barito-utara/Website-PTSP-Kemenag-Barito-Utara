@@ -126,19 +126,24 @@ export function ItemLayananClient({
 
   const handleDelete = async () => {
     if (!deletingItem) return;
+    const target = deletingItem;
+    setDeletingItem(null);
+    const toastId = toast.loading(`Sedang menghapus item "${target.name}"...`);
+
     const data = new FormData();
-    data.append("id", deletingItem.id.toString());
-    startTransition(async () => {
-      try {
-        await deleteServiceItemAction(data);
-        toast.success("Item Dihapus", {
-          description: "Item layanan berhasil dihapus secara permanen.",
-        });
-        setDeletingItem(null);
-      } catch (error) {
-        toast.error("Gagal menghapus item layanan.");
-      }
-    });
+    data.append("id", target.id.toString());
+    try {
+      await deleteServiceItemAction(data);
+      toast.dismiss(toastId);
+      toast.success("Item Dihapus", {
+        description: "Item layanan berhasil dihapus secara permanen.",
+      });
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      toast.error("Gagal menghapus item layanan", {
+        description: error?.message || "Terjadi kesalahan",
+      });
+    }
   };
 
   const handleReorder = (newItems: any[]) => {

@@ -23,6 +23,9 @@ export interface PegawaiDashboardData {
   isKepalaKantor: boolean;
   pendingAtasanCount: number;
   pendingKepalaCount: number;
+  simulatedPegawaiName?: string;
+  simulatedPegawaiJabatan?: string;
+  simulatedPegawaiUnitKerja?: string;
 }
 
 
@@ -44,13 +47,18 @@ export async function getPegawaiDashboardData(AstroCtx?: any): Promise<PegawaiDa
 
   if (!user || !profile) return defaultData;
 
-  const nip = profile.email ? profile.email.split("@")[0] : "";
   const superAdmin = isSuperAdmin(profile.email);
+  const queryNip = AstroCtx?.url?.searchParams?.get("nip") || "";
+  const nip = (superAdmin && queryNip) ? queryNip : (profile.nip || (profile.email ? profile.email.split("@")[0] : ""));
   let isPejabat = superAdmin;
 
   try {
-    const token = AstroCtx?.cookies?.get("ptsp-auth-access-token")?.value;
-    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const token = AstroCtx?.cookies?.get("ptsp-auth")?.value || AstroCtx?.cookies?.get("ptsp-auth-access-token")?.value;
+    const authHeaders: Record<string, string> = {};
+    if (token) {
+      authHeaders["Authorization"] = `Bearer ${token}`;
+      authHeaders["Cookie"] = `ptsp-auth=${token}`;
+    }
 
     if (!isPejabat) {
       try {
@@ -65,12 +73,21 @@ export async function getPegawaiDashboardData(AstroCtx?: any): Promise<PegawaiDa
 
     // 1. Fetch data rekap cuti pegawai berdasarkan NIP
     let sisaCuti = 12;
+    let simulatedPegawaiName: string | undefined;
+    let simulatedPegawaiJabatan: string | undefined;
+    let simulatedPegawaiUnitKerja: string | undefined;
+
     if (nip) {
       const resRekap = await fetchAPI<any>(`/pegawai/cuti?nip=${encodeURIComponent(nip)}`, {
         headers: { ...authHeaders }
       });
       if (resRekap?.data?.sisaCuti !== undefined) {
         sisaCuti = resRekap.data.sisaCuti;
+      }
+      if (resRekap?.data?.name) {
+        simulatedPegawaiName = resRekap.data.name;
+        simulatedPegawaiJabatan = resRekap.data.jabatan;
+        simulatedPegawaiUnitKerja = resRekap.data.unitKerja;
       }
     }
 
@@ -146,6 +163,9 @@ export async function getPegawaiDashboardData(AstroCtx?: any): Promise<PegawaiDa
       isKepalaKantor: superAdmin,
       pendingAtasanCount,
       pendingKepalaCount,
+      simulatedPegawaiName,
+      simulatedPegawaiJabatan,
+      simulatedPegawaiUnitKerja,
     };
   } catch (err) {
     console.error("Error getPegawaiDashboardData:", err);

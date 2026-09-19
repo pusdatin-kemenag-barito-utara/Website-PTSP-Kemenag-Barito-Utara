@@ -1,37 +1,17 @@
 import { fetchAPI } from "@/lib/api";
 import { revalidatePath } from "@/lib/next-compat/cache";
 
-import { createAdminClient } from "@/lib/supabase/admin";
-
 export async function getPejabatList() {
   try {
-    const supabase = createAdminClient();
-    
-    // Ambil data pejabat langsung dari schema kemenag_ptsp
-    const { data: pegawai, error: errPegawai } = await (supabase as any)
-      .schema("kemenag_ptsp")
-      .from("profiles_pegawai")
-      .select("id, nip, nama, jabatan, unit_kerja, tipe_pejabat, order_index")
-      .not("tipe_pejabat", "is", null)
-      .order("order_index", { ascending: true });
-
-    if (errPegawai || !pegawai) {
-      throw errPegawai || new Error("Gagal mengambil data profiles_pegawai");
+    const res = await fetchAPI<any>("/pegawai/pejabat");
+    if (!res || !res.success) {
+      throw new Error(res?.error || "Gagal mengambil data pejabat dari server");
     }
 
-    const rawData = pegawai.map((u: any) => ({
-      id: u.id,
-      nip: u.nip,
-      nama: u.nama || "Pegawai Kemenag",
-      jabatan: u.jabatan || "",
-      unitKerja: u.unit_kerja || "",
-      tipePejabat: u.tipe_pejabat || "",
-    }));
-
-    return { success: true, data: rawData };
-  } catch (error) {
+    return { success: true, data: res.data || [] };
+  } catch (error: any) {
     console.error("Error getPejabatList:", error);
-    return { success: false, error: "Gagal mengambil data pejabat dari database." };
+    return { success: false, error: error?.message || "Gagal mengambil data pejabat dari database." };
   }
 }
 
@@ -44,29 +24,20 @@ export async function upsertPejabat(data: {
   jabatan: string | null;
 }) {
   try {
-    if (data.id) {
-      await fetchAPI(`/admin/cuti/pegawai/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          nama: data.nama,
-          jabatan: data.jabatan || data.tipePejabat,
-          unitKerja: data.unitKerja || "",
-          golongan: "",
-          jenisPegawai: "Pejabat",
-        }),
-      });
-    } else {
-      await fetchAPI("/admin/cuti/pegawai", {
-        method: "POST",
-        body: JSON.stringify({
-          nama: data.nama,
-          nip: data.nip,
-          jabatan: data.jabatan || data.tipePejabat,
-          unitKerja: data.unitKerja || "",
-          golongan: "",
-          jenisPegawai: "Pejabat",
-        }),
-      });
+    const res = await fetchAPI<any>("/admin/cuti/pejabat", {
+      method: "POST",
+      body: JSON.stringify({
+        id: data.id || "",
+        nama: data.nama,
+        nip: data.nip,
+        jabatan: data.jabatan || data.tipePejabat,
+        unitKerja: data.unitKerja || "",
+        tipePejabat: data.tipePejabat,
+      }),
+    });
+
+    if (!res || !res.success) {
+      throw new Error(res?.error || "Gagal menyimpan data pejabat");
     }
 
     revalidatePath("/admin/manajemen-pegawai/pejabat");
@@ -83,9 +54,14 @@ export async function upsertPejabat(data: {
 
 export async function deletePejabat(id: string) {
   try {
-    await fetchAPI(`/admin/cuti/pegawai/${id}`, {
+    const res = await fetchAPI<any>(`/admin/cuti/pejabat/${id}`, {
       method: "DELETE",
     });
+
+    if (!res || !res.success) {
+      throw new Error(res?.error || "Gagal menghapus data pejabat");
+    }
+
     revalidatePath("/admin/manajemen-pegawai/pejabat");
     return { success: true };
   } catch (error: any) {
@@ -98,9 +74,18 @@ export async function deletePejabat(id: string) {
 }
 
 export async function reorderPejabat(
-  _items: { id: string; orderIndex: number }[],
+  items: { id: string; orderIndex: number }[],
 ) {
   try {
+    const res = await fetchAPI<any>("/admin/cuti/pejabat-reorder", {
+      method: "PUT",
+      body: JSON.stringify(items),
+    });
+
+    if (!res || !res.success) {
+      throw new Error(res?.error || "Gagal menyimpan urutan baru");
+    }
+
     revalidatePath("/admin/manajemen-pegawai/pejabat");
     revalidatePath("/pegawai/cuti/tambah");
     return { success: true };
@@ -112,3 +97,4 @@ export async function reorderPejabat(
     };
   }
 }
+

@@ -19,15 +19,34 @@ export default function MasterCutiClient({ initialData }: { initialData: any[] }
 
   const currentData = initialData.filter((item) => item.category === activeTab);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus opsi ini?")) return;
-    const res = await deleteMasterOptionAction(id);
-    if (res.success) {
-      toast.success("Opsi berhasil dihapus!");
-      router.refresh();
-    } else {
-      toast.error(res.error);
-    }
+  const handleDelete = async (id: string, label: string = "opsi ini") => {
+    toast(`Hapus ${label}?`, {
+      description: "Apakah Anda yakin ingin menghapus opsi ini secara permanen?",
+      action: {
+        label: "Ya, Hapus",
+        onClick: async () => {
+          const toastId = toast.loading(`Sedang menghapus "${label}"...`);
+          try {
+            const res = await deleteMasterOptionAction(id);
+            toast.dismiss(toastId);
+            if (res.success) {
+              toast.success("Opsi berhasil dihapus!");
+              router.refresh();
+            } else {
+              toast.error(res.error || "Gagal menghapus opsi");
+            }
+          } catch (err: any) {
+            toast.dismiss(toastId);
+            toast.error("Kesalahan jaringan", { description: err.message });
+          }
+        },
+      },
+      cancel: {
+        label: "Batal",
+        onClick: () => {},
+      },
+      duration: 6000,
+    });
   };
 
   const handleEdit = (item: any) => {
@@ -113,7 +132,7 @@ export default function MasterCutiClient({ initialData }: { initialData: any[] }
                         <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="danger" size="sm" onClick={() => handleDelete(item.id)}>
+                        <Button variant="danger" size="sm" onClick={() => handleDelete(item.id, item.name || item.label || "opsi ini")}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

@@ -1,4 +1,4 @@
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useMemo } from "react";
 import { useRouter } from "@/lib/next-compat/navigation";
 import { 
   Search, 
@@ -8,15 +8,24 @@ import {
   User, 
   MessageSquare, 
   Calendar, 
+  CalendarCheck,
+  CalendarDays,
   Download, 
   BookOpen, 
   AlertTriangle,
   Loader2,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Users,
+  Clock,
+  Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { toggleGuestBookModeAction, deleteGuestBookAction } from "@/lib/actions/admin/admin-visitations";
 import { motion, AnimatePresence } from "framer-motion";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 interface GuestBookEntry {
   id: string;
@@ -45,7 +54,7 @@ export function BukuTamuClient({
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [isManualMode, setIsManualMode] = useState(initialAllowManual);
   const [isToggling, setIsToggling] = useState(false);
@@ -59,73 +68,126 @@ export function BukuTamuClient({
     new Set(entries.map((e) => e.institutionType))
   ).filter(Boolean);
 
+  // Quick Stats
+  const stats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    let countToday = 0;
+    let countWeek = 0;
+    let countMonth = 0;
+
+    entries.forEach((e) => {
+      const d = new Date(e.visitDate);
+      const day = new Date(d);
+      day.setHours(0, 0, 0, 0);
+      if (day.getTime() === today.getTime()) countToday++;
+      if (d >= oneWeekAgo) countWeek++;
+      if (d >= oneMonthAgo) countMonth++;
+    });
+
+    return {
+      total: entries.length,
+      today: countToday,
+      week: countWeek,
+      month: countMonth,
+    };
+  }, [entries]);
+
   // Filter logic
-  const filteredEntries = entries.filter((entry) => {
-    // 1. Text Search
-    const searchLower = search.toLowerCase();
-    const matchesSearch =
-      (entry.guestName || "").toLowerCase().includes(searchLower) ||
-      (entry.whatsapp || "").includes(searchLower) ||
-      (entry.institutionName || "").toLowerCase().includes(searchLower) ||
-      (entry.intendedOfficer || "").toLowerCase().includes(searchLower) ||
-      (entry.purpose || "").toLowerCase().includes(searchLower);
+  const filteredEntries = useMemo(() => {
+    return entries.filter((entry) => {
+      // 1. Text Search
+      const searchLower = search.toLowerCase();
+      const matchesSearch =
+        (entry.guestName || "").toLowerCase().includes(searchLower) ||
+        (entry.whatsapp || "").includes(searchLower) ||
+        (entry.institutionName || "").toLowerCase().includes(searchLower) ||
+        (entry.intendedOfficer || "").toLowerCase().includes(searchLower) ||
+        (entry.purpose || "").toLowerCase().includes(searchLower);
 
-    // 2. Institution Type Filter
-    const matchesType = instTypeFilter === "all" || entry.institutionType === instTypeFilter;
+      // 2. Institution Type Filter
+      const matchesType = instTypeFilter === "all" || entry.institutionType === instTypeFilter;
 
-    // 3. Date Preset Filter
-    let matchesDate = true;
-    if (datePreset !== "all") {
-      const visitDateObj = new Date(entry.visitDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // 3. Date Preset Filter
+      let matchesDate = true;
+      if (datePreset !== "all") {
+        const visitDateObj = new Date(entry.visitDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      if (datePreset === "today") {
-        const entryDay = new Date(visitDateObj);
-        entryDay.setHours(0, 0, 0, 0);
-        matchesDate = entryDay.getTime() === today.getTime();
-      } else if (datePreset === "week") {
-        const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-        matchesDate = visitDateObj >= oneWeekAgo;
-      } else if (datePreset === "month") {
-        const oneMonthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-        matchesDate = visitDateObj >= oneMonthAgo;
+        if (datePreset === "today") {
+          const entryDay = new Date(visitDateObj);
+          entryDay.setHours(0, 0, 0, 0);
+          matchesDate = entryDay.getTime() === today.getTime();
+        } else if (datePreset === "week") {
+          const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          matchesDate = visitDateObj >= oneWeekAgo;
+        } else if (datePreset === "month") {
+          const oneMonthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+          matchesDate = visitDateObj >= oneMonthAgo;
+        }
       }
-    }
 
-    return matchesSearch && matchesType && matchesDate;
-  });
+      return matchesSearch && matchesType && matchesDate;
+    });
+  }, [entries, search, instTypeFilter, datePreset]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
-  const currentEntries = filteredEntries.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / itemsPerPage));
+  const currentEntries = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredEntries.slice(start, start + itemsPerPage);
+  }, [filteredEntries, currentPage, itemsPerPage]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or itemsPerPage change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, instTypeFilter, datePreset]);
+  }, [search, instTypeFilter, datePreset, itemsPerPage]);
 
-  const handleDelete = () => {
+  // Pagination numbers generator
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (currentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+  }, [currentPage, totalPages]);
+
+  const handleDelete = async () => {
     if (!deletingEntry) return;
+    const target = deletingEntry;
+    setDeletingEntry(null);
+    const toastId = toast.loading(`Sedang menghapus kunjungan ${target.guestName}...`);
 
-    startTransition(async () => {
-      const res = await deleteGuestBookAction(deletingEntry.id);
+    try {
+      const res = await deleteGuestBookAction(target.id);
       if (res.success) {
-        toast.success("Berhasil dihapus", {
-          description: `Catatan kunjungan ${deletingEntry.guestName} berhasil dihapus dari sistem.`,
+        toast.success("Berhasil Dihapus", {
+          id: toastId,
+          description: `Catatan kunjungan ${target.guestName} berhasil dihapus dari sistem.`,
         });
-        setEntries((prev) => prev.filter((e) => e.id !== deletingEntry.id));
-        setDeletingEntry(null);
+        setEntries((prev) => prev.filter((e) => e.id !== target.id));
         router.refresh();
       } else {
         toast.error("Gagal menghapus", {
+          id: toastId,
           description: res.error || "Terjadi kesalahan sistem.",
         });
       }
-    });
+    } catch (err: any) {
+      toast.error("Kesalahan jaringan", {
+        id: toastId,
+        description: err.message,
+      });
+    }
   };
 
   // Client-side CSV Export
@@ -183,190 +245,298 @@ export function BukuTamuClient({
     });
   };
 
+  const getInstitutionBadgeClass = (type: string) => {
+    const lower = (type || "").toLowerCase();
+    if (lower.includes("pemerintah")) {
+      return "bg-blue-50 text-blue-700 border-blue-200/60";
+    }
+    if (lower.includes("swasta")) {
+      return "bg-amber-50 text-amber-700 border-amber-200/60";
+    }
+    if (lower.includes("pendidikan") || lower.includes("sekolah") || lower.includes("madrasah")) {
+      return "bg-purple-50 text-purple-700 border-purple-200/60";
+    }
+    if (lower.includes("pribadi") || lower.includes("umum")) {
+      return "bg-slate-100 text-slate-600 border-slate-200/60";
+    }
+    return "bg-emerald-50 text-emerald-700 border-emerald-200/60";
+  };
+
   return (
-    <div className="space-y-6">
-      {/* ── MODE CARD ─────────────────────────────────────────── */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="space-y-4">
+      {/* ── STATS SUMMARY CARDS ─────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Total Kunjungan */}
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-2xs flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Total Kunjungan
+            </p>
+            <p className="text-xl font-black text-slate-900 mt-0.5">{stats.total}</p>
+          </div>
+          <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+            <Users className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* Hari Ini */}
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-2xs flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">
+              Hari Ini
+            </p>
+            <p className="text-xl font-black text-emerald-700 mt-0.5">{stats.today}</p>
+          </div>
+          <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <CalendarCheck className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* 7 Hari Terakhir */}
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-2xs flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold text-teal-600 uppercase tracking-wider">
+              7 Hari Terakhir
+            </p>
+            <p className="text-xl font-black text-teal-700 mt-0.5">{stats.week}</p>
+          </div>
+          <div className="h-9 w-9 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+            <CalendarDays className="h-5 w-5" />
+          </div>
+        </div>
+
+        {/* 30 Hari Terakhir */}
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-2xs flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider">
+              30 Hari Terakhir
+            </p>
+            <p className="text-xl font-black text-indigo-700 mt-0.5">{stats.month}</p>
+          </div>
+          <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <Clock className="h-5 w-5" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── MODE & CONTROLS CARD ────────────────────────────────── */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         <div>
-          <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm">Mode Input Buku Tamu (Publik)</h3>
-          <p className="text-xs text-slate-500 font-medium max-w-md mt-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-slate-800 text-xs">Mode Input Buku Tamu (Formulir Publik)</h3>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+              isManualMode 
+                ? "bg-amber-50 text-amber-700 border-amber-200" 
+                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+            }`}>
+              {isManualMode ? "Mode Bebas (Backdate)" : "Mode Realtime (Terkunci)"}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium max-w-xl mt-0.5">
             {isManualMode 
-              ? "Mode Manual Aktif. Pengunjung atau admin di halaman publik dapat memilih tanggal kunjungan secara bebas (Backdate)." 
-              : "Mode Otomatis Aktif. Tanggal kunjungan di halaman publik terkunci pada hari ini."}
+              ? "Pengunjung atau petugas di formulir publik dapat memilih tanggal kunjungan secara bebas di masa lalu." 
+              : "Tanggal kunjungan di formulir publik dikunci otomatis pada tanggal dan jam hari ini."}
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className={`text-[10px] font-black uppercase tracking-wider ${!isManualMode ? 'text-emerald-600' : 'text-slate-400'}`}>
+        <div className="flex items-center gap-2.5 shrink-0 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+          <span className={`text-[10px] font-bold ${!isManualMode ? 'text-emerald-700 font-black' : 'text-slate-400'}`}>
             Otomatis
           </span>
           <button
+            type="button"
             onClick={handleToggleMode}
             disabled={isToggling}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-              isManualMode ? 'bg-emerald-500' : 'bg-slate-200'
-            } ${isToggling ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer ${
+              isManualMode ? 'bg-emerald-600' : 'bg-slate-300'
+            } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Klik untuk mengubah mode input"
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isManualMode ? 'translate-x-6' : 'translate-x-1'
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                isManualMode ? 'translate-x-4.5' : 'translate-x-0.5'
               }`}
             />
           </button>
-          <span className={`text-[10px] font-black uppercase tracking-wider ${isManualMode ? 'text-emerald-600' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-bold ${isManualMode ? 'text-emerald-700 font-black' : 'text-slate-400'}`}>
             Manual
           </span>
         </div>
       </div>
 
       {/* ── FILTER CARD ─────────────────────────────────────────── */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-            <BookOpen className="h-4.5 w-4.5 text-emerald-600" />
-            Filter Pencarian Buku Tamu
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <BookOpen className="h-4 w-4 text-emerald-600" />
+            <span>Filter Data Kunjungan</span>
           </h3>
           <button
+            type="button"
             onClick={handleExportCSV}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-emerald-950/10 hover:shadow-lg hover:shadow-emerald-950/20 transition-all active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-xl shadow-xs hover:shadow-sm transition-all active:scale-95 cursor-pointer"
           >
-            <Download className="h-4 w-4" />
-            Ekspor CSV
+            <Download className="h-3.5 w-3.5" />
+            <span>Ekspor CSV</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Search bar */}
           <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-emerald-600 transition-colors pointer-events-none" />
             <input
               type="text"
-              placeholder="Cari nama, whatsapp, instansi..."
+              placeholder="Cari nama, whatsapp, instansi, petugas..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white text-sm font-semibold text-slate-700 transition-all"
+              className="w-full pl-9 pr-8 h-9 bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs font-medium text-slate-800 transition-all placeholder:text-slate-400"
             />
             {search && (
               <button 
+                type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-200 text-slate-400 transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-200 text-slate-400 transition-colors cursor-pointer"
+                title="Hapus pencarian"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3 w-3" />
               </button>
             )}
           </div>
 
           {/* Instansi Type Filter */}
-          <div className="relative">
-            <select
+          <div>
+            <ModernSelect
               value={instTypeFilter}
-              onChange={(e) => setInstTypeFilter(e.target.value)}
-              className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs font-bold text-slate-600 appearance-none cursor-pointer"
-            >
-              <option value="all">Semua Jenis Instansi</option>
-              {institutionTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-500 w-0 h-0" />
+              onChange={(val) => setInstTypeFilter(val)}
+              options={[
+                { value: "all", label: "Semua Jenis Instansi" },
+                ...institutionTypes.map((type) => ({ value: type, label: type })),
+              ]}
+              icon={Building2}
+              placeholder="Semua Jenis Instansi"
+            />
           </div>
 
           {/* Date Filter */}
-          <div className="relative">
-            <select
+          <div>
+            <ModernSelect
               value={datePreset}
-              onChange={(e) => setDatePreset(e.target.value)}
-              className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs font-bold text-slate-600 appearance-none cursor-pointer"
-            >
-              <option value="all">Semua Waktu</option>
-              <option value="today">Hari Ini</option>
-              <option value="week">7 Hari Terakhir</option>
-              <option value="month">30 Hari Terakhir</option>
-            </select>
-            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-500 w-0 h-0" />
+              onChange={(val) => setDatePreset(val)}
+              options={[
+                { value: "all", label: "Semua Waktu" },
+                { value: "today", label: "Hari Ini" },
+                { value: "week", label: "7 Hari Terakhir" },
+                { value: "month", label: "30 Hari Terakhir" },
+              ]}
+              icon={Calendar}
+              placeholder="Semua Waktu"
+            />
           </div>
         </div>
       </div>
 
-      {/* ── TABLE CARD ─────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* ── TABLE CONTAINER (FULL WIDTH) ────────────────────────── */}
+      <div className="w-full bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-50/70 border-b border-slate-100">
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Pengunjung</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Instansi</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Petugas Dituju</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Keperluan</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Tanggal Kunjungan</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Aksi</th>
+              <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4 w-12 text-center">#</th>
+                <th className="py-3 px-4 w-1/4">Pengunjung</th>
+                <th className="py-3 px-4 w-1/5">Instansi</th>
+                <th className="py-3 px-4 w-1/5">Petugas Dituju</th>
+                <th className="py-3 px-4">Keperluan</th>
+                <th className="py-3 px-4 w-36">Waktu Kunjungan</th>
+                <th className="py-3 px-4 w-16 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              <AnimatePresence mode="popLayout">
-                {currentEntries.map((entry) => (
-                  <motion.tr 
+            <motion.tbody
+              key={`page-${currentPage}`}
+              initial={{ opacity: 0.5 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.12 }}
+              className="divide-y divide-slate-100/80"
+            >
+              {currentEntries.map((entry, index) => {
+                const rowNumber = (currentPage - 1) * itemsPerPage + index + 1;
+                return (
+                  <tr 
                     key={entry.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="hover:bg-slate-50/40 transition-colors group"
+                    className="hover:bg-slate-50/60 transition-colors group"
                   >
+                    {/* Number */}
+                    <td className="py-3 px-4 text-center font-bold text-slate-400">
+                      {rowNumber}
+                    </td>
+
                     {/* Visitor Info */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center font-bold">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-9 w-9 shrink-0 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center font-bold text-xs border border-emerald-200/50 shadow-2xs">
                           {(entry.guestName || "G").charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-800">{entry.guestName || "-"}</p>
-                          <a 
-                            href={`https://wa.me/${entry.whatsapp.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors mt-0.5"
-                          >
-                            <Phone className="h-3 w-3 shrink-0" />
-                            {entry.whatsapp}
-                          </a>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">
+                            {entry.guestName || "-"}
+                          </p>
+                          {entry.whatsapp ? (
+                            <a 
+                              href={`https://wa.me/${entry.whatsapp.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors mt-0.5"
+                              title="Kirim Pesan WhatsApp"
+                            >
+                              <Phone className="h-2.5 w-2.5 shrink-0" />
+                              <span>{entry.whatsapp}</span>
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">-</span>
+                          )}
                         </div>
                       </div>
                     </td>
 
                     {/* Institution */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
-                        <div>
-                          <p className="text-xs font-bold text-slate-700">{entry.institutionName || "-"}</p>
-                          <span className="inline-block px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-extrabold text-[9px] uppercase tracking-wider mt-0.5">
-                            {entry.institutionType}
-                          </span>
-                        </div>
+                    <td className="py-3 px-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-slate-800">
+                          {entry.institutionName || "-"}
+                        </p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${getInstitutionBadgeClass(entry.institutionType)}`}>
+                          <Building2 className="h-2.5 w-2.5 shrink-0" />
+                          <span>{entry.institutionType || "Umum"}</span>
+                        </span>
                       </div>
                     </td>
 
                     {/* Intended Officer */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 shrink-0 text-slate-400" />
-                        <span className="text-xs font-bold text-slate-700">{entry.intendedOfficer}</span>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-6 w-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                          <User className="h-3 w-3" />
+                        </div>
+                        <span className="text-xs font-semibold text-slate-800">
+                          {entry.intendedOfficer || "-"}
+                        </span>
                       </div>
                     </td>
 
                     {/* Purpose */}
-                    <td className="px-6 py-4 max-w-xs">
-                      <div className="flex items-start gap-2">
-                        <MessageSquare className="h-4 w-4 shrink-0 text-slate-400 mt-0.5" />
-                        <p className="text-xs font-medium text-slate-600 line-clamp-2 leading-relaxed">{entry.purpose}</p>
+                    <td className="py-3 px-4 max-w-xs">
+                      <div className="flex items-start gap-1.5">
+                        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-0.5" />
+                        <p className="text-xs font-medium text-slate-600 line-clamp-2 leading-relaxed" title={entry.purpose}>
+                          {entry.purpose || "-"}
+                        </p>
                       </div>
                     </td>
 
                     {/* Visit Date */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
-                        <span className="text-xs font-bold text-slate-700">
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-slate-700">
+                        <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span className="text-xs font-medium">
                           {new Date(entry.visitDate).toLocaleString("id-ID", {
                             dateStyle: "medium",
                             timeStyle: "short",
@@ -376,123 +546,178 @@ export function BukuTamuClient({
                     </td>
 
                     {/* Actions */}
-                    <td className="px-6 py-4 text-center">
+                    <td className="py-3 px-4 text-center">
                       <button
+                        type="button"
                         onClick={() => setDeletingEntry(entry)}
-                        className="p-2 rounded-xl hover:bg-red-50 text-slate-400 hover:text-red-600 transition-all cursor-pointer active:scale-90"
+                        className="p-1.5 rounded-xl text-rose-600 bg-rose-50/80 hover:bg-rose-100 hover:text-rose-700 border border-rose-200/60 shadow-2xs transition-all active:scale-95 cursor-pointer"
                         title="Hapus Kunjungan"
                       >
-                        <Trash2 className="h-4.5 w-4.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
+                  </tr>
+                );
+              })}
+            </motion.tbody>
           </table>
         </div>
 
         {/* Empty State */}
         {filteredEntries.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="h-14 w-14 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-4">
-              <BookOpen className="h-7 w-7" />
+            <div className="h-12 w-12 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mb-3">
+              <BookOpen className="h-6 w-6" />
             </div>
-            <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm mb-1">Catatan Tidak Ditemukan</h3>
-            <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Tidak ada catatan kunjungan buku tamu yang cocok dengan filter atau pencarian Anda saat ini.
+            <h3 className="font-bold text-slate-800 text-sm mb-0.5">Catatan Tidak Ditemukan</h3>
+            <p className="text-xs text-slate-400 max-w-sm">
+              Tidak ada data kunjungan buku tamu yang sesuai dengan pencarian atau filter Anda.
             </p>
           </div>
         )}
 
-        {/* Footer info */}
-        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
-          <span>
-            {filteredEntries.length > 0
-              ? `Menampilkan ${(currentPage - 1) * itemsPerPage + 1}–${Math.min(currentPage * itemsPerPage, filteredEntries.length)} dari ${filteredEntries.length} data kunjungan`
-              : `0 dari ${entries.length} data kunjungan`}
-          </span>
-          <span>Sistem Buku Tamu Digital</span>
-        </div>
-
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">
-              Halaman {currentPage} dari {totalPages}
+        {/* ── FOOTER & NUMBERED PAGINATION ────────────────────────── */}
+        <div className="border-t border-slate-100 bg-slate-50/50 px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          {/* Info & Page Size */}
+          <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+            <span>
+              {filteredEntries.length > 0 ? (
+                <>
+                  Menampilkan{" "}
+                  <strong className="text-slate-800 font-bold">
+                    {(currentPage - 1) * itemsPerPage + 1}
+                  </strong>
+                  –
+                  <strong className="text-slate-800 font-bold">
+                    {Math.min(currentPage * itemsPerPage, filteredEntries.length)}
+                  </strong>{" "}
+                  dari{" "}
+                  <strong className="text-slate-800 font-bold">
+                    {filteredEntries.length}
+                  </strong>{" "}
+                  data
+                </>
+              ) : (
+                "0 data kunjungan"
+              )}
             </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors cursor-pointer"
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-1 pl-2 border-l border-slate-200">
+              <span className="text-[11px] text-slate-400">Tampilkan:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
               >
-                Sebelumnya
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors cursor-pointer"
-              >
-                Selanjutnya
-              </button>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
             </div>
           </div>
-        )}
+
+          {/* Numbered Pagination Buttons */}
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              {/* Previous Button */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                title="Halaman Sebelumnya"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {/* Number Buttons */}
+              {paginationPages.map((pageItem, i) => {
+                if (pageItem === "...") {
+                  return (
+                    <div
+                      key={`ellipsis-${i}`}
+                      className="flex h-8 min-w-[32px] items-center justify-center text-slate-400"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </div>
+                  );
+                }
+
+                const pageNum = pageItem as number;
+                const isActive = pageNum === currentPage;
+
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs"
+                        : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              {/* Next Button */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                title="Halaman Selanjutnya"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── DELETION MODAL ───────────────────────────────────────── */}
       <AnimatePresence>
         {deletingEntry && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div 
             onClick={() => setDeletingEntry(null)}
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-6"
+              className="w-full max-w-sm bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 text-center"
             >
-              <div className="flex items-start gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="h-6 w-6" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-black text-slate-900 text-base uppercase tracking-tight">Hapus Catatan Kunjungan?</h3>
-                  <p className="text-xs text-slate-500 font-bold leading-relaxed">
-                    Anda akan menghapus catatan kunjungan dari tamu <span className="text-slate-800 font-black">{deletingEntry.guestName}</span> secara permanen. Tindakan ini tidak dapat dibatalkan.
-                  </p>
-                </div>
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 mb-3">
+                <Trash2 className="h-6 w-6" />
               </div>
+              <h3 className="text-sm font-black text-slate-900">Hapus Catatan Kunjungan?</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Apakah Anda yakin ingin menghapus catatan kunjungan dari <strong>"{deletingEntry.guestName}"</strong>? Tindakan ini tidak dapat dibatalkan.
+              </p>
 
-              <div className="flex justify-end gap-3">
+              <div className="flex items-center justify-center gap-2 mt-5">
                 <button
+                  type="button"
                   onClick={() => setDeletingEntry(null)}
                   disabled={isPending}
-                  className="px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider text-slate-500 hover:bg-slate-100 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={isPending}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-600 to-rose-600 shadow-md shadow-rose-900/10 hover:shadow-lg hover:shadow-rose-900/20 hover:from-red-700 hover:to-rose-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-colors"
                 >
-                  {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                  Ya, Hapus Permanen
+                  {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Ya, Hapus</span>
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -18,12 +18,13 @@ type statsCacheEntry struct {
 type RequestService struct {
 	repo       *repository.RequestRepository
 	cfg        *config.Config
+	fileSvc    *FileService
 	statsCache *statsCacheEntry
 	statsMutex sync.RWMutex
 }
 
-func NewRequestService(repo *repository.RequestRepository, cfg *config.Config) *RequestService {
-	return &RequestService{repo: repo, cfg: cfg}
+func NewRequestService(repo *repository.RequestRepository, cfg *config.Config, fileSvc *FileService) *RequestService {
+	return &RequestService{repo: repo, cfg: cfg, fileSvc: fileSvc}
 }
 
 func (s *RequestService) GetAll(ctx context.Context, userID, status, category string, limit int) ([]models.ServiceRequest, error) {
@@ -78,7 +79,39 @@ func (s *RequestService) Delete(ctx context.Context, id string) error {
 	s.statsMutex.Lock()
 	s.statsCache = nil
 	s.statsMutex.Unlock()
-	return s.repo.Delete(ctx, id)
+
+	// 1. Ambil seluruh berkas yang terhubung dengan permohonan ini dalam 1 query cepat
+	var filePaths []string
+	if s.fileSvc != nil {
+		filePaths, _ = s.repo.GetFilePathsByRequestID(ctx, id)
+	}
+
+	// 2. Hapus data permohonan dan seluruh relasinya dari database seketika
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	// 3. Bersihkan berkas Cloudflare R2 secara paralel (asinkron di background) tanpa menahan response HTTP
+	if s.fileSvc != nil && len(filePaths) > 0 {
+		go func(paths []string) {
+			bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			var wg sync.WaitGroup
+			for _, fp := range paths {
+				if fp == "" {
+					continue
+				}
+				wg.Add(1)
+				go func(p string) {
+					defer wg.Done()
+					_ = s.fileSvc.DeleteFile(bgCtx, p)
+				}(fp)
+			}
+			wg.Wait()
+		}(filePaths)
+	}
+
+	return nil
 }
 
 // AttachDocument menyimpan record dokumen unggahan (revisi) ke sebuah permohonan.
@@ -96,9 +129,41 @@ func (s *RequestService) UpdateByApplicant(ctx context.Context, id, userID strin
 	return s.repo.UpdateByApplicant(ctx, id, userID, answers)
 }
 
-// DeleteByApplicant menghapus permohonan milik pemohon.
+// DeleteByApplicant menghapus permohonan milik pemohon beserta berkas R2 secara asinkron.
 func (s *RequestService) DeleteByApplicant(ctx context.Context, id, userID string) error {
-	return s.repo.DeleteByApplicant(ctx, id, userID)
+	s.statsMutex.Lock()
+	s.statsCache = nil
+	s.statsMutex.Unlock()
+
+	var filePaths []string
+	if s.fileSvc != nil {
+		filePaths, _ = s.repo.GetFilePathsByRequestID(ctx, id)
+	}
+
+	if err := s.repo.DeleteByApplicant(ctx, id, userID); err != nil {
+		return err
+	}
+
+	if s.fileSvc != nil && len(filePaths) > 0 {
+		go func(paths []string) {
+			bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			var wg sync.WaitGroup
+			for _, fp := range paths {
+				if fp == "" {
+					continue
+				}
+				wg.Add(1)
+				go func(p string) {
+					defer wg.Done()
+					_ = s.fileSvc.DeleteFile(bgCtx, p)
+				}(fp)
+			}
+			wg.Wait()
+		}(filePaths)
+	}
+
+	return nil
 }
 
 func (s *RequestService) GetDashboardStats(ctx context.Context) (*models.DashboardStats, error) {

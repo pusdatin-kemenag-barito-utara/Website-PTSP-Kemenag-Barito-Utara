@@ -4,8 +4,22 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function ScrollToTopButton() {
   const [isVisible, setIsVisible] = useState(false);
+  const [isDashboard, setIsDashboard] = useState(false);
 
   useEffect(() => {
+    const checkPath = () => {
+      const path = window.location.pathname;
+      const onDashboard =
+        path.startsWith("/masyarakat") ||
+        path.startsWith("/pegawai") ||
+        path.startsWith("/admin") ||
+        path.startsWith("/dashboard");
+      setIsDashboard(onDashboard);
+    };
+
+    checkPath();
+    document.addEventListener("astro:page-load", checkPath);
+
     const toggleVisibility = () => {
       if (window.scrollY > 250) {
         setIsVisible(true);
@@ -17,8 +31,13 @@ export function ScrollToTopButton() {
     window.addEventListener("scroll", toggleVisibility, { passive: true });
     toggleVisibility();
 
-    return () => window.removeEventListener("scroll", toggleVisibility);
+    return () => {
+      document.removeEventListener("astro:page-load", checkPath);
+      window.removeEventListener("scroll", toggleVisibility);
+    };
   }, []);
+
+  if (isDashboard) return null;
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -35,7 +54,7 @@ export function ScrollToTopButton() {
           animate={{ opacity: 1, y: 0, x: "-50%" }}
           exit={{ opacity: 0, y: 20, x: "-50%" }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="fixed bottom-6 left-1/2 z-[9990] pointer-events-auto"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+76px)] md:bottom-6 left-1/2 z-[9990] pointer-events-auto"
         >
           <button
             onClick={scrollToTop}

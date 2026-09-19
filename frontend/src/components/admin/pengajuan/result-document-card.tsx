@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Download, FileCheck, Eye, FileText } from "lucide-react";
 import { UploadResultButton } from "@/components/admin/upload-result-button";
 import { SuratPelaksanaanCutiModal } from "./surat-pelaksanaan-cuti-modal";
+import { FloatingDocViewerModal } from "@/components/ui/floating-doc-viewer-modal";
+import { resolveFileViewerUrl } from "@/lib/r2-utils";
 
 export function ResultDocumentCard({
   request,
@@ -18,8 +20,13 @@ export function ResultDocumentCard({
   pejabatList?: any[];
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
   // Tampilkan tombol Generate Surat Cuti jika data cuti ada (baik dari kategori ASN maupun dari field cutiData langsung)
   const isCuti = !!cutiData || (request.services?.name?.toLowerCase().includes("cuti"));
+
+  const finalGeneratedUrl = resolveFileViewerUrl(
+    generatedUrl || generatedDoc?.file_path || generatedDoc?.filePath || null
+  );
 
   // Prepare data for SuratPelaksanaanCutiModal
   const modalData = cutiData ? {
@@ -68,8 +75,9 @@ export function ResultDocumentCard({
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 self-center sm:self-auto">
             {isCuti && cutiData && (
                <button
+                 type="button"
                  onClick={() => setIsModalOpen(true)}
-                 className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white bg-slate-800 border border-slate-800 hover:bg-slate-700 transition-all shadow-sm active:scale-95 h-[38px]"
+                 className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-white bg-slate-800 border border-slate-800 hover:bg-slate-700 transition-all shadow-sm active:scale-95 h-[38px] cursor-pointer"
                >
                  <FileText className="h-4 w-4" />
                  Generate Surat Cuti
@@ -77,16 +85,15 @@ export function ResultDocumentCard({
             )}
 
             <UploadResultButton requestId={request.id} hasFile={!!generatedDoc} />
-            {generatedUrl && (
-              <a
-                href={generatedUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 h-[38px]"
+            {finalGeneratedUrl && (
+              <button
+                type="button"
+                onClick={() => setIsViewerOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95 h-[38px] cursor-pointer"
               >
                 <Eye className="h-4 w-4" />
                 Lihat File
-              </a>
+              </button>
             )}
           </div>
         </div>
@@ -100,6 +107,15 @@ export function ResultDocumentCard({
           pejabatList={pejabatList}
         />
       )}
+
+      <FloatingDocViewerModal
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        title="Dokumen Hasil Layanan"
+        url={finalGeneratedUrl}
+        fileName={generatedDoc?.file_name || "Dokumen_Hasil.pdf"}
+      />
     </>
   );
 }
+

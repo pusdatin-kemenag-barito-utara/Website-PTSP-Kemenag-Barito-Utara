@@ -1,4 +1,4 @@
-﻿import { revalidatePath } from "@/lib/next-compat/cache";
+import { revalidatePath } from "@/lib/next-compat/cache";
 import { getCurrentProfile } from "@/lib/auth";
 import { z } from "zod";
 import { UserService } from "@/lib/services/user-service";
@@ -33,34 +33,70 @@ export async function updateProfileAction(
   }
 
   try {
+    const rawFullName = (formData.get("full_name") as string) || "";
+    const rawPhone = (formData.get("phone") as string) || "";
+    const rawAddress = (formData.get("address") as string) || "";
+    const rawPassword = (formData.get("password") as string) || "";
+
+    let cleanPhone = rawPhone.replace(/\D/g, "");
+    if (cleanPhone.startsWith("0")) {
+      cleanPhone = "62" + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith("62")) {
+      cleanPhone = "62" + cleanPhone;
+    }
+
     const validated = UpdateProfileSchema.safeParse({
-      fullName: formData.get("full_name"),
-      phone: formData.get("phone"),
-      address: formData.get("address"),
-      password: formData.get("password"),
+      fullName: rawFullName.trim(),
+      phone: cleanPhone,
+      address: rawAddress.trim(),
+      password: rawPassword.trim(),
     });
 
     if (!validated.success) {
       return { success: false, error: validated.error.issues[0].message };
     }
 
-    const { fullName, password } = validated.data;
+    const { fullName, phone, address, password } = validated.data;
 
-    // 1. Update nama/profil via REST API Golang Backend
-    await UserService.updateProfile(profile.id, {
+    // 1. Update nama, no_hp, alamat, dan password ke PostgreSQL Database via Golang REST API
+    const updateRes = await UserService.updateProfile(profile.id, {
       fullName,
+      phone,
+      address,
+      password: password || undefined,
+      email: profile.email || undefined,
     });
 
-    // 2. Jika ada password baru, perbarui via Supabase Auth Client
-    if (password) {
-      const supabase = await createClient();
-      const { error: authErr } = await supabase.auth.updateUser({
-        password,
-      });
+    if (updateRes && (updateRes as any).error && !(updateRes as any).success) {
+      return { success: false, error: (updateRes as any).error };
+    }
 
-      if (authErr) {
-        return { success: false, error: authErr.message };
+    // 2. Sinkronkan ke Supabase Auth (metadata & password jika diisi)
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const adminClient = createAdminClient();
+      const authUpdates: any = {
+        user_metadata: {
+          full_name: fullName,
+          name: fullName,
+          phone: phone,
+          address: address,
+        },
+      };
+      if (password) {
+        authUpdates.password = password;
       }
+      await adminClient.auth.admin.updateUserById(profile.id, authUpdates);
+    } catch (authSyncErr) {
+      console.warn("Supabase Auth admin update warning:", authSyncErr);
+    }
+
+    // 3. Fallback update password via user server client jika ada sesi aktif
+    if (password) {
+      try {
+        const supabase = await createClient();
+        await supabase.auth.updateUser({ password });
+      } catch {}
     }
 
     revalidatePath("/masyarakat/profil");
@@ -69,7 +105,7 @@ export async function updateProfileAction(
     revalidatePath("/dashboard");
     revalidatePath("/admin/pengguna");
 
-    return { success: true, message: "Profil berhasil diperbarui" };
+    return { success: true, message: "Profil berhasil diperbarui dan disinkronkan!" };
   } catch (error: any) {
     console.error("Error updating profile:", error);
     return {

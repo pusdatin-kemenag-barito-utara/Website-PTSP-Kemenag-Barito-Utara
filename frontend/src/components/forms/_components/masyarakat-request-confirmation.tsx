@@ -5,6 +5,7 @@ interface MasyarakatRequestConfirmationProps {
   isConfirmed: boolean;
   onConfirmChange: (value: boolean) => void;
   loading: boolean;
+  loadingText?: string;
   error?: string;
 }
 
@@ -12,6 +13,7 @@ export function MasyarakatRequestConfirmation({
   isConfirmed,
   onConfirmChange,
   loading,
+  loadingText,
   error,
 }: MasyarakatRequestConfirmationProps) {
   return (
@@ -81,7 +83,7 @@ export function MasyarakatRequestConfirmation({
         {loading ? (
           <span className="flex items-center justify-center gap-2.5">
             <Loader2 className="h-5 w-5 animate-spin text-white" />
-            <span className="tracking-wide">Memproses Pengajuan...</span>
+            <span className="tracking-wide">{loadingText || "Memproses Pengajuan..."}</span>
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2.5">

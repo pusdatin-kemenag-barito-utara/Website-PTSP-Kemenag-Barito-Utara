@@ -61,18 +61,27 @@ export function useWizardRequirements(startTransition: any) {
     }, 500);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
+    const toastId = toast.loading("Sedang menghapus persyaratan...");
     const fd = new FormData();
     fd.append("id", id.toString());
-    startTransition(async () => {
+    try {
       const result = await deleteRequirementAction(fd);
+      toast.dismiss(toastId);
       if (result.success) {
-        toast.success("Persyaratan Dihapus");
+        toast.success("Persyaratan Dihapus", {
+          description: "Persyaratan berhasil dihapus.",
+        });
         router.refresh();
       } else {
         toast.error(result.error || "Gagal menghapus persyaratan.");
       }
-    });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error("Kesalahan jaringan", {
+        description: err.message,
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

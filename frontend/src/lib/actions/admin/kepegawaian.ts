@@ -1,4 +1,4 @@
-﻿import { invokeAction } from "@/lib/actions/runtime";
+import { invokeAction } from "@/lib/actions/runtime";
 
 export async function submitLaporanKinerjaAction(...args: any[]) {
   return invokeAction("admin/kepegawaian", "submitLaporanKinerjaAction", args);
@@ -26,5 +26,9 @@ export async function updatePegawaiAction(...args: any[]) {
 
 export async function deletePegawaiAction(...args: any[]) {
   return invokeAction("admin/kepegawaian", "deletePegawaiAction", args);
+}
+
+export async function deleteLaporanKinerjaAdminAction(...args: any[]) {
+  return invokeAction("admin/kepegawaian", "deleteLaporanKinerjaAdminAction", args);
 }
 

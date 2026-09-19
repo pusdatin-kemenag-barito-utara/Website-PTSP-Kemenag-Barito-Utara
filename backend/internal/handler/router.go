@@ -24,6 +24,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 	serviceRepo := repository.NewServiceRepository(db)
 	requestRepo := repository.NewRequestRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	authRepo := repository.NewAuthRepository(db)
 	cutiRepo := repository.NewCutiRepository(db)
 	systemRepo := repository.NewSystemRepository(db)
 
@@ -31,9 +32,11 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 	guestBookSvc := service.NewGuestBookService(guestBookRepo, cfg)
 	appointmentSvc := service.NewAppointmentService(appointmentRepo, cfg)
 	serviceSvc := service.NewServiceService(serviceRepo, cfg)
-	requestSvc := service.NewRequestService(requestRepo, cfg)
+	requestSvc := service.NewRequestService(requestRepo, cfg, fileSvc)
 	userSvc := service.NewUserService(userRepo, cfg)
+	authSvc := service.NewAuthService(authRepo, cfg)
 	cutiSvc := service.NewCutiService(cutiRepo, cfg)
+	userSvc.SetCutiService(cutiSvc)
 	systemSvc := service.NewSystemService(systemRepo, cfg)
 
 	// --- Handlers ---
@@ -42,6 +45,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 	serviceHdl := NewServiceHandler(serviceSvc, fileSvc)
 	requestHdl := NewRequestHandler(requestSvc, fileSvc)
 	userHdl := NewUserHandler(userSvc, fileSvc)
+	authHdl := NewAuthHandler(authSvc)
 	cutiHdl := NewCutiHandler(cutiSvc)
 	cronHdl := NewCronHandler(systemSvc)
 	chatHdl := NewChatHandler(cfg, serviceSvc)
@@ -86,6 +90,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		api.Post("/requests", requestHdl.CreateByApplicant)
 		api.Put("/requests/:id", requestHdl.UpdateByApplicant)
 		api.Delete("/requests/:id", requestHdl.DeleteByApplicant)
+		api.Post("/requests/:id/documents", requestHdl.AttachDocument)
 		api.Post("/upload-document", requestHdl.UploadDocument)
 
 		// Chat AI & File Utilities
@@ -94,12 +99,17 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		api.Get("/files/proxy", filesHdl.ProxyFile)
 		api.Get("/files/stats", filesHdl.Stats)
 		api.Get("/system/status", cronHdl.GetSystemStatus)
-		api.Get("/admin/system/status", cronHdl.GetSystemStatus)
 		api.Get("/users/:id", userHdl.GetUserByID)
 		api.Patch("/users/:id/profile", userHdl.UpdateProfile)
 
+		// Native Authentication Routes
+		api.Post("/auth/login", authHdl.Login)
+		api.Post("/auth/register", authHdl.Register)
+		api.Post("/auth/logout", authHdl.Logout)
+		api.Get("/auth/me", middleware.RequireJWT(cfg), authHdl.Me)
+		api.Post("/auth/change-password", middleware.RequireJWT(cfg), authHdl.ChangePassword)
 
-		// Admin Routes (wajib autentikasi JWT Supabase)
+		// Admin Routes (wajib autentikasi JWT)
 		admin := api.Group("/admin", middleware.RequireJWT(cfg))
 		admin.Get("/stats", requestHdl.GetDashboardStats)
 		admin.Get("/search", userHdl.Search)
@@ -111,10 +121,33 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		admin.Post("/requests/:id/documents", requestHdl.AttachDocument)
 		admin.Post("/impersonate", impersonateHdl.GenerateImpersonateLink)
 
+		// Manajemen Pengguna — Statistik & 3 Sub-menu Modular
+		admin.Get("/users/stats", userHdl.GetUserStats)
+
+		// 1. Sub-menu Petugas Admin
+		admin.Get("/users/petugas", userHdl.GetPetugas)
+		admin.Post("/users/petugas", userHdl.CreatePetugas)
+		admin.Patch("/users/petugas/:id", userHdl.UpdatePetugas)
+		admin.Post("/users/petugas/:id/verify", userHdl.VerifyPetugas)
+		admin.Delete("/users/petugas/:id", userHdl.DeletePetugas)
+
+		// 2. Sub-menu Pegawai (Sync Otomatis ke Manajemen Cuti)
+		admin.Get("/users/pegawai", userHdl.GetPegawai)
+		admin.Post("/users/pegawai", userHdl.CreatePegawai)
+		admin.Patch("/users/pegawai/:id", userHdl.UpdatePegawai)
+		admin.Delete("/users/pegawai/:id", userHdl.DeletePegawai)
+
+		// 3. Sub-menu Pemohon Masyarakat
+		admin.Get("/users/pemohon", userHdl.GetPemohon)
+		admin.Patch("/users/pemohon/:id", userHdl.UpdatePemohon)
+		admin.Delete("/users/pemohon/:id", userHdl.DeletePemohon)
+
+		// General / Legacy User Endpoints
 		admin.Get("/users", userHdl.GetUsers)
 		admin.Get("/users/:id", userHdl.GetUserByID)
 		admin.Patch("/users/:id", userHdl.UpdateUser)
 		admin.Delete("/users/:id", userHdl.DeleteUser)
+		admin.Post("/users/:id/reset-password", authHdl.AdminResetPassword)
 
 		// Self-profile update (nama & avatar — dipisah dari admin users)
 		admin.Patch("/profile/:id", userHdl.UpdateProfile)
@@ -128,10 +161,15 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		admin.Get("/audit-logs", userHdl.GetAuditLogs)
 
 		// Admin System Settings
+		admin.Get("/system/status", cronHdl.GetSystemStatus)
+		admin.Get("/system/storage-overview", cronHdl.GetStorageOverview)
 		admin.Patch("/system/guest-book-mode", cronHdl.ToggleGuestBookMode)
+		admin.Patch("/system/settings", cronHdl.ToggleGuestBookMode)
+		admin.Post("/system/keep-alive", cronHdl.KeepAlive)
 
 		// Admin Master Options
 		admin.Post("/master-options", serviceHdl.AdminUpsertMasterOption)
+		admin.Post("/master-options/sync-unit-kerja", serviceHdl.AdminSyncUnitKerja)
 		admin.Delete("/master-options/:id", serviceHdl.AdminDeleteMasterOption)
 
 		// Admin Services (Layanan)
@@ -166,6 +204,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		// Pegawai / Cuti / LKH
 		pegawai := api.Group("/pegawai")
 		pegawai.Get("/pejabat-nips", cutiHdl.GetPejabatNIPs)
+		pegawai.Get("/pejabat", cutiHdl.GetPejabatList)
 		pegawai.Get("/cuti", cutiHdl.GetCuti)
 		pegawai.Post("/cuti", cutiHdl.CreateCuti)
 		pegawai.Patch("/cuti/:id", cutiHdl.UpdateStatus)
@@ -182,11 +221,20 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		adminCuti.Post("/pegawai", cutiHdl.AdminCreatePegawai)
 		adminCuti.Put("/pegawai/:id", cutiHdl.AdminUpdatePegawai)
 		adminCuti.Delete("/pegawai/:id", cutiHdl.AdminDeletePegawai)
+		adminCuti.Post("/pejabat", cutiHdl.UpsertPejabat)
+		adminCuti.Put("/pejabat/:id", cutiHdl.UpsertPejabat)
+		adminCuti.Delete("/pejabat/:id", cutiHdl.DeletePejabat)
+		adminCuti.Put("/pejabat-reorder", cutiHdl.ReorderPejabat)
 		adminCuti.Post("/rekap", cutiHdl.AdminCreateRekap)
 		adminCuti.Put("/rekap/:id", cutiHdl.AdminUpdateRekap)
 		adminCuti.Delete("/rekap/:id", cutiHdl.AdminDeleteRekap)
 		adminCuti.Post("/rollover", cutiHdl.AdminRolloverTahunan)
 		adminCuti.Post("/sync-pusdatin", cutiHdl.AdminSyncPusdatin)
+
+		// Admin Laporan Kinerja (LKH)
+		admin.Get("/laporan-kinerja", cutiHdl.AdminGetLKH)
+		admin.Patch("/laporan-kinerja/:id/status", cutiHdl.AdminUpdateLKHStatus)
+		admin.Delete("/laporan-kinerja/:id", cutiHdl.DeleteLKH)
 	}
 }
 

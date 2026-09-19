@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { compressImageToUnder } from "@/lib/image-compression";
 
+import { toast } from "sonner";
+
 export function UploadRevisionForm({
   requestId,
   requirement,
@@ -50,7 +52,7 @@ export function UploadRevisionForm({
 
     const token = getClientAuthToken();
     const response = await fetch(
-      `${getClientApiBase()}/admin/requests/${requestId}/documents`,
+      `${getClientApiBase()}/requests/${requestId}/documents`,
       {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -62,11 +64,17 @@ export function UploadRevisionForm({
     setLoading(false);
 
     if (!response.ok) {
-      setError(result.error || "Upload gagal.");
+      const msg = result.error || "Upload gagal.";
+      setError(msg);
+      toast.error("Gagal Mengunggah Dokumen", { description: msg });
       return;
     }
 
-    setMessage("Dokumen revisi berhasil diupload.");
+    const successMsg = `Dokumen ${requirement.documentName || "revisi"} berhasil diupload.`;
+    setMessage(successMsg);
+    toast.success("Dokumen Revisi Berhasil Diunggah!", {
+      description: "Berkas Anda telah berhasil dikirimkan ke petugas untuk ditinjau ulang.",
+    });
     router.refresh();
   };
 

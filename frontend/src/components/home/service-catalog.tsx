@@ -1,68 +1,6 @@
-import {
-  Search,
-  ChevronRight,
-  BookOpen,
-  GraduationCap,
-  HeartHandshake,
-  Building2,
-  Users,
-  Sparkles,
-  ArrowRight,
-} from "lucide-react";
+import { Search, BookOpen, ArrowRight } from "lucide-react";
 import Link from "@/lib/next-compat/link";
 import { useState } from "react";
-import { motion, type Variants } from "framer-motion";
-
-const popularCategories = [
-  {
-    name: "Penyelenggaraan Haji dan Umrah",
-    icon: BookOpen,
-    query: "Haji",
-    color: "text-amber-500",
-    bg: "bg-amber-50",
-  },
-  {
-    name: "Pendidikan Islam",
-    icon: GraduationCap,
-    query: "Pendidikan",
-    color: "text-blue-500",
-    bg: "bg-blue-50",
-  },
-  {
-    name: "Bimbingan Masyarakat",
-    icon: Users,
-    query: "Bimbingan, Hindu",
-    color: "text-emerald-500",
-    bg: "bg-emerald-50",
-  },
-  {
-    name: "Zakat & Wakaf",
-    icon: HeartHandshake,
-    query: "Zakat",
-    color: "text-rose-500",
-    bg: "bg-rose-50",
-  },
-];
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  show: {
-    opacity: 1,
-    scale: 1,
-    transition: { type: "spring", stiffness: 100, damping: 15 },
-  },
-};
 
 export function HomeServiceCatalogSection({
   services = [],
@@ -75,59 +13,50 @@ export function HomeServiceCatalogSection({
   const popularSuggestions = displayServices.slice(0, 3).map((s: any) => s.name);
 
   return (
-    <section className="py-12 md:py-16 relative overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-300">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] rounded-full bg-emerald-50/50 dark:bg-emerald-950/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] rounded-full bg-blue-50/30 dark:bg-blue-950/20 blur-[100px]" />
-      </div>
-
-      <div className="mx-auto w-full px-6 sm:px-10 lg:px-20 xl:px-24 relative z-10">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
+    <section className="py-8 sm:py-12 lg:py-14 relative overflow-hidden bg-slate-50/80 dark:bg-slate-950 transition-colors duration-300">
+      <div className="w-full px-4 sm:px-6 lg:w-[90%] 2xl:w-[88%] max-w-[1536px] mx-auto relative z-10">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
           {/* Left Side: Content */}
-          <div className="w-full lg:w-[40%] text-center lg:text-left space-y-6 lg:space-y-8 relative lg:sticky lg:top-32 z-20">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">
+          <div className="w-full lg:w-[38%] xl:w-[34%] text-left space-y-4 sm:space-y-5 relative lg:sticky lg:top-32 z-20">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-600 dark:bg-emerald-500" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 Katalog Layanan Digital
               </span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-[1.1]">
-              Cari Tahu <span className="text-emerald-600 dark:text-emerald-400">Syarat</span>{" "}
-              <br className="hidden md:block" /> Layanan Anda
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug">
+              Cari Tahu <span className="text-emerald-700 dark:text-emerald-400">Syarat</span> Layanan Anda
             </h2>
 
-            <p className="text-sm sm:text-base md:text-lg text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
-              Persiapkan dokumen Anda lebih awal. Cari jenis layanan keagamaan
-              yang Anda butuhkan dan lihat rincian persyaratannya secara
-              transparan.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl">
+              Persiapkan dokumen Anda lebih awal. Cari jenis layanan keagamaan yang Anda butuhkan dan lihat rincian persyaratannya secara transparan.
             </p>
 
-            {/* Modern Search Bar */}
-            <div className="relative max-w-2xl mx-auto lg:mx-0 group">
-              <div className="absolute inset-0 bg-emerald-600/5 dark:bg-emerald-500/10 rounded-[2rem] blur-2xl group-focus-within:bg-emerald-600/10 transition-all duration-500" />
+            {/* Clean Modern Search Bar */}
+            <div className="relative max-w-xl">
               <form
                 action="/layanan"
                 method="get"
-                className="relative flex items-center bg-white dark:bg-slate-900/90 border-2 border-slate-100 dark:border-slate-800/80 rounded-[2rem] p-1.5 sm:p-2 shadow-xl shadow-slate-200/50 dark:shadow-none group-focus-within:border-emerald-500/50 transition-all duration-500"
+                className="relative flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 shadow-2xs focus-within:border-emerald-600 dark:focus-within:border-emerald-500 transition-colors"
               >
-                <div className="flex items-center flex-1 px-2 sm:px-4">
-                  <Search className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400 dark:text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                <div className="flex items-center flex-1 px-2.5 sm:px-3">
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                   <input
                     type="text"
                     name="q"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Contoh: Izin Madrasah..."
-                    className="w-full bg-transparent border-none focus:outline-none focus:ring-0 focus:border-none text-slate-800 dark:text-white dark:bg-transparent text-sm sm:text-base font-bold placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-semibold py-2.5 px-2 sm:py-3 sm:px-3 shadow-none"
+                    placeholder="Contoh: Izin Madrasah, Rekomendasi Nikah..."
+                    className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-slate-900 dark:text-white text-xs sm:text-sm font-medium placeholder:text-slate-400 py-2 px-2.5"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm sm:text-base px-5 py-2.5 sm:px-6 sm:py-3 rounded-3xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center gap-2"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg transition-colors flex items-center gap-1.5"
                 >
-                  Cari <ArrowRight className="h-4 w-4 hidden sm:block" />
+                  <span>Cari</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </form>
             </div>
@@ -148,27 +77,27 @@ export function HomeServiceCatalogSection({
               ))}
             </div>
 
-            {/* View All Card (Desktop Only) */}
-            <div className="hidden lg:block pt-4 w-full">
+            {/* View All Banner (Desktop Only) */}
+            <div className="hidden lg:block pt-3 w-full">
               <Link
                 href="/layanan"
-                className="group flex flex-row items-center justify-between p-3 sm:p-4 rounded-[1.25rem] bg-emerald-950 shadow-lg shadow-emerald-900/20 hover:bg-emerald-900 transition-all w-full"
+                className="group flex flex-row items-center justify-between p-3.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors w-full border border-slate-800 dark:border-slate-700"
               >
                 <div className="flex items-center gap-3 text-left">
-                  <div className="h-8 w-8 shrink-0 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <div className="h-8 w-8 shrink-0 rounded-lg bg-white/10 flex items-center justify-center text-emerald-400">
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
-                    <h4 className="text-sm sm:text-base text-white font-black tracking-tight mb-0.5">
+                    <h4 className="text-xs sm:text-sm text-white font-bold tracking-tight">
                       Lihat Seluruh Katalog Layanan
                     </h4>
-                    <p className="text-emerald-400/80 text-[9px] font-bold uppercase tracking-widest">
-                      Jelajahi Semua Unit & Layanan
+                    <p className="text-slate-400 text-[10px] font-medium">
+                      Jelajahi semua unit dan jenis perizinan
                     </p>
                   </div>
                 </div>
-                <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-md shadow-emerald-900/50">
-                  <ArrowRight className="h-4 w-4" />
+                <div className="h-7 w-7 shrink-0 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </Link>
             </div>
@@ -176,9 +105,9 @@ export function HomeServiceCatalogSection({
 
           {/* Right Side: Category Cards Grid */}
           <div
-            className="w-full lg:w-[60%] grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
+            className="w-full lg:w-[62%] xl:w-[66%] grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4"
           >
-            {displayServices.map((service: any, idx: number) => {
+            {displayServices.map((service: any) => {
               return (
                 <div
                   key={service.id || service.name}
@@ -186,24 +115,21 @@ export function HomeServiceCatalogSection({
                 >
                   <Link
                     href={`/layanan/${service.slug}`}
-                    className="group relative flex flex-col justify-end aspect-[3/4] sm:aspect-[3/4.2] overflow-hidden rounded-[1.5rem] bg-slate-100 dark:bg-slate-900 border-2 border-transparent hover:border-emerald-400/50 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-500 hover:-translate-y-1 block"
+                    className="group relative flex flex-col justify-end aspect-[3/4] overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-600 transition-all block shadow-2xs"
                   >
                     {/* Background Image */}
                     <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                       style={{
                         backgroundImage: `url(/banners/${service.slug}.png)`,
                       }}
                     />
 
                     {/* Dark Gradient Overlay for text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-transparent" />
 
-                    <div className="relative z-10 p-3 sm:p-4 w-full">
-                      <div className="mb-2 h-6 w-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-lg border border-white/10 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-colors duration-500">
-                        <Building2 className="h-3 w-3" />
-                      </div>
-                      <h4 className="text-xs sm:text-sm font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-md">
+                    <div className="relative z-10 p-3 w-full">
+                      <h4 className="text-xs font-bold text-white tracking-tight leading-snug line-clamp-2">
                         {service.name}
                       </h4>
                     </div>
@@ -213,26 +139,26 @@ export function HomeServiceCatalogSection({
             })}
 
             {/* View All Card (Mobile/Tablet Only) */}
-            <div className="col-span-2 sm:col-span-3 xl:col-span-4 pt-4 lg:hidden">
+            <div className="col-span-2 sm:col-span-3 xl:col-span-4 pt-2 lg:hidden">
               <Link
                 href="/layanan"
-                className="group flex flex-row items-center justify-between p-3 sm:p-4 rounded-[1.25rem] bg-emerald-950 shadow-lg shadow-emerald-900/20 hover:bg-emerald-900 transition-all w-full"
+                className="group flex flex-row items-center justify-between p-3.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white transition-colors w-full border border-slate-800"
               >
                 <div className="flex items-center gap-3 text-left">
-                  <div className="h-8 w-8 shrink-0 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <div className="h-8 w-8 shrink-0 rounded-lg bg-white/10 flex items-center justify-center text-emerald-400">
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
-                    <h4 className="text-sm sm:text-base text-white font-black tracking-tight mb-0.5">
+                    <h4 className="text-xs font-bold text-white tracking-tight">
                       Lihat Seluruh Katalog Layanan
                     </h4>
-                    <p className="text-emerald-400/80 text-[9px] font-bold uppercase tracking-widest">
-                      Jelajahi Semua Unit & Layanan
+                    <p className="text-slate-400 text-[10px]">
+                      Jelajahi semua unit dan layanan
                     </p>
                   </div>
                 </div>
-                <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-md shadow-emerald-900/50">
-                  <ArrowRight className="h-4 w-4" />
+                <div className="h-7 w-7 shrink-0 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </Link>
             </div>

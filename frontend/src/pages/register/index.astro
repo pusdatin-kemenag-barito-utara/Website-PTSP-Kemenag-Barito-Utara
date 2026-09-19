@@ -1,9 +1,24 @@
 ---
 import Base from "@/layouts/Base.astro";
 import { RegisterView } from "@/views/register";
+import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
+import { isAdminRole } from "@/lib/constants";
 
 const q = Astro.url.searchParams;
 const callbackUrl = q.get("callbackUrl") ?? undefined;
+
+const user = await getCurrentUser(Astro);
+if (user) {
+  const profile = await getCurrentProfile(Astro);
+  const role = profile?.role || user.user_metadata?.role;
+  if (isAdminRole(role) || role === "super_admin") {
+    return Astro.redirect("/admin");
+  } else if (role === "pegawai") {
+    return Astro.redirect("/pegawai");
+  } else {
+    return Astro.redirect("/masyarakat");
+  }
+}
 ---
 
 <Base

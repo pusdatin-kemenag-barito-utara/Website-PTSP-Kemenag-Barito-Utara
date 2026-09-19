@@ -1,28 +1,35 @@
-import { PageHeader } from "@/components/admin/page-header";
-import { FileText } from "lucide-react";
-import { LaporanKinerjaManager } from "@/components/admin/kepegawaian/laporan-manager";
+import { LaporanManagerClient } from "@/components/admin/kepegawaian/laporan";
+
+interface ELaporanKinerjaViewProps {
+  initialData?: any[];
+  masterOptions?: any[];
+  profile?: any;
+  result?: { error?: string; data?: any[]; isPemimpin?: boolean };
+}
 
 export function ELaporanKinerjaView({
+  initialData,
+  masterOptions = [],
+  profile,
   result,
-}: {
-  result: { error?: string; data?: any[]; isPemimpin?: boolean };
-}) {
-  return (
-    <div className="space-y-6 max-w-[1200px] mx-auto pb-10">
-      <PageHeader
-        title="E-Laporan Kinerja Harian"
-        description="Pantau dan kelola laporan kinerja harian pegawai"
-        icon={FileText}
-      />
+}: ELaporanKinerjaViewProps) {
+  // Support either direct initialData or legacy result wrapper
+  const data = initialData || result?.data || [];
+  const error = result?.error;
 
-      {result.error ? (
-        <div className="bg-red-50 text-red-500 p-4 rounded-xl text-sm">{result.error}</div>
-      ) : (
-        <LaporanKinerjaManager 
-          initialData={result.data || []} 
-          isPemimpin={result.isPemimpin || false} 
-        />
-      )}
+  return (
+    <div className="w-full pb-6">
+      {error ? (
+        <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 p-4 rounded-2xl border border-red-200 dark:border-red-900/50 text-sm font-semibold mb-4">
+          {error}
+        </div>
+      ) : null}
+
+      <LaporanManagerClient
+        initialData={data}
+        masterOptions={masterOptions}
+        profile={profile}
+      />
     </div>
   );
 }

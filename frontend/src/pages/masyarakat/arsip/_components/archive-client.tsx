@@ -112,30 +112,17 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-700">
       
-      {/* ── 1. Banner Header Standard PTSP ─────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.25rem] bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/80 p-6 sm:p-8 md:p-10 text-white shadow-xl dark:shadow-none border border-emerald-800/50 dark:border-slate-800 transition-colors duration-300">
-        {/* Subtle Background Radial Glow */}
-        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-emerald-500/15 dark:bg-emerald-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 dark:bg-emerald-950/80 border border-white/20 dark:border-emerald-800/60 px-3.5 py-1 backdrop-blur-md">
-              <Files className="h-3.5 w-3.5 text-emerald-300" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200 dark:text-emerald-300">
-                Repositori Pribadi
-              </span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              Arsip Dokumen Saya
-            </h1>
-
-            <p className="text-xs sm:text-sm font-medium text-emerald-100/80 dark:text-slate-300 leading-relaxed">
-              Semua berkas persyaratan yang Anda unggah dan dokumen resmi (tanda terima / sertifikat) yang diterbitkan oleh Kemenag tersimpan rapi dan aman di sini.
-            </p>
-          </div>
+      {/* ── 1. Header Bersih ─────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            Arsip Dokumen Saya
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+            Semua berkas persyaratan dan dokumen resmi yang diterbitkan Kemenag tersimpan rapi dan aman di sini.
+          </p>
         </div>
-      </section>
+      </div>
 
       {/* ── 2. Panel Statistik (Stats Panel) ─────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
@@ -253,7 +240,7 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
 
       {/* ── 4. Daftar Kartu Berkas (Grid) ────────────────────────────── */}
       {filteredDocuments.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
           {filteredDocuments.map((doc) => {
             const isPdf = doc.fileType === "application/pdf" || doc.filePath.match(/\.pdf$/i);
             const isImage = doc.fileType.startsWith("image/") || doc.filePath.match(/\.(jpg|jpeg|png|gif|webp)$/i);
@@ -261,7 +248,7 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
             return (
               <div 
                 key={doc.id}
-                className="group rounded-3xl border border-slate-100 bg-white p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                className="group rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
                   {/* Bagian Atas Kartu: Tipe Ikon & Badge Kategori */}

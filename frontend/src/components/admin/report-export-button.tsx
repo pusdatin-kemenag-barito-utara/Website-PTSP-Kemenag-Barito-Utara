@@ -150,7 +150,7 @@ export function ReportExportButton({
         onClick={handleExportExcel}
         disabled={loadingExcel || loadingPdf}
         size="sm"
-        className="h-9 px-3 flex items-center gap-2 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-[#059669] hover:bg-[#047857] text-white border-none shadow-md transition-all active:scale-95"
+        className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg font-bold uppercase tracking-wider text-[10px] bg-[#059669] hover:bg-[#047857] text-white border-none shadow-sm transition-all active:scale-95"
       >
         {loadingExcel ? (
           <Loader2 className="h-3 w-3 animate-spin" />
@@ -164,7 +164,7 @@ export function ReportExportButton({
         onClick={handleExportPdf}
         disabled={loadingExcel || loadingPdf}
         size="sm"
-        className="h-9 px-3 flex items-center gap-2 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-rose-600 hover:bg-rose-700 text-white border-none shadow-md transition-all active:scale-95"
+        className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg font-bold uppercase tracking-wider text-[10px] bg-rose-600 hover:bg-rose-700 text-white border-none shadow-sm transition-all active:scale-95"
       >
         {loadingPdf ? (
           <Loader2 className="h-3 w-3 animate-spin" />

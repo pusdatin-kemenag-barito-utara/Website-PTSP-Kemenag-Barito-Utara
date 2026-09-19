@@ -1,9 +1,14 @@
 import { fetchAPI } from "@/lib/api";
 
-export async function getAdminDashboardStats(roleOwner?: string) {
+export async function getAdminDashboardStats(roleOwner?: string, token?: string) {
   try {
     const query = roleOwner ? `?roleOwner=${encodeURIComponent(roleOwner)}` : "";
-    const res = await fetchAPI<{ success: boolean; data: any }>(`/admin/stats${query}`);
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["Cookie"] = `ptsp-auth=${token}`;
+    }
+    const res = await fetchAPI<{ success: boolean; data: any }>(`/admin/stats${query}`, { headers });
     const data = res.data || {};
 
     const emptyCategoryStats = {
@@ -58,10 +63,15 @@ export async function getAdminDashboardStats(roleOwner?: string) {
   }
 }
 
-export async function getAdminDashboardAnalytics(roleOwner?: string) {
+export async function getAdminDashboardAnalytics(roleOwner?: string, token?: string) {
   try {
     const query = roleOwner ? `?roleOwner=${encodeURIComponent(roleOwner)}` : "";
-    const res = await fetchAPI<{ success: boolean; data: any }>(`/admin/stats${query}`);
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+      headers["Cookie"] = `ptsp-auth=${token}`;
+    }
+    const res = await fetchAPI<{ success: boolean; data: any }>(`/admin/stats${query}`, { headers });
     return {
       serviceAnalytics: res.data?.serviceAnalytics || [],
       trendAnalytics: res.data?.trendAnalytics || [],

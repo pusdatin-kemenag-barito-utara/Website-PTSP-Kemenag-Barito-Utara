@@ -11,8 +11,12 @@ const userNip = profile?.email?.split("@")[0] || "";
 let requests: any[] = [];
 if (profile?.id) {
   try {
-    const token = Astro.cookies.get("ptsp-auth-access-token")?.value;
-    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const token = Astro.cookies.get("ptsp-auth")?.value || Astro.cookies.get("ptsp-auth-access-token")?.value;
+    const authHeaders: Record<string, string> = {};
+    if (token) {
+      authHeaders["Authorization"] = `Bearer ${token}`;
+      authHeaders["Cookie"] = `ptsp-auth=${token}`;
+    }
     
     const res = await fetchAPI<any>(`/requests?user_id=${profile.id}`, {
       headers: { ...authHeaders }

@@ -5,6 +5,7 @@ interface LoginTurnstileProps {
   mounted: boolean;
   onTokenChange: (token: string | null) => void;
   label?: string;
+  size?: "normal" | "compact" | "flexible";
 }
 
 export interface TurnstileRef {
@@ -23,6 +24,7 @@ declare global {
           "expired-callback"?: () => void;
           "error-callback"?: () => void;
           theme?: "light" | "dark" | "auto";
+          size?: "normal" | "compact" | "flexible";
         }
       ) => string;
       reset: (widgetId?: string) => void;
@@ -32,7 +34,7 @@ declare global {
 }
 
 export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
-  ({ mounted, onTokenChange, label }, ref) => {
+  ({ mounted, onTokenChange, label, size = "flexible" }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
     const [verified, setVerified] = useState(false);
@@ -75,6 +77,7 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
             const widgetId = window.turnstile.render(containerRef.current, {
               sitekey: siteKey,
               theme: "light",
+              size: size,
               callback: (token: string) => {
                 setVerified(true);
                 onTokenChangeRef.current(token);
@@ -128,19 +131,19 @@ export const LoginTurnstile = forwardRef<TurnstileRef, LoginTurnstileProps>(
           } catch (e) {}
         }
       };
-    }, []);
+    }, [size]);
 
     return (
-      <div className="mx-auto w-full max-w-md">
-        <div className="relative flex min-h-[65px] items-center justify-center">
+      <div className="w-full">
+        <div className="relative flex min-h-[65px] w-full items-center justify-center">
           {mounted ? (
             <div className="flex flex-col items-center justify-center w-full">
               <div
                 ref={containerRef}
-                className="origin-center scale-[0.85] sm:scale-95 drop-shadow-sm"
+                className="cf-turnstile-full w-full flex justify-center [&>iframe]:!w-full [&>iframe]:!max-w-full [&_.cf-turnstile]:!w-full [&>div]:!w-full"
               />
               {!scriptLoaded && (
-                <div className="flex items-center gap-2 text-xs text-slate-400 animate-pulse">
+                <div className="flex items-center gap-2 text-xs text-slate-400 animate-pulse py-3">
                   <Loader2 className="h-4.5 w-4.5 animate-spin text-emerald-500" />
                   <span>Memuat verifikasi keamanan...</span>
                 </div>

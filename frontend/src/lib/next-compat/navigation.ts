@@ -72,19 +72,37 @@ export function useRouter(): RouterInstance {
 }
 
 export function usePathname(): string {
-  const [pathname, setPathname] = useState("");
+  const [pathname, setPathname] = useState(() =>
+    typeof window !== "undefined" ? window.location.pathname : "",
+  );
   useEffect(() => {
-    setPathname(window.location.pathname);
+    const update = () => setPathname(window.location.pathname);
+    update();
+    window.addEventListener("popstate", update);
+    document.addEventListener("astro:page-load", update);
+    return () => {
+      window.removeEventListener("popstate", update);
+      document.removeEventListener("astro:page-load", update);
+    };
   }, []);
   return pathname;
 }
 
 export function useSearchParams(): URLSearchParams {
-  const [params, setParams] = useState<URLSearchParams>(
-    () => new URLSearchParams(),
+  const [params, setParams] = useState<URLSearchParams>(() =>
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams(),
   );
   useEffect(() => {
-    setParams(new URLSearchParams(window.location.search));
+    const update = () => setParams(new URLSearchParams(window.location.search));
+    update();
+    window.addEventListener("popstate", update);
+    document.addEventListener("astro:page-load", update);
+    return () => {
+      window.removeEventListener("popstate", update);
+      document.removeEventListener("astro:page-load", update);
+    };
   }, []);
   return params;
 }

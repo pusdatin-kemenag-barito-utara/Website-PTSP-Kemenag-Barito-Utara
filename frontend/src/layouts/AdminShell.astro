@@ -7,13 +7,25 @@ interface Props {
   description?: string;
   profile: any;
   allowedMenus: string[];
+  activeMenu?: string;
+  activeType?: "public" | "asn";
 }
 
-const { title, description, profile, allowedMenus } = Astro.props;
+const { title, description, profile, allowedMenus, activeMenu, activeType } = Astro.props;
+const currentPath = Astro.url.pathname;
+const currentSearch = Astro.url.search;
 ---
 
 <Base title={title} description={description}>
-  <AdminShell client:load profile={profile} allowedMenus={allowedMenus}>
+  <AdminShell
+    client:load
+    profile={profile}
+    allowedMenus={allowedMenus}
+    currentPath={currentPath}
+    currentSearch={currentSearch}
+    activeMenu={activeMenu}
+    activeType={activeType}
+  >
     <slot />
   </AdminShell>
 </Base>

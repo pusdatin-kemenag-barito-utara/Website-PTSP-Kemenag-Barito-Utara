@@ -128,19 +128,30 @@ export function LayananClient({
 
   const handleDelete = async () => {
     if (!deletingService) return;
+    const target = deletingService;
+    setDeletingService(null);
+    const toastId = toast.loading(`Sedang menghapus layanan "${target.name}"...`);
+
     const data = new FormData();
-    data.append("id", deletingService.id.toString());
-    startTransition(async () => {
+    data.append("id", target.id.toString());
+    try {
       const result = await deleteServiceAction(data);
+      toast.dismiss(toastId);
       if (result.success) {
         toast.success("Layanan Dihapus", {
           description: result.message || "Layanan berhasil dihapus secara permanen.",
         });
-        setDeletingService(null);
       } else {
-        toast.error(result.error || "Gagal menghapus layanan.");
+        toast.error("Gagal menghapus layanan", {
+          description: result.error || "Terjadi kesalahan",
+        });
       }
-    });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error("Kesalahan jaringan", {
+        description: err.message,
+      });
+    }
   };
 
   const handleReorder = (newOrder: any[]) => {
@@ -179,50 +190,50 @@ export function LayananClient({
   const inactiveSubItems = totalSubItems - activeSubItems;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         {/* Summary Stats Cards - Ringkas & Jelas */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Card 1: TOTAL */}
-          <div className="px-4 py-2.5 rounded-2xl border border-slate-200/80 bg-white shadow-2xs flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-              <span className="text-xs font-black text-slate-800">{totalMainServices}</span>
+          <div className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white shadow-2xs flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+              <span className="text-[11px] font-black text-slate-800">{totalMainServices}</span>
             </div>
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 leading-none mb-0.5">
                 Total Layanan
               </p>
-              <p className="text-xs font-bold text-slate-700">
+              <p className="text-xs font-bold text-slate-700 leading-tight">
                 {category === "asn" ? `${totalMainServices} Layanan Katalog` : <><span className="text-emerald-700 font-black">{totalSubItems}</span> Item Layanan</>}
               </p>
             </div>
           </div>
 
           {/* Card 2: AKTIF */}
-          <div className="px-4 py-2.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/50 shadow-2xs flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <span className="text-xs font-black">{activeMainServices}</span>
+          <div className="px-3 py-1.5 rounded-xl border border-emerald-200/80 bg-emerald-50/50 shadow-2xs flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <span className="text-[11px] font-black">{activeMainServices}</span>
             </div>
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">
+              <p className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 leading-none mb-0.5">
                 Layanan Aktif
               </p>
-              <p className="text-xs font-bold text-slate-700">
+              <p className="text-xs font-bold text-slate-700 leading-tight">
                 {category === "asn" ? `${activeMainServices} Layanan Aktif` : <><span className="text-emerald-700 font-black">{activeSubItems}</span> Item Aktif</>}
               </p>
             </div>
           </div>
 
           {/* Card 3: NONAKTIF */}
-          <div className="px-4 py-2.5 rounded-2xl border border-rose-200/80 bg-rose-50/50 shadow-2xs flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <span className="text-xs font-black">{inactiveMainServices}</span>
+          <div className="px-3 py-1.5 rounded-xl border border-rose-200/80 bg-rose-50/50 shadow-2xs flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <span className="text-[11px] font-black">{inactiveMainServices}</span>
             </div>
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700">
+              <p className="text-[9px] font-extrabold uppercase tracking-wider text-rose-700 leading-none mb-0.5">
                 Layanan Nonaktif
               </p>
-              <p className="text-xs font-bold text-slate-700">
+              <p className="text-xs font-bold text-slate-700 leading-tight">
                 {category === "asn" ? `${inactiveMainServices} Layanan Nonaktif` : <><span className="text-rose-700 font-black">{inactiveSubItems}</span> Item Nonaktif</>}
               </p>
             </div>
@@ -241,9 +252,9 @@ export function LayananClient({
             });
             setIsAddOpen(true);
           }}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#059669] to-[#047857] px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-500/20 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#059669] to-[#047857] px-3.5 py-2 text-xs font-bold text-white shadow-2xs transition-all duration-200 hover:shadow-xs hover:-translate-y-0.5 active:scale-95 cursor-pointer"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           Tambah Layanan Baru
         </button>
       </div>

@@ -1,26 +1,19 @@
 version: '3.8'
 
 services:
-  backend:
+  app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: ptsp-kemenag-backend
-    restart: always
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env.local
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ptsp-kemenag-frontend
+    container_name: ptsp-kemenag
     restart: always
     ports:
       - "3000:3000"
-    env_file:
-      - .env.local
-    depends_on:
-      - backend
+      - "8080:8080"
+    environment:
+      - INFISICAL_API_URL=${INFISICAL_API_URL:-https://app.infisical.com/api}
+      - INFISICAL_PROJECT_ID=${INFISICAL_PROJECT_ID:-ad5be957-3c8a-4c2e-b21e-3838cc3a7c0e}
+      - INFISICAL_SECRET_PATH=/ptsp-kemenag
+      - INFISICAL_ENV=${INFISICAL_ENV:-dev}
+      - INFISICAL_CLIENT_ID=${INFISICAL_CLIENT_ID}
+      - INFISICAL_CLIENT_SECRET=${INFISICAL_CLIENT_SECRET}

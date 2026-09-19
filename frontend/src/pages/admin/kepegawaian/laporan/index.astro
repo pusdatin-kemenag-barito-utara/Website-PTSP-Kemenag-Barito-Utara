@@ -1,11 +1,13 @@
 ---
 import AdminShell from "@/layouts/AdminShell.astro";
 import { ELaporanKinerjaView } from "@/views/admin/kepegawaian-laporan";
-import { requireAuth } from "@/lib/auth";
-import { getLaporanKinerjaAction } from "@/lib/actions/admin/kepegawaian";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
 import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
 
-const profile = await requireAuth(false, Astro);
+const profile = await requirePermission("kepegawaian", Astro).catch(async () => {
+  return await requirePermission("pengguna", Astro);
+});
 
 let allowedMenus: string[] = [];
 if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
@@ -14,14 +16,36 @@ if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
   allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
 }
 
-const result = await getLaporanKinerjaAction();
+const token = Astro.cookies.get("ptsp-auth")?.value;
+const headers: Record<string, string> = {};
+if (token) {
+  headers["Authorization"] = `Bearer ${token}`;
+  headers["Cookie"] = `ptsp-auth=${token}`;
+}
+
+// Fetch initial LKH and master options server-side
+const [laporanRes, optionsRes] = await Promise.all([
+  fetchAPI<{ success: boolean; data: any[] }>("/admin/laporan-kinerja", { headers }).catch((err) => {
+    console.error("Gagal fetch initial laporan kinerja:", err);
+    return { success: false, data: [] };
+  }),
+  fetchAPI<{ success: boolean; data: any[] }>("/master-options", { headers }).catch(() => null),
+]);
+
+const initialData = laporanRes?.data ?? [];
+const masterOptions = optionsRes?.data ?? [];
 ---
 
 <AdminShell
   title="E-Laporan Kinerja Harian | PTSP Kemenag Barito Utara"
-  description="Pantau dan kelola laporan kinerja harian pegawai"
+  description="Pantau dan kelola laporan kinerja harian pegawai ASN"
   profile={profile}
   allowedMenus={allowedMenus}
 >
-  <ELaporanKinerjaView client:load result={result} />
+  <ELaporanKinerjaView 
+    client:load 
+    initialData={initialData} 
+    masterOptions={masterOptions}
+    profile={profile}
+  />
 </AdminShell>

@@ -1,16 +1,25 @@
 import { getClientApiBase } from "@/lib/client-api";
 import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface PDFJsViewerProps {
   url: string;
-  onLoaded?: () => void;
+  onLoaded?: (info?: { numPages: number }) => void;
   scale?: number;
+  rotation?: number;
+  onPageChange?: (currentPage: number, totalPages: number) => void;
 }
 
-export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
+export function PDFJsViewer({
+  url,
+  onLoaded,
+  scale = 1.0,
+  rotation = 0,
+  onPageChange,
+}: PDFJsViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollWrapperRef = useRef<HTMLDivElement | null>(null);
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -29,12 +38,23 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
         pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
         let res: Response;
-        if (url.startsWith("blob:") || url.startsWith("data:")) {
-          res = await fetch(url);
+        if (
+          url.startsWith("https://files.kemenag-baritoutara.com/") ||
+          url.startsWith("blob:") ||
+          url.startsWith("data:")
+        ) {
+          try {
+            res = await fetch(url);
+            if (!res.ok) throw new Error(`Direct fetch HTTP ${res.status}`);
+          } catch {
+            const streamUrl = `${getClientApiBase()}/files/proxy?url=${encodeURIComponent(url)}`;
+            res = await fetch(streamUrl);
+          }
         } else {
           const streamUrl = `${getClientApiBase()}/files/proxy?url=${encodeURIComponent(url)}`;
           res = await fetch(streamUrl);
         }
+
         if (isCancelled) return;
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -50,7 +70,8 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
           setNumPages(doc.numPages);
           setCurrentPage(1);
           setLoading(false);
-          if (onLoaded) onLoaded();
+          if (onLoaded) onLoaded({ numPages: doc.numPages });
+          if (onPageChange) onPageChange(1, doc.numPages);
         }
       } catch (err) {
         console.error("[PDF.js] Load error:", err);
@@ -67,15 +88,19 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
     };
   }, [url, onLoaded]);
 
-  // Render ALL pages sequentially onto canvas elements
+  // Render ALL pages sequentially onto canvas elements with auto-fit width, crisp HiDPI & rotation
   useEffect(() => {
     const container = containerRef.current;
+    const scrollWrapper = scrollWrapperRef.current;
     if (!pdfDoc || !container) return;
 
     let isCancelled = false;
     container.innerHTML = "";
 
     (async () => {
+      // Determine optimal fit-to-width scale based on container
+      const availableWidth = scrollWrapper ? Math.min(scrollWrapper.clientWidth - 48, 1000) : 860;
+
       for (let pIndex = 1; pIndex <= pdfDoc.numPages; pIndex++) {
         if (isCancelled) break;
 
@@ -83,38 +108,49 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
           const page = await pdfDoc.getPage(pIndex);
           if (isCancelled) break;
 
-          const viewport = page.getViewport({ scale });
+          const totalRotation = (page.rotate + (rotation || 0)) % 360;
+          const unscaledViewport = page.getViewport({ scale: 1.0, rotation: totalRotation });
 
-          // Create container for page
+          // Calculate auto-fit multiplier so A4 portrait/landscape comfortably fills width
+          const fitMultiplier = availableWidth > 320 && unscaledViewport.width > 0
+            ? (availableWidth / unscaledViewport.width)
+            : 1.35;
+          const effectiveScale = fitMultiplier * scale;
+
+          const viewport = page.getViewport({ scale: effectiveScale, rotation: totalRotation });
+
+          // Create page wrapper
           const pageWrapper = document.createElement("div");
-          pageWrapper.className = "relative mb-4 flex flex-col items-center shrink-0 w-full";
+          pageWrapper.className =
+            "relative my-4 flex flex-col items-center shrink-0 max-w-full transition-transform duration-200 touch-pan-y";
           pageWrapper.setAttribute("data-page-num", String(pIndex));
+          pageWrapper.id = `pdf-page-${pIndex}`;
+          pageWrapper.style.touchAction = "pan-y";
 
           const canvas = document.createElement("canvas");
-          canvas.className = "max-w-full h-auto shadow-xl rounded-lg bg-white border border-slate-700/50";
+          canvas.className =
+            "max-w-full h-auto shadow-2xl rounded-sm bg-white border border-slate-700/60 touch-pan-y";
+          canvas.style.touchAction = "pan-y";
 
           const context = canvas.getContext("2d");
           if (!context) continue;
 
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
+          // HiDPI crisp rendering
+          const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+          canvas.width = Math.floor(viewport.width * dpr);
+          canvas.height = Math.floor(viewport.height * dpr);
+          canvas.style.width = `${Math.floor(viewport.width)}px`;
+          canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+          const transform = dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null;
 
           pageWrapper.appendChild(canvas);
-
-          // Page indicator badge
-          if (pdfDoc.numPages > 1) {
-            const pageBadge = document.createElement("span");
-            pageBadge.className = "mt-2 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold";
-            pageBadge.textContent = `${pIndex} / ${pdfDoc.numPages}`;
-            pageWrapper.appendChild(pageBadge);
-          }
-
           container.appendChild(pageWrapper);
 
           await page.render({
             canvasContext: context,
+            transform: transform as any,
             viewport: viewport,
-            canvas: canvas,
           } as any).promise;
         } catch (e) {
           console.warn(`Render error on page ${pIndex}:`, e);
@@ -125,9 +161,9 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
     return () => {
       isCancelled = true;
     };
-  }, [pdfDoc, scale]);
+  }, [pdfDoc, scale, rotation]);
 
-  // Track scroll position for active page indicator
+  // Track scroll position for active page indicator in header toolbar
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     const pageNodes = container.querySelectorAll("[data-page-num]");
@@ -141,6 +177,9 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
         const pNum = Number(el.getAttribute("data-page-num"));
         if (pNum && pNum !== currentPage) {
           setCurrentPage(pNum);
+          if (onPageChange && numPages > 0) {
+            onPageChange(pNum, numPages);
+          }
         }
       }
     });
@@ -148,13 +187,13 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
 
   if (errorMsg) {
     return (
-      <div className="flex flex-col items-center justify-center p-6 text-center text-slate-400 gap-2">
-        <p className="text-sm font-semibold text-red-400">{errorMsg}</p>
+      <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400 gap-3">
+        <p className="text-sm font-semibold text-rose-400">{errorMsg}</p>
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-emerald-400 underline"
+          className="text-xs font-bold text-emerald-400 hover:text-emerald-300 underline"
         >
           Buka berkas di tab baru
         </a>
@@ -163,27 +202,31 @@ export function PDFJsViewer({ url, onLoaded, scale = 1.0 }: PDFJsViewerProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-0 relative bg-slate-950">
+    <div className="flex flex-col items-center w-full h-full min-h-0 relative bg-slate-950 overflow-hidden">
       {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-20 text-slate-300 gap-2">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 z-20 text-slate-300 gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-          <span className="text-xs font-semibold">Memuat Dokumen PDF...</span>
+          <span className="text-xs font-bold">Memuat Dokumen PDF...</span>
         </div>
       )}
 
-      {/* Floating Page Counter for Multi-page PDFs */}
-      {numPages > 1 && !loading && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-700/60 text-xs font-bold text-slate-200 shadow-xl">
-          <span>Halaman {currentPage} dari {numPages}</span>
-        </div>
-      )}
-
-      {/* Scrollable Container for All Pages */}
+      {/* Scrollable Container for All Pages with smooth vertical scroll */}
       <div
+        ref={scrollWrapperRef}
         onScroll={handleScroll}
-        className="w-full h-full overflow-y-auto overflow-x-hidden p-2 sm:p-4 flex flex-col items-center scroll-smooth"
+        className="w-full h-full overflow-y-auto overflow-x-hidden p-3 sm:p-6 md:p-8 flex flex-col items-center scroll-smooth overscroll-contain"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          overscrollBehaviorY: "contain",
+          touchAction: "pan-y",
+        }}
       >
-        <div ref={containerRef} className="w-full max-w-4xl flex flex-col items-center" />
+        <div
+          ref={containerRef}
+          className="flex flex-col items-center max-w-full touch-pan-y"
+          style={{ touchAction: "pan-y" }}
+        />
       </div>
     </div>
   );

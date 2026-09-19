@@ -37,7 +37,7 @@ export function DeleteUserModal({
           <p className="mb-8 text-sm font-medium leading-relaxed text-slate-500">
             Apakah Anda yakin ingin menghapus akun{" "}
             <span className="font-bold text-slate-900">
-              {deletingUser.fullName || deletingUser.email}
+              {deletingUser.nama || deletingUser.fullName || deletingUser.email || "ini"}
             </span>
             ? Tindakan ini permanen dan tidak dapat dibatalkan.
           </p>

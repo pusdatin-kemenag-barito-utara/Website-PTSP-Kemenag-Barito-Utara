@@ -125,15 +125,31 @@ export const POST: APIRoute = async (ctx) => {
         return await (handler as (...a: unknown[]) => unknown)(...args, { cookies, request, url, locals });
       },
     );
-    return Response.json({ data: result });
+    const res = Response.json({ data: result });
+    for (const header of cookies.headers()) {
+      res.headers.append("Set-Cookie", header);
+    }
+    return res;
   } catch (e) {
     if (e instanceof RedirectSignal) {
-      return Response.json({ __redirect: e.path });
+      const res = Response.json({ __redirect: e.path });
+      for (const header of cookies.headers()) {
+        res.headers.append("Set-Cookie", header);
+      }
+      return res;
     }
     if (e instanceof NotFoundSignal) {
-      return Response.json({ __notFound: true });
+      const res = Response.json({ __notFound: true });
+      for (const header of cookies.headers()) {
+        res.headers.append("Set-Cookie", header);
+      }
+      return res;
     }
     const message = e instanceof Error ? e.message : "Terjadi kesalahan di server.";
-    return Response.json({ error: message }, { status: 400 });
+    const res = Response.json({ error: message }, { status: 400 });
+    for (const header of cookies.headers()) {
+      res.headers.append("Set-Cookie", header);
+    }
+    return res;
   }
 };

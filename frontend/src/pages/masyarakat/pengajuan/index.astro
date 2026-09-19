@@ -2,11 +2,8 @@
 import DashboardShell from "@/layouts/DashboardShell.astro";
 import { requireAuth } from "@/lib/auth";
 import { fetchAPI } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-
-import { RequestsHeader } from "./_components/requests-header";
-import { RequestsMobileList } from "./_components/requests-mobile-list";
-import { RequestsDesktopTable } from "./_components/requests-desktop-table";
+import { RequestsView } from "./_components/requests-view";
+import { Plus } from "lucide-react";
 
 const profile = await requireAuth(false, Astro);
 
@@ -22,20 +19,31 @@ try {
 ---
 
 <DashboardShell
-  title="Pengajuan Saya"
-  description={`Daftar pengajuan ${profile.fullName}`}
+  title="Riwayat Pengajuan"
+  description={`Daftar riwayat permohonan layanan ${profile.fullName}`}
 >
-  <div class="space-y-6 md:space-y-8 animate-in fade-in duration-700">
-    <RequestsHeader client:load />
-
-    <Card class="overflow-hidden border-none shadow-2xl shadow-slate-200/60 rounded-2xl sm:rounded-[2rem] bg-white dark:bg-slate-900">
-      <div class="block md:hidden">
-        <RequestsMobileList client:load requests={requests} />
+  <div class="space-y-4 sm:space-y-5 animate-in fade-in duration-300">
+    <!-- Clean Minimalist Header -->
+    <div class="flex items-center justify-between pb-0.5">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Riwayat Pengajuan
+        </h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Pantau status dan kelola berkas permohonan Anda
+        </p>
       </div>
 
-      <div class="hidden md:block">
-        <RequestsDesktopTable client:load requests={requests} />
-      </div>
-    </Card>
+      <a
+        href="/masyarakat/pengajuan/baru"
+        class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-4 py-2.5 shadow-xs transition-all active:scale-95 shrink-0"
+      >
+        <Plus className="h-4 w-4" />
+        <span>Buat Pengajuan Baru</span>
+      </a>
+    </div>
+
+    <!-- Clean, Modern & Interactive Requests View -->
+    <RequestsView client:load requests={requests} userId={profile.id} />
   </div>
 </DashboardShell>

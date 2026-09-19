@@ -21,39 +21,30 @@ export function DashboardRealtimeSync() {
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
-          table: "service_requests",
+          schema: "kemenag_ptsp",
+          table: "ptsp_service_requests",
         },
         (payload) => {
           console.log("New request received:", payload);
           
-          // 1. Refresh the dashboard data
-          router.refresh();
-          
-          // 2. Play notification sound
+          // 1. Play notification sound
           if (audioRef.current) {
-            audioRef.current.play().catch(err => console.log("Audio play blocked by browser:", err));
+            audioRef.current.play().catch((err) => console.log("Audio play blocked by browser:", err));
           }
           
-          // 3. Show a toast
+          // 2. Show a toast
           toast.success("Ada pengajuan layanan baru masuk!", {
-            description: `Nomor: ${payload.new.request_number || 'Baru'}`,
+            description: `Nomor: ${(payload.new as any)?.request_number || 'Baru'}`,
             duration: 10000,
           });
         }
       )
       .subscribe();
 
-    // Fallback polling every 30 seconds for metrics
-    const interval = setInterval(() => {
-      router.refresh();
-    }, 30000);
-
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(interval);
     };
-  }, [router]);
+  }, []);
 
   return null; // Logic-only component
 }

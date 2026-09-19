@@ -5,6 +5,6 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
 export function createClient() {
   return createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    cookieOptions: { name: "ptsp-auth" },
+    cookieOptions: { name: "ptsp-auth-access-token" },
   });
 }

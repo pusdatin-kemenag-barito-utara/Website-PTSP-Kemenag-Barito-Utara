@@ -5,7 +5,12 @@ import { signOutAction } from "@/lib/actions/auth/sign-out";
 
 export function LengkapiWaPegawaiView() {
   const handleSignOut = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
     void signOutAction("/login/pegawai");
+    window.location.replace("/login/pegawai");
   };
 
   return (

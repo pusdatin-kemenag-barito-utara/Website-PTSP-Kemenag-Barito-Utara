@@ -23,11 +23,24 @@ import (
 
 // R2Storage mengelola upload, delete, dan URL file ke Cloudflare R2 Object Storage S3-Compatible API.
 type R2Storage struct {
-	cfg *config.Config
+	cfg        *config.Config
+	httpClient *http.Client
 }
 
 func NewR2Storage(cfg *config.Config) *R2Storage {
-	return &R2Storage{cfg: cfg}
+	transport := &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 20,
+		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+	return &R2Storage{
+		cfg: cfg,
+		httpClient: &http.Client{
+			Transport: transport,
+			Timeout:   60 * time.Second,
+		},
+	}
 }
 
 // GetURL mengembalikan URL publik R2 (atau URL lokal fallback jika R2 belum diisi)
@@ -35,19 +48,35 @@ func (s *R2Storage) GetURL(key string) string {
 	if key == "" {
 		return ""
 	}
-	if strings.HasPrefix(key, "http://") || strings.HasPrefix(key, "https://") {
+	// Normalisasi jika key berisi domain R2 internal / r2.dev yang unauthorized
+	if strings.Contains(key, ".r2.dev/") {
+		parts := strings.Split(key, ".r2.dev/")
+		if len(parts) > 1 {
+			key = parts[1]
+		}
+	} else if strings.Contains(key, ".r2.cloudflarestorage.com/") {
+		parts := strings.Split(key, ".r2.cloudflarestorage.com/")
+		if len(parts) > 1 {
+			key = parts[1]
+		}
+	} else if strings.Contains(key, "/ptsp/") {
+		parts := strings.Split(key, "/ptsp/")
+		if len(parts) > 1 {
+			key = parts[1]
+		}
+	} else if strings.HasPrefix(key, "http://") || strings.HasPrefix(key, "https://") {
 		return key
 	}
+
+	key = strings.TrimLeft(key, "/")
+
 	domain := strings.TrimRight(s.cfg.R2PublicDomain, "/")
-	if domain != "" {
-		return fmt.Sprintf("%s/%s", domain, strings.TrimLeft(key, "/"))
+	if domain != "" && !strings.Contains(domain, ".r2.dev") {
+		return fmt.Sprintf("%s/%s", domain, key)
 	}
-	// Fallback ke R2 default dev domain jika ada Account ID & Bucket Name
-	if s.cfg.R2AccountId != "" && s.cfg.R2BucketName != "" {
-		return fmt.Sprintf("https://pub-%s.r2.dev/%s", s.cfg.R2AccountId, strings.TrimLeft(key, "/"))
-	}
-	// Fallback ke server lokal
-	return fmt.Sprintf("/uploads/%s", strings.TrimLeft(key, "/"))
+
+	// Default ke domain proxy publik resmi Cloudflare Worker Kemenag Barito Utara
+	return fmt.Sprintf("https://files.kemenag-baritoutara.com/ptsp/%s", key)
 }
 
 // GetStats menghitung jumlah file dan total volume data di bucket.
@@ -58,7 +87,6 @@ func (s *R2Storage) GetStats(ctx context.Context) (fileCount int64, usage int64,
 	}
 
 	host := fmt.Sprintf("%s.r2.cloudflarestorage.com", s.cfg.R2AccountId)
-	client := &http.Client{Timeout: 30 * time.Second}
 
 	continuation := ""
 	for {
@@ -99,7 +127,7 @@ func (s *R2Storage) GetStats(ctx context.Context) (fileCount int64, usage int64,
 		req.Header.Set("Authorization", fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s",
 			s.cfg.R2AccessKeyId, credentialScope, signedHeaders, signature))
 
-		resp, err := client.Do(req)
+		resp, err := s.httpClient.Do(req)
 		if err != nil {
 			return fileCount, usage, err
 		}
@@ -176,6 +204,94 @@ func (s *R2Storage) Upload(ctx context.Context, key string, data []byte, content
 	return s.GetURL(key), nil
 }
 
+// Delete menghapus file dari Cloudflare R2 dan/atau disk lokal backend/uploads/
+func (s *R2Storage) Delete(ctx context.Context, keyOrURL string) error {
+	if keyOrURL == "" {
+		return nil
+	}
+
+	// Normalisasi key
+	key := keyOrURL
+	key = strings.TrimPrefix(key, "r2:")
+	if idx := strings.Index(key, "/ptsp/"); idx != -1 {
+		key = key[idx+6:]
+	} else if idx := strings.Index(key, ".r2.dev/"); idx != -1 {
+		key = key[idx+8:]
+	} else if idx := strings.Index(key, "/uploads/"); idx != -1 {
+		key = key[idx+9:]
+	}
+	key = strings.TrimLeft(key, "/")
+
+	// Hapus file lokal jika ada di disk
+	localPath := filepath.Join("uploads", key)
+	if _, err := os.Stat(localPath); err == nil {
+		_ = os.Remove(localPath)
+	}
+
+	// Jika R2 terkonfigurasi, hapus dari Cloudflare R2
+	if s.cfg.R2AccountId != "" && s.cfg.R2AccessKeyId != "" && s.cfg.R2SecretAccessKey != "" && s.cfg.R2BucketName != "" {
+		return s.deleteFromR2(ctx, key)
+	}
+
+	return nil
+}
+
+// deleteFromR2 melakukan S3 API DeleteObject ke Cloudflare R2 menggunakan Signature V4
+func (s *R2Storage) deleteFromR2(ctx context.Context, key string) error {
+	host := fmt.Sprintf("%s.r2.cloudflarestorage.com", s.cfg.R2AccountId)
+	endpoint := fmt.Sprintf("https://%s/%s/%s", host, s.cfg.R2BucketName, key)
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", endpoint, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Host", host)
+
+	// AWS SigV4 Headers
+	now := time.Now().UTC()
+	amzDate := now.Format("20060102T150405Z")
+	dateStamp := now.Format("20060102")
+	region := "auto"
+	service := "s3"
+
+	req.Header.Set("x-amz-date", amzDate)
+	emptyPayloadHash := sha256Hash([]byte(""))
+	req.Header.Set("x-amz-content-sha256", emptyPayloadHash)
+
+	// Canonical Request
+	canonicalURI := fmt.Sprintf("/%s/%s", s.cfg.R2BucketName, key)
+	canonicalHeaders := fmt.Sprintf("host:%s\nx-amz-content-sha256:%s\nx-amz-date:%s\n", host, emptyPayloadHash, amzDate)
+	signedHeaders := "host;x-amz-content-sha256;x-amz-date"
+	canonicalRequest := fmt.Sprintf("DELETE\n%s\n\n%s\n%s\n%s", canonicalURI, canonicalHeaders, signedHeaders, emptyPayloadHash)
+
+	// String to Sign
+	credentialScope := fmt.Sprintf("%s/%s/%s/aws4_request", dateStamp, region, service)
+	stringToSign := fmt.Sprintf("AWS4-HMAC-SHA256\n%s\n%s\n%s", amzDate, credentialScope, sha256Hash([]byte(canonicalRequest)))
+
+	// Calculate Signature
+	signingKey := getSignatureKey(s.cfg.R2SecretAccessKey, dateStamp, region, service)
+	signature := hex.EncodeToString(hmacSHA256(signingKey, []byte(stringToSign)))
+
+	authorizationHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s",
+		s.cfg.R2AccessKeyId, credentialScope, signedHeaders, signature)
+	req.Header.Set("Authorization", authorizationHeader)
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// S3 DeleteObject mengembalikan status 204 (No Content) atau 200 (OK), atau 404 jika file sudah tidak ada
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusNotFound {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("R2 delete response %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	return nil
+}
+
 // uploadToR2 melakukan S3 API PutObject ke Cloudflare R2 menggunakan Signature V4
 func (s *R2Storage) uploadToR2(ctx context.Context, key string, data []byte, contentType string) error {
 	host := fmt.Sprintf("%s.r2.cloudflarestorage.com", s.cfg.R2AccountId)
@@ -221,8 +337,7 @@ func (s *R2Storage) uploadToR2(ctx context.Context, key string, data []byte, con
 		s.cfg.R2AccessKeyId, credentialScope, signedHeaders, signature)
 	req.Header.Set("Authorization", authorizationHeader)
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return err
 	}

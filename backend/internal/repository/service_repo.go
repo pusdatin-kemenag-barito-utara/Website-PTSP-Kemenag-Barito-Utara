@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"ptsp-kemenag-backend/internal/models"
 
@@ -223,10 +224,31 @@ func (r *ServiceRepository) FindBySlug(ctx context.Context, slug string) (*model
 }
 
 // Master Options & Requirements
+func getMasterTableName(category string) string {
+	switch category {
+	case "jenis_pegawai":
+		return "kemenag_ptsp.ptsp_master_jenis_pegawai"
+	case "role_admin":
+		return "kemenag_ptsp.ptsp_master_role_admin"
+	case "unit_kerja":
+		return "kemenag_ptsp.ptsp_master_unit_kerja"
+	case "jenis_cuti":
+		return "kemenag_ptsp.ptsp_master_jenis_cuti"
+	default:
+		return "kemenag_ptsp.ptsp_master_unit_kerja"
+	}
+}
+
 func (r *ServiceRepository) FindMasterOptions(ctx context.Context) ([]models.MasterOption, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT id::text, category, value, label, sort_order, is_active 
-		FROM kemenag_ptsp.ptsp_master_options ORDER BY category, sort_order ASC
+		SELECT id::text, 'jenis_pegawai' AS category, value, label, sort_order, is_active FROM kemenag_ptsp.ptsp_master_jenis_pegawai
+		UNION ALL
+		SELECT id::text, 'role_admin' AS category, value, label, sort_order, is_active FROM kemenag_ptsp.ptsp_master_role_admin
+		UNION ALL
+		SELECT id::text, 'unit_kerja' AS category, value, label, sort_order, is_active FROM kemenag_ptsp.ptsp_master_unit_kerja
+		UNION ALL
+		SELECT id::text, 'jenis_cuti' AS category, value, label, sort_order, is_active FROM kemenag_ptsp.ptsp_master_jenis_cuti
+		ORDER BY category, sort_order ASC
 	`)
 	if err != nil {
 		return nil, err
@@ -244,25 +266,30 @@ func (r *ServiceRepository) FindMasterOptions(ctx context.Context) ([]models.Mas
 }
 
 func (r *ServiceRepository) UpsertMasterOption(ctx context.Context, req models.UpsertMasterOptionRequest) (*models.MasterOption, error) {
+	tableName := getMasterTableName(req.Category)
 	var o models.MasterOption
+	o.Category = req.Category
+
 	if req.ID != "" {
-		err := r.db.QueryRow(ctx, `
-			UPDATE kemenag_ptsp.ptsp_master_options
-			SET category=$1, value=$2, label=$3, sort_order=$4, is_active=$5, updated_at=NOW()
-			WHERE id=$6::uuid
-			RETURNING id::text, category, value, label, sort_order, is_active
-		`, req.Category, req.Value, req.Label, req.SortOrder, req.IsActive, req.ID).
-			Scan(&o.ID, &o.Category, &o.Value, &o.Label, &o.SortOrder, &o.IsActive)
+		query := fmt.Sprintf(`
+			UPDATE %s
+			SET value=$1, label=$2, sort_order=$3, is_active=$4, updated_at=NOW()
+			WHERE id=$5::uuid
+			RETURNING id::text, value, label, sort_order, is_active
+		`, tableName)
+		err := r.db.QueryRow(ctx, query, req.Value, req.Label, req.SortOrder, req.IsActive, req.ID).
+			Scan(&o.ID, &o.Value, &o.Label, &o.SortOrder, &o.IsActive)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := r.db.QueryRow(ctx, `
-			INSERT INTO kemenag_ptsp.ptsp_master_options (category, value, label, sort_order, is_active)
-			VALUES ($1, $2, $3, $4, $5)
-			RETURNING id::text, category, value, label, sort_order, is_active
-		`, req.Category, req.Value, req.Label, req.SortOrder, req.IsActive).
-			Scan(&o.ID, &o.Category, &o.Value, &o.Label, &o.SortOrder, &o.IsActive)
+		query := fmt.Sprintf(`
+			INSERT INTO %s (value, label, sort_order, is_active)
+			VALUES ($1, $2, $3, $4)
+			RETURNING id::text, value, label, sort_order, is_active
+		`, tableName)
+		err := r.db.QueryRow(ctx, query, req.Value, req.Label, req.SortOrder, req.IsActive).
+			Scan(&o.ID, &o.Value, &o.Label, &o.SortOrder, &o.IsActive)
 		if err != nil {
 			return nil, err
 		}
@@ -271,8 +298,38 @@ func (r *ServiceRepository) UpsertMasterOption(ctx context.Context, req models.U
 }
 
 func (r *ServiceRepository) DeleteMasterOption(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_master_options WHERE id=$1::uuid`, id)
-	return err
+	tables := []string{
+		"kemenag_ptsp.ptsp_master_jenis_pegawai",
+		"kemenag_ptsp.ptsp_master_role_admin",
+		"kemenag_ptsp.ptsp_master_unit_kerja",
+		"kemenag_ptsp.ptsp_master_jenis_cuti",
+	}
+	for _, tbl := range tables {
+		cmdTag, err := r.db.Exec(ctx, fmt.Sprintf(`DELETE FROM %s WHERE id=$1::uuid`, tbl), id)
+		if err == nil && cmdTag.RowsAffected() > 0 {
+			return nil
+		}
+	}
+	return nil
+}
+
+func (r *ServiceRepository) SyncUnitKerjaFromPegawai(ctx context.Context) (int64, error) {
+	query := `
+		INSERT INTO kemenag_ptsp.ptsp_master_unit_kerja (value, label, sort_order, is_active)
+		SELECT DISTINCT
+			TRIM(unit_kerja),
+			TRIM(unit_kerja),
+			COALESCE((SELECT MAX(sort_order) FROM kemenag_ptsp.ptsp_master_unit_kerja), 0) + ROW_NUMBER() OVER (ORDER BY TRIM(unit_kerja)),
+			true
+		FROM kemenag_ptsp.profiles_pegawai
+		WHERE TRIM(COALESCE(unit_kerja, '')) != ''
+		ON CONFLICT (value) DO NOTHING
+	`
+	cmdTag, err := r.db.Exec(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+	return cmdTag.RowsAffected(), nil
 }
 
 

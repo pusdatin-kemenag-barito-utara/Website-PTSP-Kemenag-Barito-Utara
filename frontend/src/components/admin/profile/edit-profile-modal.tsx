@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Shield, Mail, Calendar, Camera, ZoomIn, ZoomOut, Upload, Loader2, AlertCircle, Save } from "lucide-react";
-import { uploadAvatarAction, updateProfileNameAction } from "@/lib/actions/admin/admin-profile";
+import { Crown, Shield, Mail, Calendar, Camera, ZoomIn, ZoomOut, Upload, Loader2, AlertCircle, Save, RotateCcw } from "lucide-react";
+import { uploadAvatarAction, updateAvatarUrlAction, updateProfileNameAction } from "@/lib/actions/admin/admin-profile";
 import { toast } from "sonner";
 import { getRoleLabel } from "@/lib/constants";
 
@@ -97,6 +97,7 @@ export function EditProfileModal({
     if (!selectedFile || !croppedAreaPixels || !userId) return;
     setUploading(true);
     setError("");
+    const toastId = toast.loading("Mengunggah foto profil...");
 
     try {
       const croppedBlob = await getCroppedBlob(imageSrc!, croppedAreaPixels, 400);
@@ -113,10 +114,16 @@ export function EditProfileModal({
       const result = await uploadAvatarAction(base64, fileName);
       if (!result.success) throw new Error(result.error);
 
-      toast.success("Foto profil berhasil diperbarui");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user_custom_avatar", "true");
+      }
+      toast.success("Foto profil berhasil diperbarui", { id: toastId });
       resetCrop();
+      window.location.reload();
     } catch (err: any) {
-      setError(err.message || "Gagal mengupload foto");
+      const msg = err.message || "Gagal mengupload foto";
+      setError(msg);
+      toast.error(msg, { id: toastId });
     } finally {
       setUploading(false);
     }
@@ -126,17 +133,21 @@ export function EditProfileModal({
     const trimmed = nameValue.trim();
     if (!trimmed) {
       setError("Nama tidak boleh kosong.");
+      toast.error("Nama tidak boleh kosong.");
       return;
     }
     setSavingName(true);
     setError("");
+    const toastId = toast.loading("Menyimpan nama...");
 
     try {
       const result = await updateProfileNameAction(trimmed);
       if (!result.success) throw new Error(result.error);
-      toast.success("Nama berhasil diperbarui");
+      toast.success("Nama berhasil diperbarui", { id: toastId });
     } catch (err: any) {
-      setError(err.message || "Gagal memperbarui nama");
+      const msg = err.message || "Gagal memperbarui nama";
+      setError(msg);
+      toast.error(msg, { id: toastId });
     } finally {
       setSavingName(false);
     }
@@ -161,6 +172,18 @@ export function EditProfileModal({
     : "-";
 
   const isCropping = !!imageSrc;
+
+  const [customAvatarUploaded, setCustomAvatarUploaded] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCustomAvatarUploaded(localStorage.getItem("user_custom_avatar") === "true");
+    }
+  }, []);
+
+  const showCustomAvatar =
+    Boolean(avatarUrl) &&
+    avatarUrl !== "/kemenag.svg" &&
+    (profile?.email !== "baritoutara@kemenag.go.id" || customAvatarUploaded);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -256,11 +279,11 @@ export function EditProfileModal({
                   onClick={() => inputRef.current?.click()}
                   className="group relative h-24 w-24 overflow-hidden rounded-full border-4 border-emerald-100 shadow-lg hover:border-emerald-300 transition-all cursor-pointer"
                 >
-                  {avatarUrl ? (
+                  {showCustomAvatar ? (
                     <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-100 to-emerald-50">
-                      <span className="text-3xl font-black text-[#059669]">{initials}</span>
+                    <div className="flex h-full w-full items-center justify-center bg-slate-50 p-3">
+                      <img src="/kemenag.svg" alt="Logo Kemenag" className="h-full w-full object-contain" />
                     </div>
                   )}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
@@ -269,19 +292,41 @@ export function EditProfileModal({
                 </button>
               ) : (
                 <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-slate-200 shadow-lg">
-                  {avatarUrl ? (
+                  {showCustomAvatar ? (
                     <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-50">
-                      <span className="text-3xl font-black text-[#059669]">{initials}</span>
+                    <div className="flex h-full w-full items-center justify-center bg-slate-50 p-3">
+                      <img src="/kemenag.svg" alt="Logo Kemenag" className="h-full w-full object-contain" />
                     </div>
                   )}
                 </div>
               )}
               {canUpload && (
-                <p className="text-xs text-slate-400 font-medium -mt-2">
-                  Klik foto untuk mengganti
-                </p>
+                <div className="flex flex-col items-center gap-1.5 -mt-2">
+                  <p className="text-xs text-slate-400 font-medium">
+                    Klik foto untuk mengganti
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const toastId = toast.loading("Mengembalikan ke Logo Kemenag...");
+                      try {
+                        await updateAvatarUrlAction("/kemenag.svg");
+                        if (typeof window !== "undefined") {
+                          localStorage.removeItem("user_custom_avatar");
+                        }
+                        toast.success("Foto profil berhasil direset ke Logo Kemenag", { id: toastId });
+                        window.location.reload();
+                      } catch (e: any) {
+                        toast.error(e.message || "Gagal mereset foto", { id: toastId });
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer transition-colors"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Gunakan Logo Kemenag (Default)
+                  </button>
+                </div>
               )}
             </div>
 

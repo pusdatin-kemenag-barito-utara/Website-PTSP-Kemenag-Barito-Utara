@@ -35,12 +35,14 @@ export function RiwayatDetailView({ request }: { request: any }) {
               />
               <RequestAnswersCard
                 requestId={request.id}
-                answers={request.answers || []}
-                documents={request.documents || []}
+                answers={(request.serviceRequestAnswers && request.serviceRequestAnswers.length > 0)
+                  ? request.serviceRequestAnswers
+                  : (request.answers || [])}
+                documents={request.serviceRequestDocuments || request.documents || []}
                 status={request.status}
               />
               <RequestDocumentsCard
-                documents={request.documents || []}
+                documents={request.serviceRequestDocuments || request.documents || []}
                 signedUrlMap={signedUrlMap}
               />
             </div>

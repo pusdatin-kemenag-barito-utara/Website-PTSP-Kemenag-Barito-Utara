@@ -1,7 +1,8 @@
-﻿import { revalidatePath } from "@/lib/next-compat/cache";
+import { revalidatePath } from "@/lib/next-compat/cache";
 import { requireAdmin } from "@/lib/auth";
 import { z } from "zod";
 import { fetchAPI } from "@/lib/api";
+import { deleteFromR2, isR2Path } from "@/lib/r2";
 
 export type ActionResult = {
   success: boolean;
@@ -18,7 +19,7 @@ const UpdateStatusSchema = z.object({
 export async function updateRequestStatusAction(
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   try {
     const validated = UpdateStatusSchema.safeParse({
       requestId: formData.get("requestId"),
@@ -36,14 +37,18 @@ export async function updateRequestStatusAction(
       method: "PATCH",
       body: JSON.stringify({
         status,
-        revisionNote: notes,
+        notes,
+        revisionNote: status === "revision_required" ? notes : "",
+        rejectionReason: status === "rejected" ? notes : "",
+        reviewerId: admin.id,
+        reviewerName: admin.fullName || admin.name || "Petugas PTSP",
       }),
     });
 
     revalidatePath("/admin/pengajuan");
     revalidatePath(`/admin/pengajuan/${requestId}`);
 
-    return { success: true, message: "Status pengajuan berhasil diperbarui" };
+    return { success: true, message: "Status keputusan berhasil diperbarui" };
   } catch (error: any) {
     return { success: false, error: error.message || "Gagal memperbarui status" };
   }
@@ -68,12 +73,13 @@ export async function deleteRequestAction(
 
     const { requestId } = validated.data;
 
+    // Eksekusi penghapusan di backend (menghapus database seketika dan membersihkan R2 secara asinkron di background)
     await fetchAPI(`/admin/requests/${requestId}`, {
       method: "DELETE",
     });
 
     revalidatePath("/admin/pengajuan");
-    return { success: true, message: "Pengajuan berhasil dihapus" };
+    return { success: true, message: "Pengajuan dan seluruh berkas file berhasil dihapus permanen" };
   } catch (error: any) {
     return { success: false, error: error.message || "Gagal menghapus pengajuan" };
   }

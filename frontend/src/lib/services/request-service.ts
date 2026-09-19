@@ -1,14 +1,20 @@
 import { fetchAPI } from "@/lib/api";
 
 export class RequestService {
-  static async getPaginatedRequests(params: { page: number; pageSize: number; status?: string; type?: string; category?: string }) {
+  static async getPaginatedRequests(params: { page: number; pageSize: number; status?: string; type?: string; category?: string; token?: string }) {
     const queryParts: string[] = [];
     if (params.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
     const reqType = params.type || params.category;
     if (reqType) queryParts.push(`type=${encodeURIComponent(reqType)}`);
 
+    const headers: Record<string, string> = {};
+    if (params.token) {
+      headers["Authorization"] = `Bearer ${params.token}`;
+      headers["Cookie"] = `ptsp-auth=${params.token}`;
+    }
+
     const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
-    const res = await fetchAPI<{ success: boolean; data: any[] }>(`/admin/requests${queryString}`);
+    const res = await fetchAPI<{ success: boolean; data: any[] }>(`/admin/requests${queryString}`, { headers });
     const data = res.data || [];
     return {
       data,

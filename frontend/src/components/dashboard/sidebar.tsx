@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "@/lib/next-compat/link";
 import { usePathname } from "@/lib/next-compat/navigation";
-import { Shield, ChevronDown, User, Briefcase, Menu, X } from "lucide-react";
+import { Shield, ChevronDown, User, Briefcase, Menu, X, Home, LogOut } from "lucide-react";
+import { signOutAction } from "@/lib/actions/auth/sign-out";
+import { BottomNavPemohon } from "./_components/bottom-nav-pemohon";
 import {
   ADMIN_NAV,
   USER_NAV,
@@ -13,7 +15,15 @@ import { SidebarFooter } from "./_components/sidebar-footer";
 
 type SidebarMode = "admin" | "pegawai" | "user";
 
-export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: SidebarMode; isAdmin?: boolean; userNip?: string }) {
+export function DashboardSidebar({
+  mode = "user",
+  userNip = "",
+  isAdmin = false,
+}: {
+  mode?: SidebarMode;
+  isAdmin?: boolean;
+  userNip?: string;
+}) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -21,10 +31,21 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
   });
   const sidebarRef = useRef<HTMLDivElement>(null);
   
-  // Backward compatibility wrapper (in case some old code passes isAdmin)
-  const currentMode = arguments[0]?.isAdmin ? "admin" : mode;
-  
+  const currentMode = mode;
   let navItems = currentMode === "admin" ? ADMIN_NAV : (currentMode === "pegawai" ? PEGAWAI_NAV : USER_NAV);
+
+  const handleUserSignOut = async () => {
+    try {
+      document.cookie = "ptsp-auth=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "ptsp-auth-access-token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    try {
+      await signOutAction("/login/masyarakat");
+    } catch (e) {}
+    window.location.replace("/login/masyarakat");
+  };
 
   if (currentMode === "pegawai") {
     const PEJABAT_NIPS = [
@@ -37,7 +58,7 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
       "198210022009011011", // Wandi
       "197311212001121001"  // Arbaja
     ];
-    const isPejabat = PEJABAT_NIPS.includes(userNip);
+    const isPejabat = PEJABAT_NIPS.includes(userNip) || isAdmin;
     navItems = navItems.filter((item: any) => !item.restrictedToPejabat || isPejabat);
   }
 
@@ -111,43 +132,86 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
 
   return (
     <>
-      {/* Mobile Top Bar (Full Width Top Bar) */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-[90] px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-xs transition-all duration-300">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${currentMode === "admin" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : (currentMode === "pegawai" ? "bg-blue-500/10 text-blue-600 dark:text-blue-400" : "bg-teal-500/10 text-teal-600 dark:text-teal-400")}`}>
-            {currentMode === "admin" ? (
-              <Shield className="h-4.5 w-4.5" />
-            ) : currentMode === "pegawai" ? (
-              <Briefcase className="h-4.5 w-4.5" />
-            ) : (
-              <User className="h-4.5 w-4.5" />
-            )}
-          </div>
-          <p className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
-            {currentMode === "admin" ? "Menu Admin" : (currentMode === "pegawai" ? "Menu Pegawai" : "Navigasi Pemohon")}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer border border-emerald-100 dark:border-slate-700"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      </div>
+      {/* Mobile Top Bar */}
+      {currentMode === "user" ? (
+        <div className="md:hidden fixed top-0 inset-x-0 z-[90] h-14 px-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-2xs transition-all duration-300">
+          <Link href="/masyarakat" className="flex items-center gap-2.5 active:scale-95 transition-transform">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-800/40 p-1 shrink-0 shadow-2xs">
+              <img 
+                src="/kemenag.svg" 
+                alt="Kemenag Barito Utara" 
+                className="h-full w-full object-contain" 
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+              />
+            </div>
+            <div>
+              <p className="text-xs font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+                PTSP Kemenag
+              </p>
+              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 leading-none">
+                Kab. Barito Utara
+              </p>
+            </div>
+          </Link>
 
-      {/* Mobile Drawer Overlay with Smooth Backdrop */}
-      <div 
-        className={`md:hidden fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
-        onClick={() => setIsOpen(false)} 
-      />
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              title="Kembali ke Portal Website Utama"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-600 hover:text-emerald-700 dark:text-slate-300 dark:hover:text-emerald-400 text-xs font-bold border border-slate-200/70 dark:border-slate-700/70 transition-all active:scale-95 shadow-2xs"
+            >
+              <Home className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[11px] font-bold">Portal</span>
+            </Link>
+            <button
+              type="button"
+              onClick={handleUserSignOut}
+              title="Keluar dari Akun"
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200/70 dark:border-slate-700/70 transition-all active:scale-95 cursor-pointer shadow-2xs"
+              aria-label="Keluar dari akun"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="md:hidden fixed top-0 inset-x-0 z-[90] px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between shadow-xs transition-all duration-300">
+          <div className="flex items-center gap-3">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${currentMode === "admin" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-blue-500/10 text-blue-600 dark:text-blue-400"}`}>
+              {currentMode === "admin" ? (
+                <Shield className="h-4.5 w-4.5" />
+              ) : (
+                <Briefcase className="h-4.5 w-4.5" />
+              )}
+            </div>
+            <p className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
+              {currentMode === "admin" ? "Menu Admin" : "Menu Pegawai"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-slate-800 text-emerald-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-700 transition-colors focus:outline-none cursor-pointer border border-emerald-100 dark:border-slate-700"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Mobile Drawer Overlay with Smooth Backdrop (Only for non-user) */}
+      {currentMode !== "user" && (
+        <div 
+          className={`md:hidden fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
+          onClick={() => setIsOpen(false)} 
+        />
+      )}
 
       {/* Sidebar / Drawer */}
       <aside
         ref={sidebarRef}
         className={`
-          flex flex-col w-[280px] sm:w-[320px] max-w-[85vw]
+          ${currentMode === "user" ? "hidden md:flex" : "flex"} flex-col w-[280px] sm:w-[320px] max-w-[85vw]
           fixed inset-y-0 right-0 z-[110] bg-transparent shadow-2xl transition-transform duration-300 cubic-bezier(0.16, 1, 0.3, 1) 
           ${isOpen ? "translate-x-0" : "translate-x-full"}
           md:static md:translate-x-0 md:bg-transparent md:shadow-none md:z-0
@@ -259,10 +323,13 @@ export function DashboardSidebar({ mode = "user", userNip = "" }: { mode?: Sideb
             </div>
           </div>
           <div className="mt-auto">
-            <SidebarFooter />
+            <SidebarFooter isAdmin={isAdmin} mode={currentMode} />
           </div>
         </nav>
       </aside>
+
+      {/* Mobile Bottom Navigation Bar (for Pemohon Masyarakat) */}
+      {currentMode === "user" && <BottomNavPemohon />}
     </>
   );
 }

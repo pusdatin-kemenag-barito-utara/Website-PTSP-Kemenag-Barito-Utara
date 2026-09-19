@@ -405,6 +405,17 @@ func NewImpersonateHandler(cfg *config.Config, cutiSvc *service.CutiService) *Im
 }
 
 func (h *ImpersonateHandler) GenerateImpersonateLink(c fiber.Ctx) error {
+	// Proteksi ketat: Fitur bypass/impersonate hanya boleh diakses oleh 1 akun Super Administrator
+	email, _ := c.Locals("email").(string)
+	role, _ := c.Locals("role").(string)
+	isSuper := (h.cfg.SuperAdminEmail != "" && strings.EqualFold(email, h.cfg.SuperAdminEmail)) || role == "super_admin"
+	if !isSuper {
+		return c.Status(403).JSON(fiber.Map{
+			"success": false,
+			"error":   "Akses ditolak. Fitur bypass/impersonate ini eksklusif hanya untuk 1 akun Super Administrator.",
+		})
+	}
+
 	var req struct {
 		Nip string `json:"nip"`
 	}
@@ -415,79 +426,72 @@ func (h *ImpersonateHandler) GenerateImpersonateLink(c fiber.Ctx) error {
 	if nip == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "error": "NIP tidak boleh kosong."})
 	}
-	if h.cfg.SupabaseURL == "" || h.cfg.SupabaseServiceRole == "" {
-		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Konfigurasi Supabase admin belum tersedia di backend."})
+
+	// Cari data profil pegawai berdasarkan NIP
+	data, err := h.cutiSvc.GetByNip(c.Context(), nip)
+	if err != nil || data == nil {
+		return c.Status(404).JSON(fiber.Map{
+			"success": false,
+			"error":   fmt.Sprintf("Pegawai dengan NIP %s tidak ditemukan dalam database.", nip),
+		})
 	}
 
-	// Data profil pegawai (opsional)
 	name, jabatan, unitKerja := fmt.Sprintf("Pegawai %s", nip), "-", "-"
-	if data, err := h.cutiSvc.GetByNip(c.Context(), nip); err == nil && data != nil {
-		if status, ok := data["status"].(string); ok && status != "" {
-			name = fmt.Sprintf("Pegawai %s", nip)
-		}
+	if n, ok := data["name"].(string); ok && n != "" {
+		name = n
+	}
+	if j, ok := data["jabatan"].(string); ok && j != "" {
+		jabatan = j
+	}
+	if u, ok := data["unitKerja"].(string); ok && u != "" {
+		unitKerja = u
 	}
 
-	email := fmt.Sprintf("%s@kemenag.go.id", nip)
-	origin := fmt.Sprintf("%s://%s", strings.TrimSuffix(c.Protocol(), ":443"), c.Hostname())
-	if forwarded := c.Get("x-forwarded-host"); forwarded != "" {
-		proto := c.Get("x-forwarded-proto")
-		if proto == "" {
-			if strings.Contains(forwarded, "localhost") {
-				proto = "http"
-			} else {
-				proto = "https"
+	targetEmail := fmt.Sprintf("%s@kemenag.go.id", nip)
+	directPreviewLink := fmt.Sprintf("/pegawai?nip=%s", nip)
+	magicLink := directPreviewLink
+
+	// Coba buat Supabase magic link jika konfigurasi tersedia
+	if h.cfg.SupabaseURL != "" && h.cfg.SupabaseServiceRole != "" {
+		payload := map[string]interface{}{
+			"type":  "magiclink",
+			"email": targetEmail,
+		}
+		if bodyBytes, err := json.Marshal(payload); err == nil {
+			reqUrl := strings.TrimRight(h.cfg.SupabaseURL, "/") + "/auth/v1/admin/generate_link"
+			if httpReq, err := http.NewRequestWithContext(c.Context(), "POST", reqUrl, bytes.NewReader(bodyBytes)); err == nil {
+				httpReq.Header.Set("Content-Type", "application/json")
+				httpReq.Header.Set("apikey", h.cfg.SupabaseServiceRole)
+				httpReq.Header.Set("Authorization", "Bearer "+h.cfg.SupabaseServiceRole)
+
+				client := &http.Client{Timeout: 5 * time.Second}
+				if resp, err := client.Do(httpReq); err == nil {
+					defer resp.Body.Close()
+					if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+						var linkData struct {
+							Properties struct {
+								ActionLink string `json:"action_link"`
+							} `json:"properties"`
+						}
+						if respBytes, err := io.ReadAll(resp.Body); err == nil {
+							if json.Unmarshal(respBytes, &linkData) == nil && linkData.Properties.ActionLink != "" {
+								if parsedLink, err := url.Parse(linkData.Properties.ActionLink); err == nil {
+									token := parsedLink.Query().Get("token")
+									if token != "" {
+										magicLink = fmt.Sprintf("/auth/verify?token=%s&type=magiclink&next=/pegawai", token)
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
-		origin = fmt.Sprintf("%s://%s", proto, forwarded)
-	}
-
-	payload := map[string]interface{}{
-		"type":  "magiclink",
-		"email": email,
-		"options": map[string]string{
-			"redirectTo": origin + "/pegawai",
-		},
-	}
-	bodyBytes, _ := json.Marshal(payload)
-
-	reqUrl := strings.TrimRight(h.cfg.SupabaseURL, "/") + "/auth/v1/admin/generate_link"
-	httpReq, err := http.NewRequestWithContext(c.Context(), "POST", reqUrl, bytes.NewReader(bodyBytes))
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Gagal membuat link masuk. Coba lagi."})
-	}
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("apikey", h.cfg.SupabaseServiceRole)
-	httpReq.Header.Set("Authorization", "Bearer "+h.cfg.SupabaseServiceRole)
-
-	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Gagal membuat link masuk. Coba lagi."})
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Gagal membuat link masuk. Coba lagi."})
-	}
-
-	var linkData struct {
-		Properties struct {
-			ActionLink string `json:"action_link"`
-		} `json:"properties"`
-	}
-	if err := json.Unmarshal(respBytes, &linkData); err != nil || linkData.Properties.ActionLink == "" {
-		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Gagal membuat link masuk. Coba lagi."})
-	}
-
-	magicLink := linkData.Properties.ActionLink
-	if parsedLink, err := url.Parse(magicLink); err == nil {
-		token := parsedLink.Query().Get("token")
-		magicLink = fmt.Sprintf("%s/auth/verify?token=%s&type=magiclink&next=/pegawai", origin, token)
 	}
 
 	return c.JSON(fiber.Map{
 		"success":   true,
+		"nip":       nip,
 		"name":      name,
 		"jabatan":   jabatan,
 		"unitKerja": unitKerja,

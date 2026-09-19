@@ -11,7 +11,15 @@ const data = await getPegawaiDashboardData(Astro);
 const showRecentActivity = data.recentCuti.length > 0;
 const showApprovalAlert = data.isPejabat && (data.pendingAtasanCount > 0 || data.pendingKepalaCount > 0);
 
-const userNip = profile?.email?.split("@")[0] || "";
+import { isSuperAdmin } from "@/lib/constants";
+
+const isSuper = isSuperAdmin(profile?.email);
+const queryNip = Astro.url.searchParams.get("nip") || "";
+const userNip = (isSuper && queryNip) ? queryNip : (profile?.nip || profile?.email?.split("@")[0] || "");
+const isSimulated = Boolean(isSuper && queryNip);
+const displayName = isSimulated && data.simulatedPegawaiName
+  ? data.simulatedPegawaiName
+  : ((profile?.fullName || "Pegawai") as string);
 ---
 
 <DashboardShell
@@ -21,6 +29,46 @@ const userNip = profile?.email?.split("@")[0] || "";
   userNip={userNip}
 >
   <div class="space-y-4 sm:space-y-6">
+    <!-- Simulation Banner if Super Admin impersonating an employee -->
+    {isSimulated && (
+      <div class="rounded-2xl border border-amber-300 dark:border-amber-700 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-amber-900/30 p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm shadow-amber-500/25">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                Mode Simulasi Pegawai Aktif
+              </span>
+              <span class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-200/90 dark:bg-amber-900/80 text-amber-950 dark:text-amber-200">
+                NIP: {queryNip}
+              </span>
+              {data.simulatedPegawaiJabatan && (
+                <span class="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                  • {data.simulatedPegawaiJabatan}
+                </span>
+              )}
+            </div>
+            <p class="text-xs text-amber-800/80 dark:text-amber-400 mt-0.5">
+              Anda sedang memantau akun pegawai <strong>{data.simulatedPegawaiName || queryNip}</strong> secara langsung tanpa merubah sesi utama Super Administrator.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <a
+            href="/admin/kepegawaian/pegawai"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-xs"
+          >
+            Kembali ke Panel Admin
+          </a>
+        </div>
+      </div>
+    )}
+
     <!-- Modern Welcome Banner -->
     <div class="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950 p-5 sm:p-8 lg:p-10 text-white shadow-xl border border-emerald-700/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3">
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 lg:gap-8">
@@ -29,14 +77,14 @@ const userNip = profile?.email?.split("@")[0] || "";
           <div class="inline-flex items-center gap-2 rounded-full bg-white/10 dark:bg-emerald-950/80 border border-white/20 dark:border-emerald-800/60 px-3 py-1 backdrop-blur-md">
             <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-200 dark:text-emerald-300">
-              Portal Mandiri Pegawai
+              {isSimulated ? "Simulasi Portal Mandiri Pegawai" : "Portal Mandiri Pegawai"}
             </span>
           </div>
 
           <h1 class="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white leading-snug">
             <span class="block sm:inline">Selamat Datang, </span>
             <span class="text-emerald-300 block sm:inline">
-              {(profile?.fullName || "Pegawai") as string} 👋
+              {displayName} 👋
             </span>
           </h1>
 

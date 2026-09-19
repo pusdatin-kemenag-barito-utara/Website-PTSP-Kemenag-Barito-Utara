@@ -1,22 +1,32 @@
-import { Users } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
-import { PenggunaClient } from "@/components/admin/pengguna/pengguna-client";
+import { PenggunaClient, type PenggunaTab } from "@/components/admin/pengguna/pengguna-client";
+
+interface PenggunaViewProps {
+  initialTab?: PenggunaTab;
+  initialPetugas?: any[];
+  initialPegawai?: any[];
+  initialPemohon?: any[];
+  initialStats?: any;
+  initialUsers?: any[];
+  currentEmail?: string;
+}
 
 export function PenggunaView({
-  initialUsers,
+  initialTab = "petugas",
+  initialPetugas = [],
+  initialPegawai = [],
+  initialPemohon = [],
+  initialStats,
+  initialUsers = [],
   currentEmail,
-}: {
-  initialUsers: any[];
-  currentEmail?: string;
-}) {
+}: PenggunaViewProps) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Manajemen Petugas & Pengguna"
-        description="Kelola role dan akses pengguna sistem PTSP Kemenag Barito Utara."
-        icon={Users}
-      />
+    <div className="pb-6">
       <PenggunaClient
+        initialTab={initialTab}
+        initialPetugas={initialPetugas}
+        initialPegawai={initialPegawai}
+        initialPemohon={initialPemohon}
+        initialStats={initialStats}
         initialUsers={initialUsers}
         currentEmail={currentEmail}
       />

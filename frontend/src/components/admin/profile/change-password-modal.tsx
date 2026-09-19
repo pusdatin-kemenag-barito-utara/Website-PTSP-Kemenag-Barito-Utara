@@ -24,22 +24,27 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
 
     if (password.length < 8) {
       setError("Password minimal 8 karakter");
+      toast.error("Password minimal 8 karakter");
       return;
     }
     if (password !== confirm) {
       setError("Konfirmasi password tidak cocok");
+      toast.error("Konfirmasi password tidak cocok");
       return;
     }
 
     setLoading(true);
+    const toastId = toast.loading("Memperbarui password...");
     try {
       const result = await updateAdminPasswordAction(password);
       if (!result.success) throw new Error(result.error);
 
-      toast.success("Password berhasil diperbarui");
+      toast.success("Password berhasil diperbarui", { id: toastId });
       handleClose();
     } catch (err: any) {
-      setError(err.message || "Gagal memperbarui password");
+      const msg = err.message || "Gagal memperbarui password";
+      setError(msg);
+      toast.error(msg, { id: toastId });
     } finally {
       setLoading(false);
     }

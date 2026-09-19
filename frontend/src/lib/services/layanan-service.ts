@@ -26,10 +26,18 @@ export class LayananService {
   }
 
   /**
-   * Get all services with only id and name for dropdowns
+   * Get all services with only id and name for dropdowns, filtered by category if provided
    */
   static async getAllServicesBrief(_roleOwner?: string, _category?: string) {
     const res = await fetchAPI<{ success: boolean; data: any[] }>("/services");
-    return res.data || [];
+    let services = res.data || [];
+    if (_category) {
+      if (_category === "asn" || _category === "pegawai") {
+        services = services.filter((s: any) => s.category === "asn");
+      } else if (_category === "public" || _category === "masyarakat") {
+        services = services.filter((s: any) => s.category !== "asn");
+      }
+    }
+    return services;
   }
 }

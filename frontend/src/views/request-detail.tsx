@@ -25,27 +25,29 @@ export function RequestDetailView({
 
       <RequestHeader request={request} />
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6 md:space-y-8">
+      <div className="grid gap-5 md:gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-5 md:space-y-6">
           <RequestDetailsCard
-            revisionNote={request.revisionNote}
-            rejectionReason={request.rejectionReason}
+            revisionNote={request.revisionNote || request.revision_note}
+            rejectionReason={request.rejectionReason || request.rejection_reason}
           />
 
           <RequestAnswersCard
             requestId={request.id}
-            answers={request.serviceRequestAnswers ?? []}
-            documents={request.serviceRequestDocuments ?? []}
+            answers={(request.serviceRequestAnswers && request.serviceRequestAnswers.length > 0)
+              ? request.serviceRequestAnswers
+              : (request.answers ?? request.service_request_answers ?? [])}
+            documents={request.serviceRequestDocuments ?? request.documents ?? []}
             status={request.status}
           />
 
           <RequestDocumentsCard
-            documents={request.serviceRequestDocuments ?? []}
+            documents={request.serviceRequestDocuments ?? request.documents ?? []}
             signedUrlMap={signedUrlMap}
           />
         </div>
 
-        <div className="space-y-6 md:space-y-8">
+        <div className="space-y-5 md:space-y-6">
           <OutputDocumentCard generatedUrl={generatedUrl || null} />
 
           <RevisionSection
@@ -53,7 +55,7 @@ export function RequestDetailView({
             requirements={requirements}
           />
 
-          <ActivityLogsCard activityLogs={request.activityLogs ?? []} />
+          <ActivityLogsCard activityLogs={request.activityLogs ?? request.activity_logs ?? []} />
         </div>
       </div>
     </div>

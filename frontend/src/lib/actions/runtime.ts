@@ -29,6 +29,16 @@ function handleEnvelope<T>(env: ActionResultEnvelope, res: Response): T {
   return env.data as T;
 }
 
+function getClientAuthToken(): string {
+  if (typeof document === "undefined") return "";
+  const cookies = document.cookie.split("; ");
+  const ptspAuth = cookies.find((row) => row.startsWith("ptsp-auth="));
+  if (ptspAuth) return decodeURIComponent(ptspAuth.split("=")[1] ?? "");
+  const legacy = cookies.find((row) => row.startsWith("ptsp-auth-access-token="));
+  if (legacy) return decodeURIComponent(legacy.split("=")[1] ?? "");
+  return "";
+}
+
 export async function invokeAction<T = any>(
   path: string,
   fn: string,
@@ -39,6 +49,7 @@ export async function invokeAction<T = any>(
     throw new Error("Aksi hanya bisa dijalankan di dalam konteks aplikasi.");
   }
 
+  const token = getClientAuthToken();
   const hasFormData = args.some((a) => a instanceof FormData);
 
   if (hasFormData) {
@@ -50,11 +61,8 @@ export async function invokeAction<T = any>(
     form.forEach((value, key) => body.append(key, value));
 
     const headers: Record<string, string> = {};
-    if (typeof document !== "undefined") {
-      const match = document.cookie.split("; ").find((row) => row.startsWith("ptsp-auth-access-token="));
-      if (match) {
-        headers["Authorization"] = `Bearer ${decodeURIComponent(match.split("=")[1] ?? "")}`;
-      }
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     const res = await fetch(`${origin}/api/actions/${path}`, {
@@ -68,11 +76,8 @@ export async function invokeAction<T = any>(
   }
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (typeof document !== "undefined") {
-    const match = document.cookie.split("; ").find((row) => row.startsWith("ptsp-auth-access-token="));
-    if (match) {
-      headers["Authorization"] = `Bearer ${decodeURIComponent(match.split("=")[1] ?? "")}`;
-    }
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${origin}/api/actions/${path}`, {

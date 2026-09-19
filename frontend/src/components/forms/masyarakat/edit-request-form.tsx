@@ -45,10 +45,19 @@ export function EditRequestForm({
     const rawFormData = new FormData(e.currentTarget);
 
     // Add answers
-    const updates = answers.map((answer: any) => ({
-      fieldName: answer.fieldName,
-      fieldValue: rawFormData.get(`answer_${answer.id}`) as string,
-    }));
+    const updates = answers.map((answer: any) => {
+      const val = (rawFormData.get(`answer_${answer.id}`) ?? rawFormData.get(`answer_${answer.fieldName}`) ?? answer.fieldValue ?? answer.field_value ?? "") as string;
+      const fn = answer.fieldName || answer.field_name || "";
+      const fid = answer.fieldId || answer.field_id || undefined;
+      return {
+        field_id: fid,
+        fieldId: fid,
+        field_name: fn,
+        fieldName: fn,
+        field_value: val,
+        fieldValue: val,
+      };
+    });
 
     // Add files
     const fileEntries = Array.from(rawFormData.entries()).filter(([key]: any) =>
@@ -83,7 +92,7 @@ export function EditRequestForm({
         uploadForm.append("document", file, file.name);
         uploadForm.append("requirementId", key.replace("requirement_", ""));
         uploadForm.append("category", "umum");
-        await fetch(`${getClientApiBase()}/admin/requests/${requestId}/documents`, {
+        await fetch(`${getClientApiBase()}/requests/${requestId}/documents`, {
           method: "POST",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: uploadForm,

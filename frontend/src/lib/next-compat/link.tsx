@@ -15,6 +15,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
 ) {
   void prefetch;
   void scroll;
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     onClick?.(e as any);
     if (e.defaultPrevented) return;
@@ -23,9 +24,8 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       e.preventDefault();
       return;
     }
-    // Biarkan browser default behavior berjalan agar Astro ViewTransitions 
-    // bisa mencegat event ini dan melakukan navigasi SPA yang sangat cepat!
   };
+
   return (
     <a
       ref={ref}
@@ -33,6 +33,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       target={target}
       rel={target === "_blank" ? "noopener noreferrer" : undefined}
       onClick={handleClick}
+      data-astro-prefetch={prefetch === false ? "false" : "viewport"}
       data-astro-history={replace ? "replace" : undefined}
       {...rest}
     >
@@ -41,4 +42,4 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
   );
 });
 
-export default Link;
+export default Link;

@@ -1,4 +1,4 @@
-﻿import { requirePermission } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { revalidatePath } from "@/lib/next-compat/cache";
 import { SystemService } from "@/lib/services/system-service";
 
@@ -37,8 +37,8 @@ export async function cleanupOldStorageAction(): Promise<ActionResult> {
 export async function getCleanupStats(): Promise<{ eligibleRequests: number }> {
   try {
     await requirePermission("super_admin");
-    const result = await SystemService.cleanupOldStorage("");
-    return { eligibleRequests: result.affectedRequests || 0 };
+    const overview = await SystemService.getStorageOverview();
+    return { eligibleRequests: overview.database.expiredRequests || 0 };
   } catch (error) {
     return { eligibleRequests: 0 };
   }

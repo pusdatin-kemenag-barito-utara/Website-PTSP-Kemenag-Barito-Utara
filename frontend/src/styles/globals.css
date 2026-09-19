@@ -1,6 +1,7 @@
-@import "@fontsource-variable/plus-jakarta-sans";
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
+@import "sonner/dist/styles.css";
 
 /* PTSP Modular Design System */
 @import "./theme.css";

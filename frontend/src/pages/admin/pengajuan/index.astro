@@ -30,6 +30,7 @@ const type = q.get("type") || "public";
 const currentPage = Math.max(1, parseInt(page) || 1);
 const pageSize = 20;
 
+const token = Astro.cookies.get("ptsp-auth")?.value;
 const [services, ptspData] = await Promise.all([
   LayananService.getAllServicesBrief(roleOwnerFilter, type),
   RequestService.getPaginatedRequests({
@@ -37,6 +38,7 @@ const [services, ptspData] = await Promise.all([
     pageSize,
     status,
     type,
+    token,
   }),
 ]);
 
@@ -50,6 +52,8 @@ const totalPages = ptspData.totalPages;
   description={`Tinjau dan proses pengajuan layanan dari ${type === "public" ? "pemohon" : "pegawai"}. Menampilkan ${rawRequests.length} dari ${totalCount} pengajuan.`}
   profile={profile}
   allowedMenus={allowedMenus}
+  activeMenu={type === "asn" ? "pengajuan_pegawai" : "pengajuan_masyarakat"}
+  activeType={type === "asn" ? "asn" : "public"}
 >
   <AdminRequestsView
     client:load

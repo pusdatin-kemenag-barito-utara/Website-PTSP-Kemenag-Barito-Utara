@@ -44,10 +44,15 @@ export function CompleteProfileForm({ initialName = "", initialPhone = "" }: Com
   const handleSignOut = async () => {
     setLoading(true);
     try {
-      await signOutAction("/login/pemohon");
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    try {
+      await signOutAction("/login/masyarakat");
     } catch (err) {
-      // Ignore Next.js redirect error
+      // Ignore redirect error
     }
+    window.location.replace("/login/masyarakat");
   };
 
   const itemVariants: Variants = {

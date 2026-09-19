@@ -47,13 +47,25 @@ export async function updatePasswordHashAction(
   if (!userId || !password) return { error: "Data tidak lengkap." };
 
   try {
-    const { createAdminClient } = await import("@/lib/supabase/admin");
-    const admin = createAdminClient();
-    const { error } = await admin.auth.admin.updateUserById(userId, { password });
-    if (error) throw new Error(error.message);
+    // 1. Reset password via backend Golang native
+    const res = await fetchAPI<any>(`/admin/users/${userId}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId, password }),
+    });
+
+    if (res && res.error) {
+      return { error: res.error };
+    }
+
+    // 2. Sinkronkan ke auth.users Supabase jika masih ada
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const admin = createAdminClient();
+      await admin.auth.admin.updateUserById(userId, { password });
+    } catch {}
 
     return { success: true };
   } catch (err: any) {
-    return { error: err.message };
+    return { error: err.message || "Gagal memperbarui password." };
   }
 }

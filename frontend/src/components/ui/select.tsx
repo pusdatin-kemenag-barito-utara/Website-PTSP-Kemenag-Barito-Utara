@@ -16,3 +16,6 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
     />
   );
 }
+
+export { ModernSelect } from './modern-select';
+export type { ModernSelectOption, ModernSelectProps } from './modern-select';

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { upsertMasterOptionAction } from "@/lib/actions/admin/master-options-actions";
 import { toast } from "sonner";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 export default function MasterCutiFormModal({
   isOpen,
@@ -101,14 +102,15 @@ export default function MasterCutiFormModal({
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
-                <select
+                <ModernSelect
                   value={formData.isActive ? "true" : "false"}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="true">Aktif</option>
-                  <option value="false">Tidak Aktif</option>
-                </select>
+                  onChange={(val) => setFormData({ ...formData, isActive: val === "true" })}
+                  options={[
+                    { value: "true", label: "Aktif" },
+                    { value: "false", label: "Tidak Aktif" },
+                  ]}
+                  triggerClassName="h-10 text-sm rounded-lg"
+                />
               </div>
             </div>
           </form>

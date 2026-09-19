@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, ChevronDown } from "lucide-react";
 
 interface Props {
   page: number;
@@ -42,33 +42,39 @@ export function DataCutiPagination({
   const pages = generatePagination(page, totalPages);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-4 border-t border-slate-200">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/90 px-5 py-3.5 border-t border-slate-200/80 rounded-b-2xl">
       <div className="flex items-center gap-3">
-        <select
-          value={isAll ? "all" : rowsPerPage}
-          onChange={(e) => {
-            const val = e.target.value;
-            onRowsPerPageChange(val === "all" ? totalData : Number(val));
-            onPageChange(1);
-          }}
-          className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-sm"
-        >
-          <option value={10}>10</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-          <option value="all">Semua</option>
-        </select>
-        <span className="text-xs font-medium text-slate-500">
-          Menampilkan {start} - {end} dari {totalData} data
+        <div className="relative inline-flex items-center">
+          <select
+            value={isAll ? "all" : String(rowsPerPage)}
+            onChange={(e) => {
+              const val = e.target.value;
+              const newRows = val === "all" ? totalData : Number(val);
+              onRowsPerPageChange(newRows);
+              onPageChange(1);
+            }}
+            className="h-8.5 pl-3 pr-8 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:border-slate-300 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 cursor-pointer appearance-none shadow-2xs transition-all"
+            aria-label="Pilih jumlah baris per halaman"
+          >
+            <option value="10">10 Baris</option>
+            <option value="25">25 Baris</option>
+            <option value="50">50 Baris</option>
+            <option value="100">100 Baris</option>
+            <option value="all">Semua Baris</option>
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+        </div>
+        <span className="text-xs text-slate-500 font-medium">
+          Menampilkan <span className="font-bold text-slate-800">{start}</span>–<span className="font-bold text-slate-800">{end}</span> dari <span className="font-bold text-slate-800">{totalData}</span> data
         </span>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200/70 shadow-2xs">
         <button
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+          title="Halaman sebelumnya"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -77,9 +83,9 @@ export function DataCutiPagination({
             return (
               <div
                 key={`ellipsis-${i}`}
-                className="flex h-7 min-w-[28px] items-center justify-center text-slate-400"
+                className="flex h-7 min-w-[26px] items-center justify-center text-slate-300 text-xs"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </div>
             );
           }
@@ -89,10 +95,10 @@ export function DataCutiPagination({
             <button
               key={pageNum}
               onClick={() => onPageChange(pageNum)}
-              className={`min-w-[28px] h-7 rounded-lg text-[11px] font-bold transition-all duration-200 ${
+              className={`min-w-[30px] h-7 px-1 rounded-lg text-xs font-semibold transition-all duration-150 ${
                 pageNum === page
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-200/60"
+                  ? "bg-emerald-600 text-white shadow-xs font-bold"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               {pageNum}
@@ -102,7 +108,8 @@ export function DataCutiPagination({
         <button
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          className="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 disabled:opacity-25 disabled:cursor-not-allowed transition-all"
+          title="Halaman berikutnya"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

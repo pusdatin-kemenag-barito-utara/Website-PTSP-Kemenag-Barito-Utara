@@ -23,6 +23,7 @@ import {
   updateAppointmentStatusAction 
 } from "@/lib/actions/admin/admin-visitations";
 import { motion, AnimatePresence } from "framer-motion";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 interface AppointmentEntry {
   id: string;
@@ -162,23 +163,31 @@ export function JanjiTemuClient({
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deletingEntry) return;
+    const target = deletingEntry;
+    setDeletingEntry(null);
+    const toastId = toast.loading(`Sedang menghapus janji temu ${target.guestName}...`);
 
-    startTransition(async () => {
-      const res = await deleteAppointmentAction(deletingEntry.id);
+    try {
+      const res = await deleteAppointmentAction(target.id);
+      toast.dismiss(toastId);
       if (res.success) {
-        toast.success("Berhasil dihapus", {
-          description: `Janji temu oleh ${deletingEntry.guestName} berhasil dihapus.`,
+        toast.success("Berhasil Dihapus", {
+          description: `Janji temu oleh ${target.guestName} berhasil dihapus.`,
         });
-        setEntries((prev) => prev.filter((e) => e.id !== deletingEntry.id));
-        setDeletingEntry(null);
+        setEntries((prev) => prev.filter((e) => e.id !== target.id));
       } else {
         toast.error("Gagal menghapus", {
           description: res.error || "Terjadi kesalahan sistem.",
         });
       }
-    });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error("Kesalahan jaringan", {
+        description: err.message,
+      });
+    }
   };
 
   // Client-side CSV Export
@@ -220,88 +229,90 @@ export function JanjiTemuClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ── FILTER CARD ─────────────────────────────────────────── */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-            <CalendarCheck className="h-4.5 w-4.5 text-emerald-600" />
+      <div className="bg-white p-3.5 rounded-xl border border-slate-100 shadow-2xs space-y-3">
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <CalendarCheck className="h-4 w-4 text-emerald-600" />
             Filter Pencarian Janji Temu
           </h3>
           <button
             onClick={handleExportCSV}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-md shadow-emerald-950/10 hover:shadow-lg hover:shadow-emerald-950/20 transition-all active:scale-95 cursor-pointer"
+            className="w-full md:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-lg shadow-2xs transition-all active:scale-95 cursor-pointer"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-3.5 w-3.5" />
             Ekspor CSV
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Search bar */}
           <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
             <input
               type="text"
               placeholder="Cari nama, whatsapp, instansi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white text-sm font-semibold text-slate-700 transition-all"
+              className="w-full pl-9 pr-3 h-9 bg-slate-50 border border-slate-200/80 rounded-lg focus:outline-none focus:border-emerald-500 focus:bg-white text-xs font-medium text-slate-700 transition-all"
             />
             {search && (
               <button 
                 onClick={() => setSearch("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-200 text-slate-400 transition-colors"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-200 text-slate-400 transition-colors"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3 w-3" />
               </button>
             )}
           </div>
 
           {/* Status Filter */}
-          <div className="relative">
-            <select
+          <div>
+            <ModernSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs font-bold text-slate-600 appearance-none cursor-pointer"
-            >
-              <option value="all">Semua Status</option>
-              <option value="pending">Menunggu Persetujuan</option>
-              <option value="approved">Disetujui</option>
-              <option value="rejected">Ditolak</option>
-            </select>
-            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-500 w-0 h-0" />
+              onChange={(val) => setStatusFilter(val)}
+              options={[
+                { value: "all", label: "Semua Status" },
+                { value: "pending", label: "Menunggu Persetujuan" },
+                { value: "approved", label: "Disetujui" },
+                { value: "rejected", label: "Ditolak" },
+              ]}
+              icon={Clock}
+              placeholder="Semua Status"
+            />
           </div>
 
           {/* Date Range Filter */}
-          <div className="relative">
-            <select
+          <div>
+            <ModernSelect
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full px-4 h-11 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white text-xs font-bold text-slate-600 appearance-none cursor-pointer"
-            >
-              <option value="all">Semua Tanggal Pertemuan</option>
-              <option value="today">Pertemuan Hari Ini</option>
-              <option value="upcoming">Pertemuan Mendatang (Terbaru)</option>
-              <option value="past">Pertemuan Lampau</option>
-            </select>
-            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-500 w-0 h-0" />
+              onChange={(val) => setDateFilter(val)}
+              options={[
+                { value: "all", label: "Semua Tanggal Pertemuan" },
+                { value: "today", label: "Pertemuan Hari Ini" },
+                { value: "upcoming", label: "Pertemuan Mendatang (Terbaru)" },
+                { value: "past", label: "Pertemuan Lampau" },
+              ]}
+              icon={Calendar}
+              placeholder="Semua Tanggal Pertemuan"
+            />
           </div>
         </div>
       </div>
 
       {/* ── TABLE CARD ─────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/70 border-b border-slate-100">
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Pengunjung</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Waktu & Tanggal</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Instansi & Tujuan</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400">Keperluan</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Status</th>
-                <th className="px-6 py-4.5 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Tindakan Admin</th>
+                <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Pengunjung</th>
+                <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Waktu & Tanggal</th>
+                <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Instansi & Tujuan</th>
+                <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Keperluan</th>
+                <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Status</th>
+                <th className="px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">Tindakan Admin</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -331,22 +342,22 @@ export function JanjiTemuClient({
                       className="hover:bg-slate-50/40 transition-colors group"
                     >
                       {/* Visitor Info */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-bold ${
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`h-8 w-8 shrink-0 rounded-lg flex items-center justify-center font-bold text-xs ${
                             entry.status === "approved" ? "bg-emerald-50 text-emerald-700" : entry.status === "rejected" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"
                           }`}>
                             {entry.guestName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-800">{entry.guestName}</p>
+                            <p className="text-xs font-bold text-slate-800">{entry.guestName}</p>
                             <a 
                               href={`https://wa.me/${entry.whatsapp.replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors mt-0.5"
+                              className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors mt-0.5"
                             >
-                              <Phone className="h-3 w-3 shrink-0" />
+                              <Phone className="h-2.5 w-2.5 shrink-0" />
                               {entry.whatsapp}
                             </a>
                           </div>
@@ -354,35 +365,35 @@ export function JanjiTemuClient({
                       </td>
 
                       {/* Appointment Time & Date */}
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                      <td className="px-4 py-2.5">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
+                            <Calendar className="h-3 w-3 text-slate-400" />
                             <span>
                               {new Date(entry.appointmentDate).toLocaleString("id-ID", {
                                 dateStyle: "medium"
                               })}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-                            <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          <div className="flex items-center gap-1 text-[10px] font-semibold text-slate-500">
+                            <Clock className="h-3 w-3 text-slate-400" />
                             <span>Pukul {entry.appointmentTime} WIB</span>
                           </div>
                         </div>
                       </td>
 
                       {/* Instansi & Officer */}
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <td className="px-4 py-2.5">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3 text-slate-400 shrink-0" />
                             <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">
                               {entry.institutionName || entry.institutionType}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                            <span className="text-[11px] font-bold text-slate-500 truncate max-w-[150px]">
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3 text-slate-400 shrink-0" />
+                            <span className="text-[10px] font-semibold text-slate-500 truncate max-w-[150px]">
                               Dituju: {entry.intendedOfficer}
                             </span>
                           </div>
@@ -390,32 +401,32 @@ export function JanjiTemuClient({
                       </td>
 
                       {/* Purpose */}
-                      <td className="px-6 py-4 max-w-xs">
-                        <div className="flex items-start gap-2">
-                          <MessageSquare className="h-4 w-4 shrink-0 text-slate-400 mt-0.5" />
+                      <td className="px-4 py-2.5 max-w-xs">
+                        <div className="flex items-start gap-1.5">
+                          <MessageSquare className="h-3.5 w-3.5 text-slate-400 mt-0.5" />
                           <p className="text-xs font-medium text-slate-600 line-clamp-2 leading-relaxed">{entry.purpose}</p>
                         </div>
                       </td>
 
                       {/* Status */}
-                      <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${statusBadgeClass}`}>
-                          <StatusIcon className="h-3 w-3" />
+                      <td className="px-4 py-2.5 text-center">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${statusBadgeClass}`}>
+                          <StatusIcon className="h-2.5 w-2.5" />
                           {statusText}
                         </span>
                       </td>
 
                       {/* Actions & Status Updates */}
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-4 py-2.5 text-center">
+                        <div className="flex items-center justify-center gap-1">
                           {entry.status !== "approved" && (
                             <button
                               onClick={() => handleUpdateStatus(entry, "approved")}
                               disabled={pendingIds.has(entry.id)}
-                              className={`p-2 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-100 hover:text-emerald-700"}`}
+                              className={`p-1.5 rounded-lg bg-emerald-50 text-emerald-600 shadow-2xs transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-100 hover:text-emerald-700"}`}
                               title="Setujui Janji Temu"
                             >
-                              {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                              {pendingIds.has(entry.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
                             </button>
                           )}
                           {entry.status !== "rejected" && (
@@ -425,7 +436,7 @@ export function JanjiTemuClient({
                                 setRejectingEntry(entry);
                               }}
                               disabled={pendingIds.has(entry.id)}
-                              className={`p-2 rounded-xl bg-rose-50 text-rose-600 shadow-sm transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100 hover:text-rose-700"}`}
+                              className={`p-1.5 rounded-lg bg-rose-50 text-rose-600 shadow-2xs transition-all cursor-pointer active:scale-90 ${pendingIds.has(entry.id) ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-100 hover:text-rose-700"}`}
                               title="Tolak Janji Temu"
                             >
                               {pendingIds.has(entry.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}

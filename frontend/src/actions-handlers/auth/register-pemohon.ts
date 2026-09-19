@@ -89,26 +89,64 @@ export async function registerPemohonAction(
       },
     });
 
+    let authUser = newAuthUser?.user;
+
     if (authError) {
-      return { success: false, error: authError.message };
+      // Self-healing: jika akun auth lama masih menggantung di Supabase Auth (orphaned),
+      // hapus akun lama tersebut dan buat ulang secara fresh gres!
+      if (
+        authError.message.toLowerCase().includes("already") ||
+        authError.message.toLowerCase().includes("exists")
+      ) {
+        try {
+          const { data: listData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+          const existing = listData?.users?.find(
+            (u) => u.email?.toLowerCase() === internalEmail.toLowerCase(),
+          );
+          if (existing) {
+            await admin.auth.admin.deleteUser(existing.id);
+            const { data: retryAuth, error: retryErr } = await admin.auth.admin.createUser({
+              email: internalEmail,
+              password: validated.data.password,
+              email_confirm: true,
+              user_metadata: {
+                full_name: validated.data.fullName,
+                phone,
+                address: validated.data.address,
+                role: "user",
+              },
+            });
+            if (retryErr) {
+              return { success: false, error: retryErr.message };
+            }
+            authUser = retryAuth?.user;
+          } else {
+            return { success: false, error: authError.message };
+          }
+        } catch (err: any) {
+          return { success: false, error: authError.message };
+        }
+      } else {
+        return { success: false, error: authError.message };
+      }
     }
 
-    if (newAuthUser?.user) {
+    if (authUser) {
       try {
         await (admin as any).schema("kemenag_ptsp").from("profiles_pemohon").upsert(
           {
-            user_id: newAuthUser.user.id,
+            user_id: authUser.id,
             email: internalEmail,
             nama: validated.data.fullName,
             no_hp: phone,
             alamat: validated.data.address,
-            metode_login: "Email / Password",
+            metode_login: "WhatsApp (PTSP)",
             role: "user",
             status: "active",
             is_verified: true,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: "user_id" }
+          { onConflict: "user_id" },
         );
       } catch (profileErr) {
         console.error("Gagal provisi profil ke kemenag_ptsp.profiles_pemohon:", profileErr);

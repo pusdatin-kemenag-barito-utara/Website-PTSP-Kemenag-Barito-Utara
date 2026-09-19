@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Users, CalendarCheck, UserCog } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
 import { PegawaiManager } from "@/components/admin/kepegawaian/pegawai-manager";
 import { DataCutiClient } from "@/components/admin/data-cuti/data-cuti-client";
 import PejabatPage from "@/views/admin/pejabat";
@@ -42,11 +41,6 @@ export function KepegawaianTabs({
 
   return (
     <div className="space-y-6 w-full mx-auto pb-10 px-2 sm:px-4">
-      <PageHeader
-        title="Manajemen Kepegawaian"
-        description="Kelola data dan akun pegawai Kantor Kemenag Barito Utara"
-        icon={Users}
-      />
 
       {/* Tab Navigation */}
       <div className="border-b border-slate-200">

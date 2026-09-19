@@ -145,19 +145,24 @@ export function FormLayananClient({
 
   const handleDelete = async () => {
     if (!deletingField) return;
+    const target = deletingField;
+    setDeletingField(null);
+    const toastId = toast.loading(`Sedang menghapus field "${target.label}"...`);
+
     const data = new FormData();
-    data.append("id", deletingField.id.toString());
-    startTransition(async () => {
-      try {
-        await deleteFieldAction(data);
-        toast.success("Field Dihapus", {
-          description: "Field form berhasil dihapus secara permanen.",
-        });
-        setDeletingField(null);
-      } catch (error) {
-        toast.error("Gagal menghapus field form.");
-      }
-    });
+    data.append("id", target.id.toString());
+    try {
+      await deleteFieldAction(data);
+      toast.dismiss(toastId);
+      toast.success("Field Dihapus", {
+        description: "Field form berhasil dihapus secara permanen.",
+      });
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      toast.error("Gagal menghapus field form", {
+        description: error?.message || "Terjadi kesalahan",
+      });
+    }
   };
 
   const handleReorder = (newFields: any[]) => {

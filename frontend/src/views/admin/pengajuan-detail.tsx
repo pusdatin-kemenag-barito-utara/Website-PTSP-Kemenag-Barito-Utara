@@ -30,14 +30,15 @@ export function AdminRequestDetailView({
   const signedUrlMapInstance = new Map(Object.entries(signedUrlMap));
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-3.5 pb-8">
       <RealtimeSync />
+
       {/* Back link */}
       <Link
         href={backUrl}
-        className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#059669] transition-all hover:-translate-x-1"
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#059669] transition-all hover:-translate-x-0.5"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-3.5 w-3.5" />
         Kembali ke daftar pengajuan
       </Link>
 
@@ -45,15 +46,15 @@ export function AdminRequestDetailView({
       <AdminDetailInfoGrid request={request} />
 
       {/* Main Content Layout */}
-      <div className="grid gap-6 lg:grid-cols-12 mt-6 w-full min-w-0">
+      <div className="grid gap-4 lg:grid-cols-12 mt-3.5 w-full min-w-0">
         {/* Left Column - Forms & Documents */}
-        <div className="space-y-6 lg:col-span-7 min-w-0 w-full overflow-hidden">
+        <div className="space-y-4 lg:col-span-7 min-w-0 w-full overflow-hidden">
           <FormAnswersCard request={request} />
           <RequestDocumentsCard request={request} signedUrlMap={signedUrlMapInstance} />
         </div>
 
         {/* Right Column - Actions & Logs */}
-        <div className="space-y-6 lg:col-span-5 min-w-0 w-full overflow-hidden">
+        <div className="space-y-4 lg:col-span-5 min-w-0 w-full overflow-hidden">
           <ReviewActionCard request={request} adminProfile={adminProfile} />
           <HistoryTimelineCard request={request} />
         </div>

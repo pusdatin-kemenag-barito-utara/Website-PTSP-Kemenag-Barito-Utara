@@ -62,18 +62,27 @@ export function useWizardFields(startTransition: any) {
     }, 500);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
+    const toastId = toast.loading("Sedang menghapus field form...");
     const fd = new FormData();
     fd.append("id", id.toString());
-    startTransition(async () => {
+    try {
       const result = await deleteFieldAction(fd);
+      toast.dismiss(toastId);
       if (result.success) {
-        toast.success("Field Dihapus");
+        toast.success("Field Dihapus", {
+          description: "Field form berhasil dihapus.",
+        });
         router.refresh();
       } else {
         toast.error(result.error || "Gagal menghapus field.");
       }
-    });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error("Kesalahan jaringan", {
+        description: err.message,
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

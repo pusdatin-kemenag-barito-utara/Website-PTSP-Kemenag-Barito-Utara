@@ -16,7 +16,13 @@ if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
 
 let dataCuti: any[] = [];
 try {
-  const res = await fetchAPI<any>("/admin/cuti/pegawai");
+  const token = Astro.cookies.get("ptsp-auth")?.value;
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+    headers["Cookie"] = `ptsp-auth=${token}`;
+  }
+  const res = await fetchAPI<any>("/admin/cuti/pegawai", { headers });
   if (res && res.data && Array.isArray(res.data)) {
     dataCuti = res.data;
   }

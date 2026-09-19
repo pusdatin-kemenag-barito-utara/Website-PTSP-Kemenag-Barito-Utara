@@ -1,66 +1,86 @@
-import { Users, Crown, UserCheck, BadgeCheck } from "lucide-react";
+import { ShieldCheck, BadgeCheck, Users, AlertCircle, Sparkles } from "lucide-react";
 
-export function UserStatCards({
-  stats,
-}: {
+interface UserStatCardsProps {
   stats: {
     total: number;
-    superAdmin: number;
-    admin: number;
+    petugas: number;
+    pendingPetugas: number;
     pegawai: number;
-    user: number;
+    pemohon: number;
+    pemohonGoogle?: number;
+    pemohonWhatsApp?: number;
   };
-}) {
+}
+
+export function UserStatCards({ stats }: UserStatCardsProps) {
   return (
     <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
       {[
         {
-          label: "Total Pengguna",
-          value: stats.total,
-          icon: Users,
-          color: "bg-slate-100 text-slate-600",
+          label: "Petugas Admin",
+          value: stats.petugas,
+          sublabel: stats.pendingPetugas > 0 ? `${stats.pendingPetugas} menunggu verifikasi` : "Akun admin aktif",
+          subColor: stats.pendingPetugas > 0 ? "text-amber-600 font-bold" : "text-slate-400",
+          icon: ShieldCheck,
+          color: "bg-amber-100 text-amber-700",
+          ring: stats.pendingPetugas > 0 ? "ring-1 ring-amber-300" : "",
         },
         {
-          label: "Super Admin",
-          value: stats.superAdmin,
-          icon: Crown,
-          color: "bg-amber-100 text-amber-600",
-        },
-
-        {
-          label: "Pegawai",
+          label: "Data Pegawai",
           value: stats.pegawai,
+          sublabel: "Tersinkron ke Cuti",
+          subColor: "text-emerald-600 font-bold",
           icon: BadgeCheck,
-          color: "bg-blue-100 text-blue-600",
+          color: "bg-blue-100 text-blue-700",
+          ring: "",
         },
         {
-          label: "Pemohon",
-          value: stats.user,
+          label: "Pemohon Masyarakat",
+          value: stats.pemohon,
+          sublabel:
+            stats.pemohonGoogle !== undefined && stats.pemohonWhatsApp !== undefined
+              ? `${stats.pemohonGoogle} Google · ${stats.pemohonWhatsApp} WA`
+              : "Google & WhatsApp",
+          subColor: "text-slate-500",
           icon: Users,
-          color: "bg-emerald-100 text-emerald-600",
+          color: "bg-emerald-100 text-emerald-700",
+          ring: "",
+        },
+        {
+          label: "Total Seluruh Pengguna",
+          value: stats.total,
+          sublabel: "Database terintegrasi",
+          subColor: "text-slate-400",
+          icon: Sparkles,
+          color: "bg-slate-100 text-slate-700",
+          ring: "",
         },
       ].map((card) => (
         <div
           key={card.label}
-          className="group relative rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 flex flex-col justify-between"
+          className={`group relative rounded-xl border border-slate-200/80 bg-white p-3 shadow-2xs transition-all duration-300 hover:shadow-xs hover:-translate-y-0.5 flex flex-col justify-between ${card.ring}`}
         >
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-[11px] lg:text-xs font-medium text-slate-500 truncate">{card.label}</p>
-              <p className="mt-1 text-2xl lg:text-3xl font-black text-slate-900 tabular-nums tracking-tight">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                {card.label}
+              </p>
+              <p className="mt-0.5 text-xl font-black text-slate-900 tabular-nums tracking-tight">
                 {card.value}
+              </p>
+              <p className={`text-[10.5px] truncate mt-0.5 ${card.subColor}`}>
+                {card.sublabel}
               </p>
             </div>
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${card.color} transition-transform duration-300 group-hover:scale-110`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${card.color} transition-transform duration-300 group-hover:scale-110`}
             >
-              <card.icon className="h-4 w-4 lg:h-5 lg:w-5" />
+              <card.icon className="h-4 w-4" />
             </div>
           </div>
-          <div className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-gradient-to-r from-[#059669] to-[#047857] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-gradient-to-r from-[#059669] to-[#047857] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
       ))}
     </div>
   );
 }
-

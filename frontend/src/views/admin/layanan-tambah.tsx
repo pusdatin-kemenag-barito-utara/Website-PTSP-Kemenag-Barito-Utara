@@ -1,7 +1,6 @@
 import Link from "@/lib/next-compat/link";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/admin/page-header";
-import { ArrowLeft, PlusCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AddServiceForm } from "@/components/admin/layanan/add-service-form";
 
 export function AddServiceView() {
@@ -14,12 +13,6 @@ export function AddServiceView() {
         <ArrowLeft className="h-4 w-4" />
         Kembali ke daftar layanan
       </Link>
-
-      <PageHeader
-        title="Tambah Layanan"
-        description="Buat layanan utama baru untuk PTSP."
-        icon={PlusCircle}
-      />
 
       <Card className="overflow-hidden border-slate-200/60 shadow-sm">
         <AddServiceForm />

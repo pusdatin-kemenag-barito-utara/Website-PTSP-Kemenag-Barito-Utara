@@ -1,15 +1,18 @@
 import { useRouter, useSearchParams } from "@/lib/next-compat/navigation";
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 export function DokumenHasilFilter({
   searchQuery,
   serviceFilter,
   services,
+  type = "public",
 }: {
   searchQuery: string;
   serviceFilter: string;
-  services: { id: string; name: string }[];
+  services: { id: string; name: string; category?: string }[];
+  type?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,32 +29,44 @@ export function DokumenHasilFilter({
     router.push(`?${params.toString()}`);
   };
 
+  const isASN = type === "asn";
+  const defaultLabel = isASN ? "Semua Layanan Pegawai (ASN)" : "Semua Layanan Masyarakat";
+
+  const serviceOptions = [
+    { value: "", label: defaultLabel },
+    ...services.map((svc) => ({
+      value: svc.id,
+      label: svc.name,
+      badge: svc.category === "asn" ? "ASN" : "Masyarakat",
+    })),
+  ];
+
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
+    <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-col gap-2.5 sm:flex-row sm:items-center justify-between">
       <div className="relative w-full sm:max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 pointer-events-none" />
         <Input
           type="text"
           placeholder="Cari no permohonan, nama pemohon..."
           defaultValue={searchQuery}
           onChange={(e) => handleUpdateParam("q", e.target.value)}
-          className="pl-9 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:border-[#059669] focus:ring-[#059669]/20"
+          className="pl-8.5 h-9 text-xs rounded-lg border-slate-200 bg-white shadow-xs focus:border-[#059669] focus:ring-[#059669]/20"
         />
       </div>
-      <div className="w-full sm:w-64 shrink-0 relative">
-        <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        <select
+
+      <div className="w-full sm:w-80 md:w-96 shrink-0">
+        <ModernSelect
+          options={serviceOptions}
           value={serviceFilter}
-          onChange={(e) => handleUpdateParam("serviceId", e.target.value)}
-          className="w-full h-11 pl-9 pr-9 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 shadow-sm focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20 appearance-none outline-none transition-all cursor-pointer hover:border-slate-300 truncate bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
-        >
-          <option value="">Semua Layanan</option>
-          {services.map((svc) => (
-            <option key={svc.id} value={svc.id}>
-              {svc.name}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => handleUpdateParam("serviceId", val)}
+          icon={Filter}
+          placeholder={defaultLabel}
+          searchable={true}
+          searchPlaceholder="Cari nama layanan..."
+          clearable={Boolean(serviceFilter)}
+          triggerClassName="h-9 px-3 text-xs"
+          align="right"
+        />
       </div>
     </div>
   );

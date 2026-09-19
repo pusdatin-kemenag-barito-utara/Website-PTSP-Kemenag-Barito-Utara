@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import Link from "@/lib/next-compat/link";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 type Request = {
   id: string;
@@ -127,18 +128,21 @@ export function RiwayatTable({ requests }: { requests: Request[] }) {
             className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-xs"
           />
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="sm:w-52 px-4 py-2.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer shadow-xs"
-        >
-          <option value="all">Semua Status (All)</option>
-          {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-            <option key={key} value={key}>
-              {cfg.label}
-            </option>
-          ))}
-        </select>
+        <div className="sm:w-56 shrink-0">
+          <ModernSelect
+            value={filterStatus}
+            onChange={(val) => setFilterStatus(val)}
+            options={[
+              { value: "all", label: "Semua Status (All)" },
+              ...Object.entries(STATUS_CONFIG).map(([key, cfg]) => ({
+                value: key,
+                label: cfg.label,
+              })),
+            ]}
+            placeholder="Semua Status (All)"
+            triggerClassName="rounded-2xl py-2.5 h-auto text-xs sm:text-sm font-extrabold"
+          />
+        </div>
       </div>
 
       {/* Summary counts */}

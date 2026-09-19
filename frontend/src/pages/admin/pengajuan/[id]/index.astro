@@ -138,11 +138,13 @@ function normalizeRequest(raw: any): any {
     })(),
     serviceRequestDocuments: (raw.documents || raw.serviceRequestDocuments || raw.request_documents || []).map((d: any) => ({
       id: d.id,
-      requirementName: d.requirement_name || d.requirementName || d.serviceRequirements?.documentName || d.service_requirements?.document_name,
-      fileName: d.file_name || d.fileName || d.name || "Dokumen",
+      requirementId: d.requirement_id || d.requirementId || null,
+      requirementName: d.requirement_name || d.requirementName || d.serviceRequirements?.documentName || d.service_requirements?.document_name || "Dokumen Persyaratan",
+      fileName: d.file_name || d.fileName || d.name || "",
       filePath: d.file_path || d.filePath || d.url || "",
       fileType: d.file_type || d.fileType || "pdf",
       fileSize: d.file_size || d.fileSize || 0,
+      isRequired: d.is_required ?? d.isRequired ?? false,
       serviceRequirements: d.serviceRequirements || d.service_requirements || (d.requirement_name ? { documentName: d.requirement_name } : null),
     })),
     serviceRequestReviews: (raw.reviews || raw.serviceRequestReviews || []).map((r: any) => ({
@@ -156,15 +158,22 @@ function normalizeRequest(raw: any): any {
 
 let rawData: any;
 try {
-  const res = await fetchAPI<any>(`/admin/requests/${id}`);
+  const token = Astro.cookies.get("ptsp-auth")?.value;
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+    headers["Cookie"] = `ptsp-auth=${token}`;
+  }
+  const res = await fetchAPI<any>(`/admin/requests/${id}`, { headers });
   if (res && res.success && res.data) {
     rawData = res.data;
   }
-} catch {
-  // ignore to trigger redirect below
+} catch (err) {
+  console.error(`[Admin Request Detail] Error fetching /admin/requests/${id}:`, err);
 }
 
 if (!rawData) {
+  console.warn(`[Admin Request Detail] Data permohonan ${id} kosong atau gagal dimuat dari backend.`);
   return Astro.redirect("/admin/pengajuan");
 }
 
@@ -243,6 +252,8 @@ const backUrl = isAsn ? "/admin/pengajuan?type=asn" : "/admin/pengajuan";
   description="Review dokumen dan tindak lanjut permohonan"
   profile={profile}
   allowedMenus={allowedMenus}
+  activeMenu={isAsn ? "pengajuan_pegawai" : "pengajuan_masyarakat"}
+  activeType={isAsn ? "asn" : "public"}
 >
   <AdminRequestDetailView
     client:load

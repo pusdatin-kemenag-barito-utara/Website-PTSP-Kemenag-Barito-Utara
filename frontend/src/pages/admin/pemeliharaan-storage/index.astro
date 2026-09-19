@@ -15,12 +15,12 @@ if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
 }
 
 const status = await getMaintenanceStatus();
-const aiChatEnabled = status.success ? Boolean(status.enabled) : true;
+const aiChatEnabled = status?.aiChatEnabled ?? true;
 ---
 
 <AdminShell
-  title="Pemeliharaan Storage | PTSP Kemenag Barito Utara"
-  description="Pemantauan dan pemeliharaan kapasitas penyimpanan dokumen"
+  title="Pemeliharaan Storage & Sistem | PTSP Kemenag Barito Utara"
+  description="Pusat pemantauan kapasitas penyimpanan cloud, arsip digital database, dan kontrol sinkronisasi sistem"
   profile={profile}
   allowedMenus={allowedMenus}
 >

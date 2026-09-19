@@ -98,6 +98,8 @@ func (s *FileService) UploadDocument(ctx context.Context, fileHeader *multipart.
 		contentType = "image/jpeg"
 	case ".png":
 		contentType = "image/png"
+	case ".webp":
+		contentType = "image/webp"
 	}
 
 	timestamp := time.Now().UnixNano()
@@ -167,4 +169,12 @@ func (s *FileService) CompressPDF(pdfData []byte) ([]byte, error) {
 func (s *FileService) ValidateImage(data []byte) bool {
 	_, _, err := image.Decode(bytes.NewReader(data))
 	return err == nil
+}
+
+// DeleteFile menghapus berkas dokumen atau aset dari Cloudflare R2 atau storage lokal.
+func (s *FileService) DeleteFile(ctx context.Context, filePath string) error {
+	if filePath == "" {
+		return nil
+	}
+	return s.storage.Delete(ctx, filePath)
 }

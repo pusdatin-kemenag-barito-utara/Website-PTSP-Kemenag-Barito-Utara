@@ -16,11 +16,21 @@ import { Button } from "@/components/ui/button";
 import { updatePemohonWhatsappAction } from "@/lib/actions/auth/complete-profile";
 import { Field } from "@/components/ui/field";
 
-export function PemohonLengkapiWaForm() {
+interface PemohonLengkapiWaFormProps {
+  initialUser?: {
+    id: string;
+    email?: string;
+    name?: string;
+    avatarUrl?: string;
+    token?: string;
+  };
+}
+
+export function PemohonLengkapiWaForm({ initialUser }: PemohonLengkapiWaFormProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phone, setPhone] = useState("");
-  const [namaLengkap, setNamaLengkap] = useState("");
+  const [namaLengkap, setNamaLengkap] = useState(initialUser?.name || "");
   const [alamat, setAlamat] = useState("");
   
   const [loading, setLoading] = useState(false);
@@ -46,6 +56,18 @@ export function PemohonLengkapiWaForm() {
     formData.append("phone", rawPhone);
     formData.append("fullName", namaLengkap.trim());
     formData.append("address", alamat.trim());
+    if (initialUser?.id) formData.append("userId", initialUser.id);
+    if (initialUser?.email) formData.append("userEmail", initialUser.email);
+    if (initialUser?.token) formData.append("token", initialUser.token);
+    if (initialUser?.avatarUrl) formData.append("avatarUrl", initialUser.avatarUrl);
+
+    // Fallback: sertakan token dari document.cookie jika belum ada
+    if (typeof document !== "undefined") {
+      const match = (document.cookie || "").match(/(?:ptsp-auth-access-token|ptsp-auth)=([^;]+)/);
+      if (match && !formData.has("token")) {
+        formData.append("token", decodeURIComponent(match[1].trim()));
+      }
+    }
 
     const result = await updatePemohonWhatsappAction(formData);
 

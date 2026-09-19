@@ -4,21 +4,97 @@ import { memoizeRequest, getRequestContext, tryGetRequestContext } from "@/lib/r
 import { createClient } from "@/lib/supabase/server";
 import { isSuperAdmin, isAdminRole } from "@/lib/constants";
 import { fetchAPI } from "@/lib/api";
+import { verifyNativeJWT } from "@/lib/jwt";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const getCurrentUser = async (reqCtx?: any) => {
   const run = async () => {
+    // 1. Verifikasi instan via token native JWT di cookie ptsp-auth
+    try {
+      const ctx = reqCtx || tryGetRequestContext();
+      let token = "";
+      if (ctx?.cookies) {
+        token = ctx.cookies.get("ptsp-auth")?.value || "";
+      }
+      if (!token && ctx?.request) {
+        const cookieHeader = ctx.request.headers?.get("cookie") || "";
+        const match = cookieHeader.match(/ptsp-auth=([^;]+)/);
+        if (match) token = match[1];
+      }
+      if (!token && typeof document !== "undefined") {
+        const match = document.cookie.match(/ptsp-auth=([^;]+)/);
+        if (match) token = match[1];
+      }
+
+      if (token) {
+        const claims = verifyNativeJWT(token);
+        if (claims && claims.user_id) {
+          return {
+            id: claims.user_id,
+            email: claims.email || "",
+            user_metadata: {
+              name: claims.nama,
+              full_name: claims.nama,
+              role: claims.role,
+              user_type: claims.user_type,
+              nip: claims.nip,
+              phone: claims.phone,
+              permissions: claims.permissions || [],
+              is_verified: claims.is_verified,
+            },
+          } as any;
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fallback Supabase jika sesi lama
     try {
       const supabase = await createClient(reqCtx);
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      return user ?? null;
-    } catch (e) {
-      return null;
-    }
+      if (user) return user;
+    } catch (e) {}
+
+    // 3. Fallback token di cookie ptsp-auth-access-token via admin client
+    try {
+      const ctx = reqCtx || tryGetRequestContext();
+      let accessToken = ctx?.cookies?.get?.("ptsp-auth-access-token")?.value;
+      if (!accessToken && ctx?.request?.headers?.get("cookie")) {
+        const match = (ctx.request.headers.get("cookie") || "").match(/ptsp-auth-access-token=([^;]+)/);
+        if (match) accessToken = decodeURIComponent(match[1]);
+      }
+      if (!accessToken && typeof document !== "undefined") {
+        const match = (document.cookie || "").match(/ptsp-auth-access-token=([^;]+)/);
+        if (match) accessToken = decodeURIComponent(match[1]);
+      }
+      if (accessToken) {
+        // Fast-path: verifikasi masa berlaku & decode payload JWT secara lokal (0ms roundtrip)
+        const parts = accessToken.split(".");
+        if (parts.length === 3) {
+          try {
+            const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+            if (payload?.sub && (!payload.exp || payload.exp * 1000 > Date.now())) {
+              return {
+                id: payload.sub,
+                email: payload.email || "",
+                user_metadata: payload.user_metadata || {},
+              } as any;
+            }
+          } catch {}
+        }
+
+        const admin = createAdminClient();
+        const { data } = await admin.auth.getUser(accessToken);
+        if (data?.user) return data.user;
+      }
+    } catch (e) {}
+
+    return null;
   };
   
   const ctx = reqCtx || tryGetRequestContext();
+  if (ctx?.locals?.__ptsp_user) return ctx.locals.__ptsp_user;
   if (!ctx) return run();
   
   const key = "current-user";
@@ -33,6 +109,9 @@ export const getCurrentUser = async (reqCtx?: any) => {
   if (m.has(key)) return m.get(key);
   const val = await run();
   m.set(key, val);
+  if (ctx?.locals && val) {
+    ctx.locals.__ptsp_user = val;
+  }
   return val;
 };
 export const getCurrentProfile = async (reqCtx?: any) => {
@@ -43,6 +122,47 @@ export const getCurrentProfile = async (reqCtx?: any) => {
     const userEmail = user.email ?? "";
     const userNip = userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
     const isSuper = isSuperAdmin(userEmail);
+
+    // Fast-path: hanya untuk petugas admin / internal pegawai (menghemat roundtrip),
+    // sedangkan untuk pemohon masyarakat kita selalu ambil data real-time dari database
+    // agar sinkronisasi 2 arah (nama, phone, alamat yang diubah oleh pemohon maupun admin) selalu terupdate seketika.
+    const isPemohon =
+      user.user_metadata?.role === "user" ||
+      user.user_metadata?.user_type === "eksternal_masyarakat" ||
+      user.user_metadata?.user_type === "pemohon";
+
+    if (user.user_metadata?.role && !isPemohon) {
+      const meta = user.user_metadata;
+      const role = isSuper ? "super_admin" : (meta.role || "user");
+      const userType = meta.user_type || (isAdminRole(role) || isSuper ? "internal_admin" : (role === "pegawai" ? "internal_pegawai" : "pemohon"));
+      const isInternal =
+        userType === "internal_admin" ||
+        role === "kepala_kantor" ||
+        role === "kasubag_tu" ||
+        role === "admin_ptsp" ||
+        isSuper ||
+        isAdminRole(role);
+
+      return {
+        id: user.id,
+        email: userEmail,
+        role,
+        name: meta.name || userEmail.split("@")[0],
+        fullName: meta.full_name || meta.name || userEmail.split("@")[0],
+        phone: meta.phone || (isSuper ? "000000000" : null),
+        address: isSuper ? "-" : null,
+        nip: meta.nip || (isInternal ? userNip : null),
+        nik: null,
+        jabatan: isInternal ? "Petugas PTSP" : null,
+        pangkatGolongan: null,
+        createdAt: new Date().toISOString(),
+        isVerified: meta.is_verified ?? true,
+        permissions: (meta.permissions as string[]) || ["ringkasan", "pengajuan", "dokumen_hasil", "layanan"],
+        status: "active",
+        userType: meta.user_type || (isInternal ? "internal_admin" : "pemohon"),
+        avatarUrl: meta.avatar_url || null,
+      };
+    }
 
     try {
       const res = await fetchAPI<{ success: boolean; data: any }>(
@@ -123,6 +243,7 @@ export const getCurrentProfile = async (reqCtx?: any) => {
   };
 
   const ctx = reqCtx || tryGetRequestContext();
+  if (ctx?.locals?.__ptsp_profile) return ctx.locals.__ptsp_profile;
   if (!ctx) return run();
   
   const key = "current-profile";
@@ -137,6 +258,9 @@ export const getCurrentProfile = async (reqCtx?: any) => {
   if (m.has(key)) return m.get(key);
   const val = await run();
   m.set(key, val);
+  if (ctx?.locals && val) {
+    ctx.locals.__ptsp_profile = val;
+  }
   return val;
 };
 

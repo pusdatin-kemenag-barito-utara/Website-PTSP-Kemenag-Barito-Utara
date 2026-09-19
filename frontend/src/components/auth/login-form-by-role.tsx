@@ -2,6 +2,7 @@ import {
   getEmailByPhoneAction,
   verifyTurnstileAction,
   handlePegawaiLoginAction,
+  loginViaGolangAction,
 } from "@/lib/actions/auth/login-helper";
 import { getProfileAfterLoginAction } from "@/lib/actions/auth/auth";
 import { logLoginAction } from "@/lib/actions/auth/login-audit";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { isAdminRole } from "@/lib/constants";
 import { isSafeRedirect } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 // Local Components
 import {
@@ -81,95 +83,69 @@ export function LoginFormByRole({
 
     const formData = new FormData(event.currentTarget);
     const password = String(formData.get("password") || "");
-    const supabase = createClient();
 
-    // Handle remember me for all modes
+    let identifier = "";
+
+    // Handle remember me and extract identifier for all modes
     if (mode === "pemohon") {
       const phoneRaw = String(formData.get("phone") || "");
-      const val = normalizeWhatsappNumber(phoneRaw);
-      rememberMe && val
-        ? localStorage.setItem(storageKey, val)
+      identifier = normalizeWhatsappNumber(phoneRaw);
+      rememberMe && identifier
+        ? localStorage.setItem(storageKey, identifier)
         : localStorage.removeItem(storageKey);
-    } else if (mode === "petugas") {
-      const emailVal = String(formData.get("email") || "");
-      rememberMe && emailVal
-        ? localStorage.setItem(storageKey, emailVal)
-        : localStorage.removeItem(storageKey);
-    } else if (mode === "pegawai") {
-      const nipVal = String(formData.get("nip") || "");
-      rememberMe && nipVal
-        ? localStorage.setItem(storageKey, nipVal)
-        : localStorage.removeItem(storageKey);
-    }
-    let email = String(formData.get("email") || "");
 
-    if (mode === "pemohon") {
-      const phoneRaw = String(formData.get("phone") || "");
-      const normalizedPhone = normalizeWhatsappNumber(phoneRaw);
-
-      if (!normalizedPhone) {
+      if (!identifier) {
         setLoading(false);
         setError("Nomor WhatsApp wajib diisi.");
+        toast.error("Nomor WhatsApp wajib diisi.", { id: "login-toast" });
         return;
       }
+    } else if (mode === "petugas") {
+      identifier = String(formData.get("email") || "").trim();
+      rememberMe && identifier
+        ? localStorage.setItem(storageKey, identifier)
+        : localStorage.removeItem(storageKey);
 
-      const result = await getEmailByPhoneAction(normalizedPhone);
-      if (result.error || !result.email) {
+      if (!identifier) {
         setLoading(false);
-        setError(result.error || "Nomor WhatsApp tidak ditemukan.");
+        setError("Email wajib diisi.");
+        toast.error("Email wajib diisi.", { id: "login-toast" });
         return;
       }
-      email = result.email;
     } else if (mode === "pegawai") {
-      const nip = String(formData.get("nip") || "");
-      if (!nip) {
+      identifier = String(formData.get("nip") || "").trim();
+      rememberMe && identifier
+        ? localStorage.setItem(storageKey, identifier)
+        : localStorage.removeItem(storageKey);
+
+      if (!identifier) {
         setLoading(false);
         setError("NIP wajib diisi.");
+        toast.error("NIP wajib diisi.", { id: "login-toast" });
         return;
       }
-
-      const result = await handlePegawaiLoginAction(
-        nip,
-        password,
-        turnstileToken || undefined,
-      );
-      if (result.error || !result.email) {
-        setLoading(false);
-        setError(result.error || "Gagal memverifikasi NIP.");
-        turnstileRef.current?.reset();
-        setTurnstileToken(null);
-        return;
-      }
-      email = result.email;
-    }
-
-    if (!email) {
-      setLoading(false);
-      setError(
-        "Akun ini belum memiliki email yang valid. Silakan hubungi admin.",
-      );
-      return;
     }
 
     if (!turnstileToken) {
       setLoading(false);
       setError("Silakan selesaikan verifikasi keamanan.");
+      toast.error("Silakan selesaikan verifikasi keamanan.", { id: "login-toast" });
       return;
     }
 
-    // Optimization: Run Turnstile verification and Lockout check in parallel (Promise.all)
+    toast.loading("Memproses login...", { id: "login-toast" });
+
+    // Parallel: Verifikasi Turnstile & Cek lockout
     const [verifyResult, lockoutCheck] = await Promise.all([
-      mode !== "pegawai"
-        ? verifyTurnstileAction(turnstileToken)
-        : Promise.resolve({ success: true, error: undefined }),
-      checkLoginLockoutAction(email),
+      verifyTurnstileAction(turnstileToken),
+      checkLoginLockoutAction(identifier),
     ]);
 
     if (!verifyResult.success) {
       setLoading(false);
-      setError(
-        verifyResult.error || "Verifikasi keamanan gagal. Silakan coba lagi.",
-      );
+      const errMsg = verifyResult.error || "Verifikasi keamanan gagal. Silakan coba lagi.";
+      setError(errMsg);
+      toast.error(errMsg, { id: "login-toast" });
       turnstileRef.current?.reset();
       setTurnstileToken(null);
       return;
@@ -178,64 +154,52 @@ export function LoginFormByRole({
     if (lockoutCheck.error) {
       setLoading(false);
       setError(lockoutCheck.error);
+      toast.error(lockoutCheck.error, { id: "login-toast" });
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
       return;
     }
 
     try {
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      // Panggil backend Golang Fiber secara langsung & native
+      const res = await loginViaGolangAction({
+        identifier,
+        password,
+        mode,
+        rememberMe,
+      });
 
-      if (signInError) {
+      if (!res.success || !res.user) {
+        await recordFailedLoginAction(identifier);
         setLoading(false);
-        if (signInError.message === "Invalid login credentials") {
-          await recordFailedLoginAction(email);
-          setError(
-            "Email atau password salah. Pastikan akun Anda sudah terdaftar.",
-          );
-        } else {
-          setError(signInError.message);
-        }
+        const errMsg = res.error || "Identitas atau password yang Anda masukkan salah.";
+        setError(errMsg);
+        toast.error(errMsg, { id: "login-toast" });
         turnstileRef.current?.reset();
         setTurnstileToken(null);
         return;
       }
 
-      const user = signInData.user;
-      if (!user) {
-        setLoading(false);
-        setError("Gagal memuat data pengguna.");
-        return;
+      const user = res.user;
+
+      toast.success("Login Berhasil!", {
+        id: "login-toast",
+        description: `Selamat datang kembali, ${user.nama || user.email || "Petugas"}! Mengalihkan ke panel...`,
+      });
+
+      // Pastikan cookie ptsp-auth tersimpan di browser secara sinkron sebelum navigasi
+      if (res.token) {
+        const maxAge = rememberMe ? 30 * 24 * 3600 : 7 * 24 * 3600;
+        document.cookie = `ptsp-auth=${encodeURIComponent(res.token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        try {
+          localStorage.setItem("ptsp-auth-token", res.token);
+          if (user) {
+            localStorage.setItem("ptsp-auth-user", JSON.stringify(user));
+          }
+        } catch (e) {}
       }
 
-      const { data: profile, error: profileError } =
-        await getProfileAfterLoginAction(user.id);
-      if (profileError || !profile) {
-        await supabase.auth.signOut();
-        setLoading(false);
-        setError(profileError || "Gagal memuat profil.");
-        return;
-      }
-
-      const role = String(profile.role || "user");
-      const isPetugasRole = isAdminRole(role);
-
-      if (isPetugasRole && profile.isVerified === false) {
-        await supabase.auth.signOut();
-        setLoading(false);
-        setError("Akun Anda sedang menunggu verifikasi dari Super Admin.");
-        return;
-      }
-
-      if (mode === "petugas" && !isPetugasRole) {
-        await supabase.auth.signOut();
-        setLoading(false);
-        setError("Akun ini bukan akun petugas/admin.");
-        return;
-      }
-
+      // Audit log asinkron
       logLoginAction().catch((err) =>
         console.warn("Failed to write login audit log:", err),
       );
@@ -252,21 +216,27 @@ export function LoginFormByRole({
       // Jika pemohon dan belum mengisi no HP/WhatsApp, arahkan ke lengkapi profil
       if (
         mode === "pemohon" &&
-        (!profile.phone || profile.phone.trim() === "" || profile.phone === "-")
+        (!user.phone || user.phone.trim() === "" || user.phone === "-")
       ) {
         safeRedirect = "/login/masyarakat/lengkapi-profil";
       }
 
-      window.location.href = safeRedirect;
+      // Gunakan replace agar history page login tidak tersimpan di tombol Back
+      window.location.replace(safeRedirect);
     } catch (err: any) {
       setLoading(false);
-      setError(err.message || "Terjadi kesalahan saat login.");
+      const errMsg = err.message || "Terjadi kesalahan saat memproses login.";
+      setError(errMsg);
+      toast.error(errMsg, { id: "login-toast" });
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     }
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError("");
+    toast.loading("Menghubungkan ke Google...", { id: "google-login-toast" });
     const supabase = createClient();
     try {
       const redirectUrl = `${window.location.origin}/auth/callback${callbackUrl ? `?next=${encodeURIComponent(callbackUrl)}` : ""}`;
@@ -318,7 +288,9 @@ export function LoginFormByRole({
       }
     } catch (err: any) {
       setLoading(false);
-      setError(err.message || "Terjadi kesalahan saat login dengan Google.");
+      const errMsg = err.message || "Terjadi kesalahan saat login dengan Google.";
+      setError(errMsg);
+      toast.error(errMsg, { id: "google-login-toast" });
     }
   };
 
@@ -472,7 +444,7 @@ export function LoginFormByRole({
         </div>
       </m.div>
 
-      <div>
+      <div className="w-full">
         <LoginTurnstile
           mounted={mounted}
           ref={turnstileRef}

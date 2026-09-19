@@ -1,5 +1,3 @@
-import { Layers } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
 import { ItemLayananClient } from "@/components/admin/item-layanan/item-layanan-client";
 
 export function ItemLayananView({
@@ -12,12 +10,7 @@ export function ItemLayananView({
   isSuper: boolean;
 }) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Kelola Item Layanan"
-        description="Kelola daftar sub-layanan, formulir, dan persyaratan untuk setiap induk layanan."
-        icon={Layers}
-      />
+    <div className="space-y-4 pb-6">
       <ItemLayananClient
         initialItems={items ?? []}
         services={services ?? []}

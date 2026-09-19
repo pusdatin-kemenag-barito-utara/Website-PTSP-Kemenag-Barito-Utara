@@ -18,6 +18,7 @@ import {
   History,
   FileCheck2,
   UserCog,
+  BadgeCheck,
 } from "lucide-react";
 
 export interface NavItem {
@@ -60,12 +61,23 @@ export const ADMIN_NAV: NavItem[] = [
     icon: ListChecks,
     group: "Master Data",
   },
-  { label: "Pengguna", href: "/admin/pengguna", icon: Users, group: "Sistem" },
   {
-    label: "Data Pejabat",
-    href: "/admin/manajemen-pegawai/pejabat",
+    label: "Petugas Admin",
+    href: "/admin/pengguna?tab=petugas",
     icon: UserCog,
-    group: "Sistem",
+    group: "Manajemen Pengguna",
+  },
+  {
+    label: "Data Pegawai",
+    href: "/admin/pengguna?tab=pegawai",
+    icon: BadgeCheck,
+    group: "Manajemen Pengguna",
+  },
+  {
+    label: "Pemohon Masyarakat",
+    href: "/admin/pengguna?tab=pemohon",
+    icon: Users,
+    group: "Manajemen Pengguna",
   },
   {
     label: "Dokumen Hasil",
@@ -132,6 +144,7 @@ export const PEGAWAI_NAV: NavItem[] = [
 export const GROUP_ICONS: Record<string, React.ElementType> = {
   Utama: LayoutDashboard,
   "Master Data": Database,
+  "Manajemen Pengguna": Users,
   Sistem: Settings2,
   "Layanan ASN": Briefcase,
   "E-LK Harian": ClipboardList,

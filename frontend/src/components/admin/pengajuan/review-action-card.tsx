@@ -8,6 +8,7 @@ import { updateRequestStatusAction } from "@/lib/actions/admin/admin-requests";
 import { DeleteRequestButton } from "@/components/admin/delete-request-button";
 import { MessageSquare, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 export function ReviewActionCard({
   request,
@@ -38,69 +39,73 @@ export function ReviewActionCard({
     }
   };
 
+  const statusOptions = [
+    { value: "under_review", label: "Sedang Ditinjau" },
+    { value: "revision_required", label: "Perlu Revisi Dokumen" },
+    { value: "rejected", label: "Tolak Pengajuan" },
+    { value: "approved", label: "Setujui Pengajuan" },
+    { value: "completed", label: "Selesaikan Layanan" },
+    { value: "spam", label: "Tandai Spam" },
+  ];
+
   return (
-    <Card title="Aksi Review" icon={MessageSquare}>
-      <form ref={formRef} action={handleSubmit} className="space-y-5">
+    <Card title="Tindak Lanjut & Keputusan" icon={MessageSquare}>
+      <form ref={formRef} action={handleSubmit} className="space-y-3.5">
         <input type="hidden" name="requestId" value={request.id} />
-        <div className="space-y-4">
+        <div className="space-y-3">
           <Field label="Status Keputusan">
-            <div className="relative">
-              <select
-                name="status"
-                key={request.status}
-                defaultValue={request.status}
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all duration-200 hover:border-slate-400 focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/20 appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_16px_center] bg-no-repeat pr-12 outline-none cursor-pointer"
-              >
-                <option value="under_review">🔄 Sedang Ditinjau</option>
-                <option value="revision_required">⚠️ Perlu Revisi</option>
-                <option value="rejected">❌ Ditolak</option>
-                <option value="approved">✅ Disetujui</option>
-                <option value="completed">🎉 Selesai</option>
-                <option value="spam">🚮 Spam / Palsu</option>
-              </select>
-            </div>
+            <ModernSelect
+              name="status"
+              defaultValue={request.status}
+              size="sm"
+              options={statusOptions}
+              triggerClassName="h-9 rounded-lg text-xs font-semibold text-slate-700"
+            />
           </Field>
-          <Field label="Diproses oleh">
+
+          <Field label="Petugas Peninjau">
             <div className="relative flex items-center">
-              <User className="absolute left-3 h-4 w-4 text-slate-400" />
+              <User className="absolute left-2.5 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 disabled
                 value={adminProfile.fullName || adminProfile.email}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-3 text-sm font-bold text-slate-500 cursor-not-allowed outline-none"
+                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs font-medium text-slate-600 cursor-not-allowed outline-none"
               />
             </div>
           </Field>
+
           <Field
-            label="Catatan Admin (Opsional)"
-            hint="Alasan penolakan atau catatan tambahan"
+            label="Catatan Review (Opsional)"
+            hint="Alasan penolakan, instruksi revisi, atau catatan"
           >
             <Textarea
               name="notes"
-              className="min-h-[100px] rounded-xl border-slate-300 focus:border-[#059669] focus:ring-[#059669]/20 text-sm shadow-sm"
-              placeholder="Tuliskan catatan di sini..."
+              className="min-h-[75px] rounded-lg border-slate-300 focus:border-[#059669] focus:ring-[#059669]/20 text-xs shadow-2xs"
+              placeholder="Tuliskan catatan verifikasi..."
             />
           </Field>
         </div>
+
         <Button
           disabled={isPending}
-          className="w-full h-12 rounded-xl text-sm font-bold bg-gradient-to-r from-[#059669] to-[#047857] hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98] disabled:opacity-70"
+          className="w-full h-9.5 rounded-lg text-xs font-bold bg-[#059669] hover:bg-[#047857] hover:shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 text-white"
         >
           {isPending ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
           ) : (
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
           )}
           {isPending ? "Menyimpan..." : "Simpan Keputusan"}
         </Button>
       </form>
 
-      <div className="mt-8 pt-6 border-t border-slate-100">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
-          Zona Bahaya
+      <div className="mt-5 pt-3.5 border-t border-slate-100">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+          Tindakan Berbahaya
         </p>
-        <DeleteRequestButton 
-          requestId={request.id} 
+        <DeleteRequestButton
+          requestId={request.id}
           redirectUrl={`/admin/pengajuan?type=${request.services?.category === "asn" ? "asn" : "public"}`}
         />
       </div>

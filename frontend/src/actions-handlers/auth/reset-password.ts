@@ -5,7 +5,10 @@ import { headers } from "@/lib/next-compat/headers";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limiter";
 import { fetchAPI } from "@/lib/api";
 
-const JWT_SECRET = process.env.PASSWORD_RESET_SECRET || "fallback-secret-key-ptsp-kemenag";
+const JWT_SECRET = process.env.PASSWORD_RESET_SECRET || process.env.JWT_SECRET || "";
+if (!JWT_SECRET && process.env.NODE_ENV === "production") {
+  console.error("CRITICAL: PASSWORD_RESET_SECRET / JWT_SECRET environment variable is missing!");
+}
 
 const JWT_SECRET_BUF: crypto.BinaryLike = JWT_SECRET;
 

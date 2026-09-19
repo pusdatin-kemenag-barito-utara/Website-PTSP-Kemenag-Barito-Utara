@@ -1,5 +1,4 @@
 import {
-  LayoutDashboard,
   FileText,
   Files,
   FormInput,
@@ -7,7 +6,6 @@ import {
   Users,
   FileOutput,
 } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
 
 import { AdminAlertBanner } from "@/components/admin/dashboard/admin-alert-banner";
 import { AdminDashboardMetrics } from "@/components/admin/dashboard/admin-dashboard-metrics";
@@ -86,19 +84,11 @@ export function AdminDashboardView({
   });
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="space-y-4 pb-6">
       <DashboardRealtimeSync />
-
-      {/* Header Utama */}
-      <div>
-        <PageHeader
-          title="Ringkasan Dashboard"
-          description="Pantau kondisi layanan, aktivitas pengguna, dan progres pengajuan terkini."
-          icon={LayoutDashboard}
-        />
-
-        {/* Alerts Area */}
-        <div className="mt-6 flex flex-col gap-4">
+      {/* Alerts Area */}
+      {(masyarakat.needAction > 0 || pegawai.needAction > 0) && (
+        <div className="flex flex-col gap-2">
           <AdminAlertBanner
             needAction={masyarakat.needAction}
             title="Perhatian Tindakan Masyarakat"
@@ -110,18 +100,18 @@ export function AdminDashboardView({
             href="/admin/pengajuan?type=asn"
           />
         </div>
-      </div>
+      )}
 
       {/* Bagian Layanan Masyarakat */}
       <section className="relative">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="h-10 w-2.5 rounded-full bg-emerald-500" />
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="h-4 w-1.5 rounded-full bg-emerald-500" />
+          <h2 className="text-base font-bold text-slate-800 tracking-tight">
             Sistem Layanan Masyarakat
           </h2>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3.5">
           <AdminDashboardMetrics
             serviceCount={masyarakat.serviceCount}
             userCount={masyarakat.userCount}
@@ -129,7 +119,7 @@ export function AdminDashboardView({
             totalRequests={masyarakat.totalRequests}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-3">
             <AdminStatusProgress
               totalRequests={masyarakat.totalRequests}
               stats={masyarakat.stats}
@@ -141,23 +131,19 @@ export function AdminDashboardView({
         </div>
       </section>
 
-      {/* Pembatas Ombak (Wave) */}
-      <div className="w-full py-4 relative">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" className="w-full h-auto text-indigo-50/50 fill-current">
-          <path d="M0,32L60,42.7C120,53,240,75,360,74.7C480,75,600,53,720,42.7C840,32,960,32,1080,42.7C1200,53,1320,75,1380,85.3L1440,96L1440,100L1380,100C1320,100,1200,100,1080,100C960,100,840,100,720,100C600,100,480,100,360,100C240,100,120,100,60,100L0,100Z"></path>
-        </svg>
-      </div>
+      {/* Pembatas Minimalis */}
+      <div className="border-t border-slate-200/70" />
 
       {/* Bagian Layanan Kepegawaian */}
-      <section className="relative rounded-3xl bg-indigo-50/30 p-6 sm:p-8 border border-indigo-100/50">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="h-10 w-2.5 rounded-full bg-indigo-500" />
-          <h2 className="text-2xl font-black text-indigo-900 tracking-tight">
+      <section className="relative rounded-2xl bg-indigo-50/30 p-3.5 sm:p-4 border border-indigo-100/50">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="h-4 w-1.5 rounded-full bg-indigo-500" />
+          <h2 className="text-base font-bold text-indigo-900 tracking-tight">
             Sistem Layanan Kepegawaian
           </h2>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3.5">
           <AdminDashboardMetrics
             serviceCount={pegawai.serviceCount}
             userCount={pegawai.userCount}
@@ -165,14 +151,13 @@ export function AdminDashboardView({
             totalRequests={pegawai.totalRequests}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-3">
             <AdminStatusProgress
               totalRequests={pegawai.totalRequests}
               stats={pegawai.stats}
               title="Progres Pengajuan Pegawai"
               href="/admin/pengajuan?type=asn"
             />
-            {/* Analytics khusus jika dibutuhkan, sementara pakai yang umum */}
             <div className="lg:col-span-1">
               <AdminAnalyticsWrapper
                 serviceAnalytics={serviceAnalytics}

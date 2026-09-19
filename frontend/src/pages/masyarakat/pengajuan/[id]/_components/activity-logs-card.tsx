@@ -41,34 +41,55 @@ export function ActivityLogsCard({ activityLogs }: ActivityLogsCardProps) {
         </h3>
       </div>
 
-      <div className="p-5 sm:p-6">
-        <div className="space-y-6">
-          {(activityLogs ?? []).map((log: any, idx: number) => (
-            <div key={log.id} className="relative pl-6 group">
-              {/* Timeline line */}
-              {idx !== activityLogs.length - 1 && (
-                <div className="absolute left-[7px] top-[22px] bottom-[-24px] w-0.5 bg-slate-200 dark:bg-slate-800" />
-              )}
-              {/* Timeline dot */}
-              <div className="absolute left-0 top-1.5 h-4 w-4 rounded-full bg-white dark:bg-slate-900 border-2 border-emerald-500 flex items-center justify-center shadow-xs">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
-              </div>
+      <div className="p-4 sm:p-6">
+        {(!activityLogs || activityLogs.length === 0) ? (
+          <div className="py-6 text-center">
+            <HistoryIcon className="mx-auto h-7 w-7 text-slate-300 dark:text-slate-600 mb-2" />
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              Belum Ada Log Aktivitas
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 max-w-[240px] mx-auto leading-relaxed">
+              Setiap perkembangan status dan verifikasi berkas dari petugas PTSP akan otomatis tercatat di sini.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {activityLogs.map((log: any, idx: number) => {
+              const action = log.action || "";
+              const date = log.createdAt || log.created_at;
+              const actor = log.actorName || log.actor_name || "Petugas PTSP";
+              const notes = log.notes || "";
 
-              <div className="space-y-0.5">
-                <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-100">
-                  {formatAction(log.action)}
-                </p>
-                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {log.notes || "Sistem memproses status otomatis"}
-                </p>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 pt-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>{formatDate(log.createdAt)}</span>
+              return (
+                <div key={log.id || idx} className="relative pl-6 group">
+                  {/* Timeline line */}
+                  {idx !== activityLogs.length - 1 && (
+                    <div className="absolute left-[7px] top-[22px] bottom-[-24px] w-0.5 bg-slate-200 dark:bg-slate-800" />
+                  )}
+                  {/* Timeline dot */}
+                  <div className="absolute left-0 top-1.5 h-4 w-4 rounded-full bg-white dark:bg-slate-900 border-2 border-emerald-500 flex items-center justify-center shadow-xs">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-snug">
+                      {formatAction(action)}
+                    </p>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {notes ? notes : `Oleh ${actor}`}
+                    </p>
+                    {date && (
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 pt-1">
+                        <Calendar className="h-3 w-3 shrink-0 text-slate-400" />
+                        <span>{formatDate(date)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

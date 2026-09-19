@@ -1,4 +1,4 @@
-﻿import { invokeAction } from "@/lib/actions/runtime";
+import { invokeAction } from "@/lib/actions/runtime";
 
 export async function getEmailByPhoneAction(...args: any[]) {
   return invokeAction("auth/login-helper", "getEmailByPhoneAction", args);
@@ -10,5 +10,9 @@ export async function verifyTurnstileAction(...args: any[]) {
 
 export async function handlePegawaiLoginAction(...args: any[]) {
   return invokeAction("auth/login-helper", "handlePegawaiLoginAction", args);
+}
+
+export async function loginViaGolangAction(...args: any[]) {
+  return invokeAction("auth/login-helper", "loginViaGolangAction", args);
 }
 

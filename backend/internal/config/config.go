@@ -18,6 +18,7 @@ type Config struct {
 	FrontendOrigin string
 
 	// Security
+	SuperAdminEmail   string
 	CronSecret        string
 	TurnstileSecret   string
 	JWTSecret         string
@@ -79,11 +80,17 @@ func Load() *Config {
 		r2Bucket = os.Getenv("R2_BUCKET_NAME")
 	}
 
+	superAdminEmail := os.Getenv("SUPER_ADMIN_EMAIL")
+	if superAdminEmail == "" {
+		superAdminEmail = os.Getenv("PUBLIC_SUPER_ADMIN_EMAIL")
+	}
+
 	return &Config{
 		Port:              port,
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
 		DirectURL:         os.Getenv("DIRECT_URL"),
 		FrontendOrigin:    frontendOrigin,
+		SuperAdminEmail:   superAdminEmail,
 		CronSecret:        os.Getenv("CRON_SECRET"),
 		TurnstileSecret:   os.Getenv("TURNSTILE_SECRET_KEY"),
 		JWTSecret:         os.Getenv("JWT_SECRET"),

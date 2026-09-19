@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2, FormInput, ListChecks, SlidersHorizontal, Settings2, Layers } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2, FormInput, ListChecks, SlidersHorizontal, Settings2, Layers, Clock, FileText } from "lucide-react";
 import { motion as m, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { WizardFieldSection } from "./wizard-field-section";
 import { WizardRequirementSection } from "./wizard-requirement-section";
@@ -53,40 +53,72 @@ export function WizardItemRow({
       className="group relative bg-white flex flex-col"
     >
       {/* ITEM ROW */}
-      <div className="p-4 sm:px-6 flex items-center justify-between transition-colors select-none hover:bg-slate-50">
-        <div className="flex items-center gap-3">
+      <div className="p-4 sm:px-6 flex items-center justify-between transition-colors select-none hover:bg-slate-50/80">
+        <div className="flex items-center gap-3 min-w-0 pr-4">
           {/* DRAG HANDLE */}
           <div className="shrink-0 flex items-center justify-center -ml-2" onClick={(e) => e.stopPropagation()}>
             <div
               onPointerDown={(e) => dragControls.start(e)}
-              className="flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-emerald-500 transition-colors p-2"
-              title="Tarik untuk mengubah urutan"
+              className="flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-emerald-600 transition-colors p-2"
+              title="Tarik untuk mengubah urutan posisi"
             >
-              <GripVertical className="h-5 w-5 pointer-events-none" />
+              <GripVertical className="h-4.5 w-4.5 pointer-events-none" />
             </div>
           </div>
 
-          <div>
-            <h3 className="font-bold text-slate-900">{item.name}</h3>
-            <p className="text-xs text-slate-500 font-mono mt-0.5">{item.slug}</p>
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm text-slate-800 tracking-tight truncate group-hover:text-emerald-800 transition-colors">
+              {item.name}
+            </h3>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[11px] text-slate-500 font-mono">
+                /{item.slug}
+              </span>
+              <span className="md:hidden text-[10px] text-slate-400 font-medium">
+                • {item.estimatedTime || "1-3 Hari Kerja"}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6" onClick={(e) => e.stopPropagation()}>
-          {/* Kolom 1: Status Badge */}
+        <div className="flex items-center gap-6 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {/* Kolom Tengah: Kelengkapan (Estimasi & Berkas/Form) */}
+          <div className="hidden md:flex w-48 flex-col justify-center gap-1 text-left">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-600 font-semibold">
+              <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+              <span className="truncate">{item.estimatedTime || "1-3 Hari Kerja"}</span>
+            </div>
+            {(() => {
+              const fieldCount = (item.serviceFormFields || item.formFields || item.form_fields || []).length;
+              const reqCount = (item.serviceRequirements || item.requirements || item.requirements_list || []).length;
+              return (
+                <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                  <span className="inline-flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">
+                    <FormInput className="h-2.5 w-2.5 text-emerald-600" /> {fieldCount} Field
+                  </span>
+                  <span className="inline-flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-medium">
+                    <FileText className="h-2.5 w-2.5 text-blue-600" /> {reqCount} Berkas
+                  </span>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Kolom Status Badge */}
           <div className="w-24 text-center shrink-0">
             <span
-              className={`inline-block w-full py-1 rounded-full text-[10px] font-extrabold tracking-wider ${
+              className={`inline-flex items-center justify-center gap-1.5 w-full py-1 rounded-full text-[10px] font-extrabold tracking-wider ${
                 itemIsActive 
                   ? "bg-emerald-50 text-emerald-700 border border-emerald-200/80" 
-                  : "bg-rose-50 text-rose-700 border border-rose-200/80"
+                  : "bg-slate-100 text-slate-500 border border-slate-200"
               }`}
             >
+              <span className={`w-1.5 h-1.5 rounded-full ${itemIsActive ? "bg-emerald-500" : "bg-slate-400"}`} />
               {itemIsActive ? "AKTIF" : "NONAKTIF"}
             </span>
           </div>
 
-          {/* Kolom 2: Tindakan Admin (3 Ikon Ramping) */}
+          {/* Kolom Tindakan Admin */}
           <div className="w-32 flex items-center justify-center gap-1.5 shrink-0">
             {/* Fitur 1: Kelola Field & Persyaratan (Ikon + Badge Count) */}
             {(() => {
@@ -95,7 +127,7 @@ export function WizardItemRow({
                 <button
                   onClick={() => onOpenFloatingManage(item)}
                   className="relative p-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-2xs hover:from-emerald-700 hover:to-teal-800 transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
-                  title={`Kelola Formulir & Persyaratan Dokumen (${fieldReqCount} Item)`}
+                  title={`Kelola Formulir & Dokumen Persyaratan (${fieldReqCount} Item)`}
                 >
                   <SlidersHorizontal className="h-4 w-4" />
                   {fieldReqCount > 0 && (

@@ -29,25 +29,37 @@ export function StorageCleanupCard() {
   async function handleCleanup() {
     if (!stats || stats.eligibleRequests === 0) return;
 
-    const confirm = window.confirm(
-      `Peringatan: Tindakan ini akan menghapus permanen file permohonan (Requirements) dari ${stats.eligibleRequests} pengajuan lama. Dokumen Hasil tetap aman. Lanjutkan?`
-    );
-
-    if (!confirm) return;
-
-    setCleaning(true);
-    try {
-      const result = await cleanupOldStorageAction();
-      if (result.success) {
-        toast.success(result.message);
-        fetchStats();
-      }
-    } catch (err) {
-      toast.error("Gagal melakukan pembersihan.");
-      console.error(err);
-    } finally {
-      setCleaning(false);
-    }
+    toast(`Bersihkan ${stats.eligibleRequests} berkas lama?`, {
+      description: "File permohonan lama akan dihapus permanen. Dokumen hasil tetap aman.",
+      action: {
+        label: "Ya, Bersihkan",
+        onClick: async () => {
+          setCleaning(true);
+          const toastId = toast.loading("Sedang membersihkan file penyimpanan...");
+          try {
+            const result = await cleanupOldStorageAction();
+            toast.dismiss(toastId);
+            if (result.success) {
+              toast.success(result.message);
+              fetchStats();
+            } else {
+              toast.error(result.error || "Gagal melakukan pembersihan.");
+            }
+          } catch (err) {
+            toast.dismiss(toastId);
+            toast.error("Gagal melakukan pembersihan.");
+            console.error(err);
+          } finally {
+            setCleaning(false);
+          }
+        },
+      },
+      cancel: {
+        label: "Batal",
+        onClick: () => {},
+      },
+      duration: 8000,
+    });
   }
 
   if (loading) return (

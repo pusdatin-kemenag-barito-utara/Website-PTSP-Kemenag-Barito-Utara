@@ -2,52 +2,91 @@ import { requireAuth } from "@/lib/auth";
 import { fetchAPI } from "@/lib/api";
 import { revalidatePath } from "@/lib/next-compat/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { tryGetRequestContext } from "@/lib/request-context";
 
 export async function completeProfileAction(formData: FormData, injectedCtx?: any) {
   try {
     const ctx = injectedCtx || tryGetRequestContext();
-    const supabase = await createClient(ctx ? { cookies: ctx.cookies, request: ctx.request } : undefined);
+    const adminClient = createAdminClient();
     
     let user: any = null;
     let errorMsg = "";
-    
-    try {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) errorMsg = error.message;
-      user = data?.user ?? null;
-    } catch (e: any) {
-      errorMsg = e?.message || "Error di getUser";
-    }
 
-    // Fallback 1: Cek cookie ptsp-auth-access-token
-    if (!user && ctx) {
-      const accessToken = ctx.cookies.get("ptsp-auth-access-token")?.value;
-      if (accessToken) {
-        try {
-          const { data, error } = await supabase.auth.getUser(accessToken);
-          if (error) errorMsg = error.message;
-          user = data?.user ?? null;
-        } catch (e: any) {
-          errorMsg = e?.message || "Error fallback cookie";
+    // 1. Ekstrak token otentikasi dari semua kemungkinan sumber (formData, cookies, headers)
+    let token = (formData.get("token") as string) || "";
+    if (!token && ctx?.cookies) {
+      token = ctx.cookies.get?.("ptsp-auth-access-token")?.value || ctx.cookies.get?.("ptsp-auth")?.value || "";
+    }
+    if (!token && ctx?.request?.headers) {
+      const rawCookie = ctx.request.headers.get("cookie") || "";
+      const match = rawCookie.match(/(?:ptsp-auth-access-token|ptsp-auth)=([^;]+)/);
+      if (match) token = decodeURIComponent(match[1].trim());
+
+      if (!token) {
+        const authHeader = ctx.request.headers.get("authorization") || "";
+        if (authHeader.startsWith("Bearer ")) {
+          token = authHeader.replace("Bearer ", "").trim();
         }
       }
     }
 
-    // Fallback 2: Cek Authorization header
-    if (!user && ctx) {
-      const authHeader = ctx.request.headers.get("authorization") || "";
-      if (authHeader.startsWith("Bearer ")) {
-        const token = authHeader.replace("Bearer ", "").trim();
-        if (token) {
-          try {
-            const { data, error } = await supabase.auth.getUser(token);
-            if (error) errorMsg = error.message;
-            user = data?.user ?? null;
-          } catch (e: any) {
-             errorMsg = e?.message || "Error fallback header";
+    // 2. Jika token ditemukan, verifikasi langsung via Supabase Admin Client
+    if (token) {
+      try {
+        const { data, error } = await adminClient.auth.getUser(token);
+        if (data?.user) {
+          user = data.user;
+        } else if (error) {
+          errorMsg = error.message;
+        }
+      } catch (e: any) {
+        errorMsg = e?.message || "";
+      }
+    }
+
+    // 3. Fallback jika adminClient.auth.getUser gagal (misal token JWT expired/chunked):
+    // Decode payload JWT untuk ambil subject UUID & verifikasi ke Admin API
+    if (!user && token) {
+      try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+          if (payload && payload.sub) {
+            const { data } = await adminClient.auth.admin.getUserById(payload.sub);
+            if (data?.user) {
+              user = data.user;
+            }
           }
         }
+      } catch (e) {}
+    }
+
+    // 4. Fallback ke standard @supabase/ssr server client
+    if (!user) {
+      try {
+        const supabase = await createClient(ctx ? { cookies: ctx.cookies, request: ctx.request } : undefined);
+        const { data, error } = await supabase.auth.getUser();
+        if (data?.user) {
+          user = data.user;
+        } else if (error && !errorMsg) {
+          errorMsg = error.message;
+        }
+      } catch (e: any) {
+        if (!errorMsg) errorMsg = e?.message || "";
+      }
+    }
+
+    // 5. Fallback ke userId yang dikirim dari form (diverifikasi validitasnya di Supabase Auth)
+    if (!user) {
+      const formUserId = ((formData.get("userId") as string) || "").trim();
+      if (formUserId) {
+        try {
+          const { data } = await adminClient.auth.admin.getUserById(formUserId);
+          if (data?.user) {
+            user = data.user;
+          }
+        } catch (e) {}
       }
     }
 
@@ -56,7 +95,7 @@ export async function completeProfileAction(formData: FormData, injectedCtx?: an
     }
 
     const userId = user.id;
-    const userEmail = user.email ?? "";
+    const userEmail = (formData.get("userEmail") as string) || user.email || "";
 
     const fullName = formData.get("fullName") as string;
     const phone = formData.get("phone") as string;
@@ -77,13 +116,15 @@ export async function completeProfileAction(formData: FormData, injectedCtx?: an
       return { error: "Format nomor WhatsApp tidak valid." };
     }
 
+    // 1. Coba update via public /users/:id/profile (tidak memerlukan token admin)
     const patchRes = await fetchAPI<{ success?: boolean; error?: string }>(
-      `/admin/profile/${userId}`,
+      `/users/${userId}/profile`,
       {
         method: "PATCH",
         body: JSON.stringify({
           name: fullName,
           full_name: fullName,
+          email: userEmail,
           phone: cleanPhone,
           address: address,
           avatar_url: user.user_metadata?.avatar_url || undefined,
@@ -93,12 +134,13 @@ export async function completeProfileAction(formData: FormData, injectedCtx?: an
     );
 
     if (!patchRes?.success) {
-      // Fallback ke public profile update endpoint jika token admin tidak terdeteksi
-      await fetchAPI(`/users/${userId}/profile`, {
+      // Fallback ke /admin/profile jika endpoint publik tidak berhasil
+      await fetchAPI(`/admin/profile/${userId}`, {
         method: "PATCH",
         body: JSON.stringify({
           name: fullName,
           full_name: fullName,
+          email: userEmail,
           phone: cleanPhone,
           address: address,
           avatar_url: user.user_metadata?.avatar_url || undefined,

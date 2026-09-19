@@ -133,3 +133,11 @@
   color: transparent;
   font-weight: 800;
 }
+
+/* Cloudflare Turnstile Full-Width Helper */
+.cf-turnstile-full,
+.cf-turnstile-full iframe,
+.cf-turnstile-full > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}

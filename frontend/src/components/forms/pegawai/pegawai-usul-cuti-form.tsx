@@ -17,6 +17,7 @@ const MASA_KERJA_BULAN_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: 
 
 import { UNIT_KERJA_OPTIONS } from "@/lib/constants";
 import { getSisaCutiByNip } from "@/lib/actions/pegawai/cuti";
+import { fetchAPI } from "@/lib/api";
 import Image from "@/lib/next-compat/image";
 import { useRef } from "react";
 
@@ -88,6 +89,21 @@ export function PegawaiUsulCutiForm({
 
   const [noHpAktif, setNoHpAktif] = useState(profile?.phone || "");
   const [unitKerja, setUnitKerja] = useState(profile?.unitKerja || "");
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchAPI<any>("/master-options")
+      .then((res) => {
+        if (res?.success && Array.isArray(res?.data)) {
+          const uks = res.data
+            .filter((o: any) => o.category === "unit_kerja" && o.is_active !== false)
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((o: any) => o.label || o.value);
+          if (uks.length > 0) setUnitKerjaOptions(uks);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
 
@@ -292,7 +308,23 @@ export function PegawaiUsulCutiForm({
         return;
       }
 
-      const answers: { fieldName: string; fieldValue: string }[] = [];
+      // Map field IDs to field labels/names
+      const formFields = (selectedItem?.formFields || selectedItem?.form_fields || selectedItem?.serviceFormFields) ?? [];
+      const fieldMap = new Map<string, any>();
+      formFields.forEach((f: any) => {
+        fieldMap.set(String(f.id), f);
+        if (f.name) fieldMap.set(String(f.name), f);
+      });
+
+      const answers: {
+        field_id?: number;
+        fieldId?: number;
+        field_name: string;
+        fieldName: string;
+        field_value: string;
+        fieldValue: string;
+      }[] = [];
+
       formData.forEach((value, key) => {
         if (
           key === "serviceId" ||
@@ -303,7 +335,20 @@ export function PegawaiUsulCutiForm({
         )
           return;
         if (typeof value !== "string") return;
-        answers.push({ fieldName: key.startsWith("answer_") ? key.replace("answer_", "") : key, fieldValue: value });
+
+        const rawKey = key.startsWith("answer_") ? key.replace("answer_", "") : key;
+        const matchedField = fieldMap.get(rawKey);
+        const resolvedName = matchedField ? (matchedField.label || matchedField.name || rawKey) : rawKey;
+        const resolvedId = matchedField?.id ? Number(matchedField.id) : (!isNaN(Number(rawKey)) ? Number(rawKey) : undefined);
+
+        answers.push({
+          field_id: resolvedId,
+          fieldId: resolvedId,
+          field_name: resolvedName,
+          fieldName: resolvedName,
+          field_value: value,
+          fieldValue: value,
+        });
       });
 
       const createRes = await fetch(`${getClientApiBase()}/requests`, {
@@ -334,7 +379,7 @@ export function PegawaiUsulCutiForm({
         uploadForm.append("document", file, file.name);
         uploadForm.append("requirementId", reqId);
         uploadForm.append("category", "umum");
-        await fetch(`${getClientApiBase()}/admin/requests/${result.id}/documents`, {
+        await fetch(`${getClientApiBase()}/requests/${result.id}/documents`, {
           method: "POST",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: uploadForm,
@@ -606,7 +651,7 @@ export function PegawaiUsulCutiForm({
                     <ModernSelect
                       value={unitKerja}
                       onChange={setUnitKerja}
-                      options={UNIT_KERJA_OPTIONS}
+                      options={unitKerjaOptions.length > 0 ? unitKerjaOptions : UNIT_KERJA_OPTIONS}
                       placeholder="-- Pilih Unit Kerja --"
                       enableSearch
                       searchPlaceholder="Cari unit kerja..."

@@ -29,7 +29,12 @@ export async function createClient(astroContext?: { cookies?: AstroCookies; requ
 
   return createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     cookieOptions: {
-      name: "ptsp-auth",
+      name: "ptsp-auth-access-token",
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
     },
     cookies: {
       getAll() {
@@ -66,19 +71,31 @@ export async function createClient(astroContext?: { cookies?: AstroCookies; requ
           options?: CookieOptions;
         }>,
       ) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          const cookieOptions = { ...options };
-          if (process.env.NODE_ENV !== "production") {
-            cookieOptions.secure = false;
-          }
-          if (cookieOptions.domain === "" || cookieOptions.domain === null) {
-            delete cookieOptions.domain;
-          }
-          if (typeof cookieOptions.sameSite === "string" && cookieOptions.sameSite.toLowerCase() === "lax") {
-            cookieOptions.sameSite = "lax"; // Ensure correct casing or just leave it
-          }
-          cookieStore.set(name, value, cookieOptions as any);
-        });
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            // PROTEKSI KRUSIAL: Supabase dilarang keras memodifikasi atau menghapus cookie sesi ptsp-auth
+            if (name === "ptsp-auth") {
+              return;
+            }
+            const cookieOptions = { ...options };
+            if (process.env.NODE_ENV !== "production") {
+              cookieOptions.secure = false;
+            }
+            if (cookieOptions.domain === "" || cookieOptions.domain === null) {
+              delete cookieOptions.domain;
+            }
+            if (typeof cookieOptions.sameSite === "string" && cookieOptions.sameSite.toLowerCase() === "lax") {
+              cookieOptions.sameSite = "lax"; // Ensure correct casing or just leave it
+            }
+            try {
+              cookieStore.set(name, value, cookieOptions as any);
+            } catch {
+              // Astro ResponseSentError: abaikan secara aman jika response headers sudah dikirim ke browser
+            }
+          });
+        } catch {
+          // Abaikan jika header sudah dikirim (streaming response)
+        }
       },
     },
   });

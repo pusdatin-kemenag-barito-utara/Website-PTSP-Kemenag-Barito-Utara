@@ -48,33 +48,33 @@ export function LayananTable({
   category?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden text-sm">
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden text-xs">
       <div className="overflow-x-auto">
         <div className="min-w-[800px]">
           {/* HEADER ROW */}
-          <div className="flex items-center border-b border-slate-200/60 bg-slate-50/50 px-5 py-3.5">
+          <div className="flex items-center border-b border-slate-200/60 bg-slate-50/50 px-4 py-2.5">
             {isSuperAdmin && (
-              <div className="w-16 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+              <div className="w-14 shrink-0 text-center text-[10px] font-black uppercase tracking-wider text-slate-400">
                 Urutan
               </div>
             )}
-            <div className="flex-1 text-left text-xs font-black uppercase tracking-wider text-slate-400 pl-4">
+            <div className="flex-1 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 pl-3">
               Nama Layanan & Slug
             </div>
             {showBidangColumn && (
-              <div className="w-44 shrink-0 text-left text-xs font-black uppercase tracking-wider text-slate-400">
+              <div className="w-40 shrink-0 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">
                 Bidang Pengelola
               </div>
             )}
             {category !== "asn" && (
-              <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+              <div className="w-24 shrink-0 text-center text-[10px] font-black uppercase tracking-wider text-slate-400">
                 Jumlah Item
               </div>
             )}
-            <div className="w-28 shrink-0 text-center text-xs font-black uppercase tracking-wider text-slate-400">
+            <div className="w-24 shrink-0 text-center text-[10px] font-black uppercase tracking-wider text-slate-400">
               Status
             </div>
-            <div className="w-32 shrink-0 text-right text-xs font-black uppercase tracking-wider text-slate-400 pr-4">
+            <div className="w-28 shrink-0 text-right text-[10px] font-black uppercase tracking-wider text-slate-400 pr-3">
               Aksi
             </div>
           </div>
@@ -151,76 +151,76 @@ function ServiceRow({
       value={service}
       dragListener={false}
       dragControls={dragControls}
-      className="flex items-center px-5 py-4 group transition-colors duration-150 hover:bg-slate-50/50 bg-white relative select-none"
+      className="flex items-center px-4 py-2.5 group transition-colors duration-150 hover:bg-slate-50/50 bg-white relative select-none"
     >
       {isSuperAdmin && (
-        <div className="w-16 shrink-0 flex items-center justify-center">
+        <div className="w-14 shrink-0 flex items-center justify-center">
           <div
             onPointerDown={(e) => dragControls.start(e)}
-            className="flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-emerald-500 transition-colors p-2"
+            className="flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-emerald-500 transition-colors p-1"
           >
-            <GripVertical className="h-5 w-5 pointer-events-none" />
+            <GripVertical className="h-4 w-4 pointer-events-none" />
           </div>
         </div>
       )}
-      <div className="flex-1 flex flex-col gap-1 pl-4">
-        <span className="font-bold text-slate-900">
+      <div className="flex-1 flex flex-col gap-0.5 pl-3">
+        <span className="font-bold text-slate-900 text-xs">
           {service.name}
         </span>
-        <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1">
-          <div className="w-3 border-t border-slate-300" />
+        <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+          <div className="w-2.5 border-t border-slate-300" />
           {service.slug}
         </span>
       </div>
       {showBidangColumn && (
-        <div className="w-44 shrink-0 flex items-center">
+        <div className="w-40 shrink-0 flex items-center">
           <BidangBadge roleOwner={roleOwner} />
         </div>
       )}
       {category !== "asn" && (
-        <div className="w-28 shrink-0 flex items-center justify-center">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+        <div className="w-24 shrink-0 flex items-center justify-center">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
             {itemCounts} Layanan
           </span>
         </div>
       )}
-      <div className="w-28 shrink-0 flex items-center justify-center">
+      <div className="w-24 shrink-0 flex items-center justify-center">
         <span
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold ${
             isActive
               ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/60"
               : "bg-rose-50 text-rose-700 ring-1 ring-rose-200/60"
           }`}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-rose-500"}`}
+            className={`h-1 w-1 rounded-full ${isActive ? "bg-emerald-500" : "bg-rose-500"}`}
           />
           {isActive ? "AKTIF" : "NONAKTIF"}
         </span>
       </div>
-      <div className="w-32 shrink-0 flex justify-end items-center gap-1.5 pr-4">
+      <div className="w-28 shrink-0 flex justify-end items-center gap-1 pr-3">
         {service.id && category !== "asn" ? (
           <Link
             href={`/admin/layanan/${service.id}`}
             title="Kelola Sub-Layanan"
-            className="p-2 rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-200/80 transition-all duration-200 shadow-2xs"
+            className="p-1.5 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-200/80 transition-all duration-200 shadow-2xs"
           >
-            <FolderOpen className="h-4 w-4" />
+            <FolderOpen className="h-3.5 w-3.5" />
           </Link>
         ) : null}
         <button
           onClick={() => onEdit(service)}
           title="Edit Layanan"
-          className="p-2 rounded-xl text-slate-600 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200/80 hover:border-emerald-200 transition-all duration-200 shadow-2xs"
+          className="p-1.5 rounded-lg text-slate-600 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200/80 hover:border-emerald-200 transition-all duration-200 shadow-2xs"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => onDelete(service)}
           title="Hapus Layanan"
-          className="p-2 rounded-xl text-rose-600 bg-rose-50/60 hover:bg-rose-600 hover:text-white border border-rose-200/60 hover:border-rose-600 transition-all duration-200 shadow-2xs"
+          className="p-1.5 rounded-lg text-rose-600 bg-rose-50/60 hover:bg-rose-600 hover:text-white border border-rose-200/60 hover:border-rose-600 transition-all duration-200 shadow-2xs"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
     </Reorder.Item>

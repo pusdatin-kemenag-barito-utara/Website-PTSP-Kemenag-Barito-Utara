@@ -53,9 +53,11 @@ export function UserTablePagination({
       </p>
       <div className="flex items-center gap-1">
         <button
+          type="button"
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page === 1}
-          className="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          title="Halaman Sebelumnya"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -64,7 +66,7 @@ export function UserTablePagination({
             return (
               <div
                 key={`ellipsis-${i}`}
-                className="flex h-7 min-w-[28px] items-center justify-center text-slate-400"
+                className="flex h-8 min-w-[32px] items-center justify-center text-slate-400"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </div>
@@ -72,14 +74,16 @@ export function UserTablePagination({
           }
 
           const pageNum = p as number;
+          const isActive = pageNum === page;
           return (
             <button
               key={pageNum}
+              type="button"
               onClick={() => onPageChange(pageNum)}
-              className={`min-w-[28px] h-7 rounded-lg text-[11px] font-bold transition-all duration-200 ${
-                pageNum === page
-                  ? "bg-gradient-to-r from-[#059669] to-[#047857] text-white shadow-sm shadow-emerald-500/20"
-                  : "text-slate-600 hover:bg-slate-200/60"
+              className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                isActive
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs"
+                  : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
               }`}
             >
               {pageNum}
@@ -87,9 +91,11 @@ export function UserTablePagination({
           );
         })}
         <button
+          type="button"
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page === totalPages}
-          className="p-1.5 rounded-lg hover:bg-slate-200/60 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          title="Halaman Selanjutnya"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

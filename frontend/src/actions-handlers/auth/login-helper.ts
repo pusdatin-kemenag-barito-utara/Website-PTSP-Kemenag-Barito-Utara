@@ -126,3 +126,68 @@ export async function handlePegawaiLoginAction(nip: string, password?: string, t
     return { error: "Sistem gagal melakukan pendaftaran otomatis." };
   }
 }
+
+export async function loginViaGolangAction(
+  params: {
+    identifier: string;
+    password: string;
+    mode: "petugas" | "pegawai" | "pemohon";
+    rememberMe?: boolean;
+  },
+  injectedCtx?: any,
+) {
+  const { identifier, password, mode, rememberMe } = params;
+  if (!identifier || !password) {
+    return { success: false, error: "Identitas dan password wajib diisi." };
+  }
+
+  try {
+    const { tryGetRequestContext } = await import("@/lib/request-context");
+    const res = await fetchAPI<{
+      success: boolean;
+      token?: string;
+      user?: any;
+      error?: string;
+    }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        identifier: identifier.trim(),
+        password,
+        mode,
+        remember_me: !!rememberMe,
+      }),
+    });
+
+    if (!res || !res.success || !res.token) {
+      return {
+        success: false,
+        error: res?.error || "Gagal masuk. Silakan periksa kredensial Anda.",
+      };
+    }
+
+    // Set cookie ptsp-auth di sesi HTTP response Astro
+    const ctx = injectedCtx?.cookies ? injectedCtx : tryGetRequestContext();
+    if (ctx?.cookies) {
+      const maxAge = rememberMe ? 30 * 24 * 3600 : 7 * 24 * 3600;
+      ctx.cookies.set("ptsp-auth", res.token, {
+        path: "/",
+        maxAge: maxAge,
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+    }
+
+    return {
+      success: true,
+      token: res.token,
+      user: res.user,
+    };
+  } catch (err: any) {
+    console.error("loginViaGolangAction error:", err);
+    return {
+      success: false,
+      error: err.message || "Terjadi kendala pada server autentikasi.",
+    };
+  }
+}

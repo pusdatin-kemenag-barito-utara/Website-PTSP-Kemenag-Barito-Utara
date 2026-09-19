@@ -30,6 +30,7 @@ export function NewRequestForm({
   const [serviceItemId, setServiceItemId] = useState<string>("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState<string>("");
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [requirementFiles, setRequirementFiles] = useState<Record<string, File>>({});
 
@@ -78,7 +79,7 @@ export function NewRequestForm({
 
     if (missingDocs.length > 0) {
       toast.error("Dokumen Belum Lengkap", {
-        description: `Silakan unggah dokumen wajib: ${missingDocs.map((m: any) => m.documentName).join(", ")}.`,
+        description: `Silakan unggah dokumen wajib: ${missingDocs.map((m: any) => m.name || m.documentName || m.document_name || "Dokumen Persyaratan").join(", ")}.`,
       });
       return;
     }
@@ -90,6 +91,7 @@ export function NewRequestForm({
 
     setError("");
     setLoading(true);
+    setLoadingText("Menyimpan Data Pengajuan...");
 
     const formData = new FormData(event.currentTarget);
     Object.entries(requirementFiles).forEach(([id, file]) => {
@@ -97,17 +99,34 @@ export function NewRequestForm({
     });
 
     try {
-      const userId = await getSessionUserId();
+      const sessionUserId = await getSessionUserId();
+      const userId = sessionUserId || profile?.id || "";
       if (!userId) {
         setLoading(false);
-        setError("Silakan login terlebih dahulu untuk mengajukan permohonan.");
-        toast.error("Belum Login", {
-          description: "Silakan login terlebih dahulu untuk mengajukan permohonan.",
+        setError("Sesi akun tidak ditemukan. Silakan refresh halaman atau login ulang.");
+        toast.error("Belum Terautentikasi", {
+          description: "Sesi login tidak terdeteksi. Harap login terlebih dahulu.",
         });
         return;
       }
 
-      const answers: { fieldName: string; fieldValue: string }[] = [];
+      // Map field IDs to field labels/names
+      const formFields = (selectedItem?.formFields || selectedItem?.form_fields || selectedItem?.serviceFormFields) ?? [];
+      const fieldMap = new Map<string, any>();
+      formFields.forEach((f: any) => {
+        fieldMap.set(String(f.id), f);
+        if (f.name) fieldMap.set(String(f.name), f);
+      });
+
+      const answers: {
+        field_id?: number;
+        fieldId?: number;
+        field_name: string;
+        fieldName: string;
+        field_value: string;
+        fieldValue: string;
+      }[] = [];
+
       formData.forEach((value, key) => {
         if (
           key === "serviceId" ||
@@ -118,7 +137,20 @@ export function NewRequestForm({
         )
           return;
         if (typeof value !== "string") return;
-        answers.push({ fieldName: key.startsWith("answer_") ? key.replace("answer_", "") : key, fieldValue: value });
+
+        const rawKey = key.startsWith("answer_") ? key.replace("answer_", "") : key;
+        const matchedField = fieldMap.get(rawKey);
+        const resolvedName = matchedField ? (matchedField.label || matchedField.name || rawKey) : rawKey;
+        const resolvedId = matchedField?.id ? Number(matchedField.id) : (!isNaN(Number(rawKey)) ? Number(rawKey) : undefined);
+
+        answers.push({
+          field_id: resolvedId,
+          fieldId: resolvedId,
+          field_name: resolvedName,
+          fieldName: resolvedName,
+          field_value: value,
+          fieldValue: value,
+        });
       });
 
       const createRes = await fetch(`${getClientApiBase()}/requests`, {
@@ -132,38 +164,73 @@ export function NewRequestForm({
         }),
       });
       const result = await createRes.json().catch(() => ({}));
-      setLoading(false);
 
       if (!createRes.ok || !result.id) {
+        setLoading(false);
         setError(result.error || "Gagal membuat pengajuan.");
-        toast.error("Gagal", { description: result.error || "Terjadi kesalahan saat membuat pengajuan." });
+        toast.error("Gagal Mengirim Pengajuan", { description: result.error || "Terjadi kesalahan saat memproses data." });
         return;
       }
 
-      // Upload dokumen persyaratan setelah permohonan berhasil dibuat
+      // Upload dokumen persyaratan secara paralel (Concurrency)
       const token = getClientAuthToken();
-      const uploads = Object.entries(requirementFiles).map(async ([reqId, file]) => {
-        const uploadForm = new FormData();
-        uploadForm.append("document", file, file.name);
-        uploadForm.append("requirementId", reqId);
-        uploadForm.append("category", "umum");
-        await fetch(`${getClientApiBase()}/admin/requests/${result.id}/documents`, {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: uploadForm,
-        });
-      });
-      await Promise.all(uploads);
+      const fileEntries = Object.entries(requirementFiles);
+      const uploadErrors: string[] = [];
 
-      toast.success("Pengajuan Berhasil Dikirim!", {
-        description: `Nomor Tiket: ${result.requestNumber || result.id}\nPengajuan Anda sedang diproses oleh petugas.`,
-        duration: 3500,
-      });
-      router.push(`${redirectPathPrefix}/${result.id}`);
-      router.refresh();
-    } catch (err) {
+      if (fileEntries.length > 0) {
+        setLoadingText(`Mengunggah ${fileEntries.length} Dokumen Persyaratan...`);
+        const uploadPromises = fileEntries.map(async ([reqId, file]) => {
+          try {
+            const uploadForm = new FormData();
+            uploadForm.append("document", file, file.name);
+            uploadForm.append("requirementId", reqId);
+            uploadForm.append("category", "umum");
+            const uploadRes = await fetch(`${getClientApiBase()}/requests/${result.id}/documents`, {
+              method: "POST",
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+              body: uploadForm,
+            });
+            if (!uploadRes.ok) {
+              const errData = await uploadRes.json().catch(() => ({}));
+              return { success: false, error: errData.error || `Gagal mengunggah ${file.name}` };
+            }
+            return { success: true };
+          } catch (e: any) {
+            return { success: false, error: e.message || `Gagal mengunggah ${file.name}` };
+          }
+        });
+
+        const uploadResults = await Promise.all(uploadPromises);
+        for (const r of uploadResults) {
+          if (!r.success && r.error) {
+            uploadErrors.push(r.error);
+          }
+        }
+      }
+
+      setLoadingText("Pengajuan Berhasil Dikirim, Mengalihkan...");
+
+      if (uploadErrors.length > 0) {
+        toast.warning("Pengajuan Terkirim Sebagian", {
+          description: `Nomor Tiket: ${result.requestNumber || result.id}. Sebagian berkas gagal tersimpan: ${uploadErrors.join(", ")}`,
+          duration: 5000,
+        });
+      } else {
+        toast.success("Pengajuan Berhasil Dikirim!", {
+          description: `Nomor Tiket: ${result.requestNumber || result.id}. Semua data dan berkas persyaratan telah tersimpan di sistem.`,
+          duration: 5000,
+        });
+      }
+
+      // Jeda 800ms agar toast terlihat jelas oleh pengguna sebelum berpindah halaman
+      setTimeout(() => {
+        window.location.href = `${redirectPathPrefix}/${result.id}`;
+      }, 800);
+    } catch (err: any) {
       setLoading(false);
-      setError("Terjadi kesalahan koneksi.");
+      const msg = err?.message || "Terjadi kesalahan koneksi.";
+      setError(msg);
+      toast.error("Gagal Mengirim Pengajuan", { description: msg });
     }
   };
 
@@ -172,7 +239,7 @@ export function NewRequestForm({
   }
 
   return (
-    <form className="space-y-5 sm:space-y-6" onSubmit={onSubmit}>
+    <form className="space-y-5 sm:space-y-6 w-full min-w-0 overflow-hidden" onSubmit={onSubmit}>
       <RealtimeSync />
 
       <input type="hidden" name="serviceId" value={serviceId} />
@@ -187,7 +254,7 @@ export function NewRequestForm({
       />
 
       {serviceId && serviceItemId && selectedItem ? (
-        <div className="space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full min-w-0 overflow-hidden">
           {/* Service Info Badge & Description */}
           {(selectedItem.description || selectedItem.estimatedTime) && (
             <div className="flex flex-col items-center justify-center text-center gap-2.5 rounded-2xl border border-emerald-100 dark:border-emerald-950/60 bg-emerald-50/40 dark:bg-emerald-950/30 p-4 shadow-2xs transition-colors duration-300">
@@ -227,6 +294,7 @@ export function NewRequestForm({
             isConfirmed={isConfirmed}
             onConfirmChange={setIsConfirmed}
             loading={loading}
+            loadingText={loadingText}
             error={error}
           />
         </div>

@@ -20,6 +20,10 @@ export default defineConfig({
   security: {
     checkOrigin: true,
   },
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: "viewport",
+  },
   integrations: [
     react(),
     sitemap(),

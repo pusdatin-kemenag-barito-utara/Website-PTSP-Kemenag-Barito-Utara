@@ -121,19 +121,24 @@ export function PersyaratanClient({
 
   const handleDelete = async () => {
     if (!deletingRequirement) return;
+    const target = deletingRequirement;
+    setDeletingRequirement(null);
+    const toastId = toast.loading(`Sedang menghapus persyaratan "${target.documentName}"...`);
+
     const data = new FormData();
-    data.append("id", deletingRequirement.id.toString());
-    startTransition(async () => {
-      try {
-        await deleteRequirementAction(data);
-        toast.success("Persyaratan Dihapus", {
-          description: "Persyaratan berhasil dihapus secara permanen.",
-        });
-        setDeletingRequirement(null);
-      } catch (error) {
-        toast.error("Gagal menghapus persyaratan.");
-      }
-    });
+    data.append("id", target.id.toString());
+    try {
+      await deleteRequirementAction(data);
+      toast.dismiss(toastId);
+      toast.success("Persyaratan Dihapus", {
+        description: "Persyaratan berhasil dihapus secara permanen.",
+      });
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      toast.error("Gagal menghapus persyaratan", {
+        description: error?.message || "Terjadi kesalahan",
+      });
+    }
   };
 
   const handleExtensionChange = (ext: string, checked: boolean) => {

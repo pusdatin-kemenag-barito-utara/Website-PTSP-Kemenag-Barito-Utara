@@ -1,10 +1,29 @@
 ---
 import Base from "@/layouts/Base.astro";
 import { LoginMasyarakatView } from "@/views/login-masyarakat";
+import { getCurrentUser, getCurrentProfile } from "@/lib/auth";
+import { isAdminRole } from "@/lib/constants";
 
 const q = Astro.url.searchParams;
-const callbackUrl = q.get("callbackUrl") ?? "/masyarakat";
+const callbackUrl = q.get("callbackUrl");
 const error = q.get("error") ?? "";
+
+// Jika pengguna sudah login, langsung arahkan ke dashboard
+const user = await getCurrentUser(Astro);
+if (user) {
+  if (callbackUrl) {
+    return Astro.redirect(callbackUrl);
+  }
+  const profile = await getCurrentProfile(Astro);
+  const role = profile?.role || user.user_metadata?.role;
+  if (isAdminRole(role) || role === "super_admin") {
+    return Astro.redirect("/admin");
+  } else if (role === "pegawai") {
+    return Astro.redirect("/pegawai");
+  } else {
+    return Astro.redirect("/masyarakat");
+  }
+}
 ---
 
 <Base
@@ -13,7 +32,7 @@ const error = q.get("error") ?? "";
 >
   <LoginMasyarakatView
     client:load
-    callbackUrl={callbackUrl}
+    callbackUrl={callbackUrl ?? "/masyarakat"}
     initialError={error}
   />
 </Base>

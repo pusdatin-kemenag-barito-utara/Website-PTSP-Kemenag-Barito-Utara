@@ -123,14 +123,30 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function SiteHeaderClient({
   profile,
+  pathname: propPathname,
 }: {
   profile: HeaderProfile | null;
+  pathname?: string;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const pathname = usePathname();
+  const routerPathname = usePathname();
+  const rawPath = propPathname || routerPathname || "";
+  const normalizedPath = rawPath.replace(/\/$/, "");
+  const isHome = normalizedPath === "" || normalizedPath === "/";
+  const pathname = rawPath;
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -195,15 +211,26 @@ export function SiteHeaderClient({
 
   return (
     <>
-      <header className="sticky top-0 left-0 right-0 z-[100] w-full transition-colors duration-300 shadow-sm bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
-        {/* Modern Gradient Line Divider */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 dark:via-emerald-400/50 to-transparent" />
+      <header
+        className={`w-full z-[100] transition-all duration-300 ${
+          isHome
+            ? `fixed top-0 left-0 right-0 ${
+                isScrolled
+                  ? "bg-slate-950/85 backdrop-blur-xl border-b border-emerald-500/20 shadow-lg"
+                  : "bg-transparent border-b border-transparent shadow-none"
+              }`
+            : "sticky top-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-b border-emerald-500/20 shadow-md"
+        }`}
+      >
+        {(isScrolled || !isHome) && (
+          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+        )}
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16">
           {/* Top Header Bar */}
           <div className="flex items-center justify-between py-2.5 lg:py-4">
             {/* Logo */}
             <Link href="/" className="flex min-w-0 items-center gap-3 group">
-              <span className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 p-2 ring-1 ring-emerald-100 transition-all duration-300 group-hover:shadow-md">
+              <span className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 p-2 ring-1 ring-white/20 transition-all duration-300 group-hover:bg-white/15">
                 <Image
                   src="/atak-portal.png"
                   alt="Logo Kemenag"
@@ -215,7 +242,7 @@ export function SiteHeaderClient({
                 />
               </span>
               <div className="min-w-0 flex flex-col justify-center">
-                <p className="text-xs sm:text-[13px] lg:text-sm font-black tracking-wide text-emerald-900 dark:text-white flex items-center gap-1">
+                <p className="text-xs sm:text-[13px] lg:text-sm font-black tracking-wide text-white flex items-center gap-1">
                   PTSP Si{" "}
                   <Image
                     src="/atak.png"
@@ -226,16 +253,16 @@ export function SiteHeaderClient({
                     style={{ height: "1.05em", width: "auto" }}
                   />
                 </p>
-                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-emerald-700 dark:text-emerald-400 leading-tight">
-                  <div className="block sm:hidden text-[9px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-tight">
+                <div className="mt-0.5 text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-emerald-300/90 leading-tight">
+                  <div className="block sm:hidden text-[9px] font-black text-emerald-300 uppercase tracking-tight">
                     KEMENAG KABUPATEN BARITO UTARA
                   </div>
                   <div className="hidden sm:block truncate">
-                    <span className="text-amber-500 font-black">S</span>istem{" "}
-                    <span className="text-amber-500 font-black">I</span>nformasi{" "}
-                    <span className="text-amber-500 font-black">A</span>dministrasi{" "}
-                    <span className="text-amber-500 font-black">T</span>erpadu Layanan{" "}
-                    <span className="text-amber-500 font-black">K</span>eagamaan
+                    <span className="text-amber-400 font-black">S</span>istem{" "}
+                    <span className="text-amber-400 font-black">I</span>nformasi{" "}
+                    <span className="text-amber-400 font-black">A</span>dministrasi{" "}
+                    <span className="text-amber-400 font-black">T</span>erpadu Layanan{" "}
+                    <span className="text-amber-400 font-black">K</span>eagamaan
                   </div>
                 </div>
               </div>
@@ -251,17 +278,17 @@ export function SiteHeaderClient({
                   width={96}
                   height={26}
                   style={{ width: "96px", height: "26px" }}
-                  className="h-6 w-auto object-contain drop-shadow-sm -translate-y-0.5"
+                  className="h-6 w-auto object-contain drop-shadow-md -translate-y-0.5"
                   unoptimized
                 />
-                <div className="hidden 2xl:block text-[10.5px] font-bold leading-tight text-emerald-800 dark:text-emerald-300">
-                  <span className="text-amber-500 font-black">H</span>armonis,{" "}
-                  <span className="text-amber-500 font-black">A</span>manah,{" "}
-                  <span className="text-amber-500 font-black">P</span>rofesional,{" "}
-                  <span className="text-amber-500 font-black">A</span>kuntabel,{" "}
-                  <span className="text-amber-500 font-black">K</span>reatif,{" "}
-                  <span className="text-amber-500 font-black">A</span>dil dan{" "}
-                  <span className="text-amber-500 font-black">T</span>ransparan
+                <div className="hidden 2xl:block text-[10.5px] font-bold leading-tight text-white/90">
+                  <span className="text-amber-400 font-black">H</span>armonis,{" "}
+                  <span className="text-amber-400 font-black">A</span>manah,{" "}
+                  <span className="text-amber-400 font-black">P</span>rofesional,{" "}
+                  <span className="text-amber-400 font-black">A</span>kuntabel,{" "}
+                  <span className="text-amber-400 font-black">K</span>reatif,{" "}
+                  <span className="text-amber-400 font-black">A</span>dil dan{" "}
+                  <span className="text-amber-400 font-black">T</span>ransparan
                 </div>
               </div>
 
@@ -274,19 +301,19 @@ export function SiteHeaderClient({
               <div className="hidden lg:flex items-center gap-3">
                 {profile ? (
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 rounded-full px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700">
+                    <div className="flex items-center gap-2 rounded-full px-4 py-2 bg-white/10 border border-white/20 text-white">
                       {isAdmin ? (
-                        <Shield className="h-4 w-4 text-emerald-600" />
+                        <Shield className="h-4 w-4 text-emerald-400" />
                       ) : isPegawai ? (
-                        <Briefcase className="h-4 w-4 text-emerald-600" />
+                        <Briefcase className="h-4 w-4 text-emerald-400" />
                       ) : (
-                        <UserCircle2 className="h-4 w-4 text-slate-500" />
+                        <UserCircle2 className="h-4 w-4 text-slate-300" />
                       )}
                       <span className="text-xs font-bold">{badgeLabel}</span>
                     </div>
                     <Link
                       href={dashboardHref}
-                      className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-emerald-700 to-emerald-600 px-6 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] text-white transition-all hover:shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] active:scale-95"
+                      className="group relative flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-2.5 text-[11px] font-black uppercase tracking-[0.1em] text-white transition-all hover:shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] active:scale-95"
                     >
                       <span className="relative z-10">{dashboardLabel}</span>
                       <div className="absolute inset-0 bg-white/20 transition-transform duration-500 translate-y-full group-hover:translate-y-0" />
@@ -305,12 +332,12 @@ export function SiteHeaderClient({
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="relative z-[101] flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shadow-sm transition active:scale-95 lg:hidden"
+                className="relative z-[101] flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white shadow-sm transition active:scale-95 lg:hidden"
               >
                 {mobileOpen ? (
-                  <X className="h-5 w-5 text-emerald-700 dark:text-emerald-500" />
+                  <X className="h-5 w-5 text-white" />
                 ) : (
-                  <Menu className="h-5 w-5 text-emerald-700 dark:text-emerald-500" />
+                  <Menu className="h-5 w-5 text-white" />
                 )}
               </button>
             </div>
@@ -340,20 +367,20 @@ export function SiteHeaderClient({
                       {hasChildren ? (
                         <div
                           onClick={() => setOpenDropdown(isOpen ? null : item.label)}
-                          className={`group inline-flex cursor-pointer flex-shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-black uppercase tracking-tight transition-all duration-300 ${
+                          className={`group inline-flex cursor-pointer flex-shrink-0 items-center gap-1.5 px-3 py-2 text-[13px] font-bold uppercase tracking-tight transition-colors duration-200 ${
                             active || isOpen
-                              ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
-                              : "text-slate-900 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10"
+                              ? "text-emerald-400"
+                              : "text-white/90 hover:text-emerald-400"
                           }`}
                         >
                           {item.label}
                           <ChevronDown
-                            className={`h-3 w-3 transition-transform duration-500 ${isOpen ? "rotate-180 text-emerald-500" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500"}`}
+                            className={`h-3 w-3 transition-transform duration-300 ${isOpen ? "rotate-180 text-emerald-400" : "text-white/70 group-hover:text-emerald-400"}`}
                           />
 
                           {/* Active Indicator Underline */}
                           {active && (
-                            <div className="absolute bottom-0 left-4 right-8 h-0.5 rounded-full bg-emerald-500/50" />
+                            <div className="absolute -bottom-0.5 left-3 right-6 h-[2.5px] rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
                           )}
                         </div>
                       ) : (
@@ -361,15 +388,15 @@ export function SiteHeaderClient({
                           href={item.href}
                           target={item.external ? "_blank" : undefined}
                           rel={item.external ? "noopener noreferrer" : undefined}
-                          className={`relative inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-[12.5px] font-black uppercase tracking-tight transition-all duration-300 ${
+                          className={`relative inline-flex flex-shrink-0 items-center gap-1.5 px-3 py-2 text-[13px] font-bold uppercase tracking-tight transition-colors duration-200 ${
                             active
-                              ? "text-emerald-700 dark:text-emerald-400"
-                              : "text-slate-900 dark:text-slate-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400"
+                              ? "text-emerald-400"
+                              : "text-white/90 hover:text-emerald-400"
                           }`}
                         >
                           {item.label}
                           {active && (
-                            <div className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-emerald-500" />
+                            <div className="absolute -bottom-0.5 left-3 right-3 h-[2.5px] rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
                           )}
                         </Link>
                       )}
@@ -388,8 +415,8 @@ export function SiteHeaderClient({
                             }}
                             className="absolute left-0 top-full z-50 pt-2 min-w-[240px]"
                           >
-                            <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
-                              <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-500/5 blur-2xl" />
+                            <div className="relative overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+                              <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl" />
                               <ul className="relative z-10 space-y-0.5">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
@@ -400,13 +427,13 @@ export function SiteHeaderClient({
                                         target={(child as any).external ? "_blank" : undefined}
                                         rel={(child as any).external ? "noopener noreferrer" : undefined}
                                         onClick={() => setOpenDropdown(null)}
-                                        className="group/item flex items-center justify-between rounded-xl px-4 py-3 text-[11.5px] font-black uppercase tracking-widest text-slate-900 dark:text-slate-200 transition-all hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white"
+                                        className="group/item flex items-center justify-between rounded-xl px-4 py-3 text-[11.5px] font-black uppercase tracking-widest text-slate-200 transition-all hover:bg-emerald-600 hover:text-white"
                                       >
                                         <div className="flex items-center gap-2.5">
-                                          <ChildIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover/item:text-white transition-colors" />
+                                          <ChildIcon className="h-4 w-4 text-emerald-400 group-hover/item:text-white transition-colors" />
                                           <span>{child.label}</span>
                                         </div>
-                                        <ChevronDown className="h-3 w-3 -rotate-90 opacity-0 transition-all -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0" />
+                                        <ChevronDown className="h-3 w-3 -rotate-90 opacity-0 transition-all -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 text-white" />
                                       </Link>
                                     </li>
                                   );
@@ -424,7 +451,7 @@ export function SiteHeaderClient({
               {/* Global Search Icon UI placeholder */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="absolute right-0 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mr-2"
+                className="absolute right-0 flex h-9 w-9 items-center justify-center text-white/80 hover:text-emerald-400 transition-colors mr-2 cursor-pointer"
               >
                 <Search className="h-4.5 w-4.5" />
               </button>

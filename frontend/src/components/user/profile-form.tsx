@@ -25,16 +25,30 @@ export function ProfileForm({ profile }: { profile: any }) {
     setLoading(true);
     setError("");
 
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     try {
       const result = await updateProfileAction(formData);
       if (result.success) {
-        toast.success(result.message || "Profil berhasil diperbarui");
+        toast.success("Profil Berhasil Diperbarui!", {
+          description: result.message || "Perubahan profil Anda telah tersimpan dan disinkronkan ke sistem.",
+        });
+        // Kosongkan field password setelah disimpan agar aman dan bersih
+        const passInput = form.elements.namedItem("password") as HTMLInputElement;
+        if (passInput) passInput.value = "";
       } else {
-        setError(result.error || "Gagal memperbarui profil");
+        const msg = result.error || "Gagal memperbarui profil";
+        setError(msg);
+        toast.error("Gagal Memperbarui Profil", {
+          description: msg,
+        });
       }
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      const msg = err.message || "Terjadi kesalahan sistem";
+      setError(msg);
+      toast.error("Kesalahan Sistem", {
+        description: msg,
+      });
     } finally {
       setLoading(false);
     }
@@ -60,7 +74,7 @@ export function ProfileForm({ profile }: { profile: any }) {
               <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 dark:text-slate-500 group-focus-within:text-[#059669] dark:group-focus-within:text-emerald-400 transition-colors z-10" />
               <Input
                 name="full_name"
-                defaultValue={profile.fullName || ""}
+                defaultValue={profile.fullName || profile.name || ""}
                 required
                 className="h-12 pl-11 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:border-[#059669] focus:ring-[#059669]/10 font-semibold text-sm transition-all"
                 placeholder="Masukkan nama lengkap sesuai KTP"

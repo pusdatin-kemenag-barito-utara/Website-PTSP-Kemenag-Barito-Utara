@@ -29,6 +29,7 @@ interface DraftCutiDocumentProps {
     hakBerjalan?: number;
     jumlahCuti?: number;
     totalDiambil?: number;
+    cutiCltn?: number;
   };
   pejabatList?: { jabatan: string; nama: string; nip: string }[];
 }
@@ -398,7 +399,9 @@ export function DraftCutiDocument({ data, pejabatList = [] }: DraftCutiDocumentP
             <td className="border border-black p-1 text-[13px]">
               6. CUTI DI LUAR TANGGUNGAN NEGARA
             </td>
-            <td className="border border-black p-1 text-center">-</td>
+            <td className="border border-black p-1 text-center">
+              {data.cutiCltn ? `${data.cutiCltn} Bln` : "-"}
+            </td>
           </tr>
         </tbody>
       </table>

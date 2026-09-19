@@ -28,6 +28,7 @@ export function runWithContext<T>(
   ctx: RequestContext,
   fn: () => Promise<T>,
 ): Promise<T> {
+  (globalThis as any).__ptsp_current_ctx = ctx;
   if (storage) {
     return storage.run(ctx, fn);
   }
@@ -35,7 +36,7 @@ export function runWithContext<T>(
 }
 
 export function getRequestContext(): RequestContext {
-  const ctx = storage ? storage.getStore() : null;
+  const ctx = (storage ? storage.getStore() : null) || (globalThis as any).__ptsp_current_ctx;
   if (!ctx) {
     throw new Error("RequestContext tidak tersedia di luar request server");
   }
@@ -43,13 +44,9 @@ export function getRequestContext(): RequestContext {
 }
 
 export function tryGetRequestContext(): RequestContext | null {
-  if (!storage) {
-    try {
-      const fs = eval("require")("fs");
-      fs.appendFileSync("debug_auth.txt", "[DEBUG auth] storage is NULL in tryGetRequestContext!\n");
-    } catch (e) {}
-  }
-  return storage ? storage.getStore() ?? null : null;
+  const store = storage ? storage.getStore() : null;
+  if (store) return store;
+  return (globalThis as any).__ptsp_current_ctx ?? null;
 }
 
 const requestMemo = new WeakMap<RequestContext, Map<string, unknown>>();

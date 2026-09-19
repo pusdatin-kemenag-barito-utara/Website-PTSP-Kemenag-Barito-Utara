@@ -8,22 +8,8 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 import { registerPetugasAction } from "@/lib/actions/auth/register-petugas";
-import { UNIT_KERJA_OPTIONS } from "@/lib/constants";
 import { ModernSelect } from "@/components/ui/modern-select";
-
-const PETUGAS_ROLES = [
-  { value: "admin_ptsp", label: "Admin PTSP (Umum)" },
-  { value: "admin_sub_bagian_tata_usaha", label: "Admin Sub Bagian Tata Usaha" },
-  { value: "admin_pendidikan_madrasah", label: "Admin Pendidikan Madrasah" },
-  { value: "admin_pendidikan_agama_islam", label: "Admin Pendidikan Agama Islam" },
-  { value: "admin_pendidikan_diniyah_pondok_pesantren", label: "Admin Pendidikan Diniyah & Pondok Pesantren" },
-  { value: "admin_bimbingan_masyarakat_islam", label: "Admin Bimbingan Masyarakat Islam" },
-  { value: "admin_bimbingan_masyarakat_kristen_katolik", label: "Admin Bimbingan Masyarakat Kristen & Katolik" },
-  { value: "admin_penyelenggara_zakat_wakaf", label: "Admin Penyelenggara Zakat & Wakaf" },
-  { value: "admin_penyelenggara_hindu", label: "Admin Penyelenggara Hindu" },
-  { value: "kasubag_tu", label: "Kasubag TU" },
-  { value: "kepala_kantor", label: "Kepala Kantor" },
-];
+import { fetchAPI } from "@/lib/api";
 
 export function RegisterPetugasForm() {
   const router = useRouter();
@@ -34,9 +20,28 @@ export function RegisterPetugasForm() {
   const turnstileRef = useRef<TurnstileRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [unitKerja, setUnitKerja] = useState("");
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState<string[]>([]);
+  const [petugasRoles, setPetugasRoles] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
     setMounted(true);
+    fetchAPI<any>("/master-options")
+      .then((res) => {
+        if (res?.success && Array.isArray(res?.data)) {
+          const uks = res.data
+            .filter((o: any) => o.category === "unit_kerja" && o.is_active !== false)
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((o: any) => o.label || o.value);
+          setUnitKerjaOptions(uks);
+
+          const roles = res.data
+            .filter((o: any) => o.category === "role_admin" && o.is_active !== false && o.value !== "super_admin")
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((o: any) => ({ value: o.value, label: o.label }));
+          setPetugasRoles(roles);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -47,8 +52,11 @@ export function RegisterPetugasForm() {
     if (!turnstileToken) {
       setLoading(false);
       setError("Silakan selesaikan verifikasi keamanan.");
+      toast.error("Silakan selesaikan verifikasi keamanan.", { id: "register-petugas-toast" });
       return;
     }
+
+    toast.loading("Mendaftarkan akun petugas...", { id: "register-petugas-toast" });
 
     const formData = new FormData(event.currentTarget);
     formData.append("turnstile_token", turnstileToken);
@@ -59,10 +67,12 @@ export function RegisterPetugasForm() {
 
     if (result.error) {
       setError(result.error);
+      toast.error(result.error, { id: "register-petugas-toast" });
       return;
     }
 
     toast.success("Pendaftaran Berhasil!", {
+      id: "register-petugas-toast",
       description: "Akun Anda menunggu verifikasi dari Super Admin sebelum dapat digunakan.",
     });
 
@@ -103,7 +113,7 @@ export function RegisterPetugasForm() {
         <Field label="Unit Kerja" required>
           <ModernSelect
             name="unit_kerja"
-            options={UNIT_KERJA_OPTIONS}
+            options={unitKerjaOptions}
             value={unitKerja}
             onChange={setUnitKerja}
             placeholder="- Pilih Unit Kerja -"
@@ -113,8 +123,8 @@ export function RegisterPetugasForm() {
         </Field>
 
         <Field label="Role Petugas" required>
-          <Select name="role" required defaultValue="admin_ptsp">
-            {PETUGAS_ROLES.map((role) => (
+          <Select name="role" required defaultValue={petugasRoles[0]?.value || "admin_ptsp"}>
+            {petugasRoles.map((role) => (
               <option key={role.value} value={role.value}>
                 {role.label}
               </option>

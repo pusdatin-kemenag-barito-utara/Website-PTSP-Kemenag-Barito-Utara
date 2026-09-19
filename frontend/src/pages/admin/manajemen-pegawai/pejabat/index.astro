@@ -23,6 +23,7 @@ const initialData = res.success ? res.data ?? [] : [];
   description="Kelola data Atasan Langsung dan Pejabat Berwenang untuk formulir Cuti"
   profile={profile}
   allowedMenus={allowedMenus}
+  activeMenu="manajemen_pegawai"
 >
   <PejabatView client:load initialData={initialData} />
 </AdminShell>

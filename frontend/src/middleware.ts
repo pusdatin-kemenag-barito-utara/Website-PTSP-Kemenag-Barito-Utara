@@ -3,6 +3,7 @@ import { runWithContext } from "@/lib/request-context";
 import { updateSession } from "@/lib/supabase/middleware";
 import { RedirectSignal, NotFoundSignal } from "@/lib/next-compat/navigation";
 import { checkMaintenanceStatus } from "@/lib/maintenance";
+import { verifyNativeJWT } from "@/lib/jwt";
 
 function getIp(request: Request): string {
   return (
@@ -90,15 +91,58 @@ export const onRequest = defineMiddleware(async (context, next) => {
     isMaintenanceMode = await checkMaintenanceStatus();
   }
 
+  const isProtectedAdmin = path.startsWith("/admin");
+  const isProtectedPegawai = path.startsWith("/pegawai");
+  const isProtectedMasyarakat = path.startsWith("/masyarakat");
+
+  const activeAuthToken =
+    cookies.get("ptsp-auth")?.value ||
+    cookies.get("ptsp-auth-access-token")?.value;
+  if (activeAuthToken) {
+    (globalThis as any).__ptsp_current_token = activeAuthToken;
+  }
+
+  // Jika halaman terproteksi dan sesi auth tidak ada, langsung redirect ke halaman login
+  if (isProtectedAdmin || isProtectedPegawai || isProtectedMasyarakat) {
+    let authCookie = cookies.get("ptsp-auth")?.value;
+    if (!authCookie) {
+      const cookieHeader = request.headers.get("cookie") || "";
+      const match = cookieHeader.match(/ptsp-auth=([^;]+)/);
+      if (match) {
+        try {
+          authCookie = decodeURIComponent(match[1].trim());
+        } catch {
+          authCookie = match[1].trim();
+        }
+      }
+    }
+
+    const legacyCookie = cookies.get("ptsp-auth-access-token")?.value;
+    const claims = authCookie ? verifyNativeJWT(authCookie) : null;
+    if (!claims && !legacyCookie) {
+      if (isProtectedAdmin) {
+        return context.redirect("/login/petugas", 302);
+      } else if (isProtectedPegawai) {
+        return context.redirect("/login/pegawai", 302);
+      } else {
+        return context.redirect("/login/masyarakat", 302);
+      }
+    }
+  }
+
   try {
     return await runWithContext(
       { cookies, request, url, origin: url.origin, locals },
       async () => {
         if (!isPublicPage) {
-          try {
-            await updateSession();
-          } catch {
-            // Fallback: lanjutkan tanpa session refresh jika updateSession() throw
+          const authCookie = cookies.get("ptsp-auth")?.value;
+          const isNative = authCookie ? !!verifyNativeJWT(authCookie) : false;
+          if (!isNative) {
+            try {
+              await updateSession();
+            } catch {
+              // Fallback: lanjutkan tanpa session refresh jika updateSession() throw
+            }
           }
         }
 
@@ -111,6 +155,29 @@ export const onRequest = defineMiddleware(async (context, next) => {
         response.headers.set("X-Frame-Options", "SAMEORIGIN");
         response.headers.set("X-Content-Type-Options", "nosniff");
         response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+        // Cloudflare CDN & Browser Caching untuk Aset Statis & Media
+        if (isStaticOrAsset && !path.startsWith("/api")) {
+          if (path.startsWith("/_astro/") || path.includes(".woff2") || path.includes(".woff")) {
+            // Immutable hashed bundle / font: 1 tahun di Cloudflare Edge & Browser
+            response.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+            response.headers.set("CDN-Cache-Control", "public, max-age=31536000");
+            response.headers.set("Cloudflare-CDN-Cache-Control", "public, max-age=31536000");
+          } else if (/\.(png|jpg|jpeg|webp|svg|ico|json|txt|xml|pdf)$/i.test(path)) {
+            // Gambar, logo, favicon: 30 hari di Cloudflare Edge
+            response.headers.set("Cache-Control", "public, max-age=2592000, stale-while-revalidate=86400");
+            response.headers.set("CDN-Cache-Control", "public, max-age=2592000");
+            response.headers.set("Cloudflare-CDN-Cache-Control", "public, max-age=2592000");
+          }
+        }
+
+        // Anti-Back Cache Security: Jangan pernah simpan halaman terproteksi di browser cache (bfcache)
+        if (isProtectedAdmin || isProtectedPegawai || isProtectedMasyarakat) {
+          response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+          response.headers.set("Pragma", "no-cache");
+          response.headers.set("Expires", "0");
+        }
+
         return response;
       },
     );

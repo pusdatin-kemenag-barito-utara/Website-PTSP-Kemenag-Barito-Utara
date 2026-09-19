@@ -2,6 +2,8 @@
 import Base from "@/layouts/Base.astro";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { PageTransition } from "@/components/ui/page-transition";
+import { getCurrentProfile } from "@/lib/auth";
+import { isSuperAdmin, isAdminRole } from "@/lib/constants";
 
 interface Props {
   title: string;
@@ -11,14 +13,40 @@ interface Props {
 }
 
 const { title, description, mode = "user", userNip = "" } = Astro.props;
+
+let isAdmin = false;
+try {
+  const profile = await getCurrentProfile(Astro);
+  if (profile) {
+    isAdmin = isSuperAdmin(profile.email) || isAdminRole(profile.role);
+  }
+} catch {}
 ---
 
 <Base title={title} description={description}>
-  <div class="block md:flex md:flex-row min-h-screen bg-slate-50 dark:bg-slate-950">
-    <div class="w-full md:w-[260px] lg:w-[280px] shrink-0 sticky top-0 z-40 md:h-screen self-start">
-      <DashboardSidebar client:load mode={mode} userNip={userNip} />
+  {isAdmin && mode !== "admin" && (
+    <div class="fixed top-0 inset-x-0 z-[100] bg-gradient-to-r from-amber-600 via-amber-700 to-amber-600 text-white px-4 py-2 text-xs font-semibold shadow-md flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex h-2 w-2 rounded-full bg-white animate-pulse" />
+        <span>Mode Pratinjau Administrator &mdash; Menjelajahi {mode === "pegawai" ? "Portal Pegawai" : "Portal Pemohon Masyarakat"}.</span>
+      </div>
+      <a
+        href="/admin"
+        class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white font-bold backdrop-blur-xs transition-colors"
+      >
+        <span>Kembali ke Panel Admin</span>
+        <span aria-hidden="true">&rarr;</span>
+      </a>
     </div>
-    <main class="min-w-0 flex-1 w-full p-4 pt-[72px] sm:p-6 sm:pt-[80px] md:p-6 lg:p-8 overflow-x-hidden">
+  )}
+  <div class:list={["block md:flex md:flex-row min-h-screen bg-slate-50 dark:bg-slate-950", isAdmin && mode !== "admin" ? "pt-8" : ""]}>
+    <div class="w-full md:w-[260px] lg:w-[280px] shrink-0 sticky top-0 z-40 md:h-screen self-start" transition:persist="dashboard-sidebar">
+      <DashboardSidebar client:load mode={mode} userNip={userNip} isAdmin={isAdmin} />
+    </div>
+    <main class:list={[
+      "min-w-0 flex-1 w-full p-4 sm:p-6 md:p-6 lg:p-8 overflow-x-hidden",
+      mode === "user" ? "pt-[64px] sm:pt-[72px] md:pt-6 pb-24 sm:pb-28 md:pb-8" : "pt-[72px] sm:pt-[80px] md:pt-6 md:pb-8"
+    ]}>
       <PageTransition client:load>
         <slot />
       </PageTransition>

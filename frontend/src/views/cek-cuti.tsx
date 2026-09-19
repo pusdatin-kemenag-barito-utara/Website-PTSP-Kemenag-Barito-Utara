@@ -214,6 +214,9 @@ export function CekCutiView() {
                             <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
                               Sakit
                             </th>
+                            <th className="py-3.5 px-2.5 font-bold text-slate-700 dark:text-slate-300 text-center">
+                              CLTN
+                            </th>
                             <th className="py-3.5 px-3 font-extrabold text-emerald-700 dark:text-emerald-400 text-center bg-emerald-50/70 dark:bg-emerald-950/40 border-l border-emerald-100 dark:border-slate-800">
                               Sisa Cuti
                             </th>
@@ -249,6 +252,9 @@ export function CekCutiView() {
                             </td>
                             <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
                               {result.cutiSakit || "-"}
+                            </td>
+                            <td className="py-3.5 px-2.5 text-slate-600 dark:text-slate-300 font-semibold text-center">
+                              {result.cutiCltn || "-"}
                             </td>
                             <td className="py-3.5 px-3 text-emerald-600 dark:text-emerald-400 font-black text-lg text-center bg-emerald-50 dark:bg-emerald-950/60 border-l border-emerald-100 dark:border-slate-800">
                               {result.sisaCuti}
@@ -336,6 +342,14 @@ export function CekCutiView() {
                           </span>
                           <span className="text-slate-600 dark:text-slate-300 font-medium text-sm">
                             {result.cutiSakit || "-"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                          <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                            Cuti di Luar Tanggungan Negara
+                          </span>
+                          <span className="text-slate-600 dark:text-slate-300 font-medium text-sm">
+                            {result.cutiCltn || "-"}
                           </span>
                         </div>
                         <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/60 p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/50 mt-4 shadow-sm shadow-emerald-900/5">

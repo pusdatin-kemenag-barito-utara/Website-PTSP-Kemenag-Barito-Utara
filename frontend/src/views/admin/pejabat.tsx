@@ -5,6 +5,7 @@ import { getPejabatList, deletePejabat, reorderPejabat } from "@/lib/actions/adm
 import { Reorder } from "framer-motion";
 import { toast } from "sonner";
 import PejabatFormModal from "@/pages/admin/manajemen-pegawai/pejabat/_form";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 export function PejabatView({ initialData }: { initialData?: any[] }) {
   const [data, setData] = useState<any[]>(initialData || []);
@@ -79,16 +80,22 @@ export function PejabatView({ initialData }: { initialData?: any[] }) {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-4 pb-6">
+      {/* Header Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200/80 shadow-2xs">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen Atasan & Pejabat</h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <h1 className="text-sm font-black text-slate-900 leading-tight">
+            Manajemen Atasan & Pejabat
+          </h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">
             Kelola data Atasan Langsung dan Pejabat Berwenang untuk formulir Cuti.
           </p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button
+          onClick={handleAdd}
+          className="h-8.5 px-3.5 text-xs font-bold bg-[#059669] hover:bg-[#047857] text-white rounded-lg shadow-2xs cursor-pointer inline-flex items-center self-start sm:self-auto"
+        >
+          <Plus className="w-3.5 h-3.5 mr-1.5" />
           Tambah Data
         </Button>
       </div>
@@ -163,25 +170,26 @@ export function PejabatView({ initialData }: { initialData?: any[] }) {
         {/* Pagination */}
         <div className="bg-slate-50 p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <select
-              value={rowsPerPage === data.length && data.length > 0 ? "all" : rowsPerPage}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "all") {
-                  setRowsPerPage(data.length > 0 ? data.length : 10);
-                } else {
-                  setRowsPerPage(Number(val));
-                }
-                setCurrentPage(1);
-              }}
-              className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm"
-            >
-              <option value={10}>10 Baris</option>
-              <option value={25}>25 Baris</option>
-              <option value={50}>50 Baris</option>
-              <option value={100}>100 Baris</option>
-              <option value="all">Semua Baris</option>
-            </select>
+            <div className="w-32">
+              <ModernSelect
+                value={String(rowsPerPage === data.length && data.length > 0 ? "all" : rowsPerPage)}
+                onChange={(val) => {
+                  if (val === "all") {
+                    setRowsPerPage(data.length > 0 ? data.length : 10);
+                  } else {
+                    setRowsPerPage(Number(val));
+                  }
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { value: "10", label: "10 Baris" },
+                  { value: "25", label: "25 Baris" },
+                  { value: "50", label: "50 Baris" },
+                  { value: "100", label: "100 Baris" },
+                  { value: "all", label: "Semua Baris" },
+                ]}
+              />
+            </div>
             <div className="text-xs font-medium text-slate-500">
               Menampilkan {data.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} - {Math.min(currentPage * rowsPerPage, data.length)} dari {data.length} Pejabat
             </div>

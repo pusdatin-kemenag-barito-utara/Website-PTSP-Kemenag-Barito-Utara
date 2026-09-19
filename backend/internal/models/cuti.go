@@ -55,10 +55,12 @@ type CreateCutiPegawaiRequest struct {
 
 // UpdateCutiPegawaiRequest DTO untuk admin update data master pegawai.
 type UpdateCutiPegawaiRequest struct {
-	Nama      string `json:"nama"`
-	Jabatan   string `json:"jabatan"`
-	UnitKerja string `json:"unitKerja"`
-	Golongan  string `json:"golongan"`
+	No           *int   `json:"no"`
+	Nama         string `json:"nama"`
+	Nip          string `json:"nip"`
+	Jabatan      string `json:"jabatan"`
+	UnitKerja    string `json:"unitKerja"`
+	Golongan     string `json:"golongan"`
 	JenisPegawai string `json:"jenisPegawai"`
 }
 
@@ -75,6 +77,7 @@ type RekapCutiTahunan struct {
 	CutiBesar         int    `json:"cutiBesar"`
 	CutiBersalin      int    `json:"cutiBersalin"`
 	CutiSakit         int    `json:"cutiSakit"`
+	CutiCLTN          int    `json:"cutiCltn"`
 	SisaCuti          int    `json:"sisaCuti"`
 }
 
@@ -90,6 +93,7 @@ type CreateRekapCutiRequest struct {
 	CutiBesar         int    `json:"cutiBesar"`
 	CutiBersalin      int    `json:"cutiBersalin"`
 	CutiSakit         int    `json:"cutiSakit"`
+	CutiCLTN          int    `json:"cutiCltn"`
 	SisaCuti          int    `json:"sisaCuti"`
 }
 
@@ -124,3 +128,57 @@ type CreateLaporanKinerjaRequest struct {
 type BulkCreateLaporanKinerjaRequest struct {
 	Items []CreateLaporanKinerjaRequest `json:"items"`
 }
+
+// AdminLaporanKinerjaItem merepresentasikan data LKH lengkap dengan profil pegawai untuk admin/atasan.
+type AdminLaporanKinerjaItem struct {
+	ID                   string    `json:"id"`
+	UserID               string    `json:"userId"`
+	PegawaiNama          string    `json:"pegawaiNama"`
+	PegawaiNIP           string    `json:"pegawaiNip"`
+	PegawaiJabatan       string    `json:"pegawaiJabatan"`
+	PegawaiUnitKerja     string    `json:"pegawaiUnitKerja"`
+	PegawaiAvatar        *string   `json:"pegawaiAvatar"`
+	Tanggal              string    `json:"tanggal"`
+	WaktuPelaksanaan     *string   `json:"waktuPelaksanaan"`
+	KegiatanTugasJabatan string    `json:"kegiatanTugasJabatan"`
+	Hasil                string    `json:"hasil"`
+	BuktiDukungURL       *string   `json:"buktiDukungUrl"`
+	Status               string    `json:"status"`
+	KomentarPimpinan     *string   `json:"komentarPimpinan"`
+	CreatedAt            time.Time `json:"createdAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
+}
+
+// UpdateLKHStatusRequest DTO untuk update status LKH oleh pimpinan/admin.
+type UpdateLKHStatusRequest struct {
+	Status           string  `json:"status"`
+	KomentarPimpinan *string `json:"komentarPimpinan"`
+}
+
+// PejabatItem merepresentasikan data atasan/pejabat berwenang cuti dari profiles_pegawai.
+type PejabatItem struct {
+	ID          string `json:"id"`
+	Nip         string `json:"nip"`
+	Nama        string `json:"nama"`
+	Jabatan     string `json:"jabatan"`
+	UnitKerja   string `json:"unitKerja"`
+	TipePejabat string `json:"tipePejabat"`
+	OrderIndex  int    `json:"orderIndex"`
+}
+
+// UpsertPejabatRequest DTO untuk simpan/update data atasan/pejabat cuti.
+type UpsertPejabatRequest struct {
+	ID          string `json:"id"`
+	Nip         string `json:"nip"`
+	Nama        string `json:"nama"`
+	Jabatan     string `json:"jabatan"`
+	UnitKerja   string `json:"unitKerja"`
+	TipePejabat string `json:"tipePejabat"`
+}
+
+// ReorderPejabatItem DTO untuk perubahan urutan tampilan pejabat.
+type ReorderPejabatItem struct {
+	ID         string `json:"id"`
+	OrderIndex int    `json:"orderIndex"`
+}
+

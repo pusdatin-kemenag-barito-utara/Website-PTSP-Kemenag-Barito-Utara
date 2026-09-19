@@ -127,6 +127,11 @@ func (s *ServiceService) DeleteMasterOption(ctx context.Context, id string) erro
 	return s.repo.DeleteMasterOption(ctx, id)
 }
 
+func (s *ServiceService) SyncUnitKerjaFromPegawai(ctx context.Context) (int64, error) {
+	s.clearCache()
+	return s.repo.SyncUnitKerjaFromPegawai(ctx)
+}
+
 
 func (s *ServiceService) GetRequirements(ctx context.Context, itemID string) ([]models.ServiceRequirement, error) {
 	return s.repo.FindRequirementsByServiceItemID(ctx, itemID)

@@ -25,9 +25,10 @@ export function DeleteRequestButton({
       formData.append("requestId", requestId);
       
       const result = await deleteRequestAction(formData);
+      toast.dismiss(toastId);
       
       if (result?.success) {
-        toast.success("Pengajuan berhasil dihapus!", { id: toastId });
+        toast.success("Pengajuan berhasil dihapus!");
         setIsOpen(false);
         if (redirectUrl) {
           router.push(redirectUrl);
@@ -35,11 +36,12 @@ export function DeleteRequestButton({
           router.refresh();
         }
       } else {
-        toast.error(`Gagal menghapus: ${result?.error || "Terjadi kesalahan"}`, { id: toastId });
+        toast.error(`Gagal menghapus: ${result?.error || "Terjadi kesalahan"}`);
       }
     } catch (error: any) {
+      toast.dismiss(toastId);
       console.error("Delete error:", error);
-      toast.error(`Terjadi kesalahan sistem: ${error.message}`, { id: toastId });
+      toast.error(`Terjadi kesalahan sistem: ${error.message}`);
     } finally {
       setIsPending(false);
     }

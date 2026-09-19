@@ -23,15 +23,40 @@ function readDocumentCookie(name: string): string {
 }
 
 function getAuthToken(): string {
-  // Ambil access token Supabase dari cookie session (ptsp-auth-access-token)
+  let token = "";
   if (typeof window !== "undefined") {
-    return readDocumentCookie("ptsp-auth-access-token");
+    token =
+      readDocumentCookie("ptsp-auth") ||
+      readDocumentCookie("ptsp-auth-access-token") ||
+      localStorage.getItem("ptsp-auth-token") ||
+      "";
+  } else {
+    const ctx = tryGetRequestContext();
+    if (ctx?.cookies) {
+      token =
+        ctx.cookies.get("ptsp-auth")?.value ||
+        ctx.cookies.get("ptsp-auth-access-token")?.value ||
+        "";
+    }
+    if (!token && (globalThis as any).__ptsp_current_token) {
+      token = (globalThis as any).__ptsp_current_token;
+    }
   }
-  const ctx = tryGetRequestContext();
-  if (ctx) {
-    return ctx.cookies.get("ptsp-auth-access-token")?.value ?? "";
+  return token ? token.trim().replace(/^["']|["']$/g, "").replace(/^Bearer\s+/i, "") : "";
+}
+
+const apiGetCache = new Map<string, { data: any; expiresAt: number }>();
+
+export function clearApiCache(prefix?: string) {
+  if (!prefix) {
+    apiGetCache.clear();
+    return;
   }
-  return "";
+  for (const key of apiGetCache.keys()) {
+    if (key.includes(prefix)) {
+      apiGetCache.delete(key);
+    }
+  }
 }
 
 export async function fetchAPI<T>(
@@ -40,6 +65,12 @@ export async function fetchAPI<T>(
 ): Promise<T> {
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const method = (options.method || "GET").toUpperCase();
+
+  // Bersihkan cache jika terjadi operasi mutasi data (CREATE / UPDATE / DELETE)
+  if (method !== "GET" && method !== "HEAD") {
+    apiGetCache.clear();
+  }
 
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -48,6 +79,21 @@ export async function fetchAPI<T>(
   const token = getAuthToken();
   if (token) {
     defaultHeaders["Authorization"] = `Bearer ${token}`;
+    defaultHeaders["Cookie"] = `ptsp-auth=${token}`;
+  }
+
+  // Cek Memory Cache untuk GET request yang aman di-cache singkat (0ms latensi)
+  const isCacheable =
+    method === "GET" &&
+    options.cache !== "no-store" &&
+    !options.headers?.hasOwnProperty("x-skip-cache");
+
+  const cacheKey = `${url}::${token || "anon"}`;
+  if (isCacheable) {
+    const cached = apiGetCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return JSON.parse(JSON.stringify(cached.data)) as T;
+    }
   }
 
   const controller = new AbortController();
@@ -75,19 +121,39 @@ export async function fetchAPI<T>(
       } catch {
         // Ignore JSON parse error
       }
-      const isQuiet404 =
-        response.status === 404 &&
-        (endpoint.includes("/users/") || endpoint.includes("/pegawai/cuti"));
+      const isQuiet =
+        (response.status === 404 &&
+          (endpoint.includes("/users/") ||
+            endpoint.includes("/pegawai/cuti") ||
+            endpoint.includes("/admin/system/status"))) ||
+        (response.status === 401 && endpoint.includes("/admin/system/status"));
 
-      if (!isQuiet404) {
+      if (!isQuiet) {
         console.warn(
           `[fetchAPI Warning] Endpoint ${endpoint} returned status ${response.status}: ${errorMessage}`,
         );
       }
-      return { success: false, data: [] } as unknown as T;
+      return { success: false, data: [], error: errorMessage } as unknown as T;
     }
 
-    return await response.json();
+    const data = await response.json();
+
+    // Simpan ke memory cache
+    if (isCacheable && data) {
+      // Endpoint statis seperti layanan / master options disimpan 5 menit
+      // Endpoint dinamis seperti stats / requests disimpan 3 detik agar sat-set tapi tetap fresh
+      let ttl = 3000;
+      if (endpoint.includes("/services") || endpoint.includes("/master-options")) {
+        ttl = 5 * 60 * 1000; // 5 menit
+      } else if (endpoint.includes("/videos") || endpoint.includes("/youtube")) {
+        ttl = 10 * 60 * 1000; // 10 menit
+      } else if (endpoint.includes("/system/status")) {
+        ttl = 60 * 1000; // 1 menit
+      }
+      apiGetCache.set(cacheKey, { data, expiresAt: Date.now() + ttl });
+    }
+
+    return data;
   } catch (err: any) {
     clearTimeout(timeoutId);
     console.warn(

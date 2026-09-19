@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import QRCode from "react-qr-code";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/scroll-lock";
 
 interface DraftCutiModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ interface DraftCutiModalProps {
     cutiBesar?: number;
     cutiBersalin?: number;
     cutiSakit?: number;
+    cutiCltn?: number;
   };
   pejabatList?: any[];
   hideActions?: boolean;
@@ -186,17 +188,14 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
 
   useEffect(() => {
     if (isOpen) {
-      // Prevent background scrolling
-      document.body.style.overflow = "hidden";
-      // Allow modal to render before calculating
+      lockBodyScroll();
       setTimeout(handleFit, 50);
     } else {
-      // Restore scrolling
-      document.body.style.overflow = "unset";
+      unlockBodyScroll();
     }
 
     return () => {
-      document.body.style.overflow = "unset";
+      unlockBodyScroll();
     };
   }, [isOpen]);
 
@@ -474,7 +473,12 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
               <div
                 id="modal-scroll-area"
                 ref={containerRef}
-                className="p-4 sm:p-6 overflow-auto custom-scrollbar flex-1 bg-slate-100/50"
+                className="p-4 sm:p-6 overflow-auto custom-scrollbar flex-1 bg-slate-100/50 overscroll-contain touch-pan-y"
+                style={{
+                  overscrollBehavior: "contain",
+                  WebkitOverflowScrolling: "touch",
+                  touchAction: "pan-y",
+                }}
               >
                 <div
                   className="mx-auto"
@@ -825,7 +829,7 @@ export function DraftCutiModal({ isOpen, onClose, data, pejabatList = [], hideAc
                               6. CUTI DI LUAR TANGGUNGAN NEGARA
                             </td>
                             <td className="border border-black p-1 text-center">
-                              -
+                              {data.cutiCltn ? `${data.cutiCltn} Bln` : "-"}
                             </td>
                           </tr>
                         </tbody>

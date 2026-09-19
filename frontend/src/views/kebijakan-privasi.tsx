@@ -110,6 +110,10 @@ export function KebijakanPrivasiView() {
       <PageBanner
         title="Kebijakan Privasi"
         description="Komitmen dan jaminan keandalan perlindungan data pribadi pemohon PTSP Kemenag Barito Utara."
+        breadcrumb={[
+          { label: "Beranda", href: "/" },
+          { label: "Kebijakan Privasi" },
+        ]}
       />
 
       <div className="min-h-screen bg-slate-50/50 py-12 sm:py-16">

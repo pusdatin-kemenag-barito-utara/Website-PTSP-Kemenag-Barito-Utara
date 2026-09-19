@@ -1,8 +1,6 @@
 import { DokumenHasilClient } from "@/components/admin/dokumen-hasil/dokumen-hasil-client";
 import { AdminPagination } from "@/components/admin/pengajuan/admin-pagination";
 import { ReportExportButton } from "@/components/admin/report-export-button";
-import { PageHeader } from "@/components/admin/page-header";
-import { FileOutput } from "lucide-react";
 
 export function DokumenHasilView({
   requests,
@@ -26,19 +24,23 @@ export function DokumenHasilView({
   type: string;
 }) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={type === "public" ? "Dokumen Hasil Masyarakat" : "Dokumen Hasil Pegawai"}
-        description={`Kelola dokumen PDF hasil layanan. Anda dapat mencari, melihat, dan mengunduh dokumen resmi yang telah diterbitkan untuk ${type === "public" ? "pemohon" : "pegawai"}.`}
-        icon={FileOutput}
-        actions={
-          <ReportExportButton
-            type="documents"
-            where={{ q, serviceId }}
-            fileName="Laporan_Dokumen_Hasil_PTSP"
-          />
-        }
-      />
+    <div className="space-y-4 pb-6">
+      {/* Header Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200/80 shadow-2xs">
+        <div>
+          <h1 className="text-sm font-black text-slate-900 leading-tight">
+            {type === "public" ? "Dokumen Hasil Layanan Masyarakat" : "Dokumen Hasil Layanan Pegawai (ASN)"}
+          </h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Kelola dokumen PDF hasil layanan resmi yang telah diterbitkan untuk {type === "public" ? "pemohon masyarakat" : "pegawai ASN"}.
+          </p>
+        </div>
+        <ReportExportButton
+          type="documents"
+          where={{ q, serviceId }}
+          fileName="Laporan_Dokumen_Hasil_PTSP"
+        />
+      </div>
 
       <div className="space-y-4">
         <DokumenHasilClient
@@ -47,6 +49,7 @@ export function DokumenHasilView({
           services={services || []}
           q={q}
           serviceId={serviceId}
+          type={type}
         />
 
         {totalPages > 1 && (

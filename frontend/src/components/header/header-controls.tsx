@@ -39,10 +39,10 @@ export function HeaderControls() {
       <button
         onClick={toggleTheme}
         title={theme === "light" ? "Mode Terang (Klik untuk Mode Gelap)" : "Mode Gelap (Klik untuk Mode Terang)"}
-        className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900 text-slate-700 dark:text-slate-200 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95"
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-sm transition-all hover:bg-white/20 active:scale-95"
       >
         {theme === "light" ? (
-          <Sun className="h-4 w-4 text-amber-500" />
+          <Sun className="h-4 w-4 text-amber-400" />
         ) : (
           <Moon className="h-4 w-4 text-teal-300" />
         )}

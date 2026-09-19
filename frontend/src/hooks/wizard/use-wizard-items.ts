@@ -47,18 +47,27 @@ export function useWizardItems(serviceId: any, startTransition: any) {
     }, 500);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
+    const toastId = toast.loading("Sedang menghapus item layanan...");
     const fd = new FormData();
     fd.append("id", id.toString());
-    startTransition(async () => {
+    try {
       const result = await deleteServiceItemAction(fd);
+      toast.dismiss(toastId);
       if (result.success) {
-        toast.success("Item Dihapus");
+        toast.success("Item Dihapus", {
+          description: "Item layanan berhasil dihapus.",
+        });
         router.refresh();
       } else {
         toast.error(result.error || "Gagal menghapus item.");
       }
-    });
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error("Kesalahan jaringan", {
+        description: err.message,
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -27,36 +27,36 @@ export function AdminPagination({
   };
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 px-2 py-4 sm:flex-row">
-      <p className="text-sm font-medium text-slate-500">
+    <div className="flex flex-col items-center justify-between gap-3 px-2 py-3 sm:flex-row">
+      <p className="text-xs font-medium text-slate-500">
         <span className="font-bold text-slate-900">{totalCount}</span> catatan &mdash; halaman{" "}
         <span className="font-bold text-slate-900">{currentPage}</span> dari{" "}
         <span className="font-bold text-slate-900">{totalPages}</span>
       </p>
       
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="sm"
-          className="h-9 w-9 rounded-xl border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+          className="h-8 w-8 p-0 rounded-lg border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
           disabled={currentPage <= 1}
           onClick={() => goToPage(1)}
         >
-          <ChevronsLeft className="h-4 w-4" />
+          <ChevronsLeft className="h-3.5 w-3.5" />
         </Button>
         
         <Button
           variant="outline"
           size="sm"
-          className="h-9 w-9 rounded-xl border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+          className="h-8 w-8 p-0 rounded-lg border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
           disabled={currentPage <= 1}
           onClick={() => goToPage(currentPage - 1)}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
 
         {/* Page Numbers */}
-        <div className="flex items-center gap-1 mx-2">
+        <div className="flex items-center gap-1 mx-1">
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             let pageNum = currentPage;
             if (currentPage <= 3) pageNum = i + 1;
@@ -70,9 +70,9 @@ export function AdminPagination({
                 key={pageNum}
                 variant={currentPage === pageNum ? "default" : "outline"}
                 size="sm"
-                className={`h-9 w-9 rounded-xl transition-all font-bold text-sm ${
+                className={`h-8 w-8 p-0 rounded-lg transition-all font-bold text-xs ${
                   currentPage === pageNum
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200"
                     : "border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
                 }`}
                 onClick={() => goToPage(pageNum)}
@@ -86,21 +86,21 @@ export function AdminPagination({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 w-9 rounded-xl border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+          className="h-8 w-8 p-0 rounded-lg border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
           disabled={currentPage >= totalPages}
           onClick={() => goToPage(currentPage + 1)}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5" />
         </Button>
         
         <Button
           variant="outline"
           size="sm"
-          className="h-9 w-9 rounded-xl border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+          className="h-8 w-8 p-0 rounded-lg border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
           disabled={currentPage >= totalPages}
           onClick={() => goToPage(totalPages)}
         >
-          <ChevronsRight className="h-4 w-4" />
+          <ChevronsRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

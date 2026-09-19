@@ -10,65 +10,70 @@ export type MaintenanceStatus = {
   aiChatEnabled: boolean;
 };
 
+// In-Memory cache untuk status AI Chat dari server lokal agar tidak membebani Fiber backend pada setiap request
+let cachedAiChatEnabled: boolean = true;
+let lastAiChatCheckedAt: number = 0;
+const AI_CHAT_CACHE_TTL = 60 * 1000; // 60 detik cache di memori
+
 export async function getMaintenanceStatus(): Promise<MaintenanceStatus> {
+  // Status pemeliharaan 100% diambil dari trigger/cache tabel Pusdatin (0ms)
   const isPusdatinMaintenance = await checkMaintenanceStatus();
 
-  try {
-    const res = await fetchAPI<any>("/admin/system/status", { cache: "no-store" });
-    if (res && res.data) {
-      return {
-        enabled: isPusdatinMaintenance || (res.data.maintenanceMode ?? false),
-        message: isPusdatinMaintenance
-          ? "Sistem sedang dalam mode pemeliharaan terpusat oleh Tim Pusdatin Kemenag Barito Utara."
-          : (res.data.maintenanceMessage || "Sistem sedang dalam pemeliharaan berkala."),
-        startedAt: res.data.maintenanceStartedAt ? new Date(res.data.maintenanceStartedAt) : null,
-        startedBy: res.data.maintenanceStartedBy || (isPusdatinMaintenance ? "Pusdatin" : null),
-        aiChatEnabled: res.data.aiChatEnabled ?? true,
-      };
-    }
-  } catch (error) {
-    console.error("Error getMaintenanceStatus:", error);
+  const now = Date.now();
+  if (now - lastAiChatCheckedAt < AI_CHAT_CACHE_TTL) {
+    return {
+      enabled: isPusdatinMaintenance,
+      message: isPusdatinMaintenance
+        ? "Sistem sedang dalam mode pemeliharaan terpusat oleh Tim Pusdatin Kemenag Barito Utara."
+        : "Sistem berjalan normal.",
+      startedAt: null,
+      startedBy: isPusdatinMaintenance ? "Pusdatin" : null,
+      aiChatEnabled: cachedAiChatEnabled,
+    };
   }
 
+  try {
+    const res = await fetchAPI<any>("/admin/system/status");
+    if (res && res.data) {
+      cachedAiChatEnabled = res.data.aiChatEnabled ?? true;
+      lastAiChatCheckedAt = now;
+      return {
+        enabled: isPusdatinMaintenance,
+        message: isPusdatinMaintenance
+          ? "Sistem sedang dalam mode pemeliharaan terpusat oleh Tim Pusdatin Kemenag Barito Utara."
+          : (res.data.maintenanceMessage || "Sistem berjalan normal."),
+        startedAt: null,
+        startedBy: isPusdatinMaintenance ? "Pusdatin" : null,
+        aiChatEnabled: cachedAiChatEnabled,
+      };
+    }
+  } catch {
+    // Abaikan jika backend lambat, gunakan cache terakhir
+  }
+
+  lastAiChatCheckedAt = now;
   return {
     enabled: isPusdatinMaintenance,
     message: isPusdatinMaintenance
       ? "Sistem sedang dalam mode pemeliharaan terpusat oleh Tim Pusdatin Kemenag Barito Utara."
-      : "Sistem sedang dalam pemeliharaan berkala.",
+      : "Sistem berjalan normal.",
     startedAt: null,
     startedBy: isPusdatinMaintenance ? "Pusdatin" : null,
-    aiChatEnabled: true,
+    aiChatEnabled: cachedAiChatEnabled,
   };
 }
 
-export async function toggleMaintenanceAction(
-  enabled: boolean,
-  message?: string,
-) {
-  try {
-    await fetchAPI("/admin/system/guest-book-mode", {
-      method: "PATCH",
-      body: JSON.stringify({
-        maintenanceMode: enabled,
-        maintenanceMessage: message || "Sistem sedang dalam pemeliharaan berkala.",
-      }),
-    });
-  } catch (error) {
-    console.error("Error toggleMaintenanceAction:", error);
-  }
-
-  revalidatePath("/admin/mode-pemeliharaan");
-  revalidatePath("/admin");
-
+/**
+ * Toggle maintenance dinonaktifkan di admin PTSP sesuai instruksi:
+ * Semua status maintenance dikendalikan 100% terpusat dari sistem Pusdatin.
+ */
+export async function toggleMaintenanceAction() {
   return {
-    success: true,
-    error: undefined,
-    message: enabled
-      ? "Mode Pemeliharaan telah diaktifkan."
-      : "Mode Pemeliharaan telah dinonaktifkan.",
+    success: false,
+    error: "Pengaturan mode pemeliharaan dikendalikan 100% secara terpusat oleh sistem Pusdatin Kemenag Barito Utara.",
+    message: "Admin PTSP tidak memiliki akses mengubah status pemeliharaan terpusat.",
   };
 }
-
 
 export async function toggleAIChatAction(enabled: boolean) {
   try {
@@ -78,6 +83,8 @@ export async function toggleAIChatAction(enabled: boolean) {
         aiChatEnabled: enabled,
       }),
     });
+    cachedAiChatEnabled = enabled;
+    lastAiChatCheckedAt = Date.now();
   } catch (error) {
     console.error("Error toggleAIChatAction:", error);
   }
@@ -93,4 +100,3 @@ export async function toggleAIChatAction(enabled: boolean) {
       : "Widget AI Chat telah disembunyikan.",
   };
 }
-

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 
 	"ptsp-kemenag-backend/internal/models"
@@ -77,6 +78,18 @@ func (h *ServiceHandler) AdminDeleteMasterOption(c fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"success": true, "message": "Master option berhasil dihapus"})
+}
+
+func (h *ServiceHandler) AdminSyncUnitKerja(c fiber.Ctx) error {
+	count, err := h.svc.SyncUnitKerjaFromPegawai(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{
+		"success":     true,
+		"syncedCount": count,
+		"message":     fmt.Sprintf("Berhasil menyinkronkan %d unit kerja dari data pegawai", count),
+	})
 }
 
 func (h *ServiceHandler) GetRequirements(c fiber.Ctx) error {

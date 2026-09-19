@@ -1,5 +1,10 @@
 const { Client } = require('pg');
-const client = new Client('postgres://postgres:S4g0Q3H^YgJ2u4E2@103.189.235.150:5432/postgres');
+const dbUrl = process.env.DATABASE_URL || process.env.DIRECT_URL;
+if (!dbUrl) {
+    console.error('DATABASE_URL atau DIRECT_URL tidak ditemukan');
+    process.exit(1);
+}
+const client = new Client(dbUrl);
 client.connect().then(() => {
     return client.query('SELECT * FROM kemenag_ptsp.profiles_pegawai WHERE user_id = $1', ['847ec58d-d66a-4e41-9343-da9f85a276b8']);
 }).then(res => {

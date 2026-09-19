@@ -1,5 +1,5 @@
 {
-	"pid": 26924,
+	"pid": 32956,
 	"port": 3000,
 	"url": "http://localhost:3000",
 	"urls": {
@@ -7,14 +7,14 @@
 			"http://localhost:3000/"
 		],
 		"network": [
-			"http://192.168.100.51:3000/",
-			"http://172.27.224.1:3000/"
+			"http://172.28.176.1:3000/",
+			"http://192.168.100.40:3000/"
 		],
 		"networkInterfaceNames": [
-			"Ethernet",
-			"vEthernet (Default Switch)"
+			"vEthernet (Default Switch)",
+			"Wi-Fi"
 		]
 	},
 	"background": false,
-	"startedAt": "2026-09-07T14:45:54.902Z"
+	"startedAt": "2026-09-19T08:23:09.167Z"
 }

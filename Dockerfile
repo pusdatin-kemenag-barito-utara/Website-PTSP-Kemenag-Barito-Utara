@@ -24,7 +24,9 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata bash curl
+RUN apk add --no-cache ca-certificates tzdata bash curl && \
+    curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.alpine.sh' | bash && \
+    apk add --no-cache infisical
 
 # Copy Backend
 COPY --from=backend-builder /app/backend/api-ptsp /app/api-ptsp
@@ -35,11 +37,17 @@ COPY --from=frontend-builder /app/frontend/node_modules /app/frontend/node_modul
 COPY --from=frontend-builder /app/frontend/package.json /app/frontend/package.json
 COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 
+# Copy docker-entrypoint.sh untuk dynamic Infisical runtime injection
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 3000 8080
 
 # Healthcheck untuk memastikan backend dan frontend berjalan (Coolify requirement)
 HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://127.0.0.1:8080/api/health && curl -f http://127.0.0.1:3000/api/health || exit 1
+
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Jalankan backend Golang di background, lalu jalankan Node.js server Astro
 CMD ["sh", "-c", "PORT=8080 /app/api-ptsp & HOST=0.0.0.0 PORT=3000 node /app/frontend/dist/server/entry.mjs"]

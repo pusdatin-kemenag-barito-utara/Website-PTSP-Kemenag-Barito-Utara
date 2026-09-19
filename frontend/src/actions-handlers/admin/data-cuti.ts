@@ -1,4 +1,4 @@
-﻿import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { fetchAPI } from "@/lib/api";
 import { revalidatePath } from "@/lib/next-compat/cache";
 
@@ -79,6 +79,7 @@ export async function createDataCutiAction(
     });
 
     revalidatePath("/admin/kepegawaian/pegawai");
+    revalidatePath("/admin/pengguna");
     return {
       success: true,
       message: res.message || "Pegawai berhasil ditambahkan.",
@@ -98,6 +99,9 @@ export async function updateDataCutiAction(
     if (!user) return { success: false, error: "Belum login." };
 
     const nama = String(formData.get("nama") || "");
+    const nip = String(formData.get("nip") || "");
+    const noRaw = formData.get("no");
+    const no = noRaw ? Number(noRaw) : undefined;
     const jabatan = String(formData.get("jabatan") || "");
     const unitKerja = String(formData.get("unitKerja") || "");
     const golongan = String(formData.get("golongan") || "");
@@ -107,7 +111,9 @@ export async function updateDataCutiAction(
     const resPegawai = await fetchAPI<any>(`/admin/cuti/pegawai/${id}`, {
       method: "PUT",
       body: JSON.stringify({
+        no,
         nama,
+        nip,
         jabatan,
         unitKerja,
         golongan,
@@ -124,6 +130,7 @@ export async function updateDataCutiAction(
     const cutiBesar = Number(formData.get("cutiBesar") || 0);
     const cutiBersalin = Number(formData.get("cutiBersalin") || 0);
     const cutiSakit = Number(formData.get("cutiSakit") || 0);
+    const cutiCltn = Number(formData.get("cutiCltn") || 0);
     const sisaCuti = Number(formData.get("sisaCuti") || 12);
 
     let cutiTahunan: number[] = Array(12).fill(0);
@@ -145,6 +152,7 @@ export async function updateDataCutiAction(
       cutiBesar,
       cutiBersalin,
       cutiSakit,
+      cutiCltn,
       sisaCuti,
     };
 
@@ -161,6 +169,7 @@ export async function updateDataCutiAction(
     }
 
     revalidatePath("/admin/kepegawaian/pegawai");
+    revalidatePath("/admin/pengguna");
     return {
       success: true,
       message: "Data cuti pegawai berhasil diperbarui.",
@@ -183,6 +192,7 @@ export async function deleteDataCutiAction(
     });
 
     revalidatePath("/admin/kepegawaian/pegawai");
+    revalidatePath("/admin/pengguna");
     return {
       success: true,
       message: res.message || "Data pegawai berhasil dihapus.",
@@ -208,6 +218,7 @@ export async function createRekapCutiAction(
     const cutiBesar = Number(formData.get("cutiBesar") || 0);
     const cutiBersalin = Number(formData.get("cutiBersalin") || 0);
     const cutiSakit = Number(formData.get("cutiSakit") || 0);
+    const cutiCltn = Number(formData.get("cutiCltn") || 0);
     const sisaCuti = Number(formData.get("sisaCuti") || 12);
 
     const res = await fetchAPI<any>("/admin/cuti/rekap", {
@@ -222,6 +233,7 @@ export async function createRekapCutiAction(
         cutiBesar,
         cutiBersalin,
         cutiSakit,
+        cutiCltn,
         sisaCuti,
       }),
     });
@@ -257,6 +269,7 @@ export async function updateRekapCutiAction(
     const cutiBesar = Number(formData.get("cutiBesar") || 0);
     const cutiBersalin = Number(formData.get("cutiBersalin") || 0);
     const cutiSakit = Number(formData.get("cutiSakit") || 0);
+    const cutiCltn = Number(formData.get("cutiCltn") || 0);
     const sisaCuti = Number(formData.get("sisaCuti") || 12);
 
     const res = await fetchAPI<any>(`/admin/cuti/rekap/${id}`, {
@@ -271,6 +284,7 @@ export async function updateRekapCutiAction(
         cutiBesar,
         cutiBersalin,
         cutiSakit,
+        cutiCltn,
         sisaCuti,
       }),
     });

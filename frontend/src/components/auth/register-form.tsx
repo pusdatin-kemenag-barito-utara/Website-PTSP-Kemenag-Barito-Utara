@@ -10,6 +10,7 @@ import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile
 
 import { registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
 import { isSafeRedirect } from "@/lib/utils";
+import { toast } from "sonner";
 
 function normalizeWhatsappNumber(value: string) {
   const digits = value.replace(/\D/g, "");
@@ -81,6 +82,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
       setLoading(false);
       isSubmittingRef.current = false;
       setError("Silakan selesaikan verifikasi keamanan.");
+      toast.error("Silakan selesaikan verifikasi keamanan.", { id: "register-toast" });
       return;
     }
 
@@ -96,13 +98,20 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
       setLoading(false);
       isSubmittingRef.current = false;
       setError("Nomor Telepon / WhatsApp tidak valid.");
+      toast.error("Nomor Telepon / WhatsApp tidak valid.", { id: "register-toast" });
       return;
     }
+
+    toast.loading("Memproses pendaftaran...", { id: "register-toast" });
 
     try {
       const result = await registerPemohonAction(formData);
       if (result.success) {
         setMessage("Registrasi berhasil! Mengalihkan Anda ke halaman login...");
+        toast.success("Registrasi Berhasil!", {
+          id: "register-toast",
+          description: "Mengalihkan Anda ke halaman login...",
+        });
 
         const safeCallback = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : "/masyarakat";
         const loginUrl = `/login/masyarakat?callbackUrl=${encodeURIComponent(safeCallback)}`;
@@ -112,14 +121,18 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
           router.refresh();
         }, 1500);
       } else {
-        setError(result.error || "Gagal membuat akun.");
+        const errMsg = result.error || "Gagal membuat akun.";
+        setError(errMsg);
+        toast.error(errMsg, { id: "register-toast" });
         setLoading(false);
         isSubmittingRef.current = false;
         turnstileRef.current?.reset();
         setTurnstileToken(null);
       }
     } catch (err: any) {
-      setError(err.message || "Gagal memproses permintaan.");
+      const errMsg = err.message || "Gagal memproses permintaan.";
+      setError(errMsg);
+      toast.error(errMsg, { id: "register-toast" });
       setLoading(false);
       isSubmittingRef.current = false;
       turnstileRef.current?.reset();

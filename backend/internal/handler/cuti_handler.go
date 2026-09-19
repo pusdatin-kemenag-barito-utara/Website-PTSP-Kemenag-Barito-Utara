@@ -27,7 +27,63 @@ func (h *CutiHandler) GetPejabatNIPs(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": nips})
 }
 
+func (h *CutiHandler) GetPejabatList(c fiber.Ctx) error {
+	list, err := h.svc.GetPejabatList(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	if list == nil {
+		list = []models.PejabatItem{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": list})
+}
+
+func (h *CutiHandler) UpsertPejabat(c fiber.Ctx) error {
+	var req models.UpsertPejabatRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
+	}
+	if id := c.Params("id"); id != "" {
+		req.ID = id
+	}
+	if err := h.svc.UpsertPejabat(c.Context(), req); err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": "Data pejabat berhasil disimpan"})
+}
+
+func (h *CutiHandler) DeletePejabat(c fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID pejabat diperlukan"})
+	}
+	if err := h.svc.DeletePejabat(c.Context(), id); err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": "Data pejabat berhasil dihapus"})
+}
+
+func (h *CutiHandler) ReorderPejabat(c fiber.Ctx) error {
+	var items []models.ReorderPejabatItem
+	if err := c.Bind().Body(&items); err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload urutan tidak valid"})
+	}
+	if err := h.svc.ReorderPejabat(c.Context(), items); err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": "Urutan pejabat berhasil disimpan"})
+}
+
 func (h *CutiHandler) GetCuti(c fiber.Ctx) error {
+	requestID := c.Query("request_id")
+	if requestID != "" {
+		res, err := h.svc.GetByRequestID(c.Context(), requestID)
+		if err != nil || res == nil {
+			return c.JSON(fiber.Map{"success": true, "data": nil})
+		}
+		return c.JSON(fiber.Map{"success": true, "data": res})
+	}
+
 	nip := c.Query("nip")
 	if nip != "" {
 		res, err := h.svc.GetByNip(c.Context(), nip)
@@ -128,6 +184,51 @@ func (h *CutiHandler) DeleteLKH(c fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"success": true, "message": "LKH berhasil dihapus"})
+}
+
+func (h *CutiHandler) AdminGetLKH(c fiber.Ctx) error {
+	search := c.Query("search")
+	unitKerja := c.Query("unitKerja")
+	status := c.Query("status")
+	date := c.Query("date")
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+
+	var month, year int
+	if monthStr != "" {
+		fmt.Sscanf(monthStr, "%d", &month)
+	}
+	if yearStr != "" {
+		fmt.Sscanf(yearStr, "%d", &year)
+	}
+
+	data, err := h.svc.AdminGetLKH(c.Context(), search, unitKerja, status, date, month, year)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	if data == nil {
+		data = []models.AdminLaporanKinerjaItem{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": data})
+}
+
+func (h *CutiHandler) AdminUpdateLKHStatus(c fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "ID LKH wajib diisi"})
+	}
+	var req models.UpdateLKHStatusRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Payload tidak valid"})
+	}
+	if req.Status != "pending" && req.Status != "approved" && req.Status != "revision" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Status tidak valid"})
+	}
+
+	if err := h.svc.AdminUpdateLKHStatus(c.Context(), id, req.Status, req.KomentarPimpinan); err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": "Status LKH berhasil diperbarui"})
 }
 
 // --- Admin: Master Pegawai & Rekap Cuti ---

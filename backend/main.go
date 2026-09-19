@@ -10,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/etag"
-	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/joho/godotenv"
 
 	"ptsp-kemenag-backend/internal/config"
@@ -55,15 +54,10 @@ func main() {
 		Level: compress.LevelBestSpeed,
 	}))
 
-	app.Use(logger.New(logger.Config{
-		Next: func(c fiber.Ctx) bool {
-			path := c.Path()
-			return path == "/api/health" || path == "/api/v1/admin/system/status"
-		},
-		Format: "[${time}] ${status} - ${latency} ${method} ${path}\n",
-	}))
+	// Logger Terminal Berwarna, Ringkas & Terstruktur
+	app.Use(middleware.PrettyLogger())
 
-	allowOrigins := cfg.FrontendOrigin + ",http://localhost:3000"
+	allowOrigins := cfg.FrontendOrigin + ",http://localhost:3000,http://127.0.0.1:3000,http://localhost:4321,http://127.0.0.1:4321"
 	if origins := os.Getenv("CORS_ALLOWED_ORIGINS"); origins != "" {
 		allowOrigins = origins
 	} else if origins := os.Getenv("CORS_ORIGINS"); origins != "" {

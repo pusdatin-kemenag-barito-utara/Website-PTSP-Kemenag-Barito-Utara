@@ -17,8 +17,14 @@ export function ConditionalShell({
   const isLengkapiWaPegawai = pathname.startsWith("/lengkapi-wa-pegawai");
   const isBarcode = pathname === "/barcode" || pathname.endsWith("/barcode");
 
-  if (isAdmin || isLengkapiProfil || isLengkapiWaPegawai || isBarcode) {
-    // For admin routes & lengkapi-profil & lengkapi-wa-pegawai & barcode: no header, no footer, no ptsp-shell padding
+  const isLegalPage =
+    pathname === "/syarat-ketentuan" ||
+    pathname.startsWith("/syarat-ketentuan/") ||
+    pathname === "/kebijakan-privasi" ||
+    pathname.startsWith("/kebijakan-privasi/");
+
+  if (isAdmin || isLengkapiProfil || isLengkapiWaPegawai || isBarcode || isLegalPage) {
+    // For admin, lengkapi-profil, barcode, and legal pages: no header, no footer, no ptsp-shell padding
     return <>{children}</>;
   }
 

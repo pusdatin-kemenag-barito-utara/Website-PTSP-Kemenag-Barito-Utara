@@ -1,5 +1,6 @@
 ---
 import "@/styles/globals.css";
+import "sonner/dist/styles.css";
 import { getMaintenanceStatus } from "@/actions-handlers/system/maintenance";
 import { getCurrentProfile } from "@/lib/auth";
 import { SiteHeaderClient } from "@/components/site-header-client";
@@ -26,26 +27,34 @@ const {
 const url = Astro.url;
 const pathname = url.pathname;
 
-const maintenance = await getMaintenanceStatus();
-
-let profile: any = null;
-try {
-  profile = await getCurrentProfile();
-} catch {
-  profile = null;
-}
-
 // ConditionalShell logic (dari Next.js conditional-shell.tsx)
 const isAdmin = pathname.startsWith("/admin");
 const isLengkapiProfil = pathname.startsWith("/lengkapi-profil");
 const isLengkapiWaPegawai = pathname.startsWith("/lengkapi-wa-pegawai");
 const isBarcode = pathname === "/barcode" || pathname.endsWith("/barcode");
-const isBareRoute = isAdmin || isLengkapiProfil || isLengkapiWaPegawai || isBarcode;
+const isLegalPage =
+  pathname === "/syarat-ketentuan" ||
+  pathname.startsWith("/syarat-ketentuan/") ||
+  pathname === "/kebijakan-privasi" ||
+  pathname.startsWith("/kebijakan-privasi/");
+const isBareRoute = isAdmin || isLengkapiProfil || isLengkapiWaPegawai || isBarcode || isLegalPage;
 
 const isDashboard =
   pathname.startsWith("/dashboard") ||
   pathname.startsWith("/pegawai") ||
   pathname.startsWith("/masyarakat");
+
+// Bypass pengecekan maintenance pada panel admin & dashboard agar navigasi instan
+const maintenance = (isBareRoute || isDashboard)
+  ? { enabled: false, message: "", startedAt: null, startedBy: null, aiChatEnabled: true }
+  : await getMaintenanceStatus();
+
+let profile: any = null;
+try {
+  profile = await getCurrentProfile(Astro);
+} catch {
+  profile = null;
+}
 const isMaintenance = pathname === "/maintenance";
 const isAuthPage =
   pathname.startsWith("/login") ||
@@ -100,7 +109,7 @@ const pageTitle =
 <!doctype html>
 <html
   lang="id"
-  style={{ "--font-jakarta": "'Plus Jakarta Sans Variable', sans-serif" } as any}
+  style={{ "--font-jakarta": "'Plus Jakarta Sans', sans-serif" } as any}
   class="dark:bg-slate-950"
 >
   <head>
@@ -108,6 +117,13 @@ const pageTitle =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
+    <!-- Google Fonts API: Plus Jakarta Sans (Hanya 1 Font Tunggal) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+      rel="stylesheet"
+    />
     <ClientRouter />
     <meta name="description" content={description} />
     <meta name="application-name" content="PTSP Kemenag Barito Utara" />
@@ -150,12 +166,13 @@ const pageTitle =
       })();
     </script>
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
+    <ClientRouter />
   </head>
   <body class="text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <div class="flex min-h-dvh flex-col">
       {
         showHeader && (
-          <SiteHeaderClient client:load profile={profile} />
+          <SiteHeaderClient client:load profile={profile} pathname={pathname} />
         )
       }
       <main class="relative flex w-full flex-1 flex-col">
@@ -164,37 +181,44 @@ const pageTitle =
       {
         showFooter &&
           (isDashboard ? (
-            <footer class="border-t border-slate-200 bg-white py-4 text-center text-[11px] font-medium text-slate-400">
+            <footer class="hidden md:block border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-4 text-center text-[11px] font-medium text-slate-400">
               © {new Date().getFullYear()} PTSP Kantor Kementerian Agama Kab. Barito Utara
             </footer>
           ) : (
             <SiteFooter client:load />
           ))
       }
-      <Toaster
-        client:load
-        position="top-center"
-        richColors
-        duration={3500}
-        closeButton
-        toastOptions={{
-          style: {
-            borderRadius: "14px",
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            border: "1px solid rgba(226, 232, 240, 0.8)",
-            padding: "16px",
-            fontWeight: "500",
-          },
-          className: "text-[14px]",
-        }}
-      />
-      {!isMaintenance && (
+      {!isAdmin && (
+        <Toaster
+          client:load
+          transition:persist="ptsp-toaster"
+          position="top-center"
+          richColors
+          duration={3000}
+          style={{ zIndex: 99999999 }}
+          toastOptions={{
+            style: {
+              borderRadius: "16px",
+              boxShadow:
+                "0 10px 30px -4px rgba(15, 23, 42, 0.15), 0 4px 12px -2px rgba(15, 23, 42, 0.08)",
+              border: "1px solid rgba(226, 232, 240, 0.8)",
+              padding: "12px 18px",
+              fontSize: "13px",
+              fontWeight: "600",
+              zIndex: 99999999,
+            },
+            className: "text-[13px] font-sans antialiased",
+          }}
+        />
+      )}
+      {!isMaintenance && !isAdmin && !isDashboard && !isLegalPage && (
         <>
           <CombinedWidgetClient client:load initialEnabled={maintenance.aiChatEnabled} />
-          <AccessibilityWidget client:load />
           <ScrollToTopButton client:load />
         </>
+      )}
+      {!isMaintenance && !isLegalPage && (
+        <AccessibilityWidget client:load />
       )}
       <AuthRedirectListener client:load />
       <MaintenanceSyncListener client:load />

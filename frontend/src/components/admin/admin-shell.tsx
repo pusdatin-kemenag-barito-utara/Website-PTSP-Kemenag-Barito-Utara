@@ -20,6 +20,8 @@ import {
   CalendarCheck,
   Construction,
   UserCog,
+  BadgeCheck,
+  Building2,
   Settings,
   Shield,
   ChevronDown,
@@ -32,6 +34,12 @@ import {
 import { isSuperAdmin as checkSuperAdmin } from "@/lib/constants";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { Toaster, toast } from "sonner";
+import "sonner/dist/styles.css";
+
+if (typeof window !== "undefined") {
+  (window as any).toast = toast;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Profile = Record<string, any>;
@@ -123,6 +131,36 @@ const ADMIN_NAV: NavItem[] = [
     group: "Kepegawaian",
     id: "e_laporan_kinerja",
   },
+  {
+    label: "Unit Kerja & Role",
+    href: "/admin/kepegawaian/unit-kerja",
+    icon: Building2,
+    group: "Kepegawaian",
+    id: "unit_kerja",
+  },
+
+  // --- MANAJEMEN PENGGUNA ---
+  {
+    label: "Petugas Admin",
+    href: "/admin/pengguna?tab=petugas",
+    icon: UserCog,
+    group: "Manajemen Pengguna",
+    id: "pengguna_petugas",
+  },
+  {
+    label: "Data Pegawai",
+    href: "/admin/pengguna?tab=pegawai",
+    icon: BadgeCheck,
+    group: "Manajemen Pengguna",
+    id: "pengguna_pegawai",
+  },
+  {
+    label: "Pemohon Masyarakat",
+    href: "/admin/pengguna?tab=pemohon",
+    icon: Users,
+    group: "Manajemen Pengguna",
+    id: "pengguna_pemohon",
+  },
 
   {
     label: "Pemeliharaan Storage",
@@ -137,20 +175,42 @@ const ADMIN_NAV: NavItem[] = [
 export function AdminShell({
   profile,
   allowedMenus = [],
+  currentPath,
+  currentSearch,
+  activeMenu,
+  activeType,
   children,
 }: {
   profile: Profile;
   allowedMenus?: string[];
+  currentPath?: string;
+  currentSearch?: string;
+  activeMenu?: string;
+  activeType?: "public" | "asn";
   children: ReactNode;
 }) {
-  const pathname = usePathname();
+  const routerPathname = usePathname();
+  const pathname =
+    (typeof window !== "undefined"
+      ? (routerPathname || window.location.pathname)
+      : currentPath) || "";
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Filter navigation items based on role permissions
   const isSuperAdmin = checkSuperAdmin(profile?.email);
   const authorizedNav = isSuperAdmin
     ? ADMIN_NAV
-    : ADMIN_NAV.filter((item: NavItem) => allowedMenus.includes(item.id));
+    : ADMIN_NAV.filter(
+        (item: NavItem) =>
+          allowedMenus.includes(item.id) ||
+          (item.group === "Manajemen Pengguna" &&
+            (allowedMenus.includes("pengguna") ||
+              allowedMenus.includes("manajemen_pegawai"))) ||
+          (item.id === "unit_kerja" &&
+            (allowedMenus.includes("unit_kerja") ||
+              allowedMenus.includes("pengguna") ||
+              allowedMenus.includes("manajemen_pegawai"))),
+      );
 
   const groups = Array.from(
     new Set(authorizedNav.map((item: NavItem) => item.group || "")),
@@ -166,11 +226,14 @@ export function AdminShell({
   return (
     <div className="flex w-full overflow-hidden bg-slate-50 fixed inset-0">
       {/* ── Desktop Sidebar ─────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[280px] shrink-0 flex-col bg-[#0f1117] border-r border-white/5 shadow-[2px_0_20px_rgba(0,0,0,0.3)] z-20">
+      <aside className="hidden lg:flex w-[245px] shrink-0 flex-col bg-[#0f1117] border-r border-white/5 shadow-[2px_0_20px_rgba(0,0,0,0.3)] z-20">
         <AdminSidebar
           groups={groups}
           authorizedNav={authorizedNav}
           pathname={pathname}
+          currentSearch={currentSearch}
+          activeMenu={activeMenu}
+          activeType={activeType}
         />
       </aside>
 
@@ -184,11 +247,14 @@ export function AdminShell({
             onClick={() => setMobileOpen(false)}
           />
           {/* Drawer */}
-          <aside className="relative z-10 flex w-[280px] flex-col bg-[#0f1117] border-r border-white/5 shadow-2xl">
+          <aside className="relative z-10 flex w-[250px] flex-col bg-[#0f1117] border-r border-white/5 shadow-2xl">
             <AdminSidebar
               groups={groups}
               authorizedNav={authorizedNav}
               pathname={pathname}
+              currentSearch={currentSearch}
+              activeMenu={activeMenu}
+              activeType={activeType}
               onNavClick={() => setMobileOpen(false)}
             />
           </aside>
@@ -206,8 +272,31 @@ export function AdminShell({
         />
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 min-w-0 max-w-full overflow-x-hidden">{children}</main>
+        <main className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] p-3 sm:p-4 md:p-5 min-w-0 max-w-full overflow-x-hidden">
+          <div className="w-full">
+            {children}
+          </div>
+        </main>
       </div>
+
+      {/* ── Global Toaster for Admin Panel ──────────────────────── */}
+      <Toaster
+        position="top-right"
+        richColors
+        duration={2500}
+        toastOptions={{
+          style: {
+            borderRadius: "16px",
+            boxShadow:
+              "0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04)",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            padding: "12px 18px",
+            fontSize: "13px",
+            fontWeight: "500",
+          },
+          className: "text-[13px] font-sans antialiased",
+        }}
+      />
     </div>
   );
 }

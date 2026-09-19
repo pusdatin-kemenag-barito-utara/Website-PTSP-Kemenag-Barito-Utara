@@ -13,7 +13,7 @@
     "start": "node ./dist/server/entry.mjs",
     "check": "astro check",
     "typecheck": "tsc --noEmit --skipLibCheck",
-    "sync:pegawai": "dotenv -e ../.env.local -- tsx scripts/sync-pegawai-mass.ts"
+    "sync:pegawai": "infisical run --env=dev --path=/ptsp-kemenag -- tsx scripts/sync-pegawai-mass.ts"
   },
   "dependencies": {
     "@astrojs/node": "latest",
@@ -72,6 +72,8 @@
   "overrides": {
     "@vite-pwa/astro": {
       "astro": "$astro"
-    }
+    },
+    "form-data": "^4.0.2",
+    "uuid": "^11.1.1"
   }
 }

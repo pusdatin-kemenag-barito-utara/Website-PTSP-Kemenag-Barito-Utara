@@ -71,12 +71,76 @@ export class SystemService {
    * Get real-time storage stats dari backend Golang (R2)
    */
   static async getStorageStats() {
-    const res = await fetchAPI<{ success: boolean; cloudflareR2?: { usage: number; fileCount: number } }>("/files/stats");
+    const res = await fetchAPI<{ success: boolean; cloudflareR2?: { usage: number; fileCount: number } }>("/files/stats").catch(() => null);
     return {
       cloudflareR2: {
         usage: res?.cloudflareR2?.usage || 0,
         fileCount: res?.cloudflareR2?.fileCount || 0,
       },
     };
+  }
+
+  /**
+   * Get comprehensive storage and system status overview
+   */
+  static async getStorageOverview() {
+    const [overviewRes, r2Res] = await Promise.allSettled([
+      fetchAPI<{ success: boolean; data: any }>("/admin/system/storage-overview"),
+      fetchAPI<{ success: boolean; cloudflareR2?: { usage: number; fileCount: number } }>("/files/stats"),
+    ]);
+
+    const overview = overviewRes.status === "fulfilled" ? overviewRes.value?.data : null;
+    const r2 = r2Res.status === "fulfilled" ? r2Res.value?.cloudflareR2 : null;
+
+    return {
+      cloudflareR2: {
+        usage: r2?.usage || 0,
+        fileCount: r2?.fileCount || 0,
+        status: r2?.usage !== undefined ? "ready" : "offline",
+      },
+      database: {
+        activeReqDocs: Number(overview?.activeReqDocs || 0),
+        activeGenDocs: Number(overview?.activeGenDocs || 0),
+        totalRequests: Number(overview?.totalRequests || 0),
+        completedRequests: Number(overview?.completedRequests || 0),
+        expiredRequests: Number(overview?.expiredRequests || 0),
+        totalGuestBook: Number(overview?.totalGuestBook || 0),
+        totalPegawai: Number(overview?.totalPegawai || 0),
+        dbLatencyMs: Number(overview?.dbLatencyMs || 0),
+        dbConnected: overview?.dbConnected ?? true,
+      },
+      systemStatus: overview?.systemStatus || {
+        aiChatEnabled: true,
+        allowManualGuestBook: false,
+        maintenanceMode: false,
+        maintenanceMessage: "Sistem berjalan normal.",
+      },
+    };
+  }
+
+  /**
+   * Ping / Keep-Alive test
+   */
+  static async pingSystem() {
+    const start = Date.now();
+    const res = await fetchAPI<{ success: boolean; message: string; time: string }>("/admin/system/keep-alive", {
+      method: "POST",
+    }).catch(() => null);
+    const latency = Date.now() - start;
+    return {
+      success: res?.success ?? false,
+      latency,
+      time: res?.time || new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Update system settings (AI Chat, Manual Guest Book, Maintenance Mode)
+   */
+  static async updateSettings(settings: Record<string, any>) {
+    return await fetchAPI<any>("/admin/system/settings", {
+      method: "PATCH",
+      body: JSON.stringify(settings),
+    });
   }
 }

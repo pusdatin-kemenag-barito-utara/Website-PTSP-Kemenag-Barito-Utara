@@ -1,0 +1,51 @@
+---
+import AdminShell from "@/layouts/AdminShell.astro";
+import { UnitKerjaManager } from "@/components/admin/kepegawaian/unit-kerja-manager";
+import { requirePermission } from "@/lib/auth";
+import { fetchAPI } from "@/lib/api";
+import { isSuperAdmin, ALL_ADMIN_MENUS, DEFAULT_ADMIN_PERMISSIONS } from "@/lib/constants";
+
+// Require permission for unit_kerja or super admin
+const profile = await requirePermission("unit_kerja", Astro).catch(async () => {
+  // Fallback to pengguna permission if unit_kerja is not specifically set
+  return await requirePermission("pengguna", Astro);
+});
+
+let allowedMenus: string[] = [];
+if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
+  allowedMenus = ALL_ADMIN_MENUS;
+} else {
+  allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
+}
+
+const token = Astro.cookies.get("ptsp-auth")?.value;
+const headers: Record<string, string> = {};
+if (token) {
+  headers["Authorization"] = `Bearer ${token}`;
+  headers["Cookie"] = `ptsp-auth=${token}`;
+}
+
+// Fetch all master options server-side
+const optionsRes = await fetchAPI<{ success: boolean; data: any[] }>("/master-options", { headers }).catch(() => null);
+const masterOptions = optionsRes?.data ?? [];
+---
+
+<AdminShell
+  title="Manajemen Unit Kerja & Role Admin | PTSP Kemenag Barito Utara"
+  description="Kelola daftar Unit Kerja dan Role Akses Petugas secara dinamis"
+  profile={profile}
+  allowedMenus={allowedMenus}
+>
+  <div class="w-full p-4 sm:p-6 space-y-4">
+    <div>
+      <h1 class="text-xl font-black text-slate-900 tracking-tight">
+        Manajemen Unit Kerja & Role Admin
+      </h1>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Kelola daftar Unit Kerja / Seksi dan Role Akses Admin secara dinamis yang terhubung ke seluruh formulir sistem
+      </p>
+    </div>
+
+    <UnitKerjaManager client:load initialOptions={masterOptions} />
+  </div>
+</AdminShell>

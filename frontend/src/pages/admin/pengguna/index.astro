@@ -14,15 +14,43 @@ if (profile.role === "super_admin" || isSuperAdmin(profile.email)) {
   allowedMenus = (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
 }
 
-const res = await fetchAPI<{ data: any[] }>("/admin/users");
-const users = res?.data ?? [];
+const token = Astro.cookies.get("ptsp-auth")?.value;
+const headers: Record<string, string> = {};
+if (token) {
+  headers["Authorization"] = `Bearer ${token}`;
+  headers["Cookie"] = `ptsp-auth=${token}`;
+}
+
+const rawTab = Astro.url.searchParams.get("tab");
+const currentTab = (rawTab === "pegawai" || rawTab === "pemohon") ? rawTab : "petugas";
+
+// Fetch modular endpoints concurrently
+const [statsRes, petugasRes, pegawaiRes, pemohonRes] = await Promise.all([
+  fetchAPI<{ success: boolean; data: any }>("/admin/users/stats", { headers }).catch(() => null),
+  fetchAPI<{ success: boolean; data: any[] }>("/admin/users/petugas?limit=100", { headers }).catch(() => null),
+  fetchAPI<{ success: boolean; data: any[] }>("/admin/users/pegawai?limit=500", { headers }).catch(() => null),
+  fetchAPI<{ success: boolean; data: any[] }>("/admin/users/pemohon?limit=100", { headers }).catch(() => null),
+]);
+
+const stats = statsRes?.data ?? null;
+const petugas = petugasRes?.data ?? [];
+const pegawai = pegawaiRes?.data ?? [];
+const pemohon = pemohonRes?.data ?? [];
 ---
 
 <AdminShell
-  title="Manajemen Petugas & Pengguna | PTSP Kemenag Barito Utara"
-  description="Kelola role dan akses pengguna sistem"
+  title="Manajemen Pengguna | PTSP Kemenag Barito Utara"
+  description="Kelola akun Petugas Admin, Pegawai Kemenag (tersinkron ke Manajemen Cuti), dan Pemohon Masyarakat"
   profile={profile}
   allowedMenus={allowedMenus}
 >
-  <PenggunaView client:load initialUsers={users} currentEmail={profile.email ?? undefined} />
+  <PenggunaView
+    client:load
+    initialTab={currentTab}
+    initialPetugas={petugas}
+    initialPegawai={pegawai}
+    initialPemohon={pemohon}
+    initialStats={stats}
+    currentEmail={profile.email ?? undefined}
+  />
 </AdminShell>

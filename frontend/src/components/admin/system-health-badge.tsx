@@ -35,16 +35,16 @@ export function SystemHealthBadge() {
   };
 
   return (
-    <div className="relative mt-auto p-4 border-t border-slate-100 bg-slate-50/50">
+    <div className="relative mt-auto px-3 py-2.5 border-t border-white/5 bg-transparent">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 w-full group"
+        className="flex items-center gap-2.5 w-full group"
       >
         <div className="relative">
-          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-          <div className="absolute inset-0 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping opacity-20" />
+          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+          <div className="absolute inset-0 h-2 w-2 rounded-full bg-emerald-500 animate-ping opacity-20" />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-emerald-600 transition-colors">
+        <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-400 transition-colors">
           Sistem Online
         </span>
       </button>

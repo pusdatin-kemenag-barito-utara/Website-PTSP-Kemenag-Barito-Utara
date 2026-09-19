@@ -189,23 +189,42 @@ export function PegawaiManager({
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus data pegawai ${name}?`))
-      return;
+    toast(`Hapus pegawai "${name}"?`, {
+      description: "Apakah Anda yakin ingin menghapus data pegawai ini?",
+      action: {
+        label: "Ya, Hapus",
+        onClick: async () => {
+          setLoading(true);
+          const toastId = toast.loading(`Sedang menghapus data pegawai "${name}"...`);
+          try {
+            const res = await deletePegawaiAction(id);
+            toast.dismiss(toastId);
+            if (res.error) {
+              toast.error(res.error);
+            } else {
+              toast.success("Pegawai berhasil dihapus!");
+              setData((prev) => prev.filter((p) => p.id !== id));
+              router.refresh();
 
-    setLoading(true);
-    const res = await deletePegawaiAction(id);
-    if (res.error) toast.error(res.error);
-    else {
-      toast.success("Pegawai berhasil dihapus!");
-      setData((prev) => prev.filter((p) => p.id !== id));
-      router.refresh();
-
-      const remainingOnPage = currentData.length - 1;
-      if (remainingOnPage === 0 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      }
-    }
-    setLoading(false);
+              const remainingOnPage = currentData.length - 1;
+              if (remainingOnPage === 0 && currentPage > 1) {
+                setCurrentPage((prev) => prev - 1);
+              }
+            }
+          } catch (err: any) {
+            toast.dismiss(toastId);
+            toast.error("Kesalahan jaringan", { description: err.message });
+          } finally {
+            setLoading(false);
+          }
+        },
+      },
+      cancel: {
+        label: "Batal",
+        onClick: () => {},
+      },
+      duration: 6000,
+    });
   };
 
   const handleImpersonate = async (p: any) => {
@@ -391,32 +410,33 @@ export function PegawaiManager({
         {/* Pagination */}
         <div className="bg-slate-50 p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <select
-              value={
-                rowsPerPage === filteredData.length && filteredData.length > 0
-                  ? "all"
-                  : rowsPerPage
-              }
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "all") {
-                  setRowsPerPage(
-                    filteredData.length > 0 ? filteredData.length : 10,
-                  );
-                } else {
-                  setRowsPerPage(Number(val));
-                }
-                setCurrentPage(1);
-              }}
-              className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm"
-            >
-              <option value={10}>10 Baris</option>
-              <option value={25}>25 Baris</option>
-              <option value={50}>50 Baris</option>
-              <option value={100}>100 Baris</option>
-              <option value={500}>500 Baris</option>
-              <option value="all">Semua Baris</option>
-            </select>
+            <div className="w-32">
+              <ModernSelect
+                value={String(
+                  rowsPerPage === filteredData.length && filteredData.length > 0
+                    ? "all"
+                    : rowsPerPage
+                )}
+                onChange={(val) => {
+                  if (val === "all") {
+                    setRowsPerPage(
+                      filteredData.length > 0 ? filteredData.length : 10,
+                    );
+                  } else {
+                    setRowsPerPage(Number(val));
+                  }
+                  setCurrentPage(1);
+                }}
+                options={[
+                  { value: "10", label: "10 Baris" },
+                  { value: "25", label: "25 Baris" },
+                  { value: "50", label: "50 Baris" },
+                  { value: "100", label: "100 Baris" },
+                  { value: "500", label: "500 Baris" },
+                  { value: "all", label: "Semua Baris" },
+                ]}
+              />
+            </div>
             <div className="text-xs font-medium text-slate-500">
               Menampilkan{" "}
               {filteredData.length === 0

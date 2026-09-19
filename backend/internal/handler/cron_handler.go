@@ -64,6 +64,14 @@ func (h *CronHandler) GetSystemStatus(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": status})
 }
 
+func (h *CronHandler) GetStorageOverview(c fiber.Ctx) error {
+	overview, err := h.svc.GetStorageOverview(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "data": overview})
+}
+
 func (h *CronHandler) ToggleGuestBookMode(c fiber.Ctx) error {
 	var body map[string]interface{}
 	if err := c.Bind().Body(&body); err != nil {

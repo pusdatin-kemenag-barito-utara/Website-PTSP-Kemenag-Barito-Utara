@@ -1,5 +1,3 @@
-import { FileText } from "lucide-react";
-import { PageHeader } from "@/components/admin/page-header";
 import { LayananClient } from "@/components/admin/layanan/layanan-client";
 
 export function LayananView({
@@ -16,16 +14,7 @@ export function LayananView({
   bidangLabel?: string;
 }) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Kelola Layanan"
-        description={
-          isSuper || isGeneralAdmin
-            ? "Manajemen data layanan utama untuk semua bidang — urutan, visibilitas, dan kepemilikan."
-            : `Menampilkan layanan untuk bidang: ${bidangLabel}`
-        }
-        icon={FileText}
-      />
+    <div className="space-y-4 pb-6">
       <LayananClient
         initialServices={services}
         currentUserRole={currentUserRole}

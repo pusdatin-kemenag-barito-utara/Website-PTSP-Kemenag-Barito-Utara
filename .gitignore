@@ -38,10 +38,9 @@ backend/build-errors.log
 *.log
 main
 
-# Environment Variables & Secrets
+# Environment Variables & Secrets (Semua dikelola via Infisical Cloud)
 .env
 .env*
-!.env.example
 *.env
 *.env.local
 

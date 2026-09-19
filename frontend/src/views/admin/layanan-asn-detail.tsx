@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/admin/page-header";
 import { FolderOpen, ArrowLeft } from "lucide-react";
 import Link from "@/lib/next-compat/link";
 
@@ -13,11 +12,6 @@ export function ServiceWizardASNView({ service }: { service: any }) {
           <ArrowLeft className="h-4 w-4" />
           Kembali ke Daftar Layanan
         </Link>
-        <PageHeader
-          title={`Kelola: ${service.name}`}
-          description="Manajemen layanan ini diatur secara spesifik pada masing-masing bidang."
-          icon={FolderOpen}
-        />
       </div>
 
       <div className="bg-white rounded-3xl p-10 border border-slate-200/60 shadow-sm text-center flex flex-col items-center justify-center">

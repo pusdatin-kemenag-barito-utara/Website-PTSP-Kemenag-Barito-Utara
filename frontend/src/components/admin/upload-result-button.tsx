@@ -75,12 +75,12 @@ export function UploadResultButton({
         onClick={() => fileInputRef.current?.click()}
         disabled={isPending}
         title={hasFile ? "Upload Ulang Dokumen" : "Upload Manual Dokumen"}
-        className="flex items-center justify-center p-2 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-70 disabled:pointer-events-none bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+        className="flex items-center justify-center p-1.5 rounded-lg transition-all shadow-xs active:scale-95 disabled:opacity-70 disabled:pointer-events-none bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
       >
         {isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <FileUp className="h-4 w-4" />
+          <FileUp className="h-3.5 w-3.5" />
         )}
       </button>
     </>

@@ -108,64 +108,65 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
 
   return (
     <>
-      <div className="p-5 transition-colors hover:bg-slate-50/50 flex flex-col lg:flex-row gap-6 lg:items-center justify-between border-b border-slate-100 last:border-0 group">
+      <div className="px-4 py-2.5 transition-colors hover:bg-slate-50/50 flex flex-col lg:flex-row gap-3 lg:items-center justify-between border-b border-slate-100 last:border-0 group">
         {/* Info Permohonan */}
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <div
-            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-sm border ${
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-2xs border ${
               isGenerated
                 ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                 : "bg-amber-50 text-amber-600 border-amber-100"
             }`}
           >
             {isGenerated ? (
-              <FileCheck2 className="h-7 w-7" />
+              <FileCheck2 className="h-5 w-5" />
             ) : (
-              <FileUp className="h-7 w-7" />
+              <FileUp className="h-5 w-5" />
             )}
           </div>
           
-          <div className="min-w-0 space-y-2">
-            <div>
-              <h3 className="font-bold text-slate-900 text-base truncate flex items-center gap-2">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-bold text-slate-900 text-sm truncate">
                 {applicantName}
-                {isGenerated && (
-                  <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                    Tersedia
-                  </span>
-                )}
               </h3>
-              <p className="text-sm font-medium text-slate-500 truncate mt-0.5">
+              {isGenerated && (
+                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700 uppercase tracking-wider">
+                  Tersedia
+                </span>
+              )}
+              <span className="text-xs text-slate-400 hidden sm:inline">•</span>
+              <p className="text-xs font-medium text-slate-500 truncate">
                 {serviceName}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-              <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-md" title="Nomor Tiket">
-                <span className="font-semibold font-mono text-slate-700">{reqNum}</span>
+            <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500">
+              <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md" title="Nomor Tiket">
+                <span className="font-semibold font-mono text-slate-700 text-[11px]">{reqNum}</span>
               </div>
               
-              <div className="flex items-center gap-1.5">
-                <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${statusColor}`}>
+              <div className="flex items-center">
+                <span className={`inline-flex px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${statusColor}`}>
                   {statusLabel}
                 </span>
               </div>
 
               {isGenerated ? (
-                <div className="flex items-center gap-1.5 text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 text-[11px]">
+                  <CheckCircle2 className="h-3 w-3" />
                   {docDate ? `Diunggah: ${docDate}` : "Dokumen Hasil Siap"}
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-amber-600 font-semibold bg-amber-50 px-2.5 py-1 rounded-md border border-amber-100">
-                  <Clock className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1 text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100 text-[11px]">
+                  <Clock className="h-3 w-3" />
                   Menunggu Unggahan Dokumen
                 </div>
               )}
 
               {isWaSent && (
-                <div className="flex items-center gap-1.5 text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100 animate-in fade-in zoom-in duration-300">
-                  <Send className="h-3 w-3" />
+                <div className="flex items-center gap-1 text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 animate-in fade-in zoom-in duration-300 text-[11px]">
+                  <Send className="h-2.5 w-2.5" />
                   {waSentDate ? `Terkirim ke WA: ${waSentDate}` : "Terkirim ke WA"}
                 </div>
               )}
@@ -174,7 +175,7 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
         </div>
 
         {/* Actions */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0 ml-[4.5rem] lg:ml-0">
+        <div className="flex flex-wrap items-center gap-1.5 shrink-0 ml-12 lg:ml-0">
           <UploadResultButton requestId={request.id} hasFile={isGenerated} />
           
           <button
@@ -187,13 +188,13 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
               }
             }}
             title="Lihat Dokumen Hasil"
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 text-xs font-bold ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95 text-xs font-semibold ${
               fileUrl
                 ? "bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
                 : "bg-slate-100 text-slate-400 border border-slate-200"
             }`}
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3.5 w-3.5" />
             <span>Buka File</span>
           </button>
 
@@ -207,14 +208,14 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
               setShowWADialog(true);
             }}
             disabled={isPending}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all shadow-sm active:scale-95 text-xs font-bold ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all shadow-2xs active:scale-95 text-xs font-semibold ${
               isGenerated || fileUrl
                 ? "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 cursor-pointer"
                 : "bg-slate-100 text-slate-400 border border-slate-200"
             }`}
             title="Kirim notifikasi via WhatsApp"
           >
-            <Send className={`h-4 w-4 ${isPending ? 'animate-pulse' : ''}`} />
+            <Send className={`h-3.5 w-3.5 ${isPending ? 'animate-pulse' : ''}`} />
             <span>Kirim WA</span>
           </button>
         </div>
@@ -236,7 +237,7 @@ function DokumenHasilRow({ request, fileUrl }: { request: any, fileUrl: string |
         isOpen={isDocModalOpen}
         onClose={() => setIsDocModalOpen(false)}
         title={serviceName}
-        url={fileUrl}
+        url={fileUrl || generatedDocs[0]?.filePath || generatedDocs[0]?.file_path || null}
         fileName={`Dokumen_Hasil_${reqNum}.pdf`}
       />
     </>

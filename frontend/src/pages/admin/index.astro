@@ -30,12 +30,13 @@ if (profile.role === "super_admin" || isSuper) {
     (profile.permissions as string[]) || DEFAULT_ADMIN_PERMISSIONS;
 }
 
-const { masyarakat, pegawai } = await getAdminDashboardStats(roleOwnerFilter);
+const token = Astro.cookies.get("ptsp-auth")?.value;
+const { masyarakat, pegawai } = await getAdminDashboardStats(roleOwnerFilter, token);
 
 const {
   serviceAnalytics,
   trendAnalytics,
-} = await getAdminDashboardAnalytics(roleOwnerFilter);
+} = await getAdminDashboardAnalytics(roleOwnerFilter, token);
 ---
 
 <AdminShell

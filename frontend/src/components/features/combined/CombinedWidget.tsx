@@ -135,7 +135,9 @@ export function CombinedWidget({ aiEnabled = true }: CombinedWidgetProps) {
         )}
       </AnimatePresence>
 
-      <div style={{ position: "fixed", bottom: 20, right: 16, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12 }}>
+      <div 
+        className="fixed right-3.5 sm:right-4 z-[9999] flex flex-col items-end gap-3 bottom-[calc(env(safe-area-inset-bottom)+76px)] md:bottom-5 transition-all duration-300"
+      >
         {/* ── Panel ───────────────────────────────────────────────── */}
         <AnimatePresence>
           {isOpen && (
@@ -146,7 +148,7 @@ export function CombinedWidget({ aiEnabled = true }: CombinedWidgetProps) {
               transition={{ type: "spring", damping: 26, stiffness: 320, mass: 0.8 }}
               style={{
                 width: "min(360px, calc(100vw - 32px))",
-                height: 520,
+                height: "min(520px, calc(100dvh - 160px))",
                 background: "#ffffff",
                 borderRadius: 20,
                 boxShadow: "0 24px 80px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.06)",

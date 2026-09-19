@@ -1,78 +1,97 @@
 import { Search, Filter } from "lucide-react";
+import { ModernSelect } from "@/components/ui/modern-select";
 
 export function AdminRequestFilter({
   q,
   status,
   serviceId,
   services,
+  type = "public",
 }: {
   q: string;
   status: string;
   serviceId: string;
   services: any[] | null;
+  type?: string;
 }) {
+  const isASN = type === "asn";
+  const defaultLabel = isASN ? "Semua Layanan Pegawai (ASN)" : "Semua Layanan Masyarakat";
+
+  const serviceOptions = [
+    { value: "", label: defaultLabel },
+    ...(services || []).map((s: any) => ({
+      value: String(s.id),
+      label: s.name,
+      badge: s.category === "asn" ? "ASN" : "Masyarakat",
+    })),
+  ];
+
+  const statusOptions = [
+    { value: "", label: "Semua Status" },
+    { value: "submitted", label: "Diajukan" },
+    { value: "under_review", label: "Diproses" },
+    { value: "revision_required", label: "Revisi" },
+    { value: "rejected", label: "Ditolak" },
+    { value: "approved", label: "Disetujui" },
+    { value: "completed", label: "Selesai" },
+    { value: "spam", label: "Spam / Palsu" },
+  ];
+
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-      <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3">
-        <p className="text-sm font-medium text-slate-700">Filter & Pencarian</p>
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+      <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-4 py-2">
+        <p className="text-xs font-bold text-slate-700">Filter & Pencarian</p>
       </div>
-      <div className="p-4">
-        <form className="flex flex-col gap-3 sm:flex-row sm:items-end flex-wrap">
-          <div className="flex-1 min-w-[200px]">
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
+      <div className="p-3">
+        <form className="flex flex-col gap-2.5 sm:flex-row sm:items-end flex-wrap">
+          <input type="hidden" name="type" value={type} />
+          <div className="flex-1 min-w-[180px]">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Pencarian
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <input
                 name="q"
                 defaultValue={q}
                 placeholder="Nomor pengajuan atau nama..."
-                className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition-all hover:border-slate-400 focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-900 shadow-2xs placeholder:text-slate-400 transition-all hover:border-slate-400 focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 outline-none"
               />
             </div>
           </div>
-          <div className="w-full sm:w-56 shrink-0">
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
+
+          <div className="w-full sm:w-80 md:w-96 shrink-0">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Layanan
             </label>
-            <select
+            <ModernSelect
               name="serviceId"
               defaultValue={serviceId}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-all hover:border-slate-400 focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_10px_center] bg-no-repeat pr-9 outline-none truncate"
-            >
-              <option value="">Semua Layanan</option>
-              {services?.map((s: any) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+              options={serviceOptions}
+              placeholder={defaultLabel}
+              searchable={true}
+              searchPlaceholder="Cari layanan..."
+              clearable={Boolean(serviceId)}
+            />
           </div>
-          <div className="w-full sm:w-48 shrink-0">
-            <label className="mb-1.5 block text-xs font-medium text-slate-500">
+
+          <div className="w-full sm:w-44 shrink-0">
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Status
             </label>
-            <select
+            <ModernSelect
               name="status"
               defaultValue={status}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-all hover:border-slate-400 focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/10 appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_10px_center] bg-no-repeat pr-9 outline-none"
-            >
-              <option value="">Semua status</option>
-              <option value="submitted">Diajukan</option>
-              <option value="under_review">Diproses</option>
-              <option value="revision_required">Revisi</option>
-              <option value="rejected">Ditolak</option>
-              <option value="approved">Disetujui</option>
-              <option value="completed">Selesai</option>
-              <option value="spam">Spam / Palsu</option>
-            </select>
+              options={statusOptions}
+              placeholder="Semua Status"
+            />
           </div>
+
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#059669] to-[#047857] px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-emerald-500/20 transition-all hover:shadow-md hover:shadow-emerald-500/30 active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[#059669] to-[#047857] px-3.5 py-2 text-xs font-bold text-white shadow-2xs transition-all hover:shadow-xs active:scale-[0.98] cursor-pointer h-9"
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="h-3.5 w-3.5" />
             Filter
           </button>
         </form>

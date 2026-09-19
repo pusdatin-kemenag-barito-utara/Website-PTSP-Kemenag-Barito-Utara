@@ -66,25 +66,59 @@ func (r *SystemRepository) PingDB(ctx context.Context) error {
 
 func (r *SystemRepository) UpdateSystemSettings(ctx context.Context, settings map[string]interface{}) error {
 	if allowManual, ok := settings["allowManual"]; ok {
-		_, err := r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_system_status SET allow_manual_guest_book = $1 WHERE id = 'heartbeat'`, allowManual)
+		_, err := r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_system_status SET allow_manual_guest_book = $1`, allowManual)
 		if err != nil {
 			return err
 		}
 	}
 	if maintenanceMode, ok := settings["maintenanceMode"]; ok {
 		message, _ := settings["maintenanceMessage"].(string)
-		_, err := r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_system_status SET maintenance_mode = $1, maintenance_message = $2 WHERE id = 'heartbeat'`, maintenanceMode, message)
+		_, err := r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_system_status SET maintenance_mode = $1, maintenance_message = $2`, maintenanceMode, message)
 		if err != nil {
 			return err
 		}
 	}
 	if aiChat, ok := settings["aiChatEnabled"]; ok {
-		_, err := r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_system_status SET ai_chat_enabled = $1 WHERE id = 'heartbeat'`, aiChat)
+		_, err := r.db.Exec(ctx, `UPDATE kemenag_ptsp.ptsp_system_status SET ai_chat_enabled = $1`, aiChat)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (r *SystemRepository) GetSystemStorageOverview(ctx context.Context) (map[string]interface{}, error) {
+	start := time.Now()
+	var reqDocs, genDocs, totalReq, completedReq, expiredReq, totalGuests, totalPegawai int64
+	err := r.db.QueryRow(ctx, `
+		SELECT 
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_request_documents WHERE file_path != 'EXPIRED'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_generated_documents WHERE file_path != 'EXPIRED'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'completed'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'completed' AND completed_at < NOW() - INTERVAL '3 months'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_guest_book),
+			(SELECT COUNT(*) FROM kemenag_ptsp.profiles_pegawai)
+	`).Scan(&reqDocs, &genDocs, &totalReq, &completedReq, &expiredReq, &totalGuests, &totalPegawai)
+	latency := time.Since(start).Milliseconds()
+	if err != nil {
+		return nil, err
+	}
+
+	statusMap, _ := r.GetSystemStatus(ctx)
+
+	return map[string]interface{}{
+		"activeReqDocs":     reqDocs,
+		"activeGenDocs":     genDocs,
+		"totalRequests":     totalReq,
+		"completedRequests": completedReq,
+		"expiredRequests":   expiredReq,
+		"totalGuestBook":    totalGuests,
+		"totalPegawai":      totalPegawai,
+		"dbLatencyMs":       latency,
+		"dbConnected":       true,
+		"systemStatus":      statusMap,
+	}, nil
 }
 
 func (r *SystemRepository) GetSystemStatus(ctx context.Context) (map[string]interface{}, error) {

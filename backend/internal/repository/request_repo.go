@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"ptsp-kemenag-backend/internal/models"
@@ -26,12 +28,14 @@ func (r *RequestRepository) FindAll(ctx context.Context, userID, status, categor
 		SELECT r.id, r.user_id, r.service_id, r.service_item_id, r.request_number, r.status,
 		       r.submitted_at, r.approved_at, r.rejected_at, r.completed_at, r.created_at,
 		       COALESCE(s.name, ''), COALESCE(si.name, ''),
-		       COALESCE(pm.nama, pp.nama, 'Pemohon'), COALESCE(pm.email, pp.email, '')
+		       COALESCE(NULLIF(pm.nama, ''), NULLIF(pp.nama, ''), NULLIF(pt.nama, ''), 'Pemohon'),
+		       COALESCE(NULLIF(pm.email, ''), NULLIF(pp.email, ''), NULLIF(pt.email, ''), '')
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
-		LEFT JOIN kemenag_ptsp.profiles_pemohon pm ON pm.user_id = r.user_id
-		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.user_id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pemohon pm ON pm.user_id = r.user_id OR pm.id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.user_id = r.user_id OR pp.id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_petugas pt ON pt.user_id = r.user_id OR pt.id = r.user_id
 		WHERE 1=1
 	`
 	args := []interface{}{}
@@ -90,24 +94,7 @@ func (r *RequestRepository) FindAll(ctx context.Context, userID, status, categor
 			req.ApplicantName = &aName
 			req.ApplicantEmail = &aEmail
 
-			// Fetch generated documents for this request
 			req.GeneratedDocuments = []models.RequestDocument{}
-			genRows, genErr := r.db.Query(ctx, `
-				SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0)
-				FROM kemenag_ptsp.ptsp_generated_documents
-				WHERE request_id::text = $1
-				ORDER BY created_at DESC
-			`, req.ID)
-			if genErr == nil {
-				for genRows.Next() {
-					var gDoc models.RequestDocument
-					if err := genRows.Scan(&gDoc.ID, &gDoc.FileName, &gDoc.FilePath, &gDoc.FileType, &gDoc.FileSize); err == nil {
-						req.GeneratedDocuments = append(req.GeneratedDocuments, gDoc)
-					}
-				}
-				genRows.Close()
-			}
-
 			result = append(result, req)
 		}
 	}
@@ -143,12 +130,14 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 		       r.revision_note, r.rejection_reason,
 		       COALESCE(s.name, ''), COALESCE(s.role_owner, ''), COALESCE(s.category, 'public'),
 		       COALESCE(si.name, ''),
-		       COALESCE(pm.nama, pp.nama, ''), COALESCE(pm.email, pp.email, '')
+		       COALESCE(NULLIF(pm.nama, ''), NULLIF(pp.nama, ''), NULLIF(pt.nama, ''), 'Pemohon'),
+		       COALESCE(NULLIF(pm.email, ''), NULLIF(pp.email, ''), NULLIF(pt.email, ''), '')
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
-		LEFT JOIN kemenag_ptsp.profiles_pemohon pm ON pm.user_id = r.user_id
-		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.user_id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pemohon pm ON pm.user_id = r.user_id OR pm.id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_pegawai pp ON pp.user_id = r.user_id OR pp.id = r.user_id
+		LEFT JOIN kemenag_ptsp.profiles_petugas pt ON pt.user_id = r.user_id OR pt.id = r.user_id
 		WHERE r.id::text = $1 OR UPPER(r.request_number) = UPPER($1)
 		LIMIT 1
 	`, id).Scan(&detail.ID, &detail.UserID, &detail.ServiceID, &detail.ServiceItemID, &detail.RequestNumber, &detail.Status,
@@ -169,84 +158,241 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 	detail.ApplicantName = &applicantName
 	detail.ApplicantEmail = &applicantEmail
 
-	// Fetch answers
-	answerRows, _ := r.db.Query(ctx, `SELECT field_name, COALESCE(field_value, '') FROM kemenag_ptsp.ptsp_service_request_answers WHERE request_id::text = $1 ORDER BY created_at ASC`, id)
-	if answerRows != nil {
-		defer answerRows.Close()
-		for answerRows.Next() {
-			var ans models.RequestAnswer
-			if err := answerRows.Scan(&ans.FieldName, &ans.FieldValue); err == nil {
-				detail.Answers = append(detail.Answers, ans)
-			}
-		}
-	}
+	// Inisialisasi slice kosong agar JSON output valid array
+	detail.Answers = []models.RequestAnswer{}
+	detail.ServiceRequestAnswers = []models.RequestAnswer{}
+	detail.Documents = []models.RequestDocument{}
+	detail.ServiceRequestDocuments = []models.RequestDocument{}
+	detail.GeneratedDocuments = []models.RequestDocument{}
+	detail.Reviews = []models.RequestReview{}
+	detail.ActivityLogs = []models.ActivityLog{}
 
-	// Fetch documents with requirement name
-	docRows, _ := r.db.Query(ctx, `
-		SELECT d.id::text, COALESCE(sr.document_name, ''), COALESCE(d.file_name, ''), COALESCE(d.file_path, ''), COALESCE(d.file_type, ''), COALESCE(d.file_size, 0)
-		FROM kemenag_ptsp.ptsp_service_request_documents d
-		LEFT JOIN kemenag_ptsp.ptsp_service_requirements sr ON sr.id = d.requirement_id
-		WHERE d.request_id::text = $1
-	`, id)
-	if docRows != nil {
-		defer docRows.Close()
-		for docRows.Next() {
-			var doc models.RequestDocument
-			if err := docRows.Scan(&doc.ID, &doc.RequirementName, &doc.FileName, &doc.FilePath, &doc.FileType, &doc.FileSize); err == nil {
-				detail.Documents = append(detail.Documents, doc)
-			}
-		}
-	}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
-	// Fetch generated documents
-	genRows, _ := r.db.Query(ctx, `
-		SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), COALESCE(file_type, ''), COALESCE(file_size, 0)
-		FROM kemenag_ptsp.ptsp_generated_documents
-		WHERE request_id::text = $1
-		ORDER BY created_at DESC
-	`, id)
-	if genRows != nil {
-		defer genRows.Close()
-		for genRows.Next() {
-			var gDoc models.RequestDocument
-			if err := genRows.Scan(&gDoc.ID, &gDoc.FileName, &gDoc.FilePath, &gDoc.FileType, &gDoc.FileSize); err == nil {
-				detail.GeneratedDocuments = append(detail.GeneratedDocuments, gDoc)
+	// 1. Fetch answers (paralel)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		aRows, err := r.db.Query(ctx, `
+			SELECT 
+				a.field_id,
+				COALESCE(NULLIF(ff.label, ''), NULLIF(a.field_name, ''), 'Formulir'), 
+				COALESCE(a.field_value, '') 
+			FROM kemenag_ptsp.ptsp_service_request_answers a
+			LEFT JOIN kemenag_ptsp.ptsp_service_form_fields ff ON ff.id = a.field_id OR ff.name = a.field_name
+			WHERE a.request_id::text = $1 
+			ORDER BY COALESCE(ff.sort_order, 999), a.created_at ASC
+		`, detail.ID)
+		if err == nil && aRows != nil {
+			defer aRows.Close()
+			var answers []models.RequestAnswer
+			for aRows.Next() {
+				var ans models.RequestAnswer
+				var fid *int64
+				if err := aRows.Scan(&fid, &ans.FieldName, &ans.FieldValue); err == nil {
+					ans.FieldID = fid
+					answers = append(answers, ans)
+				}
 			}
+			mu.Lock()
+			detail.Answers = answers
+			detail.ServiceRequestAnswers = answers
+			mu.Unlock()
 		}
-	}
+	}()
 
-	// Fetch reviews
-	reviewRows, _ := r.db.Query(ctx, `
-		SELECT rr.id::text, rr.action, COALESCE(rr.note, ''), rr.created_at, COALESCE(p.nama, '')
-		FROM kemenag_ptsp.ptsp_service_request_reviews rr
-		LEFT JOIN kemenag_ptsp.profiles_pegawai p ON p.user_id = rr.reviewer_id
-		WHERE rr.request_id::text = $1 ORDER BY rr.created_at DESC
-	`, id)
-	if reviewRows != nil {
-		defer reviewRows.Close()
-		for reviewRows.Next() {
-			var rev models.RequestReview
-			if err := reviewRows.Scan(&rev.ID, &rev.Action, &rev.Note, &rev.CreatedAt, &rev.ReviewerName); err == nil {
-				detail.Reviews = append(detail.Reviews, rev)
-			}
-		}
+	// 2. Fetch requirements & uploaded documents (paralel)
+	type reqItem struct {
+		ID         int64
+		Name       string
+		IsRequired bool
 	}
+	var requirements []reqItem
+	uploadedMap := make(map[int64]models.RequestDocument)
+	var extraDocs []models.RequestDocument
+	var docsWg sync.WaitGroup
+	docsWg.Add(2)
 
-	// Fetch activity logs
-	logRows, _ := r.db.Query(ctx, `
-		SELECT id::text, COALESCE(action, ''), COALESCE(actor_name, ''), created_at
-		FROM kemenag_ptsp.ptsp_service_request_activity_logs
-		WHERE request_id::text = $1 ORDER BY created_at DESC LIMIT 50
-	`, id)
-	if logRows != nil {
-		defer logRows.Close()
-		for logRows.Next() {
-			var log models.ActivityLog
-			if err := logRows.Scan(&log.ID, &log.Action, &log.ActorName, &log.CreatedAt); err == nil {
-				detail.ActivityLogs = append(detail.ActivityLogs, log)
+	go func() {
+		defer docsWg.Done()
+		if detail.ServiceItemID > 0 {
+			rRows, err := r.db.Query(ctx, `
+				SELECT id, COALESCE(document_name, ''), is_required
+				FROM kemenag_ptsp.ptsp_service_requirements
+				WHERE service_item_id = $1
+				ORDER BY sort_order ASC, id ASC
+			`, detail.ServiceItemID)
+			if err == nil && rRows != nil {
+				defer rRows.Close()
+				for rRows.Next() {
+					var ri reqItem
+					if err := rRows.Scan(&ri.ID, &ri.Name, &ri.IsRequired); err == nil {
+						requirements = append(requirements, ri)
+					}
+				}
 			}
 		}
+	}()
+
+	go func() {
+		defer docsWg.Done()
+		docRows, err := r.db.Query(ctx, `
+			SELECT d.id::text, d.requirement_id, COALESCE(sr.document_name, ''), COALESCE(d.file_name, ''), COALESCE(d.file_path, ''), COALESCE(d.file_type, ''), COALESCE(d.file_size, 0)
+			FROM kemenag_ptsp.ptsp_service_request_documents d
+			LEFT JOIN kemenag_ptsp.ptsp_service_requirements sr ON sr.id = d.requirement_id
+			WHERE d.request_id::text = $1
+		`, detail.ID)
+		if err == nil && docRows != nil {
+			defer docRows.Close()
+			for docRows.Next() {
+				var doc models.RequestDocument
+				var reqID *int64
+				if err := docRows.Scan(&doc.ID, &reqID, &doc.RequirementName, &doc.FileName, &doc.FilePath, &doc.FileType, &doc.FileSize); err == nil {
+					doc.RequirementID = reqID
+					if reqID != nil {
+						uploadedMap[*reqID] = doc
+					} else {
+						extraDocs = append(extraDocs, doc)
+					}
+				}
+			}
+		}
+	}()
+
+	// 3. Fetch generated documents (paralel)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		genRows, err := r.db.Query(ctx, `
+			SELECT id::text, COALESCE(file_name, ''), COALESCE(file_path, ''), 'pdf', 0
+			FROM kemenag_ptsp.ptsp_generated_documents
+			WHERE request_id::text = $1
+			ORDER BY created_at DESC
+		`, detail.ID)
+		if err == nil && genRows != nil {
+			defer genRows.Close()
+			var genDocs []models.RequestDocument
+			for genRows.Next() {
+				var gDoc models.RequestDocument
+				if err := genRows.Scan(&gDoc.ID, &gDoc.FileName, &gDoc.FilePath, &gDoc.FileType, &gDoc.FileSize); err == nil {
+					genDocs = append(genDocs, gDoc)
+				}
+			}
+			mu.Lock()
+			detail.GeneratedDocuments = genDocs
+			mu.Unlock()
+		}
+	}()
+
+	// 4. Fetch reviews (paralel)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		reviewRows, err := r.db.Query(ctx, `
+			SELECT rr.id::text, rr.status::text, COALESCE(rr.notes, ''), rr.created_at, COALESCE(pt.nama, COALESCE(p.nama, 'Petugas PTSP'))
+			FROM kemenag_ptsp.ptsp_service_request_reviews rr
+			LEFT JOIN kemenag_ptsp.profiles_petugas pt ON pt.user_id = rr.reviewer_id OR pt.id = rr.reviewer_id
+			LEFT JOIN kemenag_ptsp.profiles_pegawai p ON p.user_id = rr.reviewer_id OR p.id = rr.reviewer_id
+			WHERE rr.request_id::text = $1 ORDER BY rr.created_at DESC
+		`, detail.ID)
+		if err == nil && reviewRows != nil {
+			defer reviewRows.Close()
+			var revs []models.RequestReview
+			for reviewRows.Next() {
+				var rev models.RequestReview
+				if err := reviewRows.Scan(&rev.ID, &rev.Action, &rev.Note, &rev.CreatedAt, &rev.ReviewerName); err == nil {
+					revs = append(revs, rev)
+				}
+			}
+			mu.Lock()
+			detail.Reviews = revs
+			mu.Unlock()
+		}
+	}()
+
+	// 5. Fetch activity logs (paralel)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		actRows, err := r.db.Query(ctx, `
+			SELECT id::text, action, COALESCE(actor_name, 'Admin PTSP'), COALESCE(notes, ''), created_at
+			FROM kemenag_ptsp.ptsp_service_request_activity_logs
+			WHERE request_id::text = $1
+			ORDER BY created_at DESC LIMIT 50
+		`, detail.ID)
+		var logs []models.ActivityLog
+		if err == nil && actRows != nil {
+			defer actRows.Close()
+			for actRows.Next() {
+				var log models.ActivityLog
+				var notes string
+				if err := actRows.Scan(&log.ID, &log.Action, &log.ActorName, &notes, &log.CreatedAt); err == nil {
+					if notes != "" && !strings.Contains(log.Action, notes) {
+						log.Action += " — " + notes
+					}
+					logs = append(logs, log)
+				}
+			}
+		}
+		if len(logs) == 0 {
+			logRows, err := r.db.Query(ctx, `
+				SELECT id::text, COALESCE(action, ''), 'Admin PTSP', created_at
+				FROM kemenag_ptsp.ptsp_audit_logs
+				WHERE entity_id = $1 ORDER BY created_at DESC LIMIT 50
+			`, detail.ID)
+			if err == nil && logRows != nil {
+				defer logRows.Close()
+				for logRows.Next() {
+					var log models.ActivityLog
+					if err := logRows.Scan(&log.ID, &log.Action, &log.ActorName, &log.CreatedAt); err == nil {
+						logs = append(logs, log)
+					}
+				}
+			}
+		}
+		mu.Lock()
+		detail.ActivityLogs = logs
+		mu.Unlock()
+	}()
+
+	// Tunggu requirements & uploaded docs selesai diproses
+	docsWg.Wait()
+	var docs []models.RequestDocument
+	for _, req := range requirements {
+		reqIDVal := req.ID
+		if doc, found := uploadedMap[req.ID]; found {
+			doc.RequirementID = &reqIDVal
+			doc.IsRequired = req.IsRequired
+			if doc.RequirementName == "" {
+				doc.RequirementName = req.Name
+			}
+			docs = append(docs, doc)
+			delete(uploadedMap, req.ID)
+		} else {
+			docs = append(docs, models.RequestDocument{
+				ID:              fmt.Sprintf("req-%d", req.ID),
+				RequirementID:   &reqIDVal,
+				RequirementName: req.Name,
+				FileName:        "",
+				FilePath:        "",
+				FileType:        "",
+				FileSize:        0,
+				IsRequired:      req.IsRequired,
+			})
+		}
 	}
+	for _, doc := range uploadedMap {
+		docs = append(docs, doc)
+	}
+	for _, doc := range extraDocs {
+		docs = append(docs, doc)
+	}
+	detail.Documents = docs
+	detail.ServiceRequestDocuments = docs
+
+	// Tunggu seluruh query selesai
+	wg.Wait()
 
 	// Synthesize milestone activity logs from database timestamps if not already present
 	hasSubmitted := false
@@ -347,19 +493,66 @@ func (r *RequestRepository) FindByID(ctx context.Context, id string) (*models.Se
 		})
 	}
 
+	detail.ServiceRequestDocuments = detail.Documents
+	detail.AltActivityLogs = detail.ActivityLogs
+
 	return &detail, nil
 }
 
 func (r *RequestRepository) UpdateStatus(ctx context.Context, id string, req models.UpdateRequestStatusRequest) error {
 	now := time.Now()
-	note := strings.TrimSpace(req.RevisionNote)
-	if note == "" {
-		note = strings.TrimSpace(req.RejectionReason)
-	}
-
 	status := strings.TrimSpace(req.Status)
 	if status == "" {
 		return fmt.Errorf("status tidak boleh kosong")
+	}
+
+	actorName := strings.TrimSpace(req.ReviewerName)
+	if actorName == "" {
+		actorName = strings.TrimSpace(req.AltReviewerName)
+	}
+	if actorName == "" {
+		actorName = "Petugas PTSP"
+	}
+
+	reviewerIDStr := strings.TrimSpace(req.ReviewerID)
+	if reviewerIDStr == "" {
+		reviewerIDStr = strings.TrimSpace(req.AltReviewerID)
+	}
+	var reviewerID *string
+	if reviewerIDStr != "" {
+		reviewerID = &reviewerIDStr
+	}
+
+	// Klasifikasi catatan review secara akurat sesuai jenis status
+	generalNote := strings.TrimSpace(req.Notes)
+	revNote := strings.TrimSpace(req.RevisionNote)
+	rejReason := strings.TrimSpace(req.RejectionReason)
+
+	if revNote == "" && status == "revision_required" && generalNote != "" {
+		revNote = generalNote
+	}
+	if rejReason == "" && status == "rejected" && generalNote != "" {
+		rejReason = generalNote
+	}
+
+	noteForLog := generalNote
+	if noteForLog == "" {
+		if revNote != "" {
+			noteForLog = revNote
+		} else if rejReason != "" {
+			noteForLog = rejReason
+		}
+	}
+
+	// First get request UUID
+	var requestUUID string
+	err := r.db.QueryRow(ctx, `
+		SELECT id::text FROM kemenag_ptsp.ptsp_service_requests
+		WHERE id::text = $1 OR UPPER(request_number) = UPPER($1)
+		LIMIT 1
+	`, id).Scan(&requestUUID)
+	if err != nil {
+		return fmt.Errorf("permohonan tidak ditemukan: %w", err)
 	}
 
 	var approvedAt, rejectedAt, completedAt *time.Time
@@ -370,107 +563,236 @@ func (r *RequestRepository) UpdateStatus(ctx context.Context, id string, req mod
 		rejectedAt = &now
 	case "completed":
 		completedAt = &now
+		approvedAt = &now
 	}
 
-	_, err := r.db.Exec(ctx, `
+	// Update status & timestamps
+	_, err = r.db.Exec(ctx, `
 		UPDATE kemenag_ptsp.ptsp_service_requests
 		SET status = $1,
-		    revision_note = CASE WHEN $2 <> '' THEN $2 ELSE revision_note END,
-		    rejection_reason = CASE WHEN $3 <> '' THEN $3 ELSE rejection_reason END,
-		    approved_at = COALESCE($4, approved_at),
-		    rejected_at = COALESCE($5, rejected_at),
-		    completed_at = COALESCE($6, completed_at),
+		    revision_note = CASE 
+		        WHEN $1 = 'revision_required' THEN NULLIF($2, '')
+		        WHEN $1 IN ('approved', 'completed') THEN NULL
+		        ELSE revision_note 
+		    END,
+		    rejection_reason = CASE 
+		        WHEN $1 = 'rejected' THEN NULLIF($3, '')
+		        WHEN $1 IN ('approved', 'completed') THEN NULL
+		        ELSE rejection_reason 
+		    END,
+		    approved_at = CASE 
+		        WHEN $1 IN ('approved', 'completed') THEN COALESCE(approved_at, $4)
+		        WHEN $1 IN ('rejected', 'revision_required') THEN NULL
+		        ELSE approved_at 
+		    END,
+		    rejected_at = CASE 
+		        WHEN $1 = 'rejected' THEN COALESCE(rejected_at, $5)
+		        ELSE NULL 
+		    END,
+		    completed_at = CASE 
+		        WHEN $1 = 'completed' THEN COALESCE(completed_at, $6)
+		        ELSE NULL 
+		    END,
 		    updated_at = $7
-		WHERE id::text = $8 OR request_number = $8
-	`, status, note, note, approvedAt, rejectedAt, completedAt, now, id)
+		WHERE id = $8::uuid
+	`, status, revNote, rejReason, approvedAt, rejectedAt, completedAt, now, requestUUID)
 
 	if err != nil {
 		return err
 	}
 
-	// Insert Activity Log for timeline history
-	logAction := fmt.Sprintf("Status permohonan diubah menjadi %s", strings.ToUpper(status))
-	if note != "" {
-		logAction += fmt.Sprintf(" (Catatan: %s)", note)
-	}
+	// Insert into ptsp_service_request_reviews
 	r.db.Exec(ctx, `
-		INSERT INTO kemenag_ptsp.ptsp_service_request_activity_logs (request_id, action, actor_name, created_at)
-		SELECT r.id, $1, 'Admin PTSP', $2
-		FROM kemenag_ptsp.ptsp_service_requests r
-		WHERE r.id::text = $3 OR r.request_number = $3
-		LIMIT 1
-	`, logAction, now, id)
+		INSERT INTO kemenag_ptsp.ptsp_service_request_reviews (request_id, reviewer_id, status, notes, created_at)
+		VALUES ($1::uuid, $2::uuid, $3::kemenag_ptsp.ptsp_request_status, NULLIF($4, ''), $5)
+	`, requestUUID, reviewerID, status, noteForLog, now)
+
+	// Insert into ptsp_service_request_activity_logs
+	logAction := fmt.Sprintf("Status permohonan diubah menjadi %s", strings.ToUpper(status))
+	r.db.Exec(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_service_request_activity_logs (request_id, action, actor_name, notes, created_at)
+		VALUES ($1::uuid, $2, $3, NULLIF($4, ''), $5)
+	`, requestUUID, logAction, actorName, noteForLog, now)
+
+	// Insert into ptsp_audit_logs as well
+	r.db.Exec(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_audit_logs (action, entity_type, entity_id, details, created_at)
+		VALUES ($1, 'service_request', $2, jsonb_build_object('status', $3, 'notes', $4, 'reviewer', $5), $6)
+	`, logAction, requestUUID, status, noteForLog, actorName, now)
+
+	// Sinkronisasi otomatis dengan permohonan Cuti ASN jika terkait
+	r.db.Exec(ctx, `
+		UPDATE kemenag_ptsp.ptsp_pengajuan_cuti
+		SET status = CASE 
+		        WHEN $1 = 'approved' THEN 'disetujui'
+		        WHEN $1 = 'completed' THEN 'selesai'
+		        WHEN $1 = 'rejected' THEN 'ditolak'
+		        WHEN $1 = 'revision_required' THEN 'perlu_revisi'
+		        WHEN $1 = 'under_review' THEN 'diproses'
+		        WHEN $1 = 'spam' THEN 'ditolak'
+		        ELSE status 
+		    END,
+		    status_kepala = CASE 
+		        WHEN $1 = 'approved' THEN 'disetujui'
+		        WHEN $1 = 'completed' THEN 'disetujui'
+		        WHEN $1 = 'rejected' THEN 'ditolak'
+		        WHEN $1 = 'spam' THEN 'ditolak'
+		        ELSE status_kepala 
+		    END,
+		    status_atasan = CASE
+		        WHEN $1 IN ('approved', 'completed') AND (status_atasan IS NULL OR status_atasan = 'menunggu') THEN 'disetujui'
+		        ELSE status_atasan
+		    END,
+		    catatan_kepala = CASE 
+		        WHEN NULLIF($2, '') IS NOT NULL THEN $2 
+		        ELSE catatan_kepala 
+		    END,
+		    updated_at = $3
+		WHERE request_id = $4::uuid
+	`, status, noteForLog, now, requestUUID)
 
 	return nil
 }
 
+// GetFilePathsByRequestID mengambil seluruh URL/path berkas dokumen yang terhubung dengan permohonan ini untuk dihapus dari Cloudflare R2 / lokal
+// GetFilePathsByRequestID mengambil seluruh URL/path berkas dokumen yang terhubung dengan permohonan ini dalam 1 query UNION cepat
+func (r *RequestRepository) GetFilePathsByRequestID(ctx context.Context, id string) ([]string, error) {
+	var paths []string
+	rows, err := r.db.Query(ctx, `
+		WITH target_req AS (
+			SELECT id::text FROM kemenag_ptsp.ptsp_service_requests 
+			WHERE id::text = $1 OR UPPER(request_number) = UPPER($1) 
+			LIMIT 1
+		)
+		SELECT file_path FROM kemenag_ptsp.ptsp_service_request_documents
+		WHERE request_id::text IN (SELECT id::text FROM target_req) AND file_path IS NOT NULL AND file_path <> ''
+		UNION ALL
+		SELECT file_path FROM kemenag_ptsp.ptsp_generated_documents
+		WHERE request_id::text IN (SELECT id::text FROM target_req) AND file_path IS NOT NULL AND file_path <> ''
+		UNION ALL
+		SELECT dokumen_url FROM kemenag_ptsp.ptsp_pengajuan_cuti
+		WHERE request_id::text IN (SELECT id::text FROM target_req) AND dokumen_url IS NOT NULL AND dokumen_url <> ''
+	`, id)
+	if err != nil {
+		return paths, nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err == nil && p != "" {
+			paths = append(paths, p)
+		}
+	}
+	return paths, nil
+}
+
 func (r *RequestRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_requests WHERE id::text = $1 OR request_number = $1`, id)
+	// Hapus dalam 1 query transaksi cepat: relasi cuti & request utama (men-cascade seluruh relasi tabel anak)
+	_, err := r.db.Exec(ctx, `
+		WITH target_req AS (
+			SELECT id FROM kemenag_ptsp.ptsp_service_requests 
+			WHERE id::text = $1 OR UPPER(request_number) = UPPER($1)
+			LIMIT 1
+		),
+		del_cuti AS (
+			DELETE FROM kemenag_ptsp.ptsp_pengajuan_cuti 
+			WHERE request_id IN (SELECT id FROM target_req)
+		)
+		DELETE FROM kemenag_ptsp.ptsp_service_requests 
+		WHERE id IN (SELECT id FROM target_req)
+	`, id)
 	return err
 }
 
 func (r *RequestRepository) GetDashboardStats(ctx context.Context) (*models.DashboardStats, error) {
 	var stats models.DashboardStats
 
-	// 1. Total Layanan Aktif per Kategori (public vs asn)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_services WHERE is_active = true AND COALESCE(category, 'public') = 'public'`).Scan(&stats.Masyarakat.ServiceCount)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_services WHERE is_active = true AND COALESCE(category, 'public') = 'asn'`).Scan(&stats.Pegawai.ServiceCount)
+	const query = `
+		SELECT
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_services WHERE is_active = true AND COALESCE(category, 'public') = 'public'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_services WHERE is_active = true AND COALESCE(category, 'public') = 'asn'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.profiles_pemohon),
+			(SELECT COUNT(*) FROM kemenag_ptsp.profiles_pegawai),
+			COALESCE(m.total, 0),
+			COALESCE(m.need_action, 0),
+			COALESCE(m.submitted, 0),
+			COALESCE(m.under_review, 0),
+			COALESCE(m.revision, 0),
+			COALESCE(m.finished, 0),
+			COALESCE(p.total, 0),
+			COALESCE(p.need_action, 0),
+			COALESCE(p.submitted, 0),
+			COALESCE(p.under_review, 0),
+			COALESCE(p.revision, 0),
+			COALESCE(p.finished, 0),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'submitted'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'approved'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'completed'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'rejected'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_feedbacks),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_feedbacks WHERE status = 'pending'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_appointments),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_appointments WHERE status = 'pending'),
+			(SELECT COUNT(*) FROM kemenag_ptsp.ptsp_guest_book)
+		FROM (
+			SELECT
+				COUNT(*) AS total,
+				COUNT(CASE WHEN r.status IN ('submitted', 'under_review') THEN 1 END) AS need_action,
+				COUNT(CASE WHEN r.status = 'submitted' THEN 1 END) AS submitted,
+				COUNT(CASE WHEN r.status = 'under_review' THEN 1 END) AS under_review,
+				COUNT(CASE WHEN r.status = 'revision_required' THEN 1 END) AS revision,
+				COUNT(CASE WHEN r.status IN ('approved', 'completed') THEN 1 END) AS finished
+			FROM kemenag_ptsp.ptsp_service_requests r
+			LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
+			WHERE COALESCE(s.category, 'public') = 'public'
+		) m
+		CROSS JOIN (
+			SELECT
+				COUNT(*) AS total,
+				COUNT(CASE WHEN r.status IN ('submitted', 'under_review') THEN 1 END) AS need_action,
+				COUNT(CASE WHEN r.status = 'submitted' THEN 1 END) AS submitted,
+				COUNT(CASE WHEN r.status = 'under_review' THEN 1 END) AS under_review,
+				COUNT(CASE WHEN r.status = 'revision_required' THEN 1 END) AS revision,
+				COUNT(CASE WHEN r.status IN ('approved', 'completed') THEN 1 END) AS finished
+			FROM kemenag_ptsp.ptsp_service_requests r
+			LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
+			WHERE COALESCE(s.category, 'public') = 'asn'
+		) p
+	`
 
-	// 2. Total Akun Pengguna (Masyarakat vs Pegawai Internal)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.profiles_pemohon`).Scan(&stats.Masyarakat.UserCount)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.profiles_pegawai`).Scan(&stats.Pegawai.UserCount)
-
-	// 3. Stat Pengajuan Masyarakat (category = 'public')
-	r.db.QueryRow(ctx, `
-		SELECT COUNT(*),
-		       COUNT(CASE WHEN r.status IN ('submitted', 'under_review') THEN 1 END),
-		       COUNT(CASE WHEN r.status = 'submitted' THEN 1 END),
-		       COUNT(CASE WHEN r.status = 'under_review' THEN 1 END),
-		       COUNT(CASE WHEN r.status = 'revision_required' THEN 1 END),
-		       COUNT(CASE WHEN r.status IN ('approved', 'completed') THEN 1 END)
-		FROM kemenag_ptsp.ptsp_service_requests r
-		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
-		WHERE COALESCE(s.category, 'public') = 'public'
-	`).Scan(
+	err := r.db.QueryRow(ctx, query).Scan(
+		&stats.Masyarakat.ServiceCount,
+		&stats.Pegawai.ServiceCount,
+		&stats.Masyarakat.UserCount,
+		&stats.Pegawai.UserCount,
 		&stats.Masyarakat.TotalRequests,
 		&stats.Masyarakat.NeedAction,
 		&stats.Masyarakat.Stats.Submitted,
 		&stats.Masyarakat.Stats.UnderReview,
 		&stats.Masyarakat.Stats.Revision,
 		&stats.Masyarakat.Stats.Finished,
-	)
-
-	// 4. Stat Pengajuan Pegawai (category = 'asn')
-	r.db.QueryRow(ctx, `
-		SELECT COUNT(*),
-		       COUNT(CASE WHEN r.status IN ('submitted', 'under_review') THEN 1 END),
-		       COUNT(CASE WHEN r.status = 'submitted' THEN 1 END),
-		       COUNT(CASE WHEN r.status = 'under_review' THEN 1 END),
-		       COUNT(CASE WHEN r.status = 'revision_required' THEN 1 END),
-		       COUNT(CASE WHEN r.status IN ('approved', 'completed') THEN 1 END)
-		FROM kemenag_ptsp.ptsp_service_requests r
-		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
-		WHERE COALESCE(s.category, 'public') = 'asn'
-	`).Scan(
 		&stats.Pegawai.TotalRequests,
 		&stats.Pegawai.NeedAction,
 		&stats.Pegawai.Stats.Submitted,
 		&stats.Pegawai.Stats.UnderReview,
 		&stats.Pegawai.Stats.Revision,
 		&stats.Pegawai.Stats.Finished,
+		&stats.Requests.Total,
+		&stats.Requests.Pending,
+		&stats.Requests.Approved,
+		&stats.Requests.Completed,
+		&stats.Requests.Rejected,
+		&stats.Feedbacks.Total,
+		&stats.Feedbacks.Pending,
+		&stats.Appointments.Total,
+		&stats.Appointments.Pending,
+		&stats.GuestBook.Total,
 	)
-
-	// 5. Global Summary Stats
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests`).Scan(&stats.Requests.Total)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'submitted'`).Scan(&stats.Requests.Pending)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'approved'`).Scan(&stats.Requests.Approved)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'completed'`).Scan(&stats.Requests.Completed)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_service_requests WHERE status = 'rejected'`).Scan(&stats.Requests.Rejected)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_feedbacks`).Scan(&stats.Feedbacks.Total)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_feedbacks WHERE status = 'pending'`).Scan(&stats.Feedbacks.Pending)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_appointments`).Scan(&stats.Appointments.Total)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_appointments WHERE status = 'pending'`).Scan(&stats.Appointments.Pending)
-	r.db.QueryRow(ctx, `SELECT COUNT(*) FROM kemenag_ptsp.ptsp_guest_book`).Scan(&stats.GuestBook.Total)
+	if err != nil {
+		return nil, err
+	}
 
 	return &stats, nil
 }
@@ -478,11 +800,39 @@ func (r *RequestRepository) GetDashboardStats(ctx context.Context) (*models.Dash
 
 // InsertDocument menyimpan record dokumen unggahan revisi pada sebuah permohonan.
 func (r *RequestRepository) InsertDocument(ctx context.Context, requestID, requirementID, fileName, filePath, fileType string, fileSize int64) error {
-	_, err := r.db.Exec(ctx, `
+	var reqID *int64
+	if requirementID != "" {
+		if val, err := strconv.ParseInt(requirementID, 10, 64); err == nil {
+			reqID = &val
+		}
+	}
+
+	var requestUUID string
+	err := r.db.QueryRow(ctx, `
+		SELECT id::text FROM kemenag_ptsp.ptsp_service_requests
+		WHERE id::text = $1 OR UPPER(request_number) = UPPER($1)
+		LIMIT 1
+	`, requestID).Scan(&requestUUID)
+	if err != nil {
+		requestUUID = requestID
+	}
+
+	_, err = r.db.Exec(ctx, `
 		INSERT INTO kemenag_ptsp.ptsp_service_request_documents (request_id, requirement_id, file_name, file_path, file_type, file_size)
-		VALUES ($1::uuid, NULLIF($2, '')::uuid, $3, $4, $5, $6)
-	`, requestID, requirementID, fileName, filePath, fileType, fileSize)
-	return err
+		VALUES ($1::uuid, $2, $3, $4, $5, $6)
+	`, requestUUID, reqID, fileName, filePath, fileType, fileSize)
+	if err != nil {
+		return err
+	}
+
+	// Also log this upload activity
+	docAction := fmt.Sprintf("Mengunggah dokumen: %s", fileName)
+	r.db.Exec(ctx, `
+		INSERT INTO kemenag_ptsp.ptsp_service_request_activity_logs (request_id, action, actor_name, created_at)
+		VALUES ($1::uuid, $2, 'Pemohon', NOW())
+	`, requestUUID, docAction)
+
+	return nil
 }
 
 // Create membuat permohonan baru beserta jawaban form-nya, mengembalikan ID & nomor permohonan.
@@ -504,9 +854,9 @@ func (r *RequestRepository) Create(ctx context.Context, userID string, serviceID
 			continue
 		}
 		if _, err := r.db.Exec(ctx, `
-			INSERT INTO kemenag_ptsp.ptsp_service_request_answers (request_id, field_name, field_value)
-			VALUES ($1::uuid, $2, $3)
-		`, id, ans.FieldName, ans.FieldValue); err != nil {
+			INSERT INTO kemenag_ptsp.ptsp_service_request_answers (request_id, field_id, field_name, field_value)
+			VALUES ($1::uuid, $2, $3, $4)
+		`, id, ans.FieldID, ans.FieldName, ans.FieldValue); err != nil {
 			return nil, err
 		}
 	}
@@ -542,9 +892,9 @@ func (r *RequestRepository) UpdateByApplicant(ctx context.Context, id, userID st
 			continue
 		}
 		if _, err := r.db.Exec(ctx, `
-			INSERT INTO kemenag_ptsp.ptsp_service_request_answers (request_id, field_name, field_value)
-			VALUES ($1::uuid, $2, $3)
-		`, id, ans.FieldName, ans.FieldValue); err != nil {
+			INSERT INTO kemenag_ptsp.ptsp_service_request_answers (request_id, field_id, field_name, field_value)
+			VALUES ($1::uuid, $2, $3, $4)
+		`, id, ans.FieldID, ans.FieldName, ans.FieldValue); err != nil {
 			return err
 		}
 	}
@@ -569,6 +919,7 @@ func (r *RequestRepository) DeleteByApplicant(ctx context.Context, id, userID st
 		return fmt.Errorf("permohonan tidak ditemukan")
 	}
 
+	_, _ = r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_pengajuan_cuti WHERE request_id::text = $1`, id)
 	if _, err := r.db.Exec(ctx, `DELETE FROM kemenag_ptsp.ptsp_service_request_answers WHERE request_id::text = $1`, id); err != nil {
 		return err
 	}
