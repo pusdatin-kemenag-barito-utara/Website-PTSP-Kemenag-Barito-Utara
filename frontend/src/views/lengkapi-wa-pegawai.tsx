@@ -37,7 +37,7 @@ export function LengkapiWaPegawaiView() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/kantor-kemenag.jpg"
+            src="/kantor-kemenag.webp"
             alt="Kantor Kemenag Barito Utara"
             fill
             priority
@@ -71,7 +71,7 @@ export function LengkapiWaPegawaiView() {
         {/* Mobile background */}
         <div className="absolute inset-0 z-0 lg:hidden">
           <Image
-            src="/kantor-kemenag.jpg"
+            src="/kantor-kemenag.webp"
             alt="Kantor Kemenag"
             fill
             priority

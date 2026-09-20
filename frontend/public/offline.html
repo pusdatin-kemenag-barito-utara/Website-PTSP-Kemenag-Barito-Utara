@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Koneksi Terputus - PTSP Kemenag Barito Utara</title>
+  <meta name="theme-color" content="#064e3b" />
+  <link rel="icon" type="image/svg+xml" href="/kemenag.svg" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #020617;
+        color: #f1f5f9;
+      }
+      .card {
+        background: #0f172a !important;
+        border-color: #1e293b !important;
+      }
+      .muted {
+        color: #94a3b8 !important;
+      }
+      .btn-secondary {
+        background: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+      }
+      .badge {
+        background: #064e3b !important;
+        color: #6ee7b7 !important;
+        border-color: #047857 !important;
+      }
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1.75rem;
+      padding: 2.5rem 2rem;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+    }
+    .logo-box {
+      width: 4.5rem;
+      height: 4.5rem;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1.25rem;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+    }
+    .logo-box img {
+      width: 2.75rem;
+      height: 2.75rem;
+      object-fit: contain;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.6875rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      margin-bottom: 1rem;
+    }
+    .badge-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: #10b981;
+    }
+    h1 {
+      font-size: 1.375rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+    p {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: #64748b;
+      margin-bottom: 1.75rem;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.8125rem 1.25rem;
+      border-radius: 0.875rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+    }
+    .btn-primary {
+      background: #059669;
+      color: #ffffff;
+      box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+    }
+    .btn-primary:hover {
+      background: #047857;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .footer-note {
+      margin-top: 1.75rem;
+      font-size: 0.6875rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-box">
+      <img src="/kemenag.svg" alt="Logo Kemenag" />
+    </div>
+
+    <div class="badge">
+      <span class="badge-dot"></span>
+      <span>Mode Offline</span>
+    </div>
+
+    <h1>Koneksi Internet Terputus</h1>
+    <p class="muted">
+      Aplikasi PTSP Kemenag Barito Utara tidak dapat terhubung ke server saat ini. Halaman yang telah di-cache sebelumnya tetap dapat dibuka. Silakan periksa koneksi data atau Wi-Fi Anda.
+    </p>
+
+    <div class="actions">
+      <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        <span>Coba Muat Ulang</span>
+      </button>
+      <a href="/" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Kembali ke Beranda</span>
+      </a>
+    </div>
+
+    <div class="footer-note">
+      PTSP Si ATAK &bull; Kemenag Kabupaten Barito Utara
+    </div>
+  </div>
+</body>
+</html>

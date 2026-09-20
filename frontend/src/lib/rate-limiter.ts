@@ -13,6 +13,47 @@ export const RATE_LIMITS = {
   LOGIN_EMAIL: { window: 15 * 60 * 1000, max: 5 },     // 5 requests per 15 min
 };
 
+export function isRateLimited(
+  key: string,
+  namespace: string = "default",
+  config: { window: number; max: number } = { window: 60 * 1000, max: 10 }
+): { limited: boolean; remaining: number; resetTime: number } {
+  const fullKey = `${namespace}:${key}`;
+  const now = Date.now();
+  const record = store.get(fullKey);
+
+  if (!record || now > record.resetTime) {
+    return {
+      limited: false,
+      remaining: config.max,
+      resetTime: now + config.window,
+    };
+  }
+
+  if (record.count >= config.max) {
+    return {
+      limited: true,
+      remaining: 0,
+      resetTime: record.resetTime,
+    };
+  }
+
+  return {
+    limited: false,
+    remaining: config.max - record.count,
+    resetTime: record.resetTime,
+  };
+}
+
+export function clearRateLimit(key: string, namespace: string = "default"): void {
+  const fullKey = `${namespace}:${key}`;
+  store.delete(fullKey);
+}
+
+export function resetAllRateLimits(): void {
+  store.clear();
+}
+
 export function checkRateLimit(
   key: string,
   namespace: string = "default",

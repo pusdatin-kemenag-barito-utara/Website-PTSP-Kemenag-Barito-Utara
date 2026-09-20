@@ -1,0 +1,147 @@
+---
+interface Props {
+  gtmId?: string;
+  gaId?: string;
+}
+
+const {
+  gtmId = import.meta.env.PUBLIC_GTM_ID || "",
+  gaId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID || "",
+} = Astro.props;
+
+const hasGtm = Boolean(gtmId && gtmId.trim() !== "");
+const hasGa = Boolean(gaId && gaId.trim() !== "");
+const hasTracking = hasGtm || hasGa;
+---
+
+{hasTracking && (
+  <>
+    <!-- Inisialisasi dataLayer awal -->
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+    </script>
+
+    <!-- Google Tag Manager (GTM) Container Script -->
+    {hasGtm && (
+      <script is:inline define:vars={{ gtmId }}>
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer', gtmId);
+      </script>
+    )}
+
+    <!-- Google Analytics 4 (GA4) Script -->
+    {hasGa && (
+      <>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+        <script is:inline define:vars={{ gaId }}>
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          // send_page_view: false agar tidak dobel dengan virtual page_view di astro:page-load
+          gtag('config', gaId, { send_page_view: false });
+        </script>
+      </>
+    )}
+
+    <!-- Enterprise SPA View Transitions & Auto Event Delegation Tracker -->
+    <script is:inline define:vars={{ gtmId, gaId, hasGtm, hasGa }}>
+      // 1. Virtual Page View Tracker (kompatibel dengan Astro ClientRouter / View Transitions)
+      document.addEventListener("astro:page-load", function () {
+        var pagePath = window.location.pathname;
+        var pageLocation = window.location.href;
+        var pageTitle = document.title;
+
+        // Push ke GTM dataLayer
+        if (window.dataLayer) {
+          window.dataLayer.push({
+            event: "page_view",
+            page_path: pagePath,
+            page_location: pageLocation,
+            page_title: pageTitle,
+          });
+        }
+
+        // Kirim ke GA4 jika gtag tersedia
+        if (hasGa && typeof window.gtag === "function") {
+          window.gtag("event", "page_view", {
+            page_path: pagePath,
+            page_location: pageLocation,
+            page_title: pageTitle,
+          });
+        }
+      });
+
+      // 2. Auto Event Delegation Tracker (Click, Outbound, Download, CTA)
+      document.addEventListener("click", function (event) {
+        var target = event.target ? event.target.closest("a, button, [data-analytics]") : null;
+        if (!target) return;
+
+        // A. Pelacakan data-analytics atribut eksplisit
+        var analyticsEvent = target.getAttribute("data-analytics");
+        var analyticsName = target.getAttribute("data-analytics-name") || target.innerText?.trim() || "";
+        var analyticsLocation = target.getAttribute("data-analytics-location") || "";
+
+        if (analyticsEvent) {
+          var payload = {
+            event: analyticsEvent,
+            element_name: analyticsName,
+            element_id: target.id || "",
+            cta_location: analyticsLocation,
+            destination_url: target.getAttribute("href") || "",
+          };
+
+          if (window.dataLayer) {
+            window.dataLayer.push(payload);
+          }
+          if (hasGa && typeof window.gtag === "function") {
+            window.gtag("event", analyticsEvent, payload);
+          }
+          return;
+        }
+
+        // B. Pelacakan tautan eksternal (Outbound Link)
+        var href = target.getAttribute("href");
+        if (href && (href.startsWith("http://") || href.startsWith("https://"))) {
+          try {
+            var urlObj = new URL(href);
+            if (urlObj.hostname !== window.location.hostname) {
+              var outboundPayload = {
+                event: "outbound_click",
+                outbound_url: href,
+                outbound_domain: urlObj.hostname,
+                link_text: target.innerText?.trim() || "",
+              };
+              if (window.dataLayer) {
+                window.dataLayer.push(outboundPayload);
+              }
+              if (hasGa && typeof window.gtag === "function") {
+                window.gtag("event", "outbound_click", outboundPayload);
+              }
+              return;
+            }
+          } catch (e) {}
+        }
+
+        // C. Pelacakan unduhan berkas (File Download)
+        if (href && /\.(pdf|docx?|xlsx?|pptx?|zip|rar|csv)$/i.test(href)) {
+          var fileName = href.split("/").pop() || href;
+          var fileExt = fileName.split(".").pop() || "";
+          var downloadPayload = {
+            event: "file_download",
+            file_name: fileName,
+            file_extension: fileExt,
+            file_url: href,
+          };
+          if (window.dataLayer) {
+            window.dataLayer.push(downloadPayload);
+          }
+          if (hasGa && typeof window.gtag === "function") {
+            window.gtag("event", "file_download", downloadPayload);
+          }
+        }
+      });
+    </script>
+  </>
+)}

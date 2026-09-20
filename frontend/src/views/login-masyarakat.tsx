@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Link from "@/lib/next-compat/link";
 import { LoginFormByRole } from "@/components/auth/login-form-by-role";
 import { UserCircle2, ArrowLeft } from "lucide-react";
@@ -15,6 +16,17 @@ export function LoginMasyarakatView({
   callbackUrl?: string;
   initialError?: string;
 }) {
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const cookies = document.cookie;
+      const hasAuth = cookies.includes("ptsp-auth=") || cookies.includes("ptsp-auth-access-token=");
+      const hasStorage = typeof localStorage !== "undefined" && (localStorage.getItem("ptsp-auth-token") || localStorage.getItem("ptsp-auth-user"));
+      if (hasAuth || hasStorage) {
+        window.location.replace(callbackUrl || "/masyarakat");
+      }
+    }
+  }, [callbackUrl]);
+
   return (
     <div className="relative flex min-h-screen w-full bg-slate-50 overflow-hidden">
       <AuthPageSwipeMotion direction="left">
@@ -31,7 +43,7 @@ export function LoginMasyarakatView({
         <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between p-12 pt-24">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/kantor-kemenag.jpg"
+              src="/kantor-kemenag.webp"
               alt="Kantor Kemenag Barito Utara"
               fill
               sizes="50vw"

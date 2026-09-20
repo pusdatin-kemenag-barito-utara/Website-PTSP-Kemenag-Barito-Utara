@@ -26,11 +26,55 @@ interface ArchiveDocument {
   source: "uploaded" | "generated";
   requestNumber: string;
   serviceName: string;
+  requestStatus?: string;
 }
 
 interface ArchiveClientProps {
   initialDocuments: ArchiveDocument[];
 }
+
+const getStatusBadge = (status?: string) => {
+  if (!status) return null;
+  const s = status.toLowerCase();
+  if (s === "completed" || s === "selesai") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 border border-emerald-200/60">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        Selesai
+      </span>
+    );
+  }
+  if (s === "approved" || s === "disetujui") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[9.5px] font-bold text-teal-700 border border-teal-200/60">
+        <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+        Disetujui
+      </span>
+    );
+  }
+  if (s === "rejected" || s === "ditolak") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[9.5px] font-bold text-rose-700 border border-rose-200/60">
+        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+        Ditolak
+      </span>
+    );
+  }
+  if (s === "revision" || s === "revisi") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9.5px] font-bold text-amber-700 border border-amber-200/60">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+        Perlu Revisi
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[9.5px] font-bold text-blue-700 border border-blue-200/60">
+      <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+      Diproses
+    </span>
+  );
+};
 
 export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -294,9 +338,19 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
                     <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none truncate" title={doc.serviceName}>
                       {doc.serviceName}
                     </p>
-                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider leading-none">
-                      No: <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">{doc.requestNumber}</span>
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider leading-none">
+                        No:{" "}
+                        <a
+                          href={`/masyarakat/riwayat?search=${encodeURIComponent(doc.requestNumber)}`}
+                          className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono hover:underline cursor-pointer"
+                          title="Lihat Detail Permohonan di Riwayat"
+                        >
+                          {doc.requestNumber}
+                        </a>
+                      </p>
+                      {getStatusBadge(doc.requestStatus)}
+                    </div>
                   </div>
                 </div>
 
@@ -355,18 +409,34 @@ export function ArchiveClient({ initialDocuments }: ArchiveClientProps) {
         </div>
       ) : (
         /* ── Tampilan Empty State ───────────────────────────────────── */
-        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-12 text-center max-w-xl mx-auto shadow-sm animate-in fade-in duration-500">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] mx-auto mb-6">
-            <Inbox className="h-8 w-8" />
+        <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-12 text-center max-w-lg mx-auto shadow-xs animate-in fade-in duration-500">
+          <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-emerald-50 text-[#059669] mx-auto mb-4">
+            <Inbox className="h-7 w-7 sm:h-8 sm:w-8" />
           </div>
-          <h3 className="text-base font-black text-slate-900">
-            {searchTerm ? "Berkas tidak ditemukan" : "Belum ada dokumen"}
+          <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+            {searchTerm ? "Berkas tidak ditemukan" : "Belum Ada Arsip Dokumen"}
           </h3>
-          <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed">
+          <p className="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
             {searchTerm 
               ? "Tidak ada berkas arsip yang cocok dengan kata kunci pencarian Anda. Silakan coba kata kunci lain." 
-              : "Semua berkas persyaratan yang Anda unggah dan dokumen hasil dari Kemenag akan muncul secara otomatis di repositori aman ini."}
+              : "Semua berkas persyaratan yang Anda unggah saat mengajukan permohonan layanan dan dokumen hasil resmi yang diterbitkan Kemenag akan otomatis diarsipkan di sini."}
           </p>
+          {!searchTerm && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href="/masyarakat/buat-pengajuan"
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm active:scale-95 transition-all w-full sm:w-auto cursor-pointer"
+              >
+                <span>➕ Ajukan Layanan Sekarang</span>
+              </a>
+              <a
+                href="/masyarakat/riwayat"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-all w-full sm:w-auto cursor-pointer"
+              >
+                <span>📋 Cek Riwayat Pengajuan</span>
+              </a>
+            </div>
+          )}
         </div>
       )}
 

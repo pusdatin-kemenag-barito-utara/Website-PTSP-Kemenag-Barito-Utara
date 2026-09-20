@@ -12,6 +12,8 @@ import { ScrollToTopButton } from "@/components/common/scroll-to-top";
 import { AuthRedirectListener } from "@/components/auth/auth-redirect-listener";
 import { MaintenanceSyncListener } from "@/components/layout/maintenance-sync-listener";
 import { ClientRouter } from "astro:transitions";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics.astro";
+import GoogleAnalyticsNoscript from "@/components/analytics/GoogleAnalyticsNoscript.astro";
 
 interface Props {
   title?: string;
@@ -125,16 +127,41 @@ const pageTitle =
       rel="stylesheet"
     />
     <ClientRouter />
+
+    <!-- Resource & Priority Hints (GTM, GA4, LCP Hero Preload) -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+    {pathname === "/" && (
+      <link
+        rel="preload"
+        as="image"
+        type="image/webp"
+        href="/kantor-kemenag-hd.webp?v=2026"
+        fetchpriority="high"
+      />
+    )}
+
+    {/* Google Analytics & Tag Manager (Aktif hanya di luar panel admin) */}
+    {!isAdmin && <GoogleAnalytics />}
     <meta name="description" content={description} />
     <meta name="application-name" content="PTSP Kemenag Barito Utara" />
     <meta name="keywords" content="Kemenag Barito Utara, PTSP Kemenag, Layanan Agama Barut, Pelayanan Satu Pintu, Muara Teweh, Administrasi Keagamaan" />
     <meta name="author" content="Kemenag Barito Utara" />
     <meta name="creator" content="Kemenag Barito Utara" />
     <meta name="publisher" content="Kemenag Barito Utara" />
+    <!-- Enterprise PWA & Standalone Configuration -->
     <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#064e3b" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#022c22" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="PTSP Kemenag Barito Utara" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PTSP Barut" />
+    <meta name="msapplication-TileColor" content="#064e3b" />
+    <meta name="msapplication-TileImage" content="/kemenag-192.png" />
+    <meta name="msapplication-tap-highlight" content="no" />
     <meta name="format-detection" content="telephone=no" />
     <link rel="canonical" href={`${appUrl}${pathname}`} />
     <meta property="og:type" content="website" />
@@ -166,9 +193,43 @@ const pageTitle =
       })();
     </script>
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
-    <ClientRouter />
+
+    <!-- Enterprise Service Worker Registration -->
+    <script is:inline>
+      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("/sw.js", { scope: "/" })
+            .then(function (reg) {
+              reg.addEventListener("updatefound", function () {
+                var newWorker = reg.installing;
+                if (newWorker) {
+                  newWorker.addEventListener("statechange", function () {
+                    if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                      console.log("[PWA] Update baru tersedia.");
+                    }
+                  });
+                }
+              });
+            })
+            .catch(function (err) {
+              console.warn("[PWA] Registrasi Service Worker gagal:", err);
+            });
+        });
+
+        window.addEventListener("beforeinstallprompt", function (e) {
+          window.deferredPrompt = e;
+          window.dispatchEvent(new CustomEvent("pwa-installable"));
+        });
+
+        window.addEventListener("appinstalled", function () {
+          window.deferredPrompt = null;
+        });
+      }
+    </script>
   </head>
   <body class="text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+    {!isAdmin && <GoogleAnalyticsNoscript />}
     <div class="flex min-h-dvh flex-col">
       {
         showHeader && (

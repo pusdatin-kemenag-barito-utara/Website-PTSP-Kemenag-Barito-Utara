@@ -309,3 +309,17 @@ type DashboardStats struct {
 	} `json:"guest_book"`
 }
 
+// UserArchiveDocument merepresentasikan dokumen dalam arsip pemohon (hasil upload persyaratan atau dokumen keluaran PTSP).
+type UserArchiveDocument struct {
+	ID            string    `json:"id"`
+	FileName      string    `json:"fileName"`
+	FilePath      string    `json:"filePath"`
+	FileType      string    `json:"fileType"`
+	FileSize      string    `json:"fileSize"`
+	CreatedAt     time.Time `json:"createdAt"`
+	Source        string    `json:"source"` // "uploaded" | "generated"
+	RequestNumber string    `json:"requestNumber"`
+	ServiceName   string    `json:"serviceName"`
+	RequestStatus string    `json:"requestStatus"`
+}
+

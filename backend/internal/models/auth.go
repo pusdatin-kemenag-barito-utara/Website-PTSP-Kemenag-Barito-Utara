@@ -18,8 +18,9 @@ type RegisterRequest struct {
 	Role      string `json:"role,omitempty"`
 	UnitKerja string `json:"unit_kerja,omitempty"`
 	Jabatan   string `json:"jabatan,omitempty"`
-	Alamat    string `json:"alamat,omitempty"`
-	Mode      string `json:"mode"` // "petugas" | "pemohon"
+	Alamat      string `json:"alamat,omitempty"`
+	MetodeLogin string `json:"metode_login,omitempty"`
+	Mode        string `json:"mode"` // "petugas" | "pemohon"
 }
 
 // ChangePasswordRequest payload ganti password.

@@ -146,6 +146,27 @@ func (r *AuthRepository) FindPegawaiByNIPOrEmail(ctx context.Context, identifier
 // FindPemohonByPhoneOrEmail mencari akun pemohon di kemenag_ptsp.profiles_pemohon.
 func (r *AuthRepository) FindPemohonByPhoneOrEmail(ctx context.Context, identifier string) (*models.AuthUser, string, error) {
 	cleanID := strings.TrimSpace(identifier)
+
+	// Normalisasi nomor telepon ke variasi 08xxx dan 62xxx
+	digits := ""
+	for _, ch := range cleanID {
+		if ch >= '0' && ch <= '9' {
+			digits += string(ch)
+		}
+	}
+	phone0 := cleanID
+	phone62 := cleanID
+	if strings.HasPrefix(digits, "62") {
+		phone62 = digits
+		phone0 = "0" + digits[2:]
+	} else if strings.HasPrefix(digits, "0") {
+		phone0 = digits
+		phone62 = "62" + digits[1:]
+	} else if digits != "" {
+		phone0 = "0" + digits
+		phone62 = "62" + digits
+	}
+
 	query := `
 		SELECT 
 			id::text,
@@ -159,14 +180,14 @@ func (r *AuthRepository) FindPemohonByPhoneOrEmail(ctx context.Context, identifi
 			COALESCE(avatar_url, ''),
 			COALESCE(password_hash, '')
 		FROM kemenag_ptsp.profiles_pemohon
-		WHERE no_hp = $1 OR LOWER(TRIM(email)) = LOWER($1)
+		WHERE no_hp = $1 OR no_hp = $2 OR no_hp = $3 OR LOWER(TRIM(email)) = LOWER($1)
 		LIMIT 1
 	`
 
 	var user models.AuthUser
 	var passwordHash string
 
-	err := r.db.QueryRow(ctx, query, cleanID).Scan(
+	err := r.db.QueryRow(ctx, query, cleanID, phone0, phone62).Scan(
 		&user.ID,
 		&user.UserID,
 		&user.Nama,
@@ -350,11 +371,22 @@ func (r *AuthRepository) CreatePetugas(ctx context.Context, req *models.Register
 
 // CreatePemohon mendaftarkan akun pemohon baru.
 func (r *AuthRepository) CreatePemohon(ctx context.Context, req *models.RegisterRequest, passwordHash string) (*models.AuthUser, error) {
+	metodeLogin := "WhatsApp (PTSP)"
+	if strings.TrimSpace(req.MetodeLogin) != "" {
+		metodeLogin = strings.TrimSpace(req.MetodeLogin)
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	cleanPhone := strings.TrimSpace(req.Phone)
+	if email == "" && cleanPhone != "" {
+		email = "p" + cleanPhone + "@ptsp.id"
+	}
+
 	query := `
 		INSERT INTO kemenag_ptsp.profiles_pemohon (
-			user_id, nama, email, no_hp, alamat, status, is_verified, role, password_hash
+			user_id, nama, email, no_hp, alamat, status, is_verified, role, password_hash, metode_login
 		) VALUES (
-			gen_random_uuid(), $1, $2, $3, $4, 'active', true, 'user', $5
+			gen_random_uuid(), $1, $2, $3, $4, 'active', true, 'user', $5, $6
 		)
 		RETURNING id::text, user_id::text, nama, email, no_hp, alamat, status, is_verified, role
 	`
@@ -364,10 +396,11 @@ func (r *AuthRepository) CreatePemohon(ctx context.Context, req *models.Register
 
 	err := r.db.QueryRow(ctx, query,
 		req.Nama,
-		strings.ToLower(strings.TrimSpace(req.Email)),
-		strings.TrimSpace(req.Phone),
+		email,
+		cleanPhone,
 		req.Alamat,
 		passwordHash,
+		metodeLogin,
 	).Scan(
 		&user.ID,
 		&user.UserID,

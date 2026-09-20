@@ -85,6 +85,7 @@ func RegisterRoutes(app *fiber.App, db *pgxpool.Pool, cfg *config.Config) {
 		api.Post("/appointments", appointmentHdl.CreateAppointment)
 
 		api.Get("/requests/track/:requestNumber", requestHdl.TrackRequest)
+		api.Get("/requests/archive", requestHdl.GetUserArchive)
 		api.Get("/requests", requestHdl.GetRequests)
 		api.Get("/requests/:id", requestHdl.GetRequestByID)
 		api.Post("/requests", requestHdl.CreateByApplicant)

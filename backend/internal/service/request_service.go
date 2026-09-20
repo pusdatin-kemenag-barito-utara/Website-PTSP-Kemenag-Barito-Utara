@@ -34,6 +34,10 @@ func (s *RequestService) GetAll(ctx context.Context, userID, status, category st
 	return s.repo.FindAll(ctx, userID, status, category, limit)
 }
 
+func (s *RequestService) GetUserArchive(ctx context.Context, userID string) ([]models.UserArchiveDocument, error) {
+	return s.repo.GetUserArchive(ctx, userID)
+}
+
 func (s *RequestService) Track(ctx context.Context, requestNumber string) (*models.TrackRequestResponse, error) {
 	req, err := s.repo.FindByNumber(ctx, requestNumber)
 	if err != nil {

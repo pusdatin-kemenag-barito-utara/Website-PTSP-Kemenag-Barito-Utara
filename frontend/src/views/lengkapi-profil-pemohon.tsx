@@ -32,7 +32,7 @@ export function LengkapiProfilPemohonView({ initialUser }: LengkapiProfilPemohon
         <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between p-12 pt-24">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/kantor-kemenag.jpg"
+              src="/kantor-kemenag.webp"
               alt="Kantor Kemenag Barito Utara"
               fill
               priority
@@ -66,7 +66,7 @@ export function LengkapiProfilPemohonView({ initialUser }: LengkapiProfilPemohon
           {/* Mobile background */}
           <div className="absolute inset-0 z-0 lg:hidden">
             <Image
-              src="/kantor-kemenag.jpg"
+              src="/kantor-kemenag.webp"
               alt="Kantor Kemenag"
               fill
               className="object-cover object-center grayscale opacity-30"

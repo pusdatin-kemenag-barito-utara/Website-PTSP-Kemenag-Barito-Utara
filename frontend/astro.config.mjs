@@ -36,11 +36,12 @@ export default defineConfig({
         "kemenag-512.png",
         "kemenag.svg",
         "manifest.json",
+        "offline.html",
       ],
       workbox: {
         maximumFileSizeToCacheInBytes: 15000000,
         globPatterns: ["**/*.{js,css,html,svg,png,jpg,jpeg,webp,woff2,mjs}"],
-        navigateFallback: null,
+        navigateFallback: "/offline.html",
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/api\/v1\//i,

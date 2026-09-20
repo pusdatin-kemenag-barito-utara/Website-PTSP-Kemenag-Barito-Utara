@@ -1,11 +1,27 @@
 {
   "name": "PTSP Kemenag Barito Utara",
   "short_name": "PTSP Barut",
-  "description": "Portal Pelayanan Terpadu Satu Pintu Kantor Kementerian Agama Kabupaten Barito Utara",
-  "start_url": "/",
+  "description": "Sistem Informasi Administrasi Terpadu Layanan Keagamaan Kantor Kementerian Agama Kabupaten Barito Utara",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
   "background_color": "#ffffff",
-  "theme_color": "#0f2563",
+  "theme_color": "#064e3b",
+  "lang": "id-ID",
+  "dir": "ltr",
+  "categories": [
+    "government",
+    "productivity",
+    "utilities"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/kemenag.svg",
@@ -24,6 +40,60 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Katalog Layanan Publik",
+      "short_name": "Layanan",
+      "description": "Daftar layanan publik PTSP Kemenag Barito Utara",
+      "url": "/layanan?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/kemenag-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Layanan Pegawai ASN",
+      "short_name": "Kepegawaian",
+      "description": "Layanan mandiri ASN Kemenag Barito Utara",
+      "url": "/layanan-pegawai?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/kemenag-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Buku Tamu Elektronik",
+      "short_name": "Buku Tamu",
+      "description": "Isi buku tamu kunjungan secara mandiri",
+      "url": "/buku-tamu?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/kemenag-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Lacak Status Pengajuan",
+      "short_name": "Lacak",
+      "description": "Lacak status permohonan dokumen Anda",
+      "url": "/track?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/kemenag-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

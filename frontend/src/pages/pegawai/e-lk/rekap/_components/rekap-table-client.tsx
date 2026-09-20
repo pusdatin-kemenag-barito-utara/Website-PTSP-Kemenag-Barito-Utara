@@ -47,13 +47,13 @@ export function RekapTableClient({ rekap, monthName, year, userName }: RekapTabl
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-lg overflow-hidden transition-all">
-        <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden transition-all">
+        <div className="p-3.5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-950/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100">
+            <h3 className="text-sm sm:text-base md:text-lg font-black text-slate-900 dark:text-slate-100">
               Rincian Aktivitas LKH – {monthName} {year}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
               Daftar rinci seluruh poin pekerjaan harian pegawai yang telah diinput.
             </p>
           </div>
@@ -66,15 +66,15 @@ export function RekapTableClient({ rekap, monthName, year, userName }: RekapTabl
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800">
+          <table className="w-full text-xs sm:text-sm text-left">
+            <thead className="text-[10px] sm:text-[11px] uppercase tracking-wider font-extrabold text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800">
               <tr>
-                <th className="px-5 py-3.5 font-black whitespace-nowrap w-12 text-center">No</th>
-                <th className="px-5 py-3.5 font-black whitespace-nowrap min-w-[170px]">Tanggal</th>
-                <th className="px-5 py-3.5 font-black whitespace-nowrap min-w-[130px]">Waktu</th>
-                <th className="px-5 py-3.5 font-black min-w-[260px]">Kegiatan Tugas Jabatan</th>
-                <th className="px-5 py-3.5 font-black whitespace-nowrap min-w-[130px]">Kuantitas / Hasil</th>
-                <th className="px-5 py-3.5 font-black whitespace-nowrap min-w-[90px] text-center">Aksi</th>
+                <th className="px-3 py-2.5 sm:px-5 sm:py-3.5 font-black whitespace-nowrap w-10 sm:w-12 text-center">No</th>
+                <th className="px-3 py-2.5 sm:px-5 sm:py-3.5 font-black whitespace-nowrap min-w-[150px] sm:min-w-[170px]">Tanggal</th>
+                <th className="px-3 py-2.5 sm:px-5 sm:py-3.5 font-black whitespace-nowrap min-w-[110px] sm:min-w-[130px]">Waktu</th>
+                <th className="px-3 py-2.5 sm:px-5 sm:py-3.5 font-black min-w-[220px] sm:min-w-[260px]">Kegiatan Tugas Jabatan</th>
+                <th className="px-3 py-2.5 sm:px-5 sm:py-3.5 font-black whitespace-nowrap min-w-[110px] sm:min-w-[130px]">Kuantitas / Hasil</th>
+                <th className="px-3 py-2.5 sm:px-5 sm:py-3.5 font-black whitespace-nowrap min-w-[80px] sm:min-w-[90px] text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm font-semibold">
@@ -84,12 +84,12 @@ export function RekapTableClient({ rekap, monthName, year, userName }: RekapTabl
                     key={item.id || i}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group"
                   >
-                    <td className="px-5 py-4 text-center font-mono text-slate-400 font-bold">
+                    <td className="px-3 py-2.5 sm:px-5 sm:py-4 text-center font-mono text-slate-400 font-bold text-[11px] sm:text-xs">
                       {i + 1}
                     </td>
-                    <td className="px-5 py-4 text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1.5 font-extrabold text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl">
-                        <CalendarDays className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <td className="px-3 py-2.5 sm:px-5 sm:py-4 text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5 font-extrabold text-[11px] sm:text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl">
+                        <CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>
                           {format(
                             new Date(item.tanggal as string),
@@ -99,46 +99,46 @@ export function RekapTableClient({ rekap, monthName, year, userName }: RekapTabl
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
+                    <td className="px-3 py-2.5 sm:px-5 sm:py-4 whitespace-nowrap">
                       {item.waktuPelaksanaan ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200/50 dark:border-teal-800/40 px-2 py-0.5 rounded-lg">
-                          <Clock className="h-3 w-3" />
+                        <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200/50 dark:border-teal-800/40 px-1.5 py-0.5 sm:px-2 rounded-md sm:rounded-lg">
+                          <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           <span>{item.waktuPelaksanaan}</span>
                         </span>
                       ) : (
                         <span className="text-slate-400 font-normal">-</span>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                    <td className="px-3 py-2.5 sm:px-5 sm:py-4 text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line text-xs sm:text-sm">
                       {item.kegiatanTugasJabatan}
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/50 px-2.5 py-1 rounded-xl">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <td className="px-3 py-2.5 sm:px-5 sm:py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl">
+                        <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600" />
                         <span>{item.hasil}</span>
                       </span>
                     </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                    <td className="px-3 py-2.5 sm:px-5 sm:py-4 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center gap-1 sm:gap-1.5">
                         <button
                           type="button"
                           onClick={() => handleEdit(item)}
                           title="Ubah LKH"
-                          className="h-8 w-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center transition-all active:scale-90 border border-slate-200/60 dark:border-slate-700 cursor-pointer"
+                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-center transition-all active:scale-90 border border-slate-200/60 dark:border-slate-700 cursor-pointer"
                         >
-                          <Edit2 className="h-3.5 w-3.5" />
+                          <Edit2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id)}
                           disabled={deletingId === item.id}
                           title="Hapus LKH"
-                          className="h-8 w-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-all active:scale-90 border border-slate-200/60 dark:border-slate-700 cursor-pointer disabled:opacity-50"
+                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-all active:scale-90 border border-slate-200/60 dark:border-slate-700 cursor-pointer disabled:opacity-50"
                         >
                           {deletingId === item.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
                           ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           )}
                         </button>
                       </div>

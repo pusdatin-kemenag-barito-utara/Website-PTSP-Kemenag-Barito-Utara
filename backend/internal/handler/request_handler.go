@@ -45,6 +45,22 @@ func (h *RequestHandler) GetRequests(c fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
+func (h *RequestHandler) GetUserArchive(c fiber.Ctx) error {
+	userID := c.Query("user_id")
+	if userID == "" {
+		userID = c.Query("userId")
+	}
+
+	data, err := h.svc.GetUserArchive(c.Context(), userID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	}
+	if data == nil {
+		data = []models.UserArchiveDocument{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": data})
+}
+
 func (h *RequestHandler) TrackRequest(c fiber.Ctx) error {
 	reqNum := c.Params("requestNumber")
 	res, err := h.svc.Track(c.Context(), reqNum)

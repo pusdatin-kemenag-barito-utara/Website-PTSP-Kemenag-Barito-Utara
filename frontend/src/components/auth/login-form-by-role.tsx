@@ -9,9 +9,11 @@ import { logLoginAction } from "@/lib/actions/auth/login-audit";
 import {
   checkLoginLockoutAction,
   recordFailedLoginAction,
+  resetLoginLockoutAction,
+  unlockAccountAction,
 } from "@/lib/actions/auth/login-lockout";
 import { useState, useEffect, useRef, type FormEvent } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import Link from "@/lib/next-compat/link";
 import { useRouter } from "@/lib/next-compat/navigation";
 import { motion as m, AnimatePresence } from "framer-motion";
@@ -57,6 +59,7 @@ export function LoginFormByRole({
   const [mounted, setMounted] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [savedIdentifier, setSavedIdentifier] = useState("");
+  const [lastIdentifier, setLastIdentifier] = useState("");
   const turnstileRef = useRef<TurnstileRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
@@ -69,12 +72,24 @@ export function LoginFormByRole({
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      setSavedIdentifier(stored);
+    let initialId = "";
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const qPhone = urlParams.get("phone");
+      const qRegistered = urlParams.get("registered");
+      if (qRegistered === "true") {
+        toast.success("Akun berhasil dibuat!", {
+          id: "login-toast",
+          description: "Silakan masukkan password untuk masuk ke akun Anda.",
+        });
+      }
+      initialId = (mode === "pemohon" && qPhone) ? qPhone : (localStorage.getItem(storageKey) || "");
+    }
+    if (initialId) {
+      setSavedIdentifier(initialId);
       setRememberMe(true);
     }
-  }, [storageKey]);
+  }, [storageKey, mode]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,6 +140,8 @@ export function LoginFormByRole({
         return;
       }
     }
+
+    setLastIdentifier(identifier);
 
     if (!turnstileToken) {
       setLoading(false);
@@ -181,6 +198,9 @@ export function LoginFormByRole({
       }
 
       const user = res.user;
+
+      // Reset lockout counter on success
+      resetLoginLockoutAction(identifier).catch(() => {});
 
       toast.success("Login Berhasil!", {
         id: "login-toast",
@@ -456,15 +476,34 @@ export function LoginFormByRole({
         {error && (
           <m.div
             key="error-msg"
-            initial={{ opacity: 0, height: 0, y: -10 }}
+            initial={{ opacity: 0, height: 0, y: -5 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+            exit={{ opacity: 0, height: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden mb-2"
           >
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 mb-2">
-              {error}
-            </p>
+            <div className="flex flex-col gap-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 p-2.5 text-xs text-red-700 dark:text-red-400">
+              <div className="flex items-center gap-2 font-semibold">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                <span>{error}</span>
+              </div>
+              {error.includes("terkunci") && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const targetId = lastIdentifier || savedIdentifier;
+                    await unlockAccountAction(targetId);
+                    setError("");
+                    turnstileRef.current?.reset();
+                    setTurnstileToken(null);
+                    toast.success("Kunci akun telah dibuka. Silakan masukkan password Anda kembali.");
+                  }}
+                  className="self-start text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer ml-6"
+                >
+                  🔓 Buka Kunci Akun Sekarang
+                </button>
+              )}
+            </div>
           </m.div>
         )}
       </AnimatePresence>

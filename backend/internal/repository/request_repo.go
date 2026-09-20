@@ -951,3 +951,87 @@ func randomHex(n int) string {
 	return string(b)
 }
 
+// GetUserArchive mengambil semua berkas arsip milik pemohon (hasil upload persyaratan & dokumen keluaran PTSP).
+func (r *RequestRepository) GetUserArchive(ctx context.Context, userID string) ([]models.UserArchiveDocument, error) {
+	if strings.TrimSpace(userID) == "" || userID == "undefined" {
+		return []models.UserArchiveDocument{}, nil
+	}
+
+	query := `
+		-- 1. Berkas persyaratan yang diunggah pemohon
+		SELECT 
+			'uploaded-' || d.id::text AS id,
+			COALESCE(NULLIF(d.file_name, ''), NULLIF(sr.document_name, ''), 'Berkas Persyaratan') AS file_name,
+			COALESCE(d.file_path, '') AS file_path,
+			COALESCE(NULLIF(d.file_type, ''), 'application/octet-stream') AS file_type,
+			COALESCE(d.file_size, 0) AS file_size,
+			d.created_at,
+			'uploaded' AS source,
+			r.request_number,
+			COALESCE(s.name, 'Layanan PTSP') AS service_name,
+			r.status::text AS request_status
+		FROM kemenag_ptsp.ptsp_service_request_documents d
+		JOIN kemenag_ptsp.ptsp_service_requests r ON r.id = d.request_id
+		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
+		LEFT JOIN kemenag_ptsp.ptsp_service_requirements sr ON sr.id = d.requirement_id
+		WHERE r.user_id::text = $1 
+		   OR r.user_id IN (SELECT user_id FROM kemenag_ptsp.profiles_pemohon WHERE id::text = $1)
+		   OR r.user_id IN (SELECT id FROM kemenag_ptsp.profiles_pemohon WHERE user_id::text = $1)
+
+		UNION ALL
+
+		-- 2. Berkas hasil layanan yang diterbitkan Kemenag
+		SELECT 
+			'generated-' || g.id::text AS id,
+			COALESCE(NULLIF(g.file_name, ''), 'Hasil - ' || COALESCE(s.name, 'Layanan PTSP')) AS file_name,
+			COALESCE(g.file_path, '') AS file_path,
+			'application/pdf' AS file_type,
+			0 AS file_size,
+			COALESCE(g.generated_at, g.created_at) AS created_at,
+			'generated' AS source,
+			r.request_number,
+			COALESCE(s.name, 'Layanan PTSP') AS service_name,
+			r.status::text AS request_status
+		FROM kemenag_ptsp.ptsp_generated_documents g
+		JOIN kemenag_ptsp.ptsp_service_requests r ON r.id = g.request_id
+		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
+		WHERE r.user_id::text = $1 
+		   OR r.user_id IN (SELECT user_id FROM kemenag_ptsp.profiles_pemohon WHERE id::text = $1)
+		   OR r.user_id IN (SELECT id FROM kemenag_ptsp.profiles_pemohon WHERE user_id::text = $1)
+
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil arsip berkas: %w", err)
+	}
+	defer rows.Close()
+
+	var docs []models.UserArchiveDocument
+	for rows.Next() {
+		var doc models.UserArchiveDocument
+		var fileSize int64
+		if err := rows.Scan(
+			&doc.ID,
+			&doc.FileName,
+			&doc.FilePath,
+			&doc.FileType,
+			&fileSize,
+			&doc.CreatedAt,
+			&doc.Source,
+			&doc.RequestNumber,
+			&doc.ServiceName,
+			&doc.RequestStatus,
+		); err == nil {
+			doc.FileSize = fmt.Sprintf("%d", fileSize)
+			docs = append(docs, doc)
+		}
+	}
+
+	if docs == nil {
+		docs = []models.UserArchiveDocument{}
+	}
+	return docs, nil
+}
+

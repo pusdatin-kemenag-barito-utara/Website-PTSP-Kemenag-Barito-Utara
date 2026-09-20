@@ -36,29 +36,30 @@ export function SidebarFooter({
   };
 
   return (
-    <div className="p-3.5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
+    <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-1">
       {isAdmin && (
         <Link
           href="/admin"
-          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-2.5 text-xs font-bold border border-amber-500/30 transition-all duration-200"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors"
         >
-          <Shield className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          <span>Kembali ke Panel Admin</span>
+          <Shield className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <span className="truncate">Panel Admin</span>
         </Link>
       )}
       <Link
         href="/"
-        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 px-4 py-2.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border border-emerald-100 dark:border-emerald-900/40 transition-all duration-200"
+        prefetch={false}
+        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
       >
-        <Home className="h-4 w-4" />
-        <span>Kembali ke Beranda</span>
+        <Home className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" />
+        <span className="truncate">Kembali ke Beranda</span>
       </Link>
       <button
         onClick={handleSignOut}
-        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all duration-200 active:scale-95"
+        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
       >
-        <LogOut className="h-4 w-4" />
-        <span>Keluar Sesi</span>
+        <LogOut className="h-4 w-4 shrink-0 text-rose-500 dark:text-rose-400" />
+        <span className="truncate">Keluar Sesi</span>
       </button>
     </div>
   );

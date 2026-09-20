@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { LoginTurnstile, type TurnstileRef } from "./_components/login-turnstile";
 
 import { registerPemohonAction } from "@/lib/actions/auth/register-pemohon";
+import { loginViaGolangAction } from "@/lib/actions/auth/login-helper";
 import { isSafeRedirect } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -90,6 +91,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
     const formData = new FormData(form);
     const rawPhone = String(formData.get("phone") || "").trim();
     const normalizedPhone = normalizeWhatsappNumber(rawPhone);
+    const password = String(formData.get("password") || "");
 
     formData.set("phone", normalizedPhone);
     formData.append("turnstile_token", turnstileToken);
@@ -107,19 +109,58 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
     try {
       const result = await registerPemohonAction(formData);
       if (result.success) {
-        setMessage("Registrasi berhasil! Mengalihkan Anda ke halaman login...");
-        toast.success("Registrasi Berhasil!", {
-          id: "register-toast",
-          description: "Mengalihkan Anda ke halaman login...",
-        });
+        // Simpan nomor telepon di localStorage untuk auto-fill login
+        try {
+          localStorage.setItem("ptsp_remember_phone", normalizedPhone);
+        } catch (e) {}
 
         const safeCallback = callbackUrl && isSafeRedirect(callbackUrl) ? callbackUrl : "/masyarakat";
-        const loginUrl = `/login/masyarakat?callbackUrl=${encodeURIComponent(safeCallback)}`;
-          
+
+        // Coba login otomatis setelah registrasi berhasil
+        try {
+          const loginRes = await loginViaGolangAction({
+            identifier: normalizedPhone,
+            password,
+            mode: "pemohon",
+            rememberMe: true,
+          });
+
+          if (loginRes.success && loginRes.token) {
+            const maxAge = 30 * 24 * 3600;
+            document.cookie = `ptsp-auth=${encodeURIComponent(loginRes.token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+            try {
+              localStorage.setItem("ptsp-auth-token", loginRes.token);
+              if (loginRes.user) {
+                localStorage.setItem("ptsp-auth-user", JSON.stringify(loginRes.user));
+              }
+            } catch (e) {}
+
+            setMessage("Pendaftaran berhasil! Mengalihkan ke dashboard...");
+            toast.success("Pendaftaran & Login Berhasil!", {
+              id: "register-toast",
+              description: "Mengalihkan Anda ke portal pemohon...",
+            });
+
+            setTimeout(() => {
+              window.location.replace(safeCallback);
+            }, 1000);
+            return;
+          }
+        } catch (loginErr) {
+          console.warn("Auto-login error after registration:", loginErr);
+        }
+
+        // Fallback: Arahkan ke halaman login masyarakat secara tegas
+        const loginUrl = `/login/masyarakat?registered=true&phone=${encodeURIComponent(normalizedPhone)}&callbackUrl=${encodeURIComponent(safeCallback)}`;
+        setMessage("Registrasi berhasil! Mengalihkan ke halaman login...");
+        toast.success("Registrasi Berhasil!", {
+          id: "register-toast",
+          description: "Mengalihkan ke halaman login masyarakat...",
+        });
+
         setTimeout(() => {
-          router.push(loginUrl);
-          router.refresh();
-        }, 1500);
+          window.location.replace(loginUrl);
+        }, 1200);
       } else {
         const errMsg = result.error || "Gagal membuat akun.";
         setError(errMsg);
@@ -159,7 +200,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
 
   return (
     <m.form 
-      className="space-y-4" 
+      className="space-y-2.5" 
       onSubmit={onSubmit} 
       autoComplete="off"
       variants={containerVariants}
@@ -167,12 +208,13 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
       animate="show"
     >
       <m.div variants={itemVariants}>
-        <Field label="Nama Lengkap" required>
+        <Field label="Nama Lengkap" required labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-200">
           <Input
             name="full_name"
             required
             placeholder="Masukkan nama lengkap"
             autoComplete="off"
+            className="h-9 text-xs sm:text-sm py-1.5"
             onInput={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/[0-9]/g, "");
             }}
@@ -184,15 +226,16 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         <Field
           label="Nomor Telepon / WhatsApp"
           required
-          hint="Contoh: 081234567890"
+          labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-200"
         >
           <Input
             name="phone"
             required
-            placeholder="Masukkan nomor WhatsApp aktif"
+            placeholder="Nomor WhatsApp aktif (cth: 08123456789)"
             autoComplete="off"
             type="tel"
             inputMode="numeric"
+            className="h-9 text-xs sm:text-sm py-1.5"
             onInput={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
             }}
@@ -201,27 +244,27 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
       </m.div>
 
       <m.div variants={itemVariants}>
-        <Field label="Alamat" required>
+        <Field label="Alamat" required labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-200">
           <Textarea
             name="address"
             required
             placeholder="Masukkan alamat lengkap"
-            className="min-h-16 resize-none"
+            className="min-h-[44px] h-11 max-h-16 py-1.5 px-3 text-xs sm:text-sm resize-none"
             autoComplete="off"
           />
         </Field>
       </m.div>
 
       <m.div variants={itemVariants}>
-        <Field label="Password" required hint="Minimal 8 karakter">
+        <Field label="Password" required labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-200">
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
               minLength={8}
               required
-              placeholder="Masukkan password"
-              className="pr-11"
+              placeholder="Minimal 8 karakter"
+              className="pr-10 h-9 text-xs sm:text-sm py-1.5"
               autoComplete="new-password"
               value={passwordVal}
               onChange={(e) => setPasswordVal(e.target.value)}
@@ -230,9 +273,9 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
               type="button"
               aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-600"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </button>
           </div>
           
@@ -242,19 +285,19 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-1.5 space-y-1 overflow-hidden"
+                className="mt-1 space-y-0.5 overflow-hidden"
               >
                 <div className="flex gap-1">
                   {[1, 2, 3, 4].map((level) => (
                     <div
                       key={level}
-                      className={`h-1.5 w-full rounded-full transition-colors ${
+                      className={`h-1 w-full rounded-full transition-colors ${
                         strengthScore >= level ? getStrengthColor(strengthScore) : "bg-slate-200"
                       }`}
                     />
                   ))}
                 </div>
-                <p className={`text-[11px] font-medium ${getStrengthTextColor(strengthScore)}`}>
+                <p className={`text-[10px] font-medium ${getStrengthTextColor(strengthScore)}`}>
                   Kekuatan password: {getStrengthLabel(strengthScore)}
                 </p>
               </m.div>
@@ -267,30 +310,30 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         {error && (
           <m.div
             key="error-msg"
-            initial={{ opacity: 0, height: 0, y: -10 }}
+            initial={{ opacity: 0, height: 0, y: -5 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, height: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <p className="rounded-lg bg-red-50 px-3 py-3 text-sm text-red-700">{error}</p>
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
           </m.div>
         )}
         {message && (
           <m.div
             key="success-msg"
-            initial={{ opacity: 0, height: 0, y: -10 }}
+            initial={{ opacity: 0, height: 0, y: -5 }}
             animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, height: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-700 border border-emerald-100">{message}</p>
+            <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700 border border-emerald-100">{message}</p>
           </m.div>
         )}
       </AnimatePresence>
 
-      <m.div variants={itemVariants} className="pt-2 flex justify-center">
+      <m.div variants={itemVariants} className="pt-0.5 flex justify-center scale-90 sm:scale-95 origin-center">
         <LoginTurnstile
           mounted={mounted}
           ref={turnstileRef}
@@ -298,10 +341,10 @@ export function RegisterForm({ callbackUrl }: { callbackUrl?: string }) {
         />
       </m.div>
 
-      <m.div variants={itemVariants} className="pt-2">
-        <m.div whileTap={loading || !turnstileToken ? {} : { scale: 0.96 }}>
+      <m.div variants={itemVariants} className="pt-0.5">
+        <m.div whileTap={loading || !turnstileToken ? {} : { scale: 0.98 }}>
           <Button
-            className="w-full h-12 text-[15px] font-bold shadow-md transition-all bg-[#059669]! hover:bg-[#047857]! hover:shadow-emerald-500/25 rounded-xl"
+            className="w-full h-10 text-xs sm:text-sm font-bold shadow-xs transition-colors bg-emerald-700! hover:bg-emerald-800! rounded-xl cursor-pointer"
             disabled={loading || !turnstileToken}
           >
             {loading ? "Memproses..." : "Daftar Akun Pemohon"}

@@ -23,8 +23,6 @@ const profile = await requireAuth(false, Astro);
     </div>
 
     <!-- Form Container -->
-    <div class="rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-8 md:p-10 shadow-xs transition-colors">
-      <ProfileForm client:load profile={profile} />
-    </div>
+    <ProfileForm client:load profile={profile} />
   </div>
 </DashboardShell>

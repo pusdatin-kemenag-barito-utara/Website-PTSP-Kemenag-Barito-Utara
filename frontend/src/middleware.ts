@@ -37,11 +37,12 @@ function isSameOrigin(request: Request): boolean {
 
 const PUBLIC_PATHS = [
   "/", "/login", "/login/masyarakat", "/login/masyarakat/lengkapi-profil", "/login/pegawai", "/login/petugas",
-  "/layanan", "/tentang", "/kontak", "/faq",
+  "/layanan", "/layanan-pegawai", "/tentang", "/kontak", "/faq",
   "/track", "/buku-tamu", "/janji-temu", "/cek-cuti",
   "/register", "/forgot-password",
   "/berita", "/artikel",
   "/kebijakan-privasi", "/syarat-ketentuan",
+  "/offline", "/offline.html",
 ];
 
 export const onRequest = defineMiddleware(async (context, next) => {

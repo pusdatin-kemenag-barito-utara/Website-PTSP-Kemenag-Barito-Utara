@@ -3,22 +3,42 @@ import Image from "@/lib/next-compat/image";
 import { X } from "lucide-react";
 import { motion as m, AnimatePresence } from "framer-motion";
 
+const BANNER_STORAGE_KEY = "ptsp_banner_last_seen";
+const HIDE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 jam agar tidak muncul berulang
+
 export function BannerModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const hasSeenBanner = sessionStorage.getItem("ptsp_has_seen_banner");
-    if (!hasSeenBanner) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-        sessionStorage.setItem("ptsp_has_seen_banner", "true");
-      }, 1800);
-      return () => clearTimeout(timer);
+    // 1. Cek apakah sudah pernah dilihat di sesi tab ini
+    if (sessionStorage.getItem("ptsp_has_seen_banner")) {
+      return;
     }
+
+    // 2. Cek apakah sudah pernah ditutup/dilihat dalam 24 jam terakhir (localStorage)
+    const lastSeen = localStorage.getItem(BANNER_STORAGE_KEY);
+    if (lastSeen) {
+      const elapsed = Date.now() - parseInt(lastSeen, 10);
+      if (!isNaN(elapsed) && elapsed < HIDE_DURATION_MS) {
+        return;
+      }
+    }
+
+    // Tandai segera di sessionStorage agar navigasi cepat antar halaman tidak memicu ulang
+    sessionStorage.setItem("ptsp_has_seen_banner", "true");
+
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+      localStorage.setItem(BANNER_STORAGE_KEY, Date.now().toString());
+    }, 1800);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleClose = () => {
     setIsOpen(false);
+    sessionStorage.setItem("ptsp_has_seen_banner", "true");
+    localStorage.setItem(BANNER_STORAGE_KEY, Date.now().toString());
   };
 
   return (
@@ -56,15 +76,15 @@ export function BannerModal() {
               </button>
             </div>
 
-            {/* Gambar Banner — tanpa card wrapper, langsung float */}
-            <div className="w-full rounded-xl overflow-hidden shadow-[0_32px_72px_-8px_rgba(0,0,0,0.6)]">
+            {/* Gambar Banner — tanpa card wrapper, sudut tegas (tidak rounded) */}
+            <div className="w-full rounded-none overflow-hidden shadow-[0_32px_72px_-8px_rgba(0,0,0,0.6)]">
               <Image
                 src="/banners/zona-integritas.webp"
                 alt="Zona Integritas - Wilayah Bebas dari Korupsi"
                 width={1920}
                 height={480}
                 quality={82}
-                className="w-full h-auto object-contain block"
+                className="w-full h-auto object-contain block rounded-none"
               />
             </div>
 

@@ -28,7 +28,7 @@ export function HomeSambutanKepala() {
           >
             <div className="relative w-36 xs:w-44 sm:w-56 lg:w-full max-w-[280px] aspect-[3/4] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm">
               <Image
-                src="/pejabat.png"
+                src="/pejabat.webp"
                 alt="H. Arbaja, S.Ag., M.A.P."
                 fill
                 className="object-cover object-top"

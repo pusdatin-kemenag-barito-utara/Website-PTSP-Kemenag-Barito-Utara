@@ -43,13 +43,22 @@ export function verifyNativeJWT(token?: string | null, customSecret?: string): D
 
     const [headerB64, payloadB64, sigB64] = parts;
 
-    // Decode claims terlebih dahulu untuk memeriksa payload
-    const payloadJson = Buffer.from(payloadB64, "base64url").toString("utf8");
-    const claims = JSON.parse(payloadJson) as DecodedJWTClaims;
+    // Decode claims secara aman untuk format base64 maupun base64url
+    const safeBase64 = payloadB64.replace(/-/g, "+").replace(/_/g, "/");
+    const payloadJson = Buffer.from(safeBase64, "base64").toString("utf8");
+    const rawClaims = JSON.parse(payloadJson) as any;
 
-    if (!claims || !claims.user_id) {
+    const userId = rawClaims?.user_id || rawClaims?.sub || rawClaims?.id;
+    if (!rawClaims || !userId) {
       return null;
     }
+
+    const claims: DecodedJWTClaims = {
+      ...rawClaims,
+      user_id: String(userId),
+      role: rawClaims.role || rawClaims.user_metadata?.role || "user",
+      nama: rawClaims.nama || rawClaims.user_metadata?.full_name || rawClaims.user_metadata?.name || rawClaims.email?.split("@")[0] || "User",
+    };
 
     // Toleransi buffer 60 detik untuk expiration
     if (claims.exp && (Date.now() / 1000) > (claims.exp + 60)) {

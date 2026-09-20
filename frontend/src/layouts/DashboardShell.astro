@@ -45,7 +45,7 @@ try {
     </div>
     <main class:list={[
       "min-w-0 flex-1 w-full p-4 sm:p-6 md:p-6 lg:p-8 overflow-x-hidden",
-      mode === "user" ? "pt-[64px] sm:pt-[72px] md:pt-6 pb-24 sm:pb-28 md:pb-8" : "pt-[72px] sm:pt-[80px] md:pt-6 md:pb-8"
+      (mode === "user" || mode === "pegawai") ? "pt-[64px] sm:pt-[72px] md:pt-6 pb-24 sm:pb-28 md:pb-8" : "pt-[72px] sm:pt-[80px] md:pt-6 md:pb-8"
     ]}>
       <PageTransition client:load>
         <slot />

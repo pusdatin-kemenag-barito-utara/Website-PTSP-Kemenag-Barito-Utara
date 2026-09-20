@@ -60,12 +60,13 @@ export function HomeHero({ profile }: { profile?: any }) {
       {/* Background image - HD 16:9 Office Building */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/kantor-kemenag-hd.jpg?v=2026"
+          src="/kantor-kemenag-hd.webp?v=2026"
           alt="Kantor Kemenag Barito Utara"
           fill
           sizes="100vw"
           className="object-cover object-center opacity-70"
           priority
+          fetchPriority="high"
         />
         {/* Soft elegant gradient overlay - so photo of building is clearly visible */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/45 via-slate-950/25 to-slate-950/70" />
@@ -109,6 +110,9 @@ export function HomeHero({ profile }: { profile?: any }) {
               action="/track"
               method="get"
               className="flex flex-row items-center gap-1.5 sm:gap-2.5"
+              data-analytics="track_permohonan"
+              data-analytics-name="Lacak Status Form"
+              data-analytics-location="hero_section"
             >
               <div className="relative flex-1">
                 <div className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 flex items-center shrink-0 pointer-events-none z-10">
@@ -124,6 +128,9 @@ export function HomeHero({ profile }: { profile?: any }) {
               </div>
               <button
                 type="submit"
+                data-analytics="cta_click"
+                data-analytics-name="Lacak Status"
+                data-analytics-location="hero_section"
                 className="flex items-center justify-center gap-1 sm:gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 sm:px-6 py-2.5 sm:py-3.5 text-xs sm:text-sm font-bold text-white shadow-md hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 active:scale-95 shrink-0 cursor-pointer"
               >
                 <span>Lacak Status</span>
@@ -138,6 +145,9 @@ export function HomeHero({ profile }: { profile?: any }) {
           {activeProfile ? (
             <Link
               href={targetDashboard}
+              data-analytics="cta_click"
+              data-analytics-name="Masuk ke Portal Saya"
+              data-analytics-location="hero_section"
               className="w-full sm:w-auto group inline-flex justify-center items-center gap-1.5 sm:gap-2.5 rounded-xl bg-emerald-600 px-3 sm:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition-all duration-200 hover:bg-emerald-500 active:scale-98 text-center"
             >
               <LayoutDashboard className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 shrink-0" />
@@ -147,6 +157,9 @@ export function HomeHero({ profile }: { profile?: any }) {
           ) : (
             <Link
               href="/login/masyarakat"
+              data-analytics="cta_click"
+              data-analytics-name="Mulai Pengajuan"
+              data-analytics-location="hero_section"
               className="w-full sm:w-auto group inline-flex justify-center items-center gap-1.5 sm:gap-2.5 rounded-xl bg-emerald-600 px-3 sm:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg transition-all duration-200 hover:bg-emerald-500 active:scale-98 text-center"
             >
               <FilePlus2 className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 shrink-0" />
@@ -156,6 +169,9 @@ export function HomeHero({ profile }: { profile?: any }) {
           )}
           <Link
             href="/layanan"
+            data-analytics="cta_click"
+            data-analytics-name="Katalog Layanan"
+            data-analytics-location="hero_section"
             className="w-full sm:w-auto inline-flex justify-center items-center gap-1.5 sm:gap-2.5 rounded-xl border border-white/20 bg-white/10 backdrop-blur-md px-3 sm:px-7 py-2.5 sm:py-3.5 text-xs sm:text-sm font-bold text-white transition-all duration-200 hover:bg-white/20 hover:border-white/30 active:scale-98 text-center"
           >
             <LayoutGrid className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 shrink-0 text-slate-300" />

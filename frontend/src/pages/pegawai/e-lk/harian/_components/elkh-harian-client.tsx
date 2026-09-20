@@ -39,15 +39,15 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
+    <div className="space-y-5 sm:space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
       {/* Header Ringkas Minimalis */}
-      <div className="border-b border-slate-200/80 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+      <div className="border-b border-slate-200/80 dark:border-slate-800 pb-3.5 sm:pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/50 px-3 py-0.5 text-[11px] font-extrabold text-teal-700 dark:text-teal-300 mb-2">
-            <ClipboardList className="h-3.5 w-3.5" />
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/50 px-2.5 py-0.5 sm:px-3 sm:py-0.5 text-[10px] sm:text-[11px] font-extrabold text-teal-700 dark:text-teal-300 mb-1.5 sm:mb-2">
+            <ClipboardList className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span>Manajemen Laporan Kinerja (E-LK)</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
             Dashboard E-LK Harian
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-xs sm:text-sm max-w-xl font-medium leading-relaxed">
@@ -56,12 +56,12 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
         </div>
 
         {/* Status Pengisian Hari Ini */}
-        <div className="inline-flex items-center gap-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3.5 py-2 shadow-xs shrink-0 self-start sm:self-auto transition-all hover:scale-105">
-          <span className="relative flex h-2.5 w-2.5">
+        <div className="inline-flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3 py-1.5 sm:px-3.5 sm:py-2 shadow-xs shrink-0 self-start sm:self-auto transition-all hover:scale-105">
+          <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isFilledToday ? "bg-emerald-400" : "bg-amber-400"} opacity-75`} />
-            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isFilledToday ? "bg-emerald-500" : "bg-amber-500"}`} />
+            <span className={`relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 ${isFilledToday ? "bg-emerald-500" : "bg-amber-500"}`} />
           </span>
-          <div className="text-xs">
+          <div className="text-[11px] sm:text-xs">
             <span className="font-extrabold text-slate-500 dark:text-slate-400 mr-1.5">Status Hari Ini:</span>
             <span className={`font-black ${isFilledToday ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
               {isFilledToday ? "Sudah Diisi ✨" : "Belum Diisi"}
@@ -71,13 +71,13 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
       </div>
 
       {/* Banner Pengingat Hari Ini dengan Trigger Floating Modal */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-teal-900 via-emerald-900 to-slate-900 text-white p-5 sm:p-7 shadow-xl border border-teal-700/30 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-2.5 py-1 text-[11px] font-bold text-teal-200 backdrop-blur-md">
-            <CalendarDays className="h-3.5 w-3.5" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-teal-900 via-emerald-900 to-slate-900 text-white p-4 sm:p-6 shadow-xl border border-teal-700/30 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-5">
+        <div className="relative z-10 space-y-1.5 sm:space-y-2">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/15 px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-bold text-teal-200 backdrop-blur-md">
+            <CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span>{formattedToday}</span>
           </div>
-          <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+          <h2 className="text-base sm:text-xl md:text-2xl font-black text-white tracking-tight">
             {isFilledToday ? "Laporan Harian Anda Telah Tercatat!" : "Jangan Lupa Mengisi LKH Hari Ini!"}
           </h2>
           <p className="text-xs sm:text-sm text-teal-100/80 font-medium leading-relaxed max-w-lg">
@@ -90,9 +90,9 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
         <div className="relative z-10 shrink-0">
           <Button 
             onClick={handleOpenNew}
-            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm px-5 py-3 h-11 sm:h-12 rounded-xl sm:rounded-2xl shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95 gap-2 border-0 cursor-pointer"
+            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm px-4 py-2 sm:px-5 sm:py-3 h-10 sm:h-12 rounded-xl sm:rounded-2xl shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95 gap-2 border-0 cursor-pointer"
           >
-            <PlusCircle className="h-4.5 w-4.5" />
+            <PlusCircle className="h-4 w-4" />
             <span>Isi LKH Sekarang</span>
           </Button>
         </div>
@@ -102,44 +102,44 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
       </div>
 
       {/* Section List Aktivitas Terbaru */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <FileCheck2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          <h2 className="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 sm:gap-2">
+            <FileCheck2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
             <span>Aktivitas LKH Terbaru</span>
           </h2>
           {recentLkh && recentLkh.length > 0 && (
             <Link
               href="/pegawai/e-lk/riwayat"
-              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition-colors"
             >
               <span>Lihat Semua</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </Link>
           )}
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
           {recentLkh && recentLkh.length > 0 ? (
             <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {recentLkh.map((lkh) => (
-                <div key={lkh.id} className="p-4 sm:p-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3.5 sm:gap-4 min-w-0 flex-1">
-                    <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-xs">
-                      <ClipboardList className="h-5.5 w-5.5" />
+                <div key={lkh.id} className="p-3 sm:p-4.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-xs">
+                      <ClipboardList className="h-4.5 w-4.5 sm:h-5.5 sm:w-5.5" />
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
-                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
+                      <h3 className="text-xs sm:text-sm md:text-base font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
                         {lkh.kegiatanTugasJabatan}
                       </h3>
                       {lkh.hasil && (
-                        <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                          <div className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-semibold bg-slate-100/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-0.5">
+                          <div className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-semibold bg-slate-100/80 dark:bg-slate-800/80 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg">
                             <span className="text-slate-400 font-normal">Hasil:</span>
                             <span>{lkh.hasil}</span>
                           </div>
                           {lkh.waktuPelaksanaan && (
-                            <div className="inline-flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-300 font-bold bg-teal-50 dark:bg-teal-950/60 border border-teal-200/50 dark:border-teal-800/40 px-2.5 py-1 rounded-lg">
+                            <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-teal-700 dark:text-teal-300 font-bold bg-teal-50 dark:bg-teal-950/60 border border-teal-200/50 dark:border-teal-800/40 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg">
                               <span>⏰ {lkh.waktuPelaksanaan}</span>
                             </div>
                           )}
@@ -149,19 +149,19 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
                   </div>
 
                   {/* Right side: Clear Date Badge & Modern Edit Button */}
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/60">
-                    <div className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/50 px-3 py-1.5 rounded-xl text-emerald-800 dark:text-emerald-200 font-extrabold text-xs">
-                      <CalendarDays className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/60">
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/50 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-emerald-800 dark:text-emerald-200 font-extrabold text-[10px] sm:text-xs">
+                      <CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>{format(new Date(lkh.tanggal), "EEEE, d MMMM yyyy", { locale: id })}</span>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleEdit(lkh)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all active:scale-95 cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 text-slate-700 dark:text-slate-300 font-extrabold text-[10px] sm:text-xs transition-all active:scale-95 cursor-pointer shadow-xs"
                       title="Ubah LKH"
                     >
-                      <Edit2 className="h-3.5 w-3.5" />
+                      <Edit2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       <span>Ubah</span>
                     </button>
                   </div>
@@ -169,19 +169,19 @@ export function ElkhHarianClient({ recentLkh }: ElkhHarianClientProps) {
               ))}
             </div>
           ) : (
-            <div className="p-12 sm:p-16 text-center flex flex-col items-center justify-center gap-3">
-              <div className="h-16 w-16 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <ClipboardList className="h-8 w-8 text-slate-400" />
+            <div className="p-8 sm:p-16 text-center flex flex-col items-center justify-center gap-2.5 sm:gap-3">
+              <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl sm:rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400" />
               </div>
-              <h3 className="text-slate-900 dark:text-slate-100 font-extrabold text-base">Belum Ada Laporan LKH</h3>
+              <h3 className="text-slate-900 dark:text-slate-100 font-extrabold text-sm sm:text-base">Belum Ada Laporan LKH</h3>
               <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm font-medium leading-relaxed">
                 Anda belum pernah mengisi Laporan Kinerja Harian. Mulai catat aktivitas kerja harian Anda sekarang.
               </p>
               <Button 
                 onClick={handleOpenNew}
-                className="mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-md gap-2 border-0 cursor-pointer"
+                className="mt-1 sm:mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl shadow-md gap-2 border-0 cursor-pointer"
               >
-                <PlusCircle className="h-4 w-4" />
+                <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>Buat LKH Pertama</span>
               </Button>
             </div>

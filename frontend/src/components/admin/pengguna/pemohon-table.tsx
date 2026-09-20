@@ -79,10 +79,12 @@ export function PemohonTable({
 
     let matchMetode = true;
     const loginMethod = (u.metode_login || "").toLowerCase();
+    const isPtspEmail = (u.email || "").endsWith("@ptsp.id");
+    const isWa = loginMethod.includes("whatsapp") || loginMethod.includes("ptsp") || isPtspEmail;
     if (metodeFilter === "google") {
-      matchMetode = loginMethod.includes("google") || (!!u.email && !loginMethod.includes("whatsapp"));
+      matchMetode = !isWa && (loginMethod.includes("google") || (!!u.email && !isPtspEmail));
     } else if (metodeFilter === "whatsapp") {
-      matchMetode = loginMethod.includes("whatsapp") || loginMethod.includes("ptsp") || (!!u.no_hp && !u.email);
+      matchMetode = isWa || (!!u.no_hp && (!u.email || isPtspEmail));
     }
 
     return matchSearch && matchMetode;
@@ -258,7 +260,9 @@ export function PemohonTable({
               const nameStr = user.nama || user.fullName || user.name || "Pemohon";
               const phoneStr = user.no_hp || user.phone || "";
               const loginMethod = (user.metode_login || "").toLowerCase();
-              const isGoogle = loginMethod.includes("google") || (!!user.email && !loginMethod.includes("whatsapp"));
+              const isPtspEmail = (user.email || "").endsWith("@ptsp.id");
+              const isWhatsApp = loginMethod.includes("whatsapp") || loginMethod.includes("ptsp") || isPtspEmail;
+              const isGoogle = !isWhatsApp && (loginMethod.includes("google") || (!!user.email && !isPtspEmail));
 
               // Clean phone for wa.me link (replace 08 with 628)
               const cleanPhone = phoneStr.replace(/\D/g, "");
