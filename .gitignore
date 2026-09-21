@@ -67,3 +67,14 @@ ehthumbs.db
 .antigravitycli/
 .gemini/
 .agents/
+
+# Flutter Mobile Build Outputs & Tool Caches
+**/mobile/build/
+**/mobile/.dart_tool/
+**/mobile/.flutter-plugins
+**/mobile/.flutter-plugins-dependencies
+**/mobile/.pub-cache/
+**/mobile/.pub/
+**/mobile/android/.gradle/
+**/mobile/android/local.properties
+
