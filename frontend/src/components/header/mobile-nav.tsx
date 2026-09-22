@@ -7,7 +7,9 @@ import {
   ChevronDown,
   Shield,
   UserCircle2,
-  Briefcase
+  Briefcase,
+  Smartphone,
+  Download,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { HeaderControls } from "./header-controls";
@@ -161,7 +163,15 @@ export function MobileNav({
                               href={child.href} 
                               target={child.external ? "_blank" : undefined}
                               rel={child.external ? "noopener noreferrer" : undefined}
-                              onClick={() => setMobileOpen(false)}
+                              onClick={(e) => {
+                                setMobileOpen(false);
+                                if (child.href === "#download-apk") {
+                                  e.preventDefault();
+                                  setTimeout(() => {
+                                    window.dispatchEvent(new CustomEvent("open-download-apk"));
+                                  }, 150);
+                                }
+                              }}
                               className={`block rounded-xl px-4 py-3 text-[12px] font-bold transition-colors ${
                                 pathname === child.href 
                                   ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400" 

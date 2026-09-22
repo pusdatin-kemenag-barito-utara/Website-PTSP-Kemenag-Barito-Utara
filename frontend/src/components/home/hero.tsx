@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   Search,
   LayoutDashboard,
+  Smartphone,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { isAdminRole } from "@/lib/constants";

@@ -4,7 +4,11 @@
 node_modules/
 **/node_modules/
 
-# Next.js & Frontend Build Outputs
+# Astro & Frontend Build Outputs
+.astro/
+**/.astro/
+dist/
+**/dist/
 .next/
 **/frontend/.next/
 frontend/out/
@@ -36,21 +40,27 @@ backend/bin/
 backend/main
 backend/build-errors.log
 *.log
-main
+/main
 
 # Environment Variables & Secrets (Semua dikelola via Infisical Cloud)
 .env
 .env*
 *.env
 *.env.local
+*.env.production
+*.env.staging
+!.env.example
+*.pem
+*.key
+*.crt
+*.jks
+*.keystore
 
 # Temporary Scratch Files & Utility Scripts
+debug.txt
+*.tmp
 scratch/
 **/scratch/
-scripts/
-**/scripts/
-frontend/scratch/
-frontend/scripts/
 
 # IDE & OS System Files
 .vscode/
@@ -77,4 +87,8 @@ ehthumbs.db
 **/mobile/.pub/
 **/mobile/android/.gradle/
 **/mobile/android/local.properties
+**/mobile/android/app/build/
+app.*.symbols
+app.*.map.json
+**/symbols/
 

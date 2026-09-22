@@ -9,6 +9,7 @@ import {
   Globe,
   Facebook,
   Youtube,
+  Smartphone,
 } from "lucide-react";
 import {
   MotionDiv,

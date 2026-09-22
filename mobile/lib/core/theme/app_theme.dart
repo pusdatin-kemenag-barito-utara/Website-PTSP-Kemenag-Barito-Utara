@@ -7,10 +7,12 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get lightTheme {
+    final baseFont = GoogleFonts.plusJakartaSans();
     final textTheme = GoogleFonts.plusJakartaSansTextTheme();
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: baseFont.fontFamily,
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
@@ -31,6 +33,7 @@ class AppTheme {
           color: AppColors.textSecondary,
         ),
       ),
+      primaryTextTheme: textTheme,
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: true,

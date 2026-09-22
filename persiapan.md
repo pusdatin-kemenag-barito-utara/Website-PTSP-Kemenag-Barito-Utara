@@ -1,4 +1,5 @@
 # Panduan Persiapan & Setup Laptop Baru
+
 ## PTSP Kemenag Barito Utara — Mobile (Flutter) & Monorepo
 
 Panduan lengkap ini dibuat untuk memandu instalasi dan konfigurasi dari laptop yang masih **polos / baru** agar dapat langsung menjalankan aplikasi mobile Flutter (dengan emulator Android realtime), Backend Golang, dan Frontend Astro.
@@ -9,20 +10,21 @@ Panduan lengkap ini dibuat untuk memandu instalasi dan konfigurasi dari laptop y
 
 Unduh dan pasang software berikut sesuai urutan:
 
-| No | Software | Kegunaan | Link Unduhan Resmi |
-|---|---|---|---|
-| 1 | **Git for Windows** | Version control & terminal Git Bash | [git-scm.com/download/win](https://git-scm.com/download/win) |
-| 2 | **Flutter SDK (Stable)** | Framework aplikasi mobile & Dart SDK | [docs.flutter.dev/get-started/install/windows](https://docs.flutter.dev/get-started/install/windows) |
-| 3 | **Android Studio** | Android SDK, Command-line Tools, & Emulator | [developer.android.com/studio](https://developer.android.com/studio) |
-| 4 | **VS Code** | Code Editor utama | [code.visualstudio.com](https://code.visualstudio.com/) |
-| 5 | **Go (Golang v1.22+)** | Menjalankan Backend REST API | [go.dev/dl](https://go.dev/dl/) |
-| 6 | **Node.js (v20+ LTS)** | Menjalankan Frontend Web Astro | [nodejs.org](https://nodejs.org/) |
+| No  | Software                 | Kegunaan                                    | Link Unduhan Resmi                                                                                   |
+| --- | ------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1   | **Git for Windows**      | Version control & terminal Git Bash         | [git-scm.com/download/win](https://git-scm.com/download/win)                                         |
+| 2   | **Flutter SDK (Stable)** | Framework aplikasi mobile & Dart SDK        | [docs.flutter.dev/get-started/install/windows](https://docs.flutter.dev/get-started/install/windows) |
+| 3   | **Android Studio**       | Android SDK, Command-line Tools, & Emulator | [developer.android.com/studio](https://developer.android.com/studio)                                 |
+| 4   | **VS Code**              | Code Editor utama                           | [code.visualstudio.com](https://code.visualstudio.com/)                                              |
+| 5   | **Go (Golang v1.22+)**   | Menjalankan Backend REST API                | [go.dev/dl](https://go.dev/dl/)                                                                      |
+| 6   | **Node.js (v20+ LTS)**   | Menjalankan Frontend Web Astro              | [nodejs.org](https://nodejs.org/)                                                                    |
 
 ---
 
 ## 2. Langkah-Langkah Instalasi Detail
 
 ### Langkah 1: Install Git for Windows
+
 1. Jalankan installer Git, gunakan pengaturan **default** sampai selesai.
 2. Buka terminal (Git Bash atau PowerShell), konfigurasikan identitas Git Anda:
    ```bash
@@ -33,12 +35,13 @@ Unduh dan pasang software berikut sesuai urutan:
 ---
 
 ### Langkah 2: Install Flutter SDK & Setting PATH
+
 1. Unduh file `.zip` Flutter SDK dari web resmi (misal `flutter_windows_3.x.x-stable.zip`).
 2. **PENTING**: Ekstrak zip tersebut ke folder yang pendek dan **tanpa spasi / tanpa hak Administrator khusus**, sangat disarankan ke:
    ```
    C:\src\flutter
    ```
-   *(JANGAN taruh di `C:\Program Files\` karena akan terkena batasan izin sistem Windows).*
+   _(JANGAN taruh di `C:\Program Files\` karena akan terkena batasan izin sistem Windows)._
 3. Daftarkan Flutter ke **Environment Variables (PATH)**:
    - Tekan tombol **Windows**, ketik **"env"**, lalu pilih **Edit the system environment variables**.
    - Klik tombol **Environment Variables...** di kanan bawah.
@@ -56,13 +59,14 @@ Unduh dan pasang software berikut sesuai urutan:
 ---
 
 ### Langkah 3: Install Android Studio & Komponen SDK
+
 1. Pasang Android Studio menggunakan wizard instalasi standar.
 2. Buka Android Studio, pada menu pembuka klik **More Actions** (atau icon gear) > **SDK Manager**.
 3. Di tab **SDK Platforms**:
    - Centang versi Android terbaru, minimal: **Android 14 (API 34)** atau **Android 15 (API 35)**.
-4. Di tab **SDK Tools** (*Sangat Krusial!*):
+4. Di tab **SDK Tools** (_Sangat Krusial!_):
    - Centang **Android SDK Build-Tools**
-   - Centang **Android SDK Command-line Tools (latest)** *(Wajib untuk Flutter!)*
+   - Centang **Android SDK Command-line Tools (latest)** _(Wajib untuk Flutter!)_
    - Centang **Android Emulator**
    - Centang **Android SDK Platform-Tools**
    - Klik **Apply** lalu **OK** untuk mengunduh semua komponen.
@@ -70,6 +74,7 @@ Unduh dan pasang software berikut sesuai urutan:
 ---
 
 ### Langkah 4: Buat Virtual Device (Android Emulator)
+
 1. Di Android Studio, klik **Virtual Device Manager** (Device Manager).
 2. Klik tombol **+ Create Device** (atau icon panah/tambah).
 3. Pilih perangkat dengan Google Play store: contoh **Pixel 7** atau **Pixel 8**. Klik **Next**.
@@ -81,17 +86,23 @@ Unduh dan pasang software berikut sesuai urutan:
 ---
 
 ### Langkah 5: Setujui Lisensi Android
+
 Buka terminal baru (PowerShell atau Git Bash), lalu jalankan perintah berikut untuk menyetujui semua lisensi SDK:
+
 ```bash
 flutter doctor --android-licenses
 ```
+
 Ketik **`y`** dan tekan **Enter** pada setiap konfirmasi lisensi yang muncul.
 
 Setelah itu jalankan:
+
 ```bash
 flutter doctor
 ```
+
 Pastikan centang hijau muncul pada:
+
 - [✓] Flutter
 - [✓] Android toolchain
 - [✓] Chrome / Web
@@ -100,7 +111,9 @@ Pastikan centang hijau muncul pada:
 ---
 
 ### Langkah 6: Ekstensi yang Perlu Diinstal di VS Code
+
 Buka VS Code, buka menu **Extensions** (`Ctrl + Shift + X`), lalu cari dan install:
+
 1. **Flutter** (by Dart Code) — otomatis mengikutsertakan ekstensi Dart.
 2. **Dart** (by Dart Code)
 3. **Go** (by Go Team at Google)
@@ -112,16 +125,20 @@ Buka VS Code, buka menu **Extensions** (`Ctrl + Shift + X`), lalu cari dan insta
 ## 3. Menjalankan Project di Laptop Baru
 
 ### Langkah 1: Clone Repository
+
 Buka folder tempat Anda biasa menyimpan project (misal `D:\CODING\`), lalu clone repo ini:
+
 ```bash
 git clone https://github.com/pusdatin-kemenag-barito-utara/Website-PTSP-Kemenag-Barito-Utara.git ptsp-kemenag
 cd ptsp-kemenag
 ```
-*(Atau jika sudah di-clone sebelumnya, cukup jalankan `git pull origin main`).*
+
+_(Atau jika sudah di-clone sebelumnya, cukup jalankan `git pull origin main`)._
 
 ---
 
 ### Langkah 2: Menjalankan Aplikasi Mobile Flutter (Realtime di Emulator)
+
 1. Buka folder `ptsp-kemenag` di VS Code.
 2. Buka terminal di VS Code, masuk ke direktori mobile:
    ```bash
@@ -133,29 +150,34 @@ cd ptsp-kemenag
    ```bash
    flutter run
    ```
-   *Tips Realtime Development:*
+   _Tips Realtime Development:_
    - Tekan **`r`** di terminal untuk **Hot Reload** (perubahan kode langsung tampil seketika tanpa restart).
    - Tekan **`R`** untuk **Hot Restart**.
    - Tekan **`q`** untuk berhenti.
 
 ---
 
-### Langkah 3: Menjalankan Backend Golang (Opsional / Jika Diperlukan)
-Aplikasi mobile terhubung ke backend Golang pada port `8080`.
+### Langkah 3: Menjalankan Backend Golang (Zero Hardcode via Infisical)
+
+Aplikasi mobile terhubung ke backend Golang pada port `8080`. Seluruh kredensial (PostgreSQL Supabase, API Keys) diinjeksi langsung dari Infisical Cloud tanpa file `.env` di lokal:
+
 ```bash
 cd backend
-go run .
+infisical run --env=prod --path=/ptsp-kemenag -- go run .
 ```
-*(Di emulator Android, localhost laptop diakses secara otomatis melalui IP internal `10.0.2.2:8080`).*
+
+_(Di emulator Android, localhost laptop diakses secara otomatis melalui IP internal `10.0.2.2:8080`)._
 
 ---
 
-### Langkah 4: Menjalankan Frontend Astro (Opsional / Jika Diperlukan)
+### Langkah 4: Menjalankan Frontend Astro (Zero Hardcode via Infisical)
+
 ```bash
 cd frontend
 npm install
-npm run dev
+infisical run --env=prod --path=/ptsp-kemenag -- npm run dev
 ```
+
 Akses web portal di browser via `http://localhost:4321`.
 
 ---

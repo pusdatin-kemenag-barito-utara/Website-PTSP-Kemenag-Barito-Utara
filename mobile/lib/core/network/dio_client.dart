@@ -42,6 +42,8 @@ class DioClient {
           return handler.next(response);
         },
         onError: (DioException error, handler) {
+          // ignore: avoid_print
+          print('🚨 [Dio Network Error] ${error.type} - URL: ${error.requestOptions.uri} - ${error.message}');
           return handler.next(error);
         },
       ),

@@ -18,8 +18,18 @@ class UserModel {
     this.phone,
   });
 
-  bool get isPegawai => userType == 'pegawai' || (nip != null && nip!.isNotEmpty);
-  bool get isAdmin => role == 'admin_ptsp' || role == 'super_admin' || role == 'kepala_kantor' || role == 'kasubag_tu';
+  bool get isPegawai =>
+      userType == 'internal_pegawai' ||
+      userType == 'pegawai' ||
+      role == 'pegawai' ||
+      (nip != null && nip!.isNotEmpty);
+
+  bool get isAdmin =>
+      userType == 'internal_admin' ||
+      role == 'admin_ptsp' ||
+      role == 'super_admin' ||
+      role == 'kepala_kantor' ||
+      role == 'kasubag_tu';
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(

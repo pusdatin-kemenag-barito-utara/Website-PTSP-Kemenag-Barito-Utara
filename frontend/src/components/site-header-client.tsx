@@ -26,13 +26,18 @@ import {
   FileText,
   Calculator,
   Database,
+  Smartphone,
+  Download,
 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { GlobalSearchModal } from "@/components/global-search-modal";
+import { DownloadApkModal } from "@/components/download-apk-modal";
 import { isAdminRole } from "@/lib/constants";
 import { LoginDropdown } from "@/components/header/login-dropdown";
 import { MobileNav } from "@/components/header/mobile-nav";
 import { HeaderControls } from "@/components/header/header-controls";
+import { motion, AnimatePresence } from "framer-motion";
+
 type HeaderProfile = {
   role?: string | null;
 };
@@ -108,6 +113,11 @@ const navItems = [
         icon: Database,
         external: true,
       },
+      {
+        label: "Aplikasi PTSP SI ATAK",
+        href: "#download-apk",
+        icon: Smartphone,
+      },
     ],
   },
   {
@@ -119,7 +129,6 @@ const navItems = [
   { label: "Kontak", href: "/kontak", icon: PhoneCall },
 ];
 
-import { motion, AnimatePresence } from "framer-motion";
 
 export function SiteHeaderClient({
   profile,
@@ -132,12 +141,19 @@ export function SiteHeaderClient({
   const [loginOpen, setLoginOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const routerPathname = usePathname();
   const rawPath = propPathname || routerPathname || "";
   const normalizedPath = rawPath.replace(/\/$/, "");
   const isHome = normalizedPath === "" || normalizedPath === "/";
   const pathname = rawPath;
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleOpenDownload = () => setIsDownloadModalOpen(true);
+    window.addEventListener("open-download-apk", handleOpenDownload);
+    return () => window.removeEventListener("open-download-apk", handleOpenDownload);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -512,13 +528,24 @@ export function SiteHeaderClient({
                                         href={child.href}
                                         target={(child as any).external ? "_blank" : undefined}
                                         rel={(child as any).external ? "noopener noreferrer" : undefined}
-                                        onClick={() => setOpenDropdown(null)}
+                                        onClick={(e) => {
+                                          setOpenDropdown(null);
+                                          if (child.href === "#download-apk") {
+                                            e.preventDefault();
+                                            setIsDownloadModalOpen(true);
+                                          }
+                                        }}
                                         className="group/item flex items-center justify-between rounded-xl px-4 py-3 text-[11.5px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 transition-all hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-600 dark:hover:text-white"
                                       >
-                                        <div className="flex items-center gap-2.5">
-                                          <ChildIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover/item:text-emerald-700 dark:group-hover/item:text-white transition-colors" />
-                                          <span>{child.label}</span>
-                                        </div>
+                                          <div className="flex items-center gap-2.5">
+                                            <ChildIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover/item:text-emerald-700 dark:group-hover/item:text-white transition-colors" />
+                                            <span>{child.label}</span>
+                                            {child.href === "#download-apk" && (
+                                              <span className="rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-wider">
+                                                BARUT • APK
+                                              </span>
+                                            )}
+                                          </div>
                                         <ChevronDown className="h-3 w-3 -rotate-90 opacity-0 transition-all -translate-x-2 group-hover/item:opacity-100 group-hover/item:translate-x-0 text-emerald-700 dark:text-white" />
                                       </Link>
                                     </li>
@@ -563,6 +590,10 @@ export function SiteHeaderClient({
       <GlobalSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
+      />
+      <DownloadApkModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
       />
     </>
   );

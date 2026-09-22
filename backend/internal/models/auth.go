@@ -3,9 +3,14 @@ package models
 // LoginRequest merepresentasikan payload login untuk seluruh role (petugas, pegawai, pemohon).
 type LoginRequest struct {
 	Identifier string `json:"identifier"` // Email, NIP, atau No WhatsApp
+	Email      string `json:"email"`      // alias kompatibilitas client
+	NIP        string `json:"nip"`        // alias kompatibilitas client
+	Phone      string `json:"phone"`      // alias kompatibilitas client
 	Password   string `json:"password"`
-	Mode       string `json:"mode"`        // "petugas" | "pegawai" | "pemohon"
-	RememberMe bool   `json:"remember_me"`
+	Mode        string `json:"mode"`        // "petugas" | "pegawai" | "pemohon"
+	MetodeLogin string `json:"metode_login,omitempty"`
+	Nama        string `json:"nama,omitempty"`
+	RememberMe  bool   `json:"remember_me"`
 }
 
 // RegisterRequest merepresentasikan pendaftaran mandiri pemohon atau petugas baru.

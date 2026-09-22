@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 	"time"
@@ -22,11 +23,8 @@ func NewAuthHandler(svc *service.AuthService) *AuthHandler {
 // Login memproses request login dan mengatur cookie ptsp-auth HttpOnly.
 func (h *AuthHandler) Login(c fiber.Ctx) error {
 	var req models.LoginRequest
-	if err := c.Bind().Body(&req); err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"success": false,
-			"error":   "Payload request tidak valid",
-		})
+	if err := c.Bind().Body(&req); err != nil || (req.Identifier == "" && req.Email == "" && req.NIP == "" && req.Phone == "") {
+		_ = json.Unmarshal(c.Body(), &req)
 	}
 
 	res, err := h.svc.Login(c.Context(), &req)

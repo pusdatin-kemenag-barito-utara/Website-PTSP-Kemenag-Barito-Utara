@@ -1,9 +1,16 @@
+import 'package:flutter/foundation.dart';
+
 /// Daftar URL & Endpoint REST API Golang Fiber PTSP Kemenag Barito Utara
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Base URL backend (Gunakan IP LAN saat testing fisik / 10.0.2.2 di emulator Android)
-  static const String defaultBaseUrl = 'http://10.0.2.2:8080/api/v1';
+  // Base URL backend: otomatis produksi saat rilis atau 10.0.2.2 saat debug emulator
+  static const String defaultBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: kReleaseMode
+        ? 'https://ptsp.kemenag-baritoutara.com/api/v1'
+        : 'http://10.0.2.2:8080/api/v1',
+  );
 
   // Auth
   static const String login = '/auth/login';
@@ -11,6 +18,17 @@ class ApiEndpoints {
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
   static const String changePassword = '/auth/change-password';
+
+  // Google OAuth Client IDs (Sinkron dengan Infisical / --dart-define)
+  static const String googleClientId = String.fromEnvironment(
+    'PUBLIC_GOOGLE_CLIENT_ID',
+    defaultValue: '796413900805-f70k0kc4mn9e2f7go5brjg0q79r0ujkq.apps.googleusercontent.com',
+  );
+
+  static const String googleClientIdAndroid = String.fromEnvironment(
+    'PUBLIC_GOOGLE_CLIENT_ID_ANDROID',
+    defaultValue: '796413900805-g5flotmfa9h2snd6t5k028gqmlkt5bgk.apps.googleusercontent.com',
+  );
 
   // Layanan Publik
   static const String services = '/services';

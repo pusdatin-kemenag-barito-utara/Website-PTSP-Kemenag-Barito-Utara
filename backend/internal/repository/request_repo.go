@@ -110,7 +110,7 @@ func (r *RequestRepository) FindByNumber(ctx context.Context, requestNumber stri
 		FROM kemenag_ptsp.ptsp_service_requests r
 		LEFT JOIN kemenag_ptsp.ptsp_services s ON s.id = r.service_id
 		LEFT JOIN kemenag_ptsp.ptsp_service_items si ON si.id = r.service_item_id
-		WHERE r.request_number = $1
+		WHERE UPPER(r.request_number) = UPPER(TRIM($1)) OR r.id::text = TRIM($1)
 	`, requestNumber).Scan(&req.ID, &req.UserID, &req.ServiceID, &req.ServiceItemID, &req.RequestNumber, &req.Status,
 		&req.SubmittedAt, &req.CompletedAt, &req.RejectedAt, &req.CreatedAt, &req.RevisionNote, &req.RejectionReason, &req.ServiceName, &req.ItemName)
 

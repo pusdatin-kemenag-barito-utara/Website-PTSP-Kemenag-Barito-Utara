@@ -38,6 +38,15 @@ func (s *AuthService) getJWTSecret() string {
 func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest) (*models.AuthResponse, error) {
 	identifier := strings.TrimSpace(req.Identifier)
 	if identifier == "" {
+		identifier = strings.TrimSpace(req.Email)
+	}
+	if identifier == "" {
+		identifier = strings.TrimSpace(req.NIP)
+	}
+	if identifier == "" {
+		identifier = strings.TrimSpace(req.Phone)
+	}
+	if identifier == "" {
 		return nil, errors.New("identitas login (email / NIP / nomor WhatsApp) wajib diisi")
 	}
 	if req.Password == "" {
@@ -45,52 +54,105 @@ func (s *AuthService) Login(ctx context.Context, req *models.LoginRequest) (*mod
 	}
 
 	mode := strings.ToLower(strings.TrimSpace(req.Mode))
-	if mode == "" {
-		mode = "petugas"
-	}
 
 	var user *models.AuthUser
 	var passwordHash string
 	var err error
 
-	switch mode {
-	case "petugas":
-		user, passwordHash, err = s.repo.FindPetugasByEmail(ctx, identifier)
-		if err != nil {
-			return nil, errors.New("email atau password salah")
+	// Helper closures untuk mencari di masing-masing tabel
+	tryPetugas := func() bool {
+		u, h, e := s.repo.FindPetugasByEmail(ctx, identifier)
+		if e == nil && u != nil {
+			user, passwordHash, err = u, h, nil
+			return true
 		}
-		if user.Status != "active" {
-			return nil, errors.New("akun Anda sedang dinonaktifkan. Silakan hubungi Super Admin")
-		}
-		if !user.IsVerified && user.Role != "super_admin" {
-			return nil, errors.New("akun Anda masih menunggu verifikasi dari Super Admin")
-		}
-
-	case "pegawai":
-		user, passwordHash, err = s.repo.FindPegawaiByNIPOrEmail(ctx, identifier)
-		if err != nil {
-			return nil, errors.New("NIP atau password salah")
-		}
-		if user.Status != "active" {
-			return nil, errors.New("akun pegawai ini dinonaktifkan")
-		}
-
-	case "pemohon":
-		user, passwordHash, err = s.repo.FindPemohonByPhoneOrEmail(ctx, identifier)
-		if err != nil {
-			return nil, errors.New("nomor WhatsApp atau password salah")
-		}
-		if user.Status != "active" {
-			return nil, errors.New("akun pemohon dinonaktifkan")
-		}
-
-	default:
-		return nil, errors.New("mode login tidak valid")
+		return false
 	}
 
-	// Verifikasi hash password
-	if passwordHash == "" || !utils.CheckPassword(req.Password, passwordHash) {
-		return nil, errors.New("kredensial login atau password salah")
+	tryPegawai := func() bool {
+		u, h, e := s.repo.FindPegawaiByNIPOrEmail(ctx, identifier)
+		if e == nil && u != nil {
+			user, passwordHash, err = u, h, nil
+			return true
+		}
+		return false
+	}
+
+	tryPemohon := func() bool {
+		u, h, e := s.repo.FindPemohonByPhoneOrEmail(ctx, identifier)
+		if e == nil && u != nil {
+			user, passwordHash, err = u, h, nil
+			return true
+		}
+		return false
+	}
+
+	isGoogleOAuth := (req.Password == "google_oauth_verified" || strings.Contains(strings.ToLower(req.MetodeLogin), "google") || mode == "google") && strings.Contains(identifier, "@")
+
+	// 1. Coba cari sesuai mode yang ditentukan pemohon
+	matched := false
+	switch mode {
+	case "petugas":
+		matched = tryPetugas()
+	case "pegawai":
+		matched = tryPegawai()
+	case "pemohon", "google":
+		matched = tryPemohon()
+	}
+
+	// 2. Smart fallback jika belum ketemu di mode yang dipilih
+	if !matched {
+		if tryPetugas() {
+			matched = true
+		} else if tryPegawai() {
+			matched = true
+		} else if tryPemohon() {
+			matched = true
+		}
+	}
+
+	// 3. Auto-provision jika login via Google OAuth dan belum terdaftar
+	if (!matched || user == nil) && isGoogleOAuth {
+		displayName := strings.TrimSpace(req.Nama)
+		if displayName == "" {
+			nameParts := strings.Split(identifier, "@")
+			displayName = nameParts[0]
+			if len(displayName) > 0 {
+				displayName = strings.ToUpper(string(displayName[0])) + displayName[1:]
+			}
+		}
+		dummyHash, _ := utils.HashPassword("google_oauth_verified_" + identifier)
+		regReq := &models.RegisterRequest{
+			Nama:        displayName,
+			Email:       identifier,
+			Mode:        "pemohon",
+			MetodeLogin: "Google Akun",
+		}
+		var errReg error
+		user, errReg = s.repo.CreatePemohon(ctx, regReq, dummyHash)
+		if errReg != nil {
+			return nil, errors.New("gagal memproses akun Google: " + errReg.Error())
+		}
+		matched = true
+	}
+
+	if !matched || user == nil {
+		return nil, errors.New("kredensial login tidak ditemukan")
+	}
+
+	if user.Status != "active" {
+		return nil, errors.New("akun Anda sedang dinonaktifkan. Silakan hubungi Super Admin")
+	}
+
+	if user.UserType == "internal_admin" && !user.IsVerified && user.Role != "super_admin" {
+		return nil, errors.New("akun Anda masih menunggu verifikasi dari Super Admin")
+	}
+
+	// Verifikasi hash password (kecuali Google OAuth terverifikasi)
+	if !isGoogleOAuth {
+		if passwordHash == "" || !utils.CheckPassword(req.Password, passwordHash) {
+			return nil, errors.New("kredensial login atau password salah")
+		}
 	}
 
 	// Durasi masa aktif token: 30 hari jika RememberMe, 7 hari jika biasa

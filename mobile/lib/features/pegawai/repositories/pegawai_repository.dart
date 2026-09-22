@@ -11,6 +11,7 @@ class PegawaiRepository {
 
   Dio get _dio => _client.dio;
 
+  /// Ambil riwayat pengajuan cuti pegawai yang login
   Future<List<CutiModel>> getCutiList() async {
     try {
       final response = await _dio.get(ApiEndpoints.cuti);
@@ -18,12 +19,42 @@ class PegawaiRepository {
       final List<dynamic> list = raw is List
           ? raw
           : (raw['data'] as List<dynamic>? ?? []);
-      return list.map((e) => CutiModel.fromJson(e as Map<String, dynamic>)).toList();
+      return list
+          .map((e) => CutiModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       return [];
     }
   }
 
+  /// Cek data rekap dan sisa cuti pegawai berdasarkan NIP (Sinkron dengan Web ptsp.kemenag-baritoutara.com/cek-cuti)
+  Future<RekapCutiPegawai?> checkCutiByNip(String nip) async {
+    final cleaned = nip.trim().replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleaned.isEmpty) return null;
+
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.cuti,
+        queryParameters: {'nip': cleaned},
+      );
+      if (response.statusCode == 200 && response.data != null) {
+        final dynamic raw = response.data;
+        final Map<String, dynamic> data = raw is Map<String, dynamic>
+            ? (raw['data'] as Map<String, dynamic>? ?? raw)
+            : {};
+        if (data.isEmpty ||
+            (data['name'] == null && data['nama'] == null && data['nip'] == null)) {
+          return null;
+        }
+        return RekapCutiPegawai.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Ajukan cuti baru bagi pegawai
   Future<bool> ajukanCuti({
     required String jenisCuti,
     required String alasan,

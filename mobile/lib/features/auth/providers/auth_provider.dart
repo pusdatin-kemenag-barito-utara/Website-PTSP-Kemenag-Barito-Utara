@@ -26,19 +26,52 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     }
   }
 
-  Future<bool> login(String emailOrNip, String password) async {
+  Future<String?> login(
+    String identifier,
+    String password, {
+    String mode = 'pemohon',
+    String? nama,
+  }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _repo.login(emailOrNip, password);
+      final user = await _repo.login(identifier, password, mode: mode, nama: nama);
       if (user != null) {
         state = AsyncValue.data(user);
-        return true;
+        return null; // Null menandakan login sukses
       }
       state = const AsyncValue.data(null);
-      return false;
+      return 'Kredensial atau kata sandi tidak sesuai.';
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      return false;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      return msg.isNotEmpty ? msg : 'Terjadi kendala saat menghubungi server.';
+    }
+  }
+
+  Future<String?> registerPemohon({
+    required String nama,
+    required String phone,
+    required String password,
+    String? alamat,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final user = await _repo.registerPemohon(
+        nama: nama,
+        phone: phone,
+        password: password,
+        alamat: alamat,
+      );
+      if (user != null) {
+        state = AsyncValue.data(user);
+        return null;
+      }
+      state = const AsyncValue.data(null);
+      return 'Gagal memproses pendaftaran akun.';
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      return msg.isNotEmpty ? msg : 'Terjadi kendala saat menghubungi server.';
     }
   }
 
